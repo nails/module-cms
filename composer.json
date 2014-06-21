@@ -25,6 +25,6 @@
 	{
 		"php": ">=5.4.0",
 		"nailsapp/common" : "dev-master",
-		"nailsapp/cdn" : "dev-master"
+		"nailsapp/module-cdn" : "dev-master"
 	}
 }
