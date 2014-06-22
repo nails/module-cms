@@ -35,10 +35,10 @@ class NAILS_Cms_page_model extends NAILS_Model
 
 		// --------------------------------------------------------------------------
 
-		$this->_nails_templates_dir	= NAILS_PATH . 'modules/cms/templates/';
+		$this->_nails_templates_dir	= NAILS_PATH . 'module-cms/cms/templates/';
 		$this->_app_templates_dir	= FCPATH . APPPATH . 'modules/cms/templates/';
 
-		$this->_nails_widgets_dir	= NAILS_PATH . 'modules/cms/widgets/';
+		$this->_nails_widgets_dir	= NAILS_PATH . 'module-cms/cms/widgets/';
 		$this->_app_widgets_dir		= FCPATH . APPPATH . 'modules/cms/widgets/';
 
 		$this->_nails_prefix		= 'NAILS_CMS_';

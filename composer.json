@@ -24,7 +24,7 @@
 	"require":
 	{
 		"php": ">=5.4.0",
-		"nailsapp/common" : "dev-master",
-		"nailsapp/module-cdn" : "dev-master"
+		"nailsapp/common" : "dev-develop",
+		"nailsapp/module-cdn" : "dev-develop"
 	}
 }
