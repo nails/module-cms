@@ -45,6 +45,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 		$this->_app_prefix			= 'CMS_';
 
 		$this->_table				= NAILS_DB_PREFIX . 'cms_page';
+		$this->_table_preview		=  $this->_table . '_preview';
 		$this->_table_prefix		= 'p';
 
 		$this->_destructive_delete	= FALSE;
@@ -888,10 +889,10 @@ class NAILS_Cms_page_model extends NAILS_Model
 		endforeach;
 
 		//	Other data
-		$page->published->depth		= count( explode( '/', $page->published->slug ) ) - 1;
-		$page->published->url		= site_url( $page->published->slug );
-		$page->draft->depth			= count( explode( '/', $page->draft->slug ) ) - 1;
-		$page->draft->url			= site_url( $page->draft->slug );
+		$page->published->depth	= count( explode( '/', $page->published->slug ) ) - 1;
+		$page->published->url	= site_url( $page->published->slug );
+		$page->draft->depth		= count( explode( '/', $page->draft->slug ) ) - 1;
+		$page->draft->url		= site_url( $page->draft->slug );
 
 		//	Decode JSON
 		$page->published->template_data	= json_decode( $page->published->template_data );
@@ -908,11 +909,11 @@ class NAILS_Cms_page_model extends NAILS_Model
 		$_modified_by					= (int) $page->modified_by;
 		$page->modified_by				= new stdClass();
 		$page->modified_by->id			= $_modified_by;
-		$page->modified_by->first_name	= $page->first_name;
-		$page->modified_by->last_name	= $page->last_name;
-		$page->modified_by->email		= $page->email;
-		$page->modified_by->profile_img	= $page->profile_img;
-		$page->modified_by->gender		= $page->gender;
+		$page->modified_by->first_name	= isset( $page->first_name ) ? $page->first_name : '';
+		$page->modified_by->last_name	= isset( $page->last_name ) ? $page->last_name : '';
+		$page->modified_by->email		= isset( $page->email ) ? $page->email : '';
+		$page->modified_by->profile_img	= isset( $page->profile_img ) ? $page->profile_img : '';
+		$page->modified_by->gender		= isset( $page->gender ) ? $page->gender : '';
 
 		unset( $page->first_name );
 		unset( $page->last_name );
@@ -1628,6 +1629,132 @@ class NAILS_Cms_page_model extends NAILS_Model
 		//	TODO: implement this?
 		$this->_set_error( 'It is not possible to destroy pages using this system.' );
 		return FALSE;
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	public function create_preview( $data )
+	{
+		//	Some basic sanity testing
+		//	Check the data
+		if ( empty( $data->data->template ) ) :
+
+			$this->_set_error( '"data.template" is a required field.' );
+			return FALSE;
+
+		endif;
+
+		// --------------------------------------------------------------------------
+
+		$_data					= new stdClass();
+		$_data->draft_hash		= isset( $data->hash ) ? $data->hash : '';
+		$_data->draft_template	= isset( $data->data->template ) ? $data->data->template : '';
+
+		// --------------------------------------------------------------------------
+
+		//	Test to see if this preview has already been created
+		$this->db->select( 'id' );
+		$this->db->where( 'draft_hash', $_data->draft_hash );
+		$_result = $this->db->get( $this->_table_preview )->row();
+
+		if ( $_result ) :
+
+			return $_result->id;
+
+		endif;
+
+		// --------------------------------------------------------------------------
+
+		$_data->draft_parent_id			= ! empty( $data->data->parent_id ) ? $data->data->parent_id : NULL;
+		$_data->draft_template_data		= json_encode( $data, JSON_UNESCAPED_SLASHES );
+		$_data->draft_title				= isset( $data->data->title ) ? $data->data->title : '';
+		$_data->draft_seo_title			= isset( $data->data->seo_title ) ? $data->data->seo_title : '';
+		$_data->draft_seo_description	= isset( $data->data->seo_description ) ? $data->data->seo_description : '';
+		$_data->draft_seo_keywords		= isset( $data->data->seo_keywords ) ? $data->data->seo_keywords : '';
+
+		//	Generate the breadcrumbs
+		$_data->draft_breadcrumbs = array();
+
+		if ( $_data->draft_parent_id ) :
+
+			//	There is a parent, use it's breadcrumbs array as the starting point.
+			//	No need to fetch the parent again.
+
+			$_parent = $this->get_by_id( $_data->draft_parent_ud );
+
+			if ( $_parent ) :
+
+				$_data->draft_breadcrumbs = $_parent->published->breadcrumbs;
+
+			endif;
+
+		endif;
+
+		$_temp			= new stdClass();
+		$_temp->id		= NULL;
+		$_temp->title	= $_data->draft_title;
+		$_temp->slug	= '';
+
+		$_data->breadcrumbs[] = $_temp;
+		unset( $_temp );
+
+		//	Encode the breadcrumbs for the database
+		$_data->draft_breadcrumbs = json_encode( $_data->draft_breadcrumbs );
+
+		// --------------------------------------------------------------------------
+
+		//	Save to the DB
+		$this->db->trans_begin();
+
+		$this->db->set( $_data );
+		$this->db->set( 'created', 'NOW()', FALSE );
+		$this->db->set( 'modified', 'NOW()', FALSE );
+
+		if ( $this->user->is_logged_in() ) :
+
+			$this->db->set( 'created_by', active_user( 'id' ) );
+			$this->db->set( 'modified_by', active_user( 'id' ) );
+
+		endif;
+
+		if ( ! $this->db->insert( $this->_table_preview ) ) :
+
+			$this->db->trans_rollback();
+			$this->_set_error( 'Failed to create preview object.' );
+			return FALSE;
+
+		else :
+
+			$_id = $this->db->insert_id();
+			$this->db->trans_commit();
+			return $_id;
+
+		endif;
+	}
+
+
+	// --------------------------------------------------------------------------
+
+
+	public function get_preview_by_id( $preview_id )
+	{
+		$this->db->where( 'id', $preview_id );
+		$_result = $this->db->get( $this->_table_preview )->row();
+
+		// --------------------------------------------------------------------------
+
+		if ( ! $_result ) :
+
+			return FALSE;
+
+		endif;
+
+		// --------------------------------------------------------------------------
+
+		$this->_format_object( $_result );
+		return $_result;
 	}
 }
 

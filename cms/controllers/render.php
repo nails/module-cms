@@ -45,9 +45,17 @@ class NAILS_Render extends NAILS_CMS_Controller
 	// --------------------------------------------------------------------------
 
 
-	public function page( $preview = FALSE )
+	public function page()
 	{
-		$_page = $this->cms_page_model->get_by_id( $this->_page_id, TRUE );
+		if ( $this->_is_preview ) :
+
+			$_page = $this->cms_page_model->get_preview_by_id( $this->_page_id );
+
+		else :
+
+			$_page = $this->cms_page_model->get_by_id( $this->_page_id, TRUE );
+
+		endif;
 
 		if ( ! $_page || $_page->is_deleted ) :
 
