@@ -961,12 +961,12 @@ class NAILS_Cms_page_model extends NAILS_Model
 		$_app_widgets	= array();
 
 		//	Look for nails widgets
-		$_nails_widgets = directory_map( $this->_nails_widgets_dir );
+		$_nails_widgets = is_dir($this->_nails_widgets_dir) ? directory_map($this->_nails_widgets_dir) : array();
 
 		//	Look for app widgets
 		if ( is_dir( $this->_app_widgets_dir ) ) :
 
-			$_app_widgets = directory_map( $this->_app_widgets_dir );
+			$_app_widgets = is_dir($this->_app_widgets_dir) ? directory_map($this->_app_widgets_dir) : array();
 
 		endif;
 
@@ -1268,12 +1268,12 @@ class NAILS_Cms_page_model extends NAILS_Model
 		$_app_templates		= array();
 
 		//	Look for nails widgets
-		$_nails_templates = directory_map( $this->_nails_templates_dir );
+		$_nails_templates = is_dir($this->_nails_templates_dir) ? directory_map($this->_nails_templates_dir) : array();
 
 		//	Look for app widgets
 		if ( is_dir( $this->_app_templates_dir ) ) :
 
-			$_app_templates = directory_map( $this->_app_templates_dir );
+			$_app_templates = is_dir($this->_app_templates_dir) ? directory_map($this->_app_templates_dir) : array();
 
 		endif;
 
