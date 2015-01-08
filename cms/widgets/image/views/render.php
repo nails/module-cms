@@ -1,64 +1,59 @@
 <?php
 
-	//	Set defaults
-	$_image_id	= ! empty( $image_id )	? $image_id	: '';
-	$_scaling	= ! empty( $scaling )	? $scaling	: '';
-	$_width		= ! empty( $width )		? $width	: '';
-	$_height	= ! empty( $height )	? $height	: '';
-	$_linking	= ! empty( $linking )	? $linking	: '';
-	$_url		= ! empty( $url )		? $url		: '';
-	$_target	= ! empty( $target )	? $target	: '';
-	$_link_attr	= ! empty( $link_attr )	? $link_attr	: '';
-	$_img_attr	= ! empty( $img_attr )	? $img_attr	: '';
+    //  Set defaults
+    $image_id  = ! empty($image_id)  ? $image_id  : '';
+    $scaling   = ! empty($scaling)   ? $scaling   : '';
+    $width     = ! empty($width)     ? $width     : '';
+    $height    = ! empty($height)    ? $height    : '';
+    $linking   = ! empty($linking)   ? $linking   : '';
+    $url       = ! empty($url)       ? $url       : '';
+    $target    = ! empty($target)    ? $target    : '';
+    $link_attr = ! empty($link_attr) ? $link_attr : '';
+    $img_attr  = ! empty($img_attr)  ? $img_attr  : '';
 
+    if ($image_id) {
 
-	if ( $_image_id ) :
+        //  Determine image URL
+        if ($scaling == 'CROP' && $width && $height) {
 
-		//	Determine image URL
-		if ( $_scaling == 'CROP' && $_width && $_height ) :
+            $img_url = cdn_thumb($image_id, $width, $height);
 
-			$_img_url = cdn_thumb( $_image_id, $_width, $_height );
+        } elseif ($scaling == 'SCALE' && $width && $height) {
 
-		elseif ( $_scaling == 'SCLAE' && $_width && $_height ) :
+            $img_url = cdn_scale($image_id, $width, $height);
 
-			$_img_url = cdn_scale( $_image_id, $_width, $_height );
+        } else {
 
-		else :
+            $img_url = cdn_serve($image_id);
+        }
 
-			$_img_url = cdn_serve( $_image_id );
+        // --------------------------------------------------------------------------
 
-		endif;
+        //  Determine linking
+        if ($linking == 'CUSTOM' && $url) {
 
-		// --------------------------------------------------------------------------
+            $link_url       = $url;
+            $link_target    = $target ? 'target="' . $target . '"' : '' ;
 
-		//	Determine linking
-		if ( $_linking == 'CUSTOM' && $_url ) :
+        } elseif ($linking == 'FULLSIZE') {
 
-			$_link_url		= $_url;
-			$_link_target	= $_target ? 'target="' . $_target . '"' : '' ;
+            $link_url       = cdn_serve($image_id);
+            $link_target    = $target ? 'target="' . $target . '"' : '' ;
 
-		elseif( $_linking == 'FULLSIZE' ) :
+        } else {
 
-			$_link_url		= cdn_serve( $_image_id );
-			$_link_target	= $_target ? 'target="' . $_target . '"' : '' ;
+            $link_url       = '';
+            $link_target    = '';
+        }
 
-		else :
+        // --------------------------------------------------------------------------
 
-			$_link_url		= '';
-			$_link_target	= '';
+        // Render
+        $out = '';
+        $out .= $link_url ? '<a href="' . $link_url . '" ' . $link_attr . '>' : '';
+        $out .= '<img src="' . $img_url . '" ' . $img_attr . '/>';
+        $out .= $link_url ? '</a>' : '';
 
-		endif;
+        echo $out;
 
-		// --------------------------------------------------------------------------
-
-		// Render
-		$_out = '';
-		$_out .= $_link_url ? '<a href="' . $_link_url . '" ' . $_link_attr . '>' : '';
-		$_out .= '<img src="' . $_img_url . '" ' . $_img_attr . '/>';
-		$_out .= $_link_url ? '</a>' : '';
-
-		echo $_out;
-
-
-
-	endif;
+    }
