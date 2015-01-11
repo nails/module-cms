@@ -1,4 +1,14 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+/**
+ * This class provides some common CMS controller functionality
+ *
+ * @package     Nails
+ * @subpackage  module-cms
+ * @category    Controller
+ * @author      Nails Dev Team
+ * @link
+ */
 
 class NAILS_CMS_Controller extends NAILS_Controller
 {
