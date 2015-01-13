@@ -249,7 +249,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 				if ( $_children ) :
 
 					//	Loop each child and update it's details
-					foreach( $_children AS $child_id ) :
+					foreach ( $_children AS $child_id ) :
 
 						//	We can assume that the children are in a sensible order, loop them and
 						//	process. For nested children, their parent will have been processed by
@@ -484,7 +484,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 				//	Loop each child and update it's published details, but only
 				//	if they've changed.
 
-				foreach( $_children AS $child_id ) :
+				foreach ( $_children AS $child_id ) :
 
 					$_child = $this->get_by_id( $child_id );
 
@@ -544,7 +544,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 			// --------------------------------------------------------------------------
 
 			//	Rewrite routes
-			$this->load->model( 'system/routes_model' );
+			$this->load->model( 'common/routes_model' );
 			$this->routes_model->update( 'cms' );
 
 			// --------------------------------------------------------------------------
@@ -644,7 +644,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 		//	Remove parents from the array if they have any children
 		if ( $murder_parents_of_children ) :
 
-			foreach( $_out AS $key => &$page ) :
+			foreach ( $_out AS $key => &$page ) :
 
 				$_found		= FALSE;
 				$_needle	= $page . $separator;
@@ -773,7 +773,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 		$_out	= array();
 		$_pages	= $this->get_all();
 
-		foreach( $_pages AS $page ) :
+		foreach ( $_pages AS $page ) :
 
 			if ( $use_draft ) :
 
@@ -974,7 +974,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
 		//	Test and merge widgets
 		$_widgets = array();
-		foreach( $_nails_widgets AS $widget => $details ) :
+		foreach ( $_nails_widgets AS $widget => $details ) :
 
 			//	Ignore base template
 			if ( $details == '_widget.php' ) :
@@ -1023,7 +1023,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 		endforeach;
 
 		//	Now test app widgets
-		foreach( $_app_widgets AS $widget => $details ) :
+		foreach ( $_app_widgets AS $widget => $details ) :
 
 			//	Ignore malformed widgets
 			if ( ! is_array( $details ) || array_search( 'widget.php', $details ) === FALSE ) :
@@ -1125,7 +1125,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 		endforeach;
 
 		//	Sort non-generic widgets into alphabetical order
-		foreach( $_out AS $o ) :
+		foreach ( $_out AS $o ) :
 
 			usort( $o->widgets, array( $this, '_sort_widgets' ) );
 
@@ -1281,7 +1281,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
 		//	Test and merge templates
 		$_templates = array();
-		foreach( $_nails_templates AS $template => $details ) :
+		foreach ( $_nails_templates AS $template => $details ) :
 
 			//	Ignore base template
 			if ( $details == '_template.php' ) :
@@ -1367,7 +1367,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 		endforeach;
 
 		//	Now test app templates
-		foreach( $_app_templates AS $template => $details ) :
+		foreach ( $_app_templates AS $template => $details ) :
 
 			//	Ignore malformed templates
 			if ( ! is_array( $details ) || array_search( 'template.php', $details ) === FALSE ) :
@@ -1593,7 +1593,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 			// --------------------------------------------------------------------------
 
 			//	Rewrite routes
-			$this->load->model( 'system/routes_model' );
+			$this->load->model( 'common/routes_model' );
 			$this->routes_model->update( 'cms' );
 
 			// --------------------------------------------------------------------------

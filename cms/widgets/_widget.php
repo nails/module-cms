@@ -65,7 +65,7 @@ class NAILS_CMS_Widget
 		$_d->callbacks->remove_stop		= '';
 
 		//	Attempt to auto-populate these fields
-		foreach( $_d->callbacks AS $property => &$callback ) :
+		foreach ( $_d->callbacks AS $property => &$callback ) :
 
 			if ( is_file( $_d->path . 'js/' . $property . '.min.js' ) )  :
 
@@ -175,7 +175,7 @@ class NAILS_CMS_Widget
 				extract( $_wgt_data );
 
 			endif;
-			
+
 			if ( $_tpl_additional_data ) :
 
 				extract( $_tpl_additional_data );

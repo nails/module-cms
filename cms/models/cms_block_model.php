@@ -404,7 +404,7 @@ class NAILS_Cms_block_model extends NAILS_Model
 				$this->db->order_by( 'created', 'DESC' );
 				$_temp->revisions = $this->db->get( NAILS_DB_PREFIX . 'cms_block_translation_revision cbtr' )->result();
 
-				foreach( $_temp->revisions AS $revision ) :
+				foreach ( $_temp->revisions AS $revision ) :
 
 					$revision->user					= new stdClass();
 					$revision->user->id				= $revision->created_by ? (int) $revision->created_by : NULL;
