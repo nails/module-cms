@@ -550,7 +550,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 			// --------------------------------------------------------------------------
 
 			//	Regenerate sitemap
-			if ( module_is_enabled( 'sitemap' ) ) :
+			if ( isModuleEnabled( 'sitemap' ) ) :
 
 				$this->load->model( 'sitemap/sitemap_model' );
 				$this->sitemap_model->generate();
@@ -1599,7 +1599,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 			// --------------------------------------------------------------------------
 
 			//	Regenerate sitemap
-			if ( module_is_enabled( 'sitemap' ) ) :
+			if ( isModuleEnabled( 'sitemap' ) ) :
 
 				$this->load->model( 'sitemap/sitemap_model' );
 				$this->sitemap_model->generate();

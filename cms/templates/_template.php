@@ -62,7 +62,7 @@ class Nails_CMS_Template
 
 				elseif ( preg_match( '#^' . preg_quote( FCPATH . APPPATH, '#' ) . '#', $_icon ) ) :
 
-					if ( page_is_secure() ) :
+					if ( isPageSecure() ) :
 
 						$_d->img->icon = preg_replace( '#^' . preg_quote( FCPATH . APPPATH, '#' ) . '#', SECURE_BASE_URL . APPPATH . '', $_icon );
 
@@ -220,7 +220,7 @@ class Nails_CMS_Template
 		if ( is_file( $this->_details->path . 'view.php' ) ) :
 
 			//	If passed, extract any view data
-			$_NAILS_CONTROLLER_DATA =& get_controller_data();
+			$_NAILS_CONTROLLER_DATA =& getControllerData();
 			if ( $_NAILS_CONTROLLER_DATA ) :
 
 				extract( $_NAILS_CONTROLLER_DATA );

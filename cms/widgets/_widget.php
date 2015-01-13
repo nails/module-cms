@@ -161,7 +161,7 @@ class NAILS_CMS_Widget
 		if ( is_file( $this->_details->path . 'views/render.php' ) ) :
 
 			//	If passed, extract any controller data
-			$_NAILS_CONTROLLER_DATA =& get_controller_data();
+			$_NAILS_CONTROLLER_DATA =& getControllerData();
 
 			if ( $_NAILS_CONTROLLER_DATA ) :
 

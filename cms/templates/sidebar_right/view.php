@@ -1,6 +1,6 @@
 <?php
 
-	echo $this->load->view( 'structure/header', get_controller_data() );
+	echo $this->load->view( 'structure/header', getControllerData() );
 
 	// --------------------------------------------------------------------------
 
@@ -12,4 +12,4 @@
 
 	// --------------------------------------------------------------------------
 
-	echo $this->load->view( 'structure/footer', get_controller_data() );
+	echo $this->load->view( 'structure/footer', getControllerData() );
