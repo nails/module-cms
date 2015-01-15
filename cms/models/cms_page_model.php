@@ -1,1766 +1,1755 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
 
 /**
- * Name:			cms_page_model.php
+ * This model handle CMS Pages
  *
- * Description:		This model handles everything to do with CMS pages
- *
- **/
-
-/**
- * OVERLOADING NAILS' MODELS
- *
- * Note the name of this class; done like this to allow apps to extend this class.
- * Read full explanation at the bottom of this file.
- *
- **/
+ * @package     Nails
+ * @subpackage  module-cms
+ * @category    Model
+ * @author      Nails Dev Team
+ * @link
+ */
 
 class NAILS_Cms_page_model extends NAILS_Model
 {
-	protected $_available_widgets;
-	protected $_nails_templates_dir;
-	protected $_app_templates_dir;
-	protected $_nails_widgets_dir;
-	protected $_app_widgets_dir;
-	protected $_nails_prefix;
-	protected $_app_prefix;
+    protected $availableWidgets;
+    protected $nailsTemplatesDir;
+    protected $appTemplatesDir;
+    protected $nailsWidgetsDir;
+    protected $appWidgetsDir;
+    protected $nailsPrefix;
+    protected $appPrefix;
 
+    // --------------------------------------------------------------------------
 
-	// --------------------------------------------------------------------------
+    /**
+     * Constuct the model
+     */
+    public function __construct()
+    {
+        parent::__construct();
 
+        // --------------------------------------------------------------------------
 
-	public function __construct()
-	{
-		parent::__construct();
+        $this->nailsTemplatesDir = NAILS_PATH . 'module-cms/cms/templates/';
+        $this->appTemplatesDir   = FCPATH . APPPATH . 'modules/cms/templates/';
 
-		// --------------------------------------------------------------------------
+        $this->nailsWidgetsDir = NAILS_PATH . 'module-cms/cms/widgets/';
+        $this->appWidgetsDir   = FCPATH . APPPATH . 'modules/cms/widgets/';
 
-		$this->_nails_templates_dir	= NAILS_PATH . 'module-cms/cms/templates/';
-		$this->_app_templates_dir	= FCPATH . APPPATH . 'modules/cms/templates/';
+        //  @TODO: Load widgets from modules
 
-		$this->_nails_widgets_dir	= NAILS_PATH . 'module-cms/cms/widgets/';
-		$this->_app_widgets_dir		= FCPATH . APPPATH . 'modules/cms/widgets/';
+        $this->nailsPrefix = 'NAILS_CMS_';
+        $this->appPrefix   = 'CMS_';
 
-		$this->_nails_prefix		= 'NAILS_CMS_';
-		$this->_app_prefix			= 'CMS_';
+        $this->_table         = NAILS_DB_PREFIX . 'cms_page';
+        $this->_table_preview =  $this->_table . '_preview';
+        $this->_table_prefix  = 'p';
 
-		$this->_table				= NAILS_DB_PREFIX . 'cms_page';
-		$this->_table_preview		=  $this->_table . '_preview';
-		$this->_table_prefix		= 'p';
+        $this->_destructive_delete = false;
 
-		$this->_destructive_delete	= FALSE;
+        // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+        //  Load the generic template & widget
+        include_once $this->nailsTemplatesDir . '_template.php';
+        include_once $this->nailsWidgetsDir . '_widget.php';
+    }
 
-		//	Load the generic template & widget
-		include_once $this->_nails_templates_dir . '_template.php';
-		include_once $this->_nails_widgets_dir . '_widget.php';
-	}
+    // --------------------------------------------------------------------------
 
+    /**
+     * Create a new CMS page
+     * @param  array  $data The data to create the page with
+     * @return mixed        The ID of the page on success, false on failure
+     */
+    public function create($data)
+    {
+        if (empty($data->data->template)) {
 
-	// --------------------------------------------------------------------------
+            $this->_set_error('"data.template" is a required field.');
+            return false;
+        }
 
+        // --------------------------------------------------------------------------
 
-	public function create( $data )
-	{
-		//	Some basic sanity testing
-		//	Check the data
-		if ( empty( $data->data->template ) ) :
+        $this->db->trans_begin();
 
-			$this->_set_error( '"data.template" is a required field.' );
-			return FALSE;
+        //  Create a new blank row to work with
+        $id = parent::create();
 
-		endif;
+        if (!$id) {
 
-		// --------------------------------------------------------------------------
+            $this->_set_error('Unable to create base page object.');
+            $this->db->trans_rollback();
+            return false;
+        }
 
-		$this->db->trans_begin();
+        //  Try and update it depending on how the update went, commit & update or rollback
+        if ($this->update($id, $data)) {
 
-		//	Create a new blank row to work with
-		$_id = parent::create();
+            $this->db->trans_commit();
+            return $id;
 
-		if ( ! $_id ) :
+        } else {
 
-			$this->_set_error( 'Unable to create base page object.' );
-			$this->db->trans_rollback();
-			return FALSE;
+            $this->db->trans_rollback();
+            return false;
+        }
+    }
 
-		endif;
+    // --------------------------------------------------------------------------
 
-		//	Try and update it depending on how the update went, commit & update or rollback
-		if ( $this->update( $_id, $data ) ) :
+    /**
+     * Update a CMS page
+     * @param  int     $pageId The ID of the page to update
+     * @param  array   $data   The data to update with
+     * @return boolean
+     */
+    public function update($pageId, $data)
+    {
+        //  Check the data
+        if (empty($data->data->template)) {
 
-			$this->db->trans_commit();
-			return $_id;
+            $this->_set_error('"data.template" is a required field.');
+            return false;
+        }
 
-		else :
+        // --------------------------------------------------------------------------
 
-			$this->db->trans_rollback();
-			return FALSE;
+        //  Fetch the current version of this page, for reference.
+        $current = $this->get_by_id($pageId);
 
-		endif;
-	}
+        if (!$current) {
 
+            $this->_set_error('Invalid Page ID');
+            return false;
+        }
 
-	// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
+        /**
+         * Clone the data object so we can mutate it without worry. Unset id and hash
+         * as we don't need to store them
+         */
 
-	public function update( $page_id, $data )
-	{
-		//	Check the data
-		if ( empty( $data->data->template ) ) :
+        $clone = clone $data;
+        unset($clone->id);
+        unset($clone->hash);
 
-			$this->_set_error( '"data.template" is a required field.' );
-			return FALSE;
+        // --------------------------------------------------------------------------
 
-		endif;
+        //  Start the transaction
+        $this->db->trans_begin();
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Fetch the current version of this page, for reference.
-		$_current = $this->get_by_id( $page_id );
+        //  Start prepping the data which doesn't require much thinking
+        $data = new stdClass();
 
-		if ( ! $_current ) :
+        $data->draft_parent_id       = !empty($clone->data->parent_id)       ? (int) $clone->data->parent_id       : null;
+        $data->draft_title           = !empty($clone->data->title)           ? trim($clone->data->title)           : 'Untitled';
+        $data->draft_seo_title       = !empty($clone->data->seo_title)       ? trim($clone->data->seo_title)       : '';
+        $data->draft_seo_description = !empty($clone->data->seo_description) ? trim($clone->data->seo_description) : '';
+        $data->draft_seo_keywords    = !empty($clone->data->seo_keywords)    ? trim($clone->data->seo_keywords)    : '';
+        $data->draft_template        = $clone->data->template;
+        $data->draft_template_data   = json_encode($clone, JSON_UNESCAPED_SLASHES);
+        $data->draft_hash            = md5($data->draft_template_data);
 
-			$this->_set_error( 'Invalid Page ID' );
-			return FALSE;
+        // --------------------------------------------------------------------------
 
-		endif;
+        /**
+         * Additional sanitising; encode HTML entities. Also encode the pipe character
+         * in the title, so that it doesn't break our explode
+         */
 
-		// --------------------------------------------------------------------------
+        $data->draft_title           = htmlentities(str_replace('|', '&#124;', $data->draft_title), ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
+        $data->draft_seo_title       = htmlentities($data->draft_seo_title, ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
+        $data->draft_seo_description = htmlentities($data->draft_seo_description, ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
+        $data->draft_seo_keywords    = htmlentities($data->draft_seo_keywords, ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
 
-		//	Clone the data object so we can mutate it without worry. Unset id and
-		//	hash as we don't need to store them
+        // --------------------------------------------------------------------------
 
-		$_clone = clone $data;
-		unset( $_clone->id );
-		unset( $_clone->hash );
+        //  Prep data which requires a little more intensive processing
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Start the transaction
-		$this->db->trans_begin();
+        //  Work out the slug
+        if ($data->draft_parent_id) {
 
-		// --------------------------------------------------------------------------
+            //  There is a parent, so set it's slug as the prefix
+            $parent = $this->get_by_id($data->draft_parent_id);
 
-		//	Start prepping the data which doesn't require much thinking
-		$_data = new stdClass();
+            if (!$parent) {
 
-		$_data->draft_parent_id			= ! empty( $_clone->data->parent_id )		? (int) $_clone->data->parent_id			: NULL;
-		$_data->draft_title				= ! empty( $_clone->data->title )			? trim( $_clone->data->title )				: 'Untitled';
-		$_data->draft_seo_title			= ! empty( $_clone->data->seo_title )		? trim( $_clone->data->seo_title )			: '';
-		$_data->draft_seo_description	= ! empty( $_clone->data->seo_description )	? trim( $_clone->data->seo_description )	: '';
-		$_data->draft_seo_keywords		= ! empty( $_clone->data->seo_keywords )	? trim( $_clone->data->seo_keywords )		: '';
+                $this->_set_error('Invalid Parent ID.');
+                $this->db->trans_rollback();
+                return false;
+            }
 
-		$_data->draft_template			= $_clone->data->template;
+            $prefix = $parent->draft->slug . '/';
 
-		$_data->draft_template_data		= json_encode( $_clone, JSON_UNESCAPED_SLASHES );
-		$_data->draft_hash				= md5( $_data->draft_template_data );
+        } else {
 
-		// --------------------------------------------------------------------------
+            //  No parent, no need for a prefix
+            $prefix = '';
+        }
 
-		//	Additional sanitising; encode HTML entities. Also encode the pipe character
-		//	in the title, so that it doesn't break our explode
+        $data->draft_slug     = $this->_generate_slug($data->draft_title, $prefix, '', null, 'draft_slug', $current->id);
+        $data->draft_slug_end = end(explode('/', $data->draft_slug));
 
-		$_data->draft_title				= htmlentities( str_replace( '|', '&#124;', $_data->draft_title ), ENT_COMPAT | ENT_HTML401, 'UTF-8', FALSE );
-		$_data->draft_seo_title			= htmlentities( $_data->draft_seo_title, ENT_COMPAT | ENT_HTML401, 'UTF-8', FALSE );
-		$_data->draft_seo_description	= htmlentities( $_data->draft_seo_description, ENT_COMPAT | ENT_HTML401, 'UTF-8', FALSE );
-		$_data->draft_seo_keywords		= htmlentities( $_data->draft_seo_keywords, ENT_COMPAT | ENT_HTML401, 'UTF-8', FALSE );
+        // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+        //  Generate the breadcrumbs
+        $data->draft_breadcrumbs = array();
 
-		//	Prep data which requires a little more intensive processing
+        if ($data->draft_parent_id) {
 
-		// --------------------------------------------------------------------------
+            /**
+             * There is a parent, use it's breadcrumbs array as the starting point.
+             * No need to fetch the parent again.
+             */
 
-		//	Work out the slug
-		if ( $_data->draft_parent_id ) :
+            $data->draft_breadcrumbs = $parent->draft->breadcrumbs;
+        }
 
-			//	There is a parent, so set it's slug as the prefix
-			$_parent = $this->get_by_id( $_data->draft_parent_id );
+        $temp        = new stdClass();
+        $temp->id    = $current->id;
+        $temp->title = $data->draft_title;
+        $temp->slug  = $data->draft_slug;
 
-			if ( ! $_parent ) :
+        $data->draft_breadcrumbs[] = $temp;
+        unset($temp);
 
-				$this->_set_error( 'Invalid Parent ID.' );
-				$this->db->trans_rollback();
-				return FALSE;
+        //  Encode the breadcrumbs for the database
+        $data->draft_breadcrumbs = json_encode($this->generateBreadcrumbs($current->id));
 
-			endif;
+        // --------------------------------------------------------------------------
 
-			$_prefix = $_parent->draft->slug . '/';
+        if (parent::update($current->id, $data)) {
 
-		else :
+            //  Update was successful, set the breadcrumbs
+            $breadcrumbs = $this->generateBreadcrumbs($current->id);
 
-			//	No parent, no need for a prefix
-			$_prefix = '';
+            $this->db->set('draft_breadcrumbs', json_encode($breadcrumbs));
+            $this->db->where('id', $current->id);
+            if (!$this->db->update($this->_table)) {
 
-		endif;
+                $this->_set_error('Failed to generate breadcrumbs.');
+                $this->db->trans_rollback();
+                return false;
+            }
 
-		$_data->draft_slug		= $this->_generate_slug( $_data->draft_title, $_prefix, '', NULL, 'draft_slug', $_current->id );
-		$_data->draft_slug_end	= end( explode('/', $_data->draft_slug ) );
+            //  For each child regenerate the breadcrumbs and slugs (only if the title or slug has changed)
+            if ($current->draft->title != $data->draft_title || $current->draft->slug != $data->draft_slug) {
 
-		// --------------------------------------------------------------------------
+                $children = $this->get_ids_of_children($current->id);
 
-		//	Generate the breadcrumbs
-		$_data->draft_breadcrumbs = array();
+                if ($children) {
 
-		if ( $_data->draft_parent_id ) :
+                    //  Loop each child and update it's details
+                    foreach ($children as $child_id) {
 
-			//	There is a parent, use it's breadcrumbs array as the starting point.
-			//	No need to fetch the parent again.
+                        /**
+                         * We can assume that the children are in a sensible order, loop
+                         * them and process. For nested children, their parent will have
+                         * been processed by the time we process it.
+                         */
 
-			$_data->draft_breadcrumbs = $_parent->draft->breadcrumbs;
+                        $child = $this->get_by_id($child_id);
 
-		endif;
+                        if (!$child) {
 
-		$_temp			= new stdClass();
-		$_temp->id		= $_current->id;
-		$_temp->title	= $_data->draft_title;
-		$_temp->slug	= $_data->draft_slug;
+                            continue;
+                        }
 
-		$_data->draft_breadcrumbs[] = $_temp;
-		unset( $_temp );
+                        $data = new stdClass();
 
-		//	Encode the breadcrumbs for the database
-		$_data->draft_breadcrumbs = json_encode( $this->_generate_breadcrumbs( $_current->id ) );
+                        //  Generate the breadcrumbs
+                        $data->draft_breadcrumbs = json_encode($this->generateBreadcrumbs($child->id));
 
-		// --------------------------------------------------------------------------
+                        //  Generate the slug
+                        if ($child->draft->parent_id) {
 
-		if ( parent::update( $_current->id, $_data ) ) :
+                            //  Child has a parent, fetch it and use it's slug as the prefix
+                            $parent = $this->get_by_id($child->draft->parent_id);
 
-			//	Update was successful, set the breadcrumbs
-			$_breadcrumbs = $this->_generate_breadcrumbs( $_current->id );
+                            if ($parent) {
 
-			$this->db->set( 'draft_breadcrumbs', json_encode( $_breadcrumbs ) );
-			$this->db->where( 'id', $_current->id );
-			if ( ! $this->db->update( $this->_table ) ) :
+                                $data->draft_slug = $parent->draft->slug . '/' . $child->draft->slug_end;
 
-				$this->_set_error( 'Failed to generate breadcrumbs.' );
-				$this->db->trans_rollback();
-				return FALSE;
+                            } else {
 
-			endif;
+                                //  Parent is bad, make this a parent page. Poor wee orphan.
+                                $data->draft_parent_id = null;
+                                $data->draft_slug      = $child->draft->slug_end;
+                            }
 
-			//	For each child regenerate the breadcrumbs and slugs (only if the title or slug has changed)
-			if ( $_current->draft->title != $_data->draft_title || $_current->draft->slug != $_data->draft_slug ) :
+                        } else {
 
-				$_children = $this->get_ids_of_children( $_current->id );
+                            //  Would be weird if this happened, but ho hum handle it anyway
+                            $data->draft_parent_id = null;
+                            $data->draft_slug      = $child->draft->slug_end;
+                        }
 
-				if ( $_children ) :
+                        //  Update the child and move on
+                        if (!parent::update($child->id, $data)) {
 
-					//	Loop each child and update it's details
-					foreach ( $_children AS $child_id ) :
+                            $this->_set_error('Failed to update breadcrumbs and/or slug of child page.');
+                            $this->db->trans_rollback();
+                            return false;
+                        }
+                    }
+                }
+            }
 
-						//	We can assume that the children are in a sensible order, loop them and
-						//	process. For nested children, their parent will have been processed by
-						//	the time we process it.
+            // --------------------------------------------------------------------------
 
-						$_child = $this->get_by_id( $child_id );
+            //  Finish up.
+            $this->db->trans_commit();
+            return true;
 
-						if ( ! $_child ) :
+        } else {
 
-							continue;
+            $this->_set_error('Failed to update page object.');
+            $this->db->trans_rollback();
+            return false;
+        }
+    }
 
-						endif;
+    // --------------------------------------------------------------------------
 
-						$_data = new stdClass();
+    /**
+     * Generate breadcrumbs for the page
+     * @param  int   $id The page to generate breadcrumbs for
+     * @return mixed     Array of breadcrumbs, or false on failure
+     */
+    protected function generateBreadcrumbs($id)
+    {
+        $page = $this->get_by_id($id);
 
-						//	Generate the breadcrumbs
-						$_data->draft_breadcrumbs = json_encode( $this->_generate_breadcrumbs( $_child->id ) );
+        if (!$page) {
 
-						//	Generate the slug
-						if ( $_child->draft->parent_id ) :
+            return false;
+        }
 
-							//	Child has a parent, fetch it and use it's slug as the prefix
-							$_parent = $this->get_by_id( $_child->draft->parent_id );
+        // --------------------------------------------------------------------------
 
-							if ( $_parent ) :
+        $breadcrumbs = array();
 
-								$_data->draft_slug = $_parent->draft->slug . '/' . $_child->draft->slug_end;
+        if ($page->draft->parent_id) {
 
-							else :
+            $breadcrumbs = array_merge($breadcrumbs, $this->generateBreadcrumbs($page->draft->parent_id));
+        }
 
-								//	Parent is bad, make this a parent page. Poor wee orphan.
-								$_data->draft_parent_id	= NULL;
-								$_data->draft_slug		= $_child->draft->slug_end;
+        $temp        = new stdClass();
+        $temp->id    = $page->id;
+        $temp->title = $page->draft->title;
 
-							endif;
+        $breadcrumbs[] = $temp;
+        unset($temp);
 
-						else :
+        return $breadcrumbs;
+    }
 
-							//	Would be weird if this happened, but ho hum handle it anyway
-							$_data->draft_parent_id	= NULL;
-							$_data->draft_slug		= $_child->draft->slug_end;
+    // --------------------------------------------------------------------------
 
-						endif;
+    /**
+     * Render a template with the provided widgets and additional data
+     * @param  string $template         The template to render
+     * @param  array  $widgets          The widgets to render
+     * @param  array  $additionalFields Any additional fields to pass to the template
+     * @return mixed                    String (the rendered template) on success, false on failure
+     */
+    public function render_template($template, $widgets = array(), $additionalFields = array())
+    {
+        $template = $this->get_template($template, 'RENDER');
 
-						//	Update the child and move on
-						if ( ! parent::update( $_child->id, $_data ) ) :
+        if (!$template) {
 
-							$this->_set_error( 'Failed to update breadcrumbs and/or slug of child page.' );
-							$this->db->trans_rollback();
-							return FALSE;
+            $this->_set_error('"' . $template .'" is not a valid template.');
+            return false;
+        }
 
-						endif;
+        // --------------------------------------------------------------------------
 
-					endforeach;
+        //  Look for manual config items
+        if (!empty($additionalFields->manual_config->assets_render)) {
 
-				endif;
+            if (!is_array($additionalFields->manual_config->assets_render)) {
 
-			endif;
+                $additionalFields->manual_config->assets_render = (array) $additionalFields->manual_config->assets_render;
+            }
 
-			// --------------------------------------------------------------------------
+            $this->loadAssets($additionalFields->manual_config->assets_render);
+        }
 
-			//	Finish up.
-			$this->db->trans_commit();
-			return TRUE;
+        // --------------------------------------------------------------------------
 
-		else :
+        //  Attempt to instantiate and render the template
+        try {
 
-		 	$this->_set_error( 'Failed to update page object.' );
-			$this->db->trans_rollback();
-		 	return FALSE;
+            require_once $template->path . 'template.php';
 
-		endif;
-	}
+            $TEMPLATE = new $template->iam();
 
+            try {
 
-	// --------------------------------------------------------------------------
+                return $TEMPLATE->render((array) $widgets, (array) $additionalFields);
 
+            } catch (Exception $e) {
 
-	protected function _generate_breadcrumbs( $id )
-	{
-		$_page = $this->get_by_id( $id );
+                $this->_set_error('Could not render template "' . $template . '".');
+                return false;
+            }
 
-		if ( ! $_page ) :
+        } catch (Exception $e) {
 
-			return FALSE;
+            $this->_set_error('Could not instantiate template "' . $template . '".');
+            return false;
+        }
+    }
 
-		endif;
+    // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+    /**
+     * Publish a page
+     * @param  int     $id The page to publish
+     * @return boolean
+     */
+    public function publish($id)
+    {
+        //  Check the page is valid
+        $page = $this->get_by_id($id);
 
-		$_breadcrumbs = array();
+        if (!$page) {
 
-		if ( $_page->draft->parent_id ) :
+            $this->_set_message('Invalid Page ID');
+            return false;
+        }
 
-			$_breadcrumbs = array_merge( $_breadcrumbs, $this->_generate_breadcrumbs( $_page->draft->parent_id ) );
+        // --------------------------------------------------------------------------
 
-		endif;
+        //  Start the transaction
+        $this->db->trans_begin();
 
-		$_temp					= new stdClass();
-		$_temp->id				= $_page->id;
-		$_temp->title			= $_page->draft->title;
+        // --------------------------------------------------------------------------
 
-		$_breadcrumbs[] = $_temp;
-		unset( $_temp );
+        //  If the slug has changed add an entry to the slug history page
+        $slugHistory = array();
+        if ($page->published->slug && $page->published->slug != $page->draft->slug) {
 
-		return $_breadcrumbs;
-	}
+            $slugHistory[] = array(
+                'slug'    => $page->published->slug,
+                'page_id' => $id
+            );
+        }
 
+        // --------------------------------------------------------------------------
 
-	// --------------------------------------------------------------------------
+        //  Update the published_* columns to be the same as the draft columns
+        $this->db->set('published_hash', 'draft_hash', false);
+        $this->db->set('published_parent_id', 'draft_parent_id', false);
+        $this->db->set('published_slug', 'draft_slug', false);
+        $this->db->set('published_slug_end', 'draft_slug_end', false);
+        $this->db->set('published_template', 'draft_template', false);
+        $this->db->set('published_template_data', 'draft_template_data', false);
+        $this->db->set('published_title', 'draft_title', false);
+        $this->db->set('published_breadcrumbs', 'draft_breadcrumbs', false);
+        $this->db->set('published_seo_title', 'draft_seo_title', false);
+        $this->db->set('published_seo_description', 'draft_seo_description', false);
+        $this->db->set('published_seo_keywords', 'draft_seo_keywords', false);
+        $this->db->set('is_published', true);
+        $this->db->set('modified', date('Y-m-d H:i{s'));
 
+        if ($this->user_model->is_logged_in()) {
 
-	public function render_template( $template, $widgets = array(), $additional_fields = array() )
-	{
-		$_template = $this->get_template( $template, 'RENDER' );
+            $this->db->set('modified_by', active_user('id'));
+        }
 
-		if ( ! $_template ) :
+        $this->db->where('id', $page->id);
 
-			$this->_set_error( '"' . $template .'" is not a valid template.' );
-			return FALSE;
+        if ($this->db->update($this->_table)) {
 
-		endif;
+            //  Fetch the children, returning the data we need for the updates
+            $children = $this->get_ids_of_children($page->id);
 
-		// --------------------------------------------------------------------------
+            if ($children) {
 
-		//	Look for manual config items
-		if ( ! empty( $additional_fields->manual_config->assets_render ) ) :
+                /**
+                 * Loop each child and update it's published details, but only
+                 * if they've changed.
+                 */
 
-			if ( ! is_array( $additional_fields->manual_config->assets_render ) ) :
+                foreach ($children as $child_id) {
 
-				$additional_fields->manual_config->assets_render = (array) $additional_fields->manual_config->assets_render;
+                    $child = $this->get_by_id($child_id);
 
-			endif;
+                    if (!$child) {
 
-			$this->_load_assets( $additional_fields->manual_config->assets_render );
+                        continue;
+                    }
 
-		endif;
+                    if ($child->published->title == $child->draft->title && $child->published->slug == $child->draft->slug) {
 
-		// --------------------------------------------------------------------------
+                        continue;
+                    }
 
-		//	Attempt to instantiate and render the template
-		try
-		{
-			require_once $_template->path . 'template.php';
+                    //  First make a note of the old slug
+                    if ($child->is_published) {
 
-			$TEMPLATE = new $_template->iam();
+                        $slugHistory[] = array(
+                            'slug'    => $child->draft->slug,
+                            'page_id' => $child->id
+                        );
 
-			try
-			{
-				return $TEMPLATE->render( (array) $widgets, (array) $additional_fields );
-			}
-			catch( Exception $e )
-			{
-				$this->_set_error( 'Could not render template "' . $template . '".' );
-				return FALSE;
-			}
-		}
-		catch( Exception $e )
-		{
-			$this->_set_error( 'Could not instantiate template "' . $template . '".' );
-			return FALSE;
-		}
-	}
+                    }
 
+                    //  Next we set the appropriate fields
+                    $this->db->set('published_slug', $child->draft->slug);
+                    $this->db->set('published_slug_end', $child->draft->slug_end);
+                    $this->db->set('published_breadcrumbs', json_encode($child->draft->breadcrumbs));
+                    $this->db->set('modified', date('Y-m-d H:i{s'));
 
-	// --------------------------------------------------------------------------
+                    $this->db->where('id', $child->id);
 
+                    if (!$this->db->update($this->_table)) {
 
-	public function publish( $id )
-	{
-		//	Check the page is valid
-		$_page = $this->get_by_id( $id );
+                        $this->_set_error('Failed to update a child page\'s data.');
+                        $this->db->trans_rollback();
+                        return false;
+                    }
+                }
+            }
 
-		if ( ! $_page ) :
+            //  Add any slug_history thingmys
+            foreach ($slugHistory as $item) {
 
-			$this->_set_message( 'Invalid Page ID' );
-			return FALSE;
+                $this->db->set('hash', md5($item['slug'] . $item['page_id']));
+                $this->db->set('slug', $item['slug']);
+                $this->db->set('page_id', $item['page_id']);
+                $this->db->set('created', 'NOW()', false);
+                $this->db->replace(NAILS_DB_PREFIX . 'cms_page_slug_history');
+            }
 
-		endif;
+            // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+            //  Rewrite routes
+            $this->load->model('routes_model');
+            $this->routes_model->update('cms');
 
-		//	Start the transaction
-		$this->db->trans_begin();
+            // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+            //  Regenerate sitemap
+            if (isModuleEnabled('sitemap')) {
 
-		//	If the slug has changed add an entry to the slug history page
-		$_slug_history = array();
-		if ( $_page->published->slug && $_page->published->slug != $_page->draft->slug ) :
+                $this->load->model('sitemap/sitemap_model');
+                $this->sitemap_model->generate();
+            }
 
-			$_slug_history[] = array(
-				'slug'		=> $_page->published->slug,
-				'page_id'	=> $id
-			);
+            $this->db->trans_commit();
 
-		endif;
+            //  @TODO: Kill caches for this page and all children
+            return true;
 
-		// --------------------------------------------------------------------------
+        } else {
 
-		//	Update the published_* columns to be the same as the draft columns
-		$this->db->set( 'published_hash',				'draft_hash',				FALSE );
-		$this->db->set( 'published_parent_id',			'draft_parent_id',			FALSE );
-		$this->db->set( 'published_slug',				'draft_slug',				FALSE );
-		$this->db->set( 'published_slug_end',			'draft_slug_end',			FALSE );
-		$this->db->set( 'published_template',			'draft_template',			FALSE );
-		$this->db->set( 'published_template_data',		'draft_template_data',		FALSE );
-		$this->db->set( 'published_title',				'draft_title',				FALSE );
-		$this->db->set( 'published_breadcrumbs',		'draft_breadcrumbs',		FALSE );
-		$this->db->set( 'published_seo_title',			'draft_seo_title',			FALSE );
-		$this->db->set( 'published_seo_description',	'draft_seo_description',	FALSE );
-		$this->db->set( 'published_seo_keywords',		'draft_seo_keywords',		FALSE );
+            $this->db->trans_rollback();
+            return false;
+        }
+    }
 
-		$this->db->set( 'is_published',	TRUE );
-		$this->db->set( 'modified',		date('Y-m-d H:i:s') );
+    // --------------------------------------------------------------------------
 
-		if ( $this->user_model->is_logged_in() ) :
+    /**
+     * Applies common conditionals
+     *
+     * This method applies the conditionals which are common across the get_*()
+     * methods and the count() method.
+     * @param string $data Data passed from the calling method
+     * @param string $_caller The name of the calling method
+     * @return void
+     **/
+    public function _getcount_common($data = array(), $_caller = null)
+    {
+        $this->db->select($this->_table_prefix . '.*');
+        $this->db->select('ue.email, u.first_name, u.last_name, u.profile_img, u.gender');
 
-			$this->db->set( 'modified_by',	active_user( 'id' ) );
+        $this->db->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->_table_prefix . '.modified_by', 'LEFT');
+        $this->db->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
 
-		endif;
+        $this->db->order_by($this->_table_prefix . '.draft_slug');
+    }
 
-		$this->db->where( 'id', $_page->id );
+    // --------------------------------------------------------------------------
 
-		if ( $this->db->update( $this->_table ) ) :
+    /**
+     * Gets all pages, nested
+     * @param  boolean $useDraft Whther to use the published or draft version of pages
+     * @return array
+     */
+    public function get_all_nested($useDraft = true)
+    {
+        return $this->nestPages($this->get_all(), null, $useDraft);
+    }
 
-			//	Fetch the children, returning the data we need for the updates
-			$_children = $this->get_ids_of_children( $_page->id );
+    // --------------------------------------------------------------------------
 
-			if ( $_children ) :
+    /**
+     * Nests pages
+     * Hat tip to Timur; http://stackoverflow.com/a/9224696/789224
+     * @param  array   &$list    The pages to nest
+     * @param  int     $parentId The parent ID of the page
+     * @param  boolean $useDraft Whether to use published data or draft data
+     * @return array
+     */
+    protected function nestPages(&$list, $parentId = null, $useDraft = true)
+    {
+        $result = array();
 
-				//	Loop each child and update it's published details, but only
-				//	if they've changed.
+        for ($i = 0, $c = count($list); $i < $c; $i++) {
 
-				foreach ( $_children AS $child_id ) :
+            $curParentId = $useDraft ? $list[$i]->draft->parent_id : $list[$i]->published->parent_id;
 
-					$_child = $this->get_by_id( $child_id );
+            if ($curParentId == $parentId) {
 
-					if ( ! $_child ) :
+                $list[$i]->children = $this->nestPages($list, $list[$i]->id, $useDraft);
+                $result[]           = $list[$i];
+            }
+        }
 
-						continue;
+        return $result;
+    }
 
-					endif;
+    // --------------------------------------------------------------------------
 
-					if ( $_child->published->title == $_child->draft->title && $_child->published->slug == $_child->draft->slug ) :
+    /**
+     * Get all pages nested, but as a flat array
+     * @param  string  $separator               The seperator to use between pages
+     * @param  boolean $murderParentsOfChildren Whether to include parents in the result
+     * @return array
+     */
+    public function get_all_nested_flat($separator = ' &rsaquo; ', $murderParentsOfChildren = true)
+    {
+        $out   = array();
+        $pages = $this->get_all();
 
-						continue;
+        foreach ($pages as $page) {
 
-					endif;
+            $out[$page->id] = $this->findParents($page->draft->parent_id, $pages, $separator) . $page->draft->title;
+        }
 
-					//	First make a note of the old slug
-					if ( $_child->is_published ) :
+        asort($out);
 
-						$_slug_history[] = array(
-							'slug'		=> $_child->draft->slug,
-							'page_id'	=> $_child->id
-						);
+        // --------------------------------------------------------------------------
 
-					endif;
+        //  Remove parents from the array if they have any children
+        if ($murderParentsOfChildren) {
 
-					//	Next we set the appropriate fields
-					$this->db->set( 'published_slug',			$_child->draft->slug );
-					$this->db->set( 'published_slug_end',		$_child->draft->slug_end );
-					$this->db->set( 'published_breadcrumbs',	json_encode( $_child->draft->breadcrumbs ) );
-					$this->db->set( 'modified',					date('Y-m-d H:i:s') );
+            foreach ($out as $key => &$page) {
 
-					$this->db->where( 'id', $_child->id );
+                $found  = false;
+                $needle = $page . $separator;
 
-					if ( ! $this->db->update( $this->_table ) ) :
+                //  Hat tip - http://uk3.php.net/manual/en/function.array-search.php#90711
+                foreach ($out as $item) {
 
-						$this->_set_error( 'Failed to update a child page\'s data.' );
-						$this->db->trans_rollback();
-						return FALSE;
+                    if (strpos($item, $needle) !== false) {
 
-					endif;
+                        $found = true;
+                        break;
+                    }
+                }
 
-				endforeach;
+                if ($found) {
 
-			endif;
+                    unset($out[$key]);
+                }
+            }
+        }
 
-			//	Add any slug_history thingmys
-			foreach ( $_slug_history AS $item ) :
+        return $out;
+    }
 
-				$this->db->set( 'hash',		md5( $item['slug'] . $item['page_id'] ) );
-				$this->db->set( 'slug',		$item['slug'] );
-				$this->db->set( 'page_id',	$item['page_id'] );
-				$this->db->set( 'created',	'NOW()', FALSE );
-				$this->db->replace( NAILS_DB_PREFIX . 'cms_page_slug_history' );
+    // --------------------------------------------------------------------------
 
-			endforeach;
+    /**
+     * Find the parents of a page
+     * @param  int      $parentId  The page to find parents for
+     * @param  stdClass &$source   The source page
+     * @param  string   $separator The seperator to use
+     * @return string
+     */
+    protected function findParents($parentId, &$source, $separator)
+    {
+        if (!$parentId) {
 
-			// --------------------------------------------------------------------------
+            //  No parent ID, end of the line señor!
+            return '';
 
-			//	Rewrite routes
-			$this->load->model( 'routes_model' );
-			$this->routes_model->update( 'cms' );
+        } else {
 
-			// --------------------------------------------------------------------------
+            //  There is a parent, look for it
+            foreach ($source as $src) {
 
-			//	Regenerate sitemap
-			if ( isModuleEnabled( 'sitemap' ) ) :
+                if ($src->id == $parentId) {
 
-				$this->load->model( 'sitemap/sitemap_model' );
-				$this->sitemap_model->generate();
+                    $parent = $src;
+                }
+            }
 
-			endif;
+            if (isset($parent) && $parent) {
 
-			$this->db->trans_commit();
+                //  Parent was found, does it have any parents?
+                if ($parent->draft->parent_id) {
 
-			//	TODO: Kill caches for this page and all children
+                    //  Yes it does, repeat!
+                    $return = $this->findParents($parent->draft->parent_id, $source, $separator);
 
-			return TRUE;
+                    return $return ? $return . $parent->draft->title . $separator : $parent->draft->title;
 
-		else :
+                } else {
 
-			$this->db->trans_rollback();
-			return FALSE;
+                    //  Nope, end of the line mademoiselle
+                    return $parent->draft->title . $separator;
+                }
 
-		endif;
-	}
+            } else {
 
+                //  Did not find parent, give up.
+                return '';
+            }
+        }
+    }
 
-	// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
+    /**
+     * Get the IDs of a page's children
+     * @param  int    $pageId The ID of the page to look at
+     * @param  string $format How to return the data, one of ID, ID_SLUG, ID_SLUG_TITLE or ID_SLUG_TITLE_PUBLISHED
+     * @return array
+     */
+    public function get_ids_of_children($pageId, $format = 'ID')
+    {
+        $out = array();
 
-	public function _getcount_common( $data = array(), $_caller = NULL )
-	{
-		$this->db->select( $this->_table_prefix . '.*' );
-		$this->db->select( 'ue.email, u.first_name, u.last_name, u.profile_img, u.gender' );
+        $this->db->select('id,draft_slug,draft_title,is_published');
+        $this->db->where('draft_parent_id', $pageId);
+        $children = $this->db->get(NAILS_DB_PREFIX . 'cms_page')->result();
 
-		$this->db->join( NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->_table_prefix . '.modified_by', 'LEFT' );
-		$this->db->join( NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT' );
+        if ($children) {
 
-		$this->db->order_by( $this->_table_prefix . '.draft_slug' );
-	}
+            foreach ($children as $child) {
 
+                switch ($format) {
 
-	// --------------------------------------------------------------------------
+                    case 'ID':
 
+                        $out[] = $child->id;
+                        break;
 
-	public function get_all_nested( $use_draft = TRUE )
-	{
-		return $this->_nest_pages( $this->get_all(), NULL, $use_draft );
-	}
+                    case 'ID_SLUG':
 
+                        $out[] = array(
+                            'id'   => $child->id,
+                            'slug' => $child->draft_slug
+                        );
+                        break;
 
-	// --------------------------------------------------------------------------
+                    case 'ID_SLUG_TITLE':
 
+                        $out[] = array(
+                            'id'    => $child->id,
+                            'slug'  => $child->draft_slug,
+                            'title' => $child->draft_title
+                        );
+                        break;
 
-	/**
-	 *	Hat tip to Timur; http://stackoverflow.com/a/9224696/789224
-	 **/
-	protected function _nest_pages( &$list, $parent_id = NULL, $use_draft = TRUE )
-	{
-		$result = array();
+                    case 'ID_SLUG_TITLE_PUBLISHED':
 
-		for ( $i = 0, $c = count( $list ); $i < $c; $i++ ) :
+                        $out[] = array(
+                            'id'           => $child->id,
+                            'slug'         => $child->draft_slug,
+                            'title'        => $child->draft_title,
+                            'is_published' => (bool) $child->is_published
+                        );
+                        break;
+                }
 
-			$_parent_id = $use_draft ? $list[$i]->draft->parent_id : $list[$i]->published->parent_id;
+                $out = array_merge($out, $this->get_ids_of_children($child->id, $format));
+            }
 
-			if ( $_parent_id == $parent_id ) :
+            return $out;
 
-				$list[$i]->children	= $this->_nest_pages( $list, $list[$i]->id, $use_draft );
-				$result[]			= $list[$i];
+        } else {
 
-			endif;
+            return $out;
+        }
+    }
 
-		endfor;
+    // --------------------------------------------------------------------------
 
-		return $result;
-	}
+    /**
+     * Get all pages as a flat array
+     * @param  boolean $useDraft Whether to use published data, or draft data
+     * @return array
+     */
+    public function get_all_flat($useDraft = true)
+    {
+        $out   = array();
+        $pages = $this->get_all();
 
+        foreach ($pages as $page) {
 
-	// --------------------------------------------------------------------------
+            if ($useDraft) {
 
+                $out[$page->id] = $page->draft->title;
 
-	public function get_all_nested_flat( $separator = ' &rsaquo; ', $murder_parents_of_children = TRUE )
-	{
-		$_out	= array();
-		$_pages	= $this->get_all();
+            } else {
 
-		foreach ( $_pages AS $page ) :
+                $out[$page->id] = $page->published->title;
+            }
+        }
 
-			$_out[$page->id] = $this->_find_parents( $page->draft->parent_id, $_pages, $separator ) . $page->draft->title;
+        return $out;
+    }
 
-		endforeach;
+    // --------------------------------------------------------------------------
 
-		asort( $_out );
+    /**
+     * Get the top level pages, i.e., those without a parent
+     * @param  boolean $useDraft Whether to use published data, or draft data
+     * @return array
+     */
+    public function get_top_level($useDraft = true)
+    {
+        if ($useDraft) {
 
-		// --------------------------------------------------------------------------
+            $this->db->where('draft_parent_id', null);
 
-		//	Remove parents from the array if they have any children
-		if ( $murder_parents_of_children ) :
+        } else {
 
-			foreach ( $_out AS $key => &$page ) :
+            $this->db->where('published_parent_id', null);
+        }
 
-				$_found		= FALSE;
-				$_needle	= $page . $separator;
+        return $this->get_all();
+    }
 
-				//	Hat tip - http://uk3.php.net/manual/en/function.array-search.php#90711
-				foreach ( $_out as $item ) :
+    // --------------------------------------------------------------------------
 
-					if ( strpos( $item, $_needle ) !== FALSE ) :
+    /**
+     * Get the siblings of a page, i.e those with the smame parent
+     * @param  int     $id       The page whose sibilings to fetch
+     * @param  boolean $useDraft Whether to use published data, or draft data
+     * @return array
+     */
+    public function get_siblings($id, $useDraft = true)
+    {
+        $page = $this->get_by_id($id);
 
-						$_found = TRUE;
-						break;
+        if (!$page) {
 
-					endif;
+            return array();
+        }
 
-				endforeach;
+        if ($useDraft) {
 
-				if ( $_found ) :
+            $this->db->where('draft_parent_id', $page->draft->parent_id);
 
-					unset( $_out[$key] );
+        } else {
 
-				endif;
+            $this->db->where('published_parent_id', $page->published->parent_id);
+        }
 
-			endforeach;
+        return $this->get_all();
+    }
 
-		endif;
+    // --------------------------------------------------------------------------
 
-		return $_out;
-	}
+    /**
+     * Get the page marked as the homepage
+     * @return mixed stdClass on success, false on failure
+     */
+    public function get_homepage()
+    {
+        $this->db->where($this->_table_prefix . '.is_homepage', true);
+        $page = $this->get_all();
 
+        if (!$page) {
 
-	// --------------------------------------------------------------------------
+            return false;
+        }
 
+        return $page[0];
+    }
 
-	protected function _find_parents( $parent_id, &$source, $separator )
-	{
-		if ( ! $parent_id ) :
+    // --------------------------------------------------------------------------
 
-			//	No parent ID, end of the line señor!
-			return '';
+    /**
+     * Format a page object
+     * @param  stdClass &$page The page to format
+     * @return void
+     */
+    protected function _format_object(&$page)
+    {
+        parent::_format_object($page);
 
-		else :
+        $page->is_published = (bool) $page->is_published;
+        $page->is_deleted   = (bool) $page->is_deleted;
 
-			//	There is a parent, look for it
-			foreach ( $source AS $src ) :
+        //  Loop properties and sort into published data and draft data
+        $page->published = new stdClass();
+        $page->draft     = new stdClass();
 
-				if ( $src->id == $parent_id ) :
+        foreach ($page as $property => $value) {
 
-					$_parent = $src;
+            preg_match('/^(published|draft)_(.*)$/', $property, $match);
 
-				endif;
+            if (!empty($match[1]) && !empty($match[2]) && $match[1] == 'published') {
 
-			endforeach;
+                $page->published->{$match[2]} = $value;
+                unset($page->{$property});
 
-			if ( isset( $_parent ) && $_parent ) :
+            } elseif (!empty($match[1]) && !empty($match[2]) && $match[1] == 'draft') {
 
-				//	Parent was found, does it have any parents?
-				if ( $_parent->draft->parent_id ) :
+                $page->draft->{$match[2]} = $value;
+                unset($page->{$property});
+            }
+        }
 
-					//	Yes it does, repeat!
-					$_return = $this->_find_parents( $_parent->draft->parent_id, $source, $separator );
+        //  Other data
+        $page->published->depth = count(explode('/', $page->published->slug)) - 1;
+        $page->published->url   = site_url($page->published->slug);
+        $page->draft->depth     = count(explode('/', $page->draft->slug)) - 1;
+        $page->draft->url       = site_url($page->draft->slug);
 
-					return $_return ? $_return . $_parent->draft->title . $separator : $_parent->draft->title;
+        //  Decode JSON
+        $page->published->template_data = json_decode($page->published->template_data);
+        $page->draft->template_data     = json_decode($page->draft->template_data);
+        $page->published->breadcrumbs   = json_decode($page->published->breadcrumbs);
+        $page->draft->breadcrumbs       = json_decode($page->draft->breadcrumbs);
 
-				else :
+        //  Unpublished changes?
+        $page->has_unpublished_changes = $page->is_published && $page->draft->hash != $page->published->hash;
 
-					//	Nope, end of the line mademoiselle
-					return $_parent->draft->title . $separator;
+        // --------------------------------------------------------------------------
 
-				endif;
+        //  Owner
+        $modifiedBy                     = (int) $page->modified_by;
+        $page->modified_by              = new stdClass();
+        $page->modified_by->id          = $modifiedBy;
+        $page->modified_by->first_name  = isset($page->first_name) ? $page->first_name : '';
+        $page->modified_by->last_name   = isset($page->last_name) ? $page->last_name : '';
+        $page->modified_by->email       = isset($page->email) ? $page->email : '';
+        $page->modified_by->profile_img = isset($page->profile_img) ? $page->profile_img : '';
+        $page->modified_by->gender      = isset($page->gender) ? $page->gender : '';
 
+        unset($page->first_name);
+        unset($page->last_name);
+        unset($page->email);
+        unset($page->profile_img);
+        unset($page->gender);
+        unset($page->template_data);
 
-			else :
+        // --------------------------------------------------------------------------
 
-				//	Did not find parent, give up.
-				return '';
+        //  SEO Title; If not set then fallback to the page title
+        if (empty($page->seo_title) && !empty($page->title)) {
 
-			endif;
+            $page->seo_title = $page->title;
+        }
+    }
 
-		endif;
-	}
+    // --------------------------------------------------------------------------
 
+    /**
+     * Get all available widgets to the system
+     * @param  boolean $loadAssets Whether or not to laod assets defined by the widgets
+     * @return array
+     */
+    public function get_available_widgets($loadAssets = false)
+    {
+        //  Have we done this already? Don't do it again.
+        $key   = 'cms-page-available-widgets';
+        $cache = $this->_get_cache($key);
 
-	// --------------------------------------------------------------------------
+        if ($cache) {
 
+            return $cache;
+        }
 
-	public function get_ids_of_children( $page_id, $format = 'ID' )
-	{
-		$_out = array();
+        // --------------------------------------------------------------------------
 
-		$this->db->select( 'id,draft_slug,draft_title,is_published' );
-		$this->db->where( 'draft_parent_id', $page_id );
-		$_children = $this->db->get( NAILS_DB_PREFIX . 'cms_page' )->result();
+        /**
+         * Search the Nails. widget folder, and then the App's widget folder. Widgets
+         *in the app folder trump widgets in the Nails folder
+         */
 
-		if ( $_children ) :
+        $this->load->helper('directory');
 
-			foreach ( $_children AS $child ) :
+        $nailsWidgets = array();
+        $appWidgets   = array();
 
-				switch( $format ) :
+        //  Look for nails widgets
+        $nailsWidgets = is_dir($this->nailsWidgetsDir) ? directory_map($this->nailsWidgetsDir) : array();
 
-					case 'ID'						: $_out[] = $child->id;	break;
-					case 'ID_SLUG'					: $_out[] = array( 'id' => $child->id, 'slug' => $child->draft_slug );	break;
-					case 'ID_SLUG_TITLE'			: $_out[] = array( 'id' => $child->id, 'slug' => $child->draft_slug, 'title' => $child->draft_title );	break;
-					case 'ID_SLUG_TITLE_PUBLISHED'	: $_out[] = array( 'id' => $child->id, 'slug' => $child->draft_slug, 'title' => $child->draft_title, 'is_published' => (bool) $child->is_published );	break;
+        //  Look for app widgets
+        if (is_dir($this->appWidgetsDir)) {
 
-				endswitch;
+            $appWidgets = is_dir($this->appWidgetsDir) ? directory_map($this->appWidgetsDir) : array();
+        }
 
-				$_out	= array_merge( $_out, $this->get_ids_of_children( $child->id, $format ) );
+        // --------------------------------------------------------------------------
 
-			endforeach;
+        //  Test and merge widgets
+        $widgets = array();
+        foreach ($nailsWidgets as $widget => $details) {
 
-			return $_out;
+            //  Ignore base template
+            if ($details == '_widget.php') {
 
-		else :
+                continue;
+            }
 
-			return $_out;
+            //  Ignore malformed widgets
+            if (!is_array($details) || array_search('widget.php', $details) === false) {
 
-		endif;
-	}
+                log_message('error', 'Ignoring malformed NAILS CMS Widget "' . $widget . '"');
+                continue;
+            }
 
+            //  Ignore widgets which have an app override
+            if (isset($appWidgets[$widget]) && is_array($appWidgets[$widget])) {
 
-	// --------------------------------------------------------------------------
+                continue;
+            }
 
+            // --------------------------------------------------------------------------
 
-	public function get_all_flat( $use_draft = TRUE )
-	{
-		$_out	= array();
-		$_pages	= $this->get_all();
+            include_once $this->nailsWidgetsDir . $widget . '/widget.php';
 
-		foreach ( $_pages AS $page ) :
+            //  Can we call the static details method?
+            $class = $this->nailsPrefix . 'Widget_' . $widget;
 
-			if ( $use_draft ) :
+            if (!class_exists($class) || !method_exists($class, 'details')) {
 
-				$_out[$page->id] = $page->draft->title;
+                log_message('error', 'Cannot call static method "details()" on  NAILS CMS Widget: "' . $widget . '"');
+                continue;
+            }
 
-			else :
+            $details = $class::details();
 
-				$_out[$page->id] = $page->published->title;
+            if ($details) {
 
-			endif;
+                $widgets[$widget] = $class::details();
+            }
+        }
 
-		endforeach;
+        //  Now test app widgets
+        foreach ($appWidgets as $widget => $details) {
 
-		return $_out;
-	}
+            //  Ignore malformed widgets
+            if (!is_array($details) || array_search('widget.php', $details) === false) {
 
+                log_message('error', 'Ignoring malformed APP CMS Widget "' . $widget . '"');
+                continue;
+            }
 
-	// --------------------------------------------------------------------------
+            // --------------------------------------------------------------------------
 
+            include_once $this->appWidgetsDir . $widget . '/widget.php';
 
-	public function get_top_level( $use_draft = TRUE )
-	{
-		if ( $use_draft ) :
+            //  Can we call the static details method?
+            $class = $this->appPrefix . 'Widget_' . $widget;
 
-			$this->db->where( 'draft_parent_id', NULL );
+            if (!class_exists($class) || !method_exists($class, 'details')) {
 
-		else :
+                log_message('error', 'Cannot call static method "details()" on  APP CMS Widget: "' . $widget . '"');
+                continue;
+            }
 
-			$this->db->where( 'published_parent_id', NULL );
+            $widgets[$widget] = $class::details();
+        }
 
-		endif;
+        // --------------------------------------------------------------------------
 
-		return $this->get_all();
-	}
+        //  Sort the widgets into their sub groupings and then alphabetically
+        $out                   = array();
+        $genericWidgets        = array();
+        $genericWidgetGrouping = 'Generic';
 
+        foreach ($widgets as $w) {
 
-	// --------------------------------------------------------------------------
+            if ($w->grouping) {
 
+                $key = md5($w->grouping);
 
-	public function get_siblings( $id, $use_draft = TRUE )
-	{
-		$_page = $this->get_by_id( $id );
+                if (!isset($out[$key])) {
 
-		if ( ! $_page ) :
+                    $out[$key]          = new stdClass();
+                    $out[$key]->label   = $w->grouping;
+                    $out[$key]->widgets = array();
+                }
 
-			return array();
+                $out[$key]->widgets[] = $w;
 
-		endif;
+            } else {
 
-		if ( $use_draft ) :
+                $key = md5($genericWidgetGrouping);
 
-			$this->db->where( 'draft_parent_id', $_page->draft->parent_id );
+                if (!isset($genericWidgets[$key])) {
 
-		else :
+                    $genericWidgets[$key]          = new stdClass();
+                    $genericWidgets[$key]->label   = $genericWidgetGrouping;
+                    $genericWidgets[$key]->widgets = array();
+                }
 
-			$this->db->where( 'published_parent_id', $_page->published->parent_id );
+                $genericWidgets[$key]->widgets[] = $w;
+            }
 
-		endif;
+            // --------------------------------------------------------------------------
 
-		return $this->get_all();
-	}
+            //  Load the widget's assets if requested
+            if ($loadAssets) {
 
+                //  What type of assets do we want to load, editor or render assets?
+                switch ($loadAssets) {
 
-	// --------------------------------------------------------------------------
+                    case 'EDITOR':
 
+                        $assets = $w->assets_editor;
+                        break;
 
-	public function get_homepage()
-	{
-		$this->db->where( $this->_table_prefix . '.is_homepage', TRUE );
-		$_page	= $this->get_all();
+                    case 'RENDER':
 
-		if ( ! $_page ) :
+                        $assets = $w->assets_render;
+                        break;
 
-			return FALSE;
+                    default:
 
-		endif;
+                        $assets = array();
+                        break;
+                }
 
-		return $_page[0];
-	}
+                $this->loadAssets($assets);
+            }
+        }
 
+        //  Sort non-generic widgets into alphabetical order
+        foreach ($out as $o) {
 
-	// --------------------------------------------------------------------------
+            usort($o->widgets, array($this, 'sortWidgets'));
+        }
 
+        //  Sort generic
+        usort($genericWidgets[md5($genericWidgetGrouping)]->widgets, array($this, 'sortWidgets'));
 
-	protected function _format_object( &$page )
-	{
-		parent::_format_object( $page );
+        /**
+         * Sort the non-generic groupings
+         * @TODO: Future Pabs, explain in comment why you're not using the sortWidgets method.
+         * I'm sure there's a valid reason you handsome chap, you.
+         */
 
-		$page->is_published		= (bool) $page->is_published;
-		$page->is_deleted		= (bool) $page->is_deleted;
+        usort($out, function ($a, $b) use ($genericWidgetGrouping) {
 
+            //  Equal?
+            if (trim($a->label) == trim($b->label)) {
 
-		//	Loop properties and sort into published data and draft data
-		$page->published	= new stdClass();
-		$page->draft		= new stdClass();
+                return 0;
+            }
 
-		foreach ( $page AS $property => $value ) :
+            //  Not equal, work out which takes precedence
+            $sort = array($a->label, $b->label);
+            sort($sort);
 
-			preg_match( '/^(published|draft)_(.*)$/', $property, $_match );
+            return $sort[0] == $a->label ? -1 : 1;
+        });
 
-			if ( ! empty( $_match[1] ) && ! empty( $_match[2]) && $_match[1] == 'published' ) :
+        //  Glue generic groupings to the beginning of the array
+        $out = array_merge($genericWidgets, $out);
 
-				$page->published->{$_match[2]} = $value;
-				unset($page->{$property});
+        // --------------------------------------------------------------------------
 
-			elseif ( ! empty( $_match[1] ) && ! empty( $_match[2]) && $_match[1] == 'draft' ) :
+        //  Save to the cache
+        $this->_set_cache($key, $widgets);
 
-				$page->draft->{$_match[2]} = $value;
-				unset($page->{$property});
+        // --------------------------------------------------------------------------
 
-			endif;
+        return array_values($out);
+    }
 
-		endforeach;
+    // --------------------------------------------------------------------------
 
-		//	Other data
-		$page->published->depth	= count( explode( '/', $page->published->slug ) ) - 1;
-		$page->published->url	= site_url( $page->published->slug );
-		$page->draft->depth		= count( explode( '/', $page->draft->slug ) ) - 1;
-		$page->draft->url		= site_url( $page->draft->slug );
+    /**
+     * The sorting function for widgets, called by usort()
+     * @param  stdClass $a The first widget
+     * @param  stdClass $b The second widget
+     * @return int
+     */
+    protected function sortWidgets($a, $b)
+    {
+        //  Equal?
+        if (trim($a->label) == trim($b->label)) {
 
-		//	Decode JSON
-		$page->published->template_data	= json_decode( $page->published->template_data );
-		$page->draft->template_data		= json_decode( $page->draft->template_data );
-		$page->published->breadcrumbs	= json_decode( $page->published->breadcrumbs );
-		$page->draft->breadcrumbs		= json_decode( $page->draft->breadcrumbs );
+            return 0;
+        }
 
-		//	Unpublished changes?
-		$page->has_unpublished_changes = $page->is_published && $page->draft->hash != $page->published->hash;
+        //  Not equal, work out which takes precedence
+        $sort = array($a->label, $b->label);
+        sort($sort);
 
-		// --------------------------------------------------------------------------
+        return $sort[0] == $a->label ? -1 : 1;
+    }
 
-		//	Owner
-		$_modified_by					= (int) $page->modified_by;
-		$page->modified_by				= new stdClass();
-		$page->modified_by->id			= $_modified_by;
-		$page->modified_by->first_name	= isset( $page->first_name ) ? $page->first_name : '';
-		$page->modified_by->last_name	= isset( $page->last_name ) ? $page->last_name : '';
-		$page->modified_by->email		= isset( $page->email ) ? $page->email : '';
-		$page->modified_by->profile_img	= isset( $page->profile_img ) ? $page->profile_img : '';
-		$page->modified_by->gender		= isset( $page->gender ) ? $page->gender : '';
+    // --------------------------------------------------------------------------
 
-		unset( $page->first_name );
-		unset( $page->last_name );
-		unset( $page->email );
-		unset( $page->profile_img );
-		unset( $page->gender );
-		unset( $page->template_data );
+    /**
+     * Get an individual widget
+     * @param  string  $slug       The widget's slug
+     * @param  boolean $loadAssets Whether or not to load the widget's assets
+     * @return mixed               stdClass on success, false on failure
+     */
+    public function get_widget($slug, $loadAssets = false)
+    {
+        $widgets = $this->get_available_widgets();
 
-		// --------------------------------------------------------------------------
+        foreach ($widgets as $widget_group) {
 
-		//	SEO Title
-		//	If not set then fallback to the page title
+            foreach ($widget_group->widgets as $widget) {
 
-		if ( empty( $page->seo_title ) && ! empty( $page->title ) ) :
+                if ($slug == $widget->slug) {
 
-			$page->seo_title = $page->title;
+                    if ($loadAssets) {
 
-		endif;
-	}
+                        switch ($loadAssets) {
 
+                            case 'EDITOR':
 
-	// --------------------------------------------------------------------------
+                                $assets = $widget->assets_editor;
+                                break;
 
+                            case 'RENDER':
 
-	public function get_available_widgets( $load_assets = FALSE )
-	{
-		//	Have we done this already? Don't do it again.
-		$_key	= 'cms-page-available-widgets';
-		$_cache	= $this->_get_cache( $_key );
+                                $assets = $widget->assets_render;
+                                break;
 
-		if ( $_cache ) :
+                            default:
 
-			return $_cache;
+                                $assets = array();
+                                break;
+                        }
 
-		endif;
+                        $this->loadAssets($assets);
+                    }
 
-		// --------------------------------------------------------------------------
+                    return $widget;
+                }
+            }
+        }
 
-		//	Search the Nails. widget folder, and then the App's widget folder.
-		//	Widgets in the app folder trump widgets in the Nails folder
+        return false;
+    }
 
-		$this->load->helper( 'directory' );
+    // --------------------------------------------------------------------------
 
-		$_nails_widgets	= array();
-		$_app_widgets	= array();
+    /**
+     * Get all available templates to the system
+     * @param  boolean $loadAssets Whether or not to load template's assets
+     * @return array
+     */
+    public function get_available_templates($loadAssets = false)
+    {
+        //  Have we done this already? Don't do it again.
+        $key   = 'cms-page-available-templates';
+        $cache = $this->_get_cache($key);
 
-		//	Look for nails widgets
-		$_nails_widgets = is_dir($this->_nails_widgets_dir) ? directory_map($this->_nails_widgets_dir) : array();
+        if ($cache) {
 
-		//	Look for app widgets
-		if ( is_dir( $this->_app_widgets_dir ) ) :
+            return $cache;
+        }
 
-			$_app_widgets = is_dir($this->_app_widgets_dir) ? directory_map($this->_app_widgets_dir) : array();
+        // --------------------------------------------------------------------------
 
-		endif;
+        /**
+         * Search the Nails. widget folder, and then the App's widget folder. Widgets
+         * in the app folder trump widgets in the Nails folder
+         */
 
-		// --------------------------------------------------------------------------
+        $this->load->helper('directory');
 
-		//	Test and merge widgets
-		$_widgets = array();
-		foreach ( $_nails_widgets AS $widget => $details ) :
+        $nailsTemplates = array();
+        $appTemplates   = array();
 
-			//	Ignore base template
-			if ( $details == '_widget.php' ) :
+        //  Look for nails widgets
+        $nailsTemplates = is_dir($this->nailsTemplatesDir) ? directory_map($this->nailsTemplatesDir) : array();
 
-				continue;
+        //  Look for app widgets
+        if (is_dir($this->appTemplatesDir)) {
 
-			endif;
+            $appTemplates = is_dir($this->appTemplatesDir) ? directory_map($this->appTemplatesDir) : array();
+        }
 
-			//	Ignore malformed widgets
-			if ( ! is_array( $details ) || array_search( 'widget.php', $details ) === FALSE ) :
+        // --------------------------------------------------------------------------
 
-				log_message( 'error', 'Ignoring malformed NAILS CMS Widget "' . $widget . '"' );
-				continue;
+        //  Test and merge templates
+        $templates = array();
+        foreach ($nailsTemplates as $template => $details) {
 
-			endif;
+            //  Ignore base template
+            if ($details == '_template.php') {
 
-			//	Ignore widgets which have an app override
-			if ( isset( $_app_widgets[$widget] ) && is_array( $_app_widgets[$widget] ) ) :
+                continue;
+            }
 
-				continue;
+            //  Ignore malformed templates
+            if (!is_array($details) || array_search('template.php', $details) === false) {
 
-			endif;
+                log_message('error', 'Ignoring malformed NAILS CMS Template "' . $template . '"');
+                continue;
+            }
 
-			// --------------------------------------------------------------------------
+            //  Ignore templates which have an app override
+            if (isset($appTemplates[$template]) && is_array($appTemplates[$template])) {
 
-			include_once $this->_nails_widgets_dir . $widget . '/widget.php';
+                continue;
+            }
 
-			//	Can we call the static details method?
-			$_class = $this->_nails_prefix . 'Widget_' . $widget;
+            // --------------------------------------------------------------------------
 
-			if ( ! class_exists( $_class ) || ! method_exists( $_class, 'details' ) ) :
+            include_once $this->nailsTemplatesDir . $template . '/template.php';
 
-				log_message( 'error', 'Cannot call static method "details()" on  NAILS CMS Widget: "' . $widget . '"' );
-				continue;
+            //  Can we call the static details method?
+            $class = $this->nailsPrefix . 'Template_' . $template;
 
-			endif;
+            if (!class_exists($class) || !method_exists($class, 'details')) {
 
-			$_details = $_class::details();
+                log_message('error', 'Cannot call static method "details()" on  NAILS CMS Template: "' . $template . '"');
+                continue;
+            }
 
-			if ( $_details ) :
+            $details = $class::details();
 
-				$_widgets[$widget] = $_class::details();
+            if ($details) {
 
-			endif;
+                $templates[$template] = $class::details();
 
-		endforeach;
+            } else {
 
-		//	Now test app widgets
-		foreach ( $_app_widgets AS $widget => $details ) :
+                //  This template returned no details, ignore it.
+                log_message('warning', 'Static method "details()"" of Nails template "' . $template . '" returned empty data.');
+            }
 
-			//	Ignore malformed widgets
-			if ( ! is_array( $details ) || array_search( 'widget.php', $details ) === FALSE ) :
+            // --------------------------------------------------------------------------
 
-				log_message( 'error', 'Ignoring malformed APP CMS Widget "' . $widget . '"' );
-				continue;
+            //  Load the template's assets if requested
+            if ($loadAssets) {
 
-			endif;
+                //  What type of assets do we want to load, editor or render assets?
+                switch ($loadAssets) {
 
-			// --------------------------------------------------------------------------
+                    case 'EDITOR':
 
-			include_once $this->_app_widgets_dir . $widget . '/widget.php';
+                        $assets = $templates[$template]->assets_editor;
+                        break;
 
-			//	Can we call the static details method?
-			$_class	= $this->_app_prefix . 'Widget_' . $widget;
+                    case 'RENDER':
 
-			if ( ! class_exists( $_class ) || ! method_exists( $_class, 'details' ) ) :
+                        $assets = $templates[$template]->assets_render;
+                        break;
 
-				log_message( 'error', 'Cannot call static method "details()" on  APP CMS Widget: "' . $widget . '"' );
-				continue;
+                    default:
 
-			endif;
+                        $assets = array();
+                        break;
+                }
 
-			$_widgets[$widget] = $_class::details();
+                $this->loadAssets($assets);
+            }
+        }
 
-		endforeach;
+        //  Now test app templates
+        foreach ($appTemplates as $template => $details) {
 
-		// --------------------------------------------------------------------------
+            //  Ignore malformed templates
+            if (!is_array($details) || array_search('template.php', $details) === false) {
 
-		//	Sort the widgets into their sub groupings and then alphabetically
-		$_out						= array();
-		$_generic_widgets			= array();
-		$_generic_widget_grouping	= 'Generic';
+                log_message('error', 'Ignoring malformed APP CMS Template "' . $template . '"');
+                continue;
+            }
 
-		foreach ( $_widgets AS $w ) :
+            // --------------------------------------------------------------------------
 
-			if ( $w->grouping ) :
+            include_once $this->appTemplatesDir . $template . '/template.php';
 
-				$_key = md5( $w->grouping );
+            //  Can we call the static details method?
+            $class = $this->appPrefix . 'Template_' . $template;
 
-				if ( ! isset( $_out[$_key] ) ) :
+            if (!class_exists($class) || !method_exists($class, 'details')) {
 
-					$_out[$_key]			= new stdClass();
-					$_out[$_key]->label		= $w->grouping;
-					$_out[$_key]->widgets	= array();
+                log_message('error', 'Cannot call static method "details()" on  NAILS CMS Template: "' . $template . '"');
+                continue;
+            }
 
-				endif;
+            $details = $class::details();
 
-				$_out[$_key]->widgets[] = $w;
+            if ($details) {
 
-			else :
+                $templates[$template] = $class::details();
 
-				$_key = md5( $_generic_widget_grouping );
+            } else {
 
-				if ( ! isset( $_generic_widgets[$_key] ) ) :
+                /**
+                 * This template returned no details, ignore this template. Don't log
+                 * anything as it's likely a developer override to hide a default
+                 * template.
+                 */
 
-					$_generic_widgets[$_key]			= new stdClass();
-					$_generic_widgets[$_key]->label		= $_generic_widget_grouping;
-					$_generic_widgets[$_key]->widgets	= array();
+                continue;
+            }
 
-				endif;
+            // --------------------------------------------------------------------------
 
-				$_generic_widgets[$_key]->widgets[] = $w;
+            //  Load the template's assets if requested
+            if ($loadAssets) {
 
-			endif;
+                switch ($loadAssets) {
 
-			// --------------------------------------------------------------------------
+                    case 'EDITOR':
 
-			//	Load the widget's assets if requested
-			if ( $load_assets ) :
+                        $assets = $templates[$template]->assets_editor;
+                        break;
 
-				//	What type of assets do we want to load, editor or render assets?
-				switch( $load_assets ) :
+                    case 'RENDER':
 
-					case 'EDITOR' :
+                        $assets = $templates[$template]->assets_render;
+                        break;
 
-						$_assets = $w->assets_editor;
+                    default:
 
-					break;
+                        $assets = array();
+                        break;
 
-					case 'RENDER' :
+                }
 
-						$_assets = $w->assets_render;
+                $this->loadAssets($assets);
+            }
+        }
 
-					break;
+        // --------------------------------------------------------------------------
 
-					default :
+        //  Sort into some alphabetical order
+        ksort($templates);
 
-						$_assets = array();
+        // --------------------------------------------------------------------------
 
-					break;
+        //  Save to the cache
+        $this->_set_cache($key, $templates);
 
-				endswitch;
+        // --------------------------------------------------------------------------
 
-				$this->_load_assets( $_assets );
+        return $templates;
+    }
 
-			endif;
+    // --------------------------------------------------------------------------
 
-		endforeach;
+    /**
+     * Get an individual template
+     * @param  string  $slug       The template's slug
+     * @param  boolean $loadAssets Whether or not to load the template's assets
+     * @return mixed               stdClass on success, false on failure
+     */
+    public function get_template($slug, $loadAssets = false)
+    {
+        $templates = $this->get_available_templates();
 
-		//	Sort non-generic widgets into alphabetical order
-		foreach ( $_out AS $o ) :
+        foreach ($templates as $template) {
 
-			usort( $o->widgets, array( $this, '_sort_widgets' ) );
+            if ($slug == $template->slug) {
 
-		endforeach;
+                if ($loadAssets) {
 
-		//	Sort generic
-		usort( $_generic_widgets[md5( $_generic_widget_grouping )]->widgets, array( $this, '_sort_widgets' ) );
+                    switch ($loadAssets) {
 
-		//	Sort the non-generic groupings
-		//	TODO: Future Pabs, explain in comment why you're not using the _sort_widgets method. I'm sure
-		//	there's a valid reason you handsome chap, you.
+                        case 'EDITOR':
 
-		usort( $_out, function( $a, $b ) use ( $_generic_widget_grouping )
-		{
-			//	Equal?
-			if ( trim( $a->label ) == trim( $b->label ) ) :
+                            $assets = $template->assets_editor;
+                            break;
 
-				return 0;
+                        case 'RENDER':
 
-			endif;
+                            $assets = $template->assets_render;
+                            break;
 
-			//	Not equal, work out which takes precedence
-			$_sort = array( $a->label, $b->label );
-			sort( $_sort );
+                        default:
 
-			return $_sort[0] == $a->label ? -1 : 1;
+                            $assets = array();
+                            break;
+                    }
 
-		});
+                    $this->loadAssets($assets);
+                }
 
-		//	Glue generic groupings to the beginning of the array
-		$_out = array_merge( $_generic_widgets, $_out );
+                return $template;
+            }
+        }
 
-		// --------------------------------------------------------------------------
+        return false;
+    }
 
-		//	Save to the cache
-		$this->_set_cache( $_key, $_widgets );
+    // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+    /**
+     * Load widget/template assets
+     * @param  array  $assets An array of assets to load
+     * @return void
+     */
+    protected function loadAssets($assets = array())
+    {
+        foreach ($assets as $asset) {
 
-		return array_values( $_out );
-	}
+            if (is_array($asset)) {
 
+                if (!empty($asset[1])) {
 
-	// --------------------------------------------------------------------------
+                    $isNails = $asset[1];
 
+                } else {
 
-	protected function _sort_widgets( $a, $b )
-	{
-		//	Equal?
-		if ( trim( $a->label ) == trim( $b->label ) ) :
+                    $isNails = false;
+                }
 
-			return 0;
+                $this->asset->load($asset[0], $isNails);
 
-		endif;
+            } elseif (is_string($asset)) {
 
-		//	Not equal, work out which takes precedence
-		$_sort = array( $a->label, $b->label );
-		sort( $_sort );
+                $this->asset->load($asset);
+            }
+        }
+    }
 
-		return $_sort[0] == $a->label ? -1 : 1;
-	}
+    // --------------------------------------------------------------------------
 
+    /**
+     * Delete a page and it's children
+     * @param  int     $id The ID of the page to delete
+     * @return boolean
+     */
+    public function delete($id)
+    {
+        $page = $this->get_by_id($id);
 
-	// --------------------------------------------------------------------------
+        if (!$page) {
 
+            $this->_set_error('Invalid page ID');
+            return false;
+        }
 
-	public function get_widget( $slug, $load_assets = FALSE )
-	{
-		$_widgets = $this->get_available_widgets();
+        // --------------------------------------------------------------------------
 
-		foreach ( $_widgets AS $widget_group ) :
+        $this->db->trans_begin();
 
-			foreach ( $widget_group->widgets AS $widget ) :
+        $this->db->where('id', $id);
+        $this->db->set('is_deleted', true);
+        $this->db->set('modified', 'NOW()', false);
 
-				if ( $slug == $widget->slug ) :
+        if ($this->user_model->is_logged_in()) {
 
-					if ( $load_assets ) :
+            $this->db->set('modified_by', active_user('id'));
+        }
 
-						switch( $load_assets ) :
+        if ($this->db->update($this->_table)) {
 
-							case 'EDITOR' :
+            //  Success, update children
+            $children = $this->get_ids_of_children($id);
 
-								$_assets = $widget->assets_editor;
+            if ($children) {
 
-							break;
+                $this->db->where_in('id', $children);
+                $this->db->set('is_deleted', true);
+                $this->db->set('modified', 'NOW()', false);
 
-							case 'RENDER' :
+                if ($this->user_model->is_logged_in()) {
 
-								$_assets = $widget->assets_render;
+                    $this->db->set('modified_by', active_user('id'));
+                }
 
-							break;
+                if (!$this->db->update($this->_table)) {
 
-							default :
+                    $this->_set_error('Unable to delete children pages');
+                    $this->db->trans_rollback();
+                    return false;
+                }
+            }
 
-								$_assets = array();
+            // --------------------------------------------------------------------------
 
-							break;
+            //  Rewrite routes
+            $this->load->model('routes_model');
+            $this->routes_model->update('cms');
 
-						endswitch;
+            // --------------------------------------------------------------------------
 
-						$this->_load_assets( $_assets );
+            //  Regenerate sitemap
+            if (isModuleEnabled('sitemap')) {
 
-					endif;
+                $this->load->model('sitemap/sitemap_model');
+                $this->sitemap_model->generate();
+            }
 
-					return $widget;
+            // --------------------------------------------------------------------------
 
-				endif;
+            $this->db->trans_commit();
+            return true;
 
-			endforeach;
+        } else {
 
-		endforeach;
+            //  Failed
+            $this->db->trans_rollback();
+            return false;
+        }
+    }
 
-		return FALSE;
-	}
+    // --------------------------------------------------------------------------
 
+    /**
+     * Permenantly delete a page and it's children
+     * @param  int     $id The ID of the page to destroy
+     * @return boolean
+     */
+    public function destroy($id)
+    {
+        //  @TODO: implement this?
+        $this->_set_error('It is not possible to destroy pages using this system.');
+        return false;
+    }
 
-	// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
+    /**
+     * Generate a page preview
+     * @param  array $data The Page data
+     * @return mixed       int on success, false on failure
+     */
+    public function create_preview($data)
+    {
+        if (empty($data->data->template)) {
 
-	public function get_available_templates( $load_assets = FALSE )
-	{
-		//	Have we done this already? Don't do it again.
-		$_key	= 'cms-page-available-templates';
-		$_cache	= $this->_get_cache( $_key );
+            $this->_set_error('"data.template" is a required field.');
+            return false;
+        }
 
-		if ( $_cache ) :
+        // --------------------------------------------------------------------------
 
-			return $_cache;
+        $data                 = new stdClass();
+        $data->draft_hash     = isset($data->hash) ? $data->hash : '';
+        $data->draft_template = isset($data->data->template) ? $data->data->template : '';
 
-		endif;
+        // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+        //  Test to see if this preview has already been created
+        $this->db->select('id');
+        $this->db->where('draft_hash', $data->draft_hash);
+        $result = $this->db->get($this->_table_preview)->row();
 
-		//	Search the Nails. widget folder, and then the App's widget folder.
-		//	Widgets in the app folder trump widgets in the Nails folder
+        if ($result) {
 
-		$this->load->helper( 'directory' );
+            return $result->id;
+        }
 
-		$_nails_templates	= array();
-		$_app_templates		= array();
+        // --------------------------------------------------------------------------
 
-		//	Look for nails widgets
-		$_nails_templates = is_dir($this->_nails_templates_dir) ? directory_map($this->_nails_templates_dir) : array();
+        $data->draft_parent_id       = !empty($data->data->parent_id) ? $data->data->parent_id : null;
+        $data->draft_template_data   = json_encode($data, JSON_UNESCAPED_SLASHES);
+        $data->draft_title           = isset($data->data->title) ? $data->data->title : '';
+        $data->draft_seo_title       = isset($data->data->seo_title) ? $data->data->seo_title : '';
+        $data->draft_seo_description = isset($data->data->seo_description) ? $data->data->seo_description : '';
+        $data->draft_seo_keywords    = isset($data->data->seo_keywords) ? $data->data->seo_keywords : '';
 
-		//	Look for app widgets
-		if ( is_dir( $this->_app_templates_dir ) ) :
+        //  Generate the breadcrumbs
+        $data->draft_breadcrumbs = array();
 
-			$_app_templates = is_dir($this->_app_templates_dir) ? directory_map($this->_app_templates_dir) : array();
+        if ($data->draft_parent_id) {
 
-		endif;
+            /**
+             * There is a parent, use it's breadcrumbs array as the starting point. No
+             * need to fetch the parent again.
+             */
 
-		// --------------------------------------------------------------------------
+            $parent = $this->get_by_id($data->draft_parent_ud);
 
-		//	Test and merge templates
-		$_templates = array();
-		foreach ( $_nails_templates AS $template => $details ) :
+            if ($parent) {
 
-			//	Ignore base template
-			if ( $details == '_template.php' ) :
+                $data->draft_breadcrumbs = $parent->published->breadcrumbs;
+            }
+        }
 
-				continue;
+        $temp        = new stdClass();
+        $temp->id    = null;
+        $temp->title = $data->draft_title;
+        $temp->slug  = '';
 
-			endif;
+        $data->breadcrumbs[] = $temp;
+        unset($temp);
 
-			//	Ignore malformed templates
-			if ( ! is_array( $details ) || array_search( 'template.php', $details ) === FALSE ) :
+        //  Encode the breadcrumbs for the database
+        $data->draft_breadcrumbs = json_encode($data->draft_breadcrumbs);
 
-				log_message( 'error', 'Ignoring malformed NAILS CMS Template "' . $template . '"' );
-				continue;
+        // --------------------------------------------------------------------------
 
-			endif;
+        //  Save to the DB
+        $this->db->trans_begin();
 
-			//	Ignore templates which have an app override
-			if ( isset( $_app_templates[$template] ) && is_array( $_app_templates[$template] ) ) :
+        $this->db->set($data);
+        $this->db->set('created', 'NOW()', false);
+        $this->db->set('modified', 'NOW()', false);
 
-				continue;
+        if ($this->user->is_logged_in()) {
 
-			endif;
+            $this->db->set('created_by', active_user('id'));
+            $this->db->set('modified_by', active_user('id'));
+        }
 
-			// --------------------------------------------------------------------------
+        if (!$this->db->insert($this->_table_preview)) {
 
-			include_once $this->_nails_templates_dir . $template . '/template.php';
+            $this->db->trans_rollback();
+            $this->_set_error('Failed to create preview object.');
+            return false;
 
-			//	Can we call the static details method?
-			$_class = $this->_nails_prefix . 'Template_' . $template;
+        } else {
 
-			if ( ! class_exists( $_class ) || ! method_exists( $_class, 'details' ) ) :
+            $id = $this->db->insert_id();
+            $this->db->trans_commit();
+            return $id;
+        }
+    }
 
-				log_message( 'error', 'Cannot call static method "details()" on  NAILS CMS Template: "' . $template . '"' );
-				continue;
+    // --------------------------------------------------------------------------
 
-			endif;
+    /**
+     * Get's a preview page by it's ID
+     * @param  int   $previewId The Id of the preview to get
+     * @return mixed            stdClass on success, false on failure
+     */
+    public function get_preview_by_id($previewId)
+    {
+        $this->db->where('id', $previewId);
+        $result = $this->db->get($this->_table_preview)->row();
 
-			$_details = $_class::details();
+        // --------------------------------------------------------------------------
 
-			if ( $_details ) :
+        if (!$result) {
 
-				$_templates[$template] = $_class::details();
+            return false;
+        }
 
-			else :
+        // --------------------------------------------------------------------------
 
-				//	This template returned no details, ignore it.
-				log_message( 'warning', 'Static method "details()"" of Nails template "' . $template . '" returned empty data.' );
-
-			endif;
-
-			// --------------------------------------------------------------------------
-
-			//	Load the template's assets if requested
-			if ( $load_assets ) :
-
-				//	What type of assets do we want to load, editor or render assets?
-				switch( $load_assets ) :
-
-					case 'EDITOR' :
-
-						$_assets = $_templates[$template]->assets_editor;
-
-					break;
-
-					case 'RENDER' :
-
-						$_assets = $_templates[$template]->assets_render;
-
-					break;
-
-					default :
-
-						$_assets = array();
-
-					break;
-
-				endswitch;
-
-				$this->_load_assets( $_assets );
-
-			endif;
-
-		endforeach;
-
-		//	Now test app templates
-		foreach ( $_app_templates AS $template => $details ) :
-
-			//	Ignore malformed templates
-			if ( ! is_array( $details ) || array_search( 'template.php', $details ) === FALSE ) :
-
-				log_message( 'error', 'Ignoring malformed APP CMS Template "' . $template . '"' );
-				continue;
-
-			endif;
-
-			// --------------------------------------------------------------------------
-
-			include_once $this->_app_templates_dir . $template . '/template.php';
-
-			//	Can we call the static details method?
-			$_class = $this->_app_prefix . 'Template_' . $template;
-
-			if ( ! class_exists( $_class ) || ! method_exists( $_class, 'details' ) ) :
-
-				log_message( 'error', 'Cannot call static method "details()" on  NAILS CMS Template: "' . $template . '"' );
-				continue;
-
-			endif;
-
-			$_details = $_class::details();
-
-			if ( $_details ) :
-
-				$_templates[$template] = $_class::details();
-
-			else :
-
-				//	This template returned no details, ignore this template. Don't log anything
-				//	as it's likely a developer override to hide a default template.
-
-				continue;
-
-			endif;
-
-			// --------------------------------------------------------------------------
-
-			//	Load the template's assets if requested
-			if ( $load_assets ) :
-
-				switch( $load_assets ) :
-
-					case 'EDITOR' :
-
-						$_assets = $_templates[$template]->assets_editor;
-
-					break;
-
-					case 'RENDER' :
-
-						$_assets = $_templates[$template]->assets_render;
-
-					break;
-
-					default :
-
-						$_assets = array();
-
-					break;
-
-				endswitch;
-
-				$this->_load_assets( $_assets );
-
-			endif;
-
-		endforeach;
-
-		// --------------------------------------------------------------------------
-
-		//	Sort into some alphabetical order
-		ksort( $_templates );
-
-		// --------------------------------------------------------------------------
-
-		//	Save to the cache
-		$this->_set_cache( $_key, $_templates );
-
-		// --------------------------------------------------------------------------
-
-		return $_templates;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	public function get_template( $slug, $load_assets = FALSE )
-	{
-		$_templates = $this->get_available_templates();
-
-		foreach ( $_templates AS $template ) :
-
-			if ( $slug == $template->slug ) :
-
-				if ( $load_assets ) :
-
-					switch( $load_assets ) :
-
-						case 'EDITOR' :
-
-							$_assets = $template->assets_editor;
-
-						break;
-
-						case 'RENDER' :
-
-							$_assets = $template->assets_render;
-
-						break;
-
-						default :
-
-							$_assets = array();
-
-						break;
-
-					endswitch;
-
-					$this->_load_assets( $_assets );
-
-				endif;
-
-				return $template;
-
-			endif;
-
-		endforeach;
-
-		return FALSE;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	protected function _load_assets( $assets = array() )
-	{
-		foreach ( $assets AS $asset ) :
-
-			if ( is_array( $asset ) ) :
-
-				if ( ! empty( $asset[1] ) ) :
-
-					$_is_nails = $asset[1];
-
-				else:
-
-					$_is_nails = FALSE;
-
-				endif;
-
-				$this->asset->load( $asset[0], $_is_nails );
-
-			elseif ( is_string( $asset ) ) :
-
-				$this->asset->load( $asset );
-
-			endif;
-
-		endforeach;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	public function delete( $id )
-	{
-		$_page = $this->get_by_id( $id );
-
-		if ( ! $_page ) :
-
-			$this->_set_error( 'Invalid page ID' );
-			return FALSE;
-
-		endif;
-
-		// --------------------------------------------------------------------------
-
-		$this->db->trans_begin();
-
-		$this->db->where( 'id', $id );
-		$this->db->set( 'is_deleted', TRUE );
-		$this->db->set( 'modified', 'NOW()', FALSE );
-
-		if ( $this->user_model->is_logged_in() ) :
-
-			$this->db->set( 'modified_by', active_user( 'id' ) );
-
-		endif;
-
-		if ( $this->db->update( $this->_table ) ) :
-
-			//	Success, update children
-			$_children = $this->get_ids_of_children( $id );
-
-			if ( $_children ) :
-
-				$this->db->where_in( 'id', $_children );
-				$this->db->set( 'is_deleted', TRUE );
-				$this->db->set( 'modified', 'NOW()', FALSE );
-
-				if ( $this->user_model->is_logged_in() ) :
-
-					$this->db->set( 'modified_by', active_user( 'id' ) );
-
-				endif;
-
-				if ( ! $this->db->update( $this->_table ) ) :
-
-					$this->_set_error( 'Unable to delete children pages' );
-					$this->db->trans_rollback();
-					return FALSE;
-
-				endif;
-
-			endif;
-
-			// --------------------------------------------------------------------------
-
-			//	Rewrite routes
-			$this->load->model( 'routes_model' );
-			$this->routes_model->update( 'cms' );
-
-			// --------------------------------------------------------------------------
-
-			//	Regenerate sitemap
-			if ( isModuleEnabled( 'sitemap' ) ) :
-
-				$this->load->model( 'sitemap/sitemap_model' );
-				$this->sitemap_model->generate();
-
-			endif;
-
-			// --------------------------------------------------------------------------
-
-			$this->db->trans_commit();
-			return TRUE;
-
-		else :
-
-			//	Failed
-			$this->db->trans_rollback();
-			return FALSE;
-
-		endif;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	public function destroy( $id )
-	{
-		//	TODO: implement this?
-		$this->_set_error( 'It is not possible to destroy pages using this system.' );
-		return FALSE;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	public function create_preview( $data )
-	{
-		//	Some basic sanity testing
-		//	Check the data
-		if ( empty( $data->data->template ) ) :
-
-			$this->_set_error( '"data.template" is a required field.' );
-			return FALSE;
-
-		endif;
-
-		// --------------------------------------------------------------------------
-
-		$_data					= new stdClass();
-		$_data->draft_hash		= isset( $data->hash ) ? $data->hash : '';
-		$_data->draft_template	= isset( $data->data->template ) ? $data->data->template : '';
-
-		// --------------------------------------------------------------------------
-
-		//	Test to see if this preview has already been created
-		$this->db->select( 'id' );
-		$this->db->where( 'draft_hash', $_data->draft_hash );
-		$_result = $this->db->get( $this->_table_preview )->row();
-
-		if ( $_result ) :
-
-			return $_result->id;
-
-		endif;
-
-		// --------------------------------------------------------------------------
-
-		$_data->draft_parent_id			= ! empty( $data->data->parent_id ) ? $data->data->parent_id : NULL;
-		$_data->draft_template_data		= json_encode( $data, JSON_UNESCAPED_SLASHES );
-		$_data->draft_title				= isset( $data->data->title ) ? $data->data->title : '';
-		$_data->draft_seo_title			= isset( $data->data->seo_title ) ? $data->data->seo_title : '';
-		$_data->draft_seo_description	= isset( $data->data->seo_description ) ? $data->data->seo_description : '';
-		$_data->draft_seo_keywords		= isset( $data->data->seo_keywords ) ? $data->data->seo_keywords : '';
-
-		//	Generate the breadcrumbs
-		$_data->draft_breadcrumbs = array();
-
-		if ( $_data->draft_parent_id ) :
-
-			//	There is a parent, use it's breadcrumbs array as the starting point.
-			//	No need to fetch the parent again.
-
-			$_parent = $this->get_by_id( $_data->draft_parent_ud );
-
-			if ( $_parent ) :
-
-				$_data->draft_breadcrumbs = $_parent->published->breadcrumbs;
-
-			endif;
-
-		endif;
-
-		$_temp			= new stdClass();
-		$_temp->id		= NULL;
-		$_temp->title	= $_data->draft_title;
-		$_temp->slug	= '';
-
-		$_data->breadcrumbs[] = $_temp;
-		unset( $_temp );
-
-		//	Encode the breadcrumbs for the database
-		$_data->draft_breadcrumbs = json_encode( $_data->draft_breadcrumbs );
-
-		// --------------------------------------------------------------------------
-
-		//	Save to the DB
-		$this->db->trans_begin();
-
-		$this->db->set( $_data );
-		$this->db->set( 'created', 'NOW()', FALSE );
-		$this->db->set( 'modified', 'NOW()', FALSE );
-
-		if ( $this->user->is_logged_in() ) :
-
-			$this->db->set( 'created_by', active_user( 'id' ) );
-			$this->db->set( 'modified_by', active_user( 'id' ) );
-
-		endif;
-
-		if ( ! $this->db->insert( $this->_table_preview ) ) :
-
-			$this->db->trans_rollback();
-			$this->_set_error( 'Failed to create preview object.' );
-			return FALSE;
-
-		else :
-
-			$_id = $this->db->insert_id();
-			$this->db->trans_commit();
-			return $_id;
-
-		endif;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	public function get_preview_by_id( $preview_id )
-	{
-		$this->db->where( 'id', $preview_id );
-		$_result = $this->db->get( $this->_table_preview )->row();
-
-		// --------------------------------------------------------------------------
-
-		if ( ! $_result ) :
-
-			return FALSE;
-
-		endif;
-
-		// --------------------------------------------------------------------------
-
-		$this->_format_object( $_result );
-		return $_result;
-	}
+        $this->_format_object($result);
+        return $result;
+    }
 }
 
-
 // --------------------------------------------------------------------------
-
 
 /**
  * OVERLOADING NAILS' MODELS
@@ -1786,14 +1775,9 @@ class NAILS_Cms_page_model extends NAILS_Model
  *
  **/
 
-if ( ! defined( 'NAILS_ALLOW_EXTENSION_CMS_PAGE_MODEL' ) ) :
+if (!defined('NAILS_ALLOW_EXTENSION_CMS_PAGE_MODEL')) {
 
-	class Cms_page_model extends NAILS_Cms_page_model
-	{
-	}
-
-endif;
-
-
-/* End of file cms_page_model.php */
-/* Location: ./models/cms_page_model.php */
+    class Cms_page_model extends NAILS_Cms_page_model
+    {
+    }
+}

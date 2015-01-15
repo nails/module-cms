@@ -1,141 +1,147 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
 
 /**
- * Name:			cms_slider_model.php
+ * This model handle CMS Sliders
  *
- * Description:		This model handles everything to do with CMS sliders
- *
- **/
-
-/**
- * OVERLOADING NAILS' MODELS
- *
- * Note the name of this class; done like this to allow apps to extend this class.
- * Read full explanation at the bottom of this file.
- *
- **/
+ * @package     Nails
+ * @subpackage  module-cms
+ * @category    Model
+ * @author      Nails Dev Team
+ * @link
+ */
 
 class NAILS_Cms_slider_model extends NAILS_Model
 {
-	public function __construct()
-	{
-		parent::__construct();
+    /**
+     * Constructs the model
+     */
+    public function __construct()
+    {
+        parent::__construct();
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		$this->_table				= NAILS_DB_PREFIX . 'cms_slider';
-		$this->_table_prefix		= 's';
-		$this->_table_item			= NAILS_DB_PREFIX . 'cms_slider_item';
-		$this->_table_item_prefix	= 'si';
-	}
+        $this->_table             = NAILS_DB_PREFIX . 'cms_slider';
+        $this->_table_prefix      = 's';
+        $this->_table_item        = NAILS_DB_PREFIX . 'cms_slider_item';
+        $this->_table_item_prefix = 'si';
+    }
 
+    // --------------------------------------------------------------------------
 
-	// --------------------------------------------------------------------------
+    /**
+     * Gets all the sliders
+     * @param  boolean $includeSliderItems Whether or not to include the slider items
+     * @return array
+     */
+    public function get_all($includeSliderItems = false)
+    {
+        $this->db->select($this->_table_prefix . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
+        $this->db->join(NAILS_DB_PREFIX . 'user u', $this->_table_prefix . '.modified_by = u.id');
+        $this->db->join(NAILS_DB_PREFIX . 'user_email ue', $this->_table_prefix . '.modified_by = ue.user_id AND ue.is_primary = 1');
+        $sliders = parent::get_all();
 
+        foreach ($sliders as $m) {
 
-	public function get_all( $include_slider_items = FALSE )
-	{
-		$this->db->select( $this->_table_prefix . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email' );
-		$this->db->join( NAILS_DB_PREFIX . 'user u', $this->_table_prefix . '.modified_by = u.id' );
-		$this->db->join( NAILS_DB_PREFIX . 'user_email ue', $this->_table_prefix . '.modified_by = ue.user_id AND ue.is_primary = 1' );
-		$_sliders = parent::get_all();
+            if ($includeSliderItems) {
 
-		foreach ( $_sliders AS $m ) :
+                //  Fetch the nested slider items
+                $m->items = $this->get_slider_items($m->id);
+            }
+        }
 
-			if ( $include_slider_items ) :
+        // --------------------------------------------------------------------------
 
-				//	Fetch the nested slider items
-				$m->items = $this->get_slider_items( $m->id );
+        return $sliders;
+    }
 
-			endif;
+    // --------------------------------------------------------------------------
 
-		endforeach;
+    /**
+     * Gets a single slider
+     * @param  boolean $includeSliderItems Whther or not to include slider items
+     * @return mixed
+     */
+    public function get_by_id($includeSliderItems = false)
+    {
+        $slder = $this->get_all($includeSliderItems);
 
-		// --------------------------------------------------------------------------
+        if (!$slder) {
 
-		return $_sliders;
-	}
+            return false;
+        }
 
+        return $slder[0];
+    }
 
-	// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
+    /**
+     * Gets the slides of an individual slider
+     * @param  int   $sliderId the Slider's ID
+     * @return array
+     */
+    public function get_slider_items($sliderId)
+    {
+        $this->db->where('slider_id', $sliderId);
+        $this->db->order_by('order');
+        $items = $this->db->get($this->_table_item)->result();
 
-	public function get_by_id( $include_slider_items = FALSE )
-	{
-		$_slider = $this->get_all( $include_slider_items );
+        foreach ($items as $i) {
 
-		if ( ! $_slider ) :
+            $this->_format_slider_item($i);
+        }
 
-			return FALSE;
+        return $items;
+    }
+    // --------------------------------------------------------------------------
 
-		endif;
+    /**
+     * Formats a slider object
+     * @param  stdClass &$obj The sldier object to format
+     * @return void
+     */
+    protected function _format_object(&$obj)
+    {
+        $temp              = new stdClass();
+        $temp->id          = $obj->modified_by;
+        $temp->email       = $obj->email;
+        $temp->first_name  = $obj->first_name;
+        $temp->last_name   = $obj->last_name;
+        $temp->gender      = $obj->gender;
+        $temp->profile_img = $obj->profile_img;
 
-		return $_slider[0];
-	}
+        $obj->modified_by = $temp;
 
+        unset($obj->email);
+        unset($obj->first_name);
+        unset($obj->last_name);
+        unset($obj->gender);
+        unset($obj->profile_img);
+    }
 
-	// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
+    /**
+     * Format a slider item
+     * @param  stdClass &$obj The slider item to format
+     * @return voud
+     */
+    protected function _format_slider_item(&$obj)
+    {
+        parent::_format_object($obj);
 
-	public function get_slider_items( $slider_id )
-	{
-		$this->db->where( 'slider_id', $slider_id );
-		$this->db->order_by( 'order' );
-		$_items = $this->db->get( $this->_table_item )->result();
+        // --------------------------------------------------------------------------
 
-		foreach ( $_items AS $i ) :
+        $obj->slider_id = (int) $obj->slider_id;
+        $obj->object_id = $obj->object_id ? (int) $obj->object_id : null;
+        $obj->page_id   = $obj->page_id ? (int) $obj->page_id : null;
 
-			$this->_format_slider_item( $i );
-
-		endforeach;
-
-		return $_items;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	protected function _format_object( &$obj )
-	{
-		$_temp				= new stdClass();
-		$_temp->id			= $obj->modified_by;
-		$_temp->email		= $obj->email;
-		$_temp->first_name	= $obj->first_name;
-		$_temp->last_name	= $obj->last_name;
-		$_temp->gender		= $obj->gender;
-		$_temp->profile_img	= $obj->profile_img;
-
-		$obj->modified_by	= $_temp;
-
-		unset( $obj->email );
-		unset( $obj->first_name );
-		unset( $obj->last_name );
-		unset( $obj->gender );
-		unset( $obj->profile_img );
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	protected function _format_slider_item( &$obj )
-	{
-		parent::_format_object( $obj );
-
-		// --------------------------------------------------------------------------
-
-		$obj->slider_id	= (int) $obj->slider_id;
-		$obj->object_id	= $obj->object_id ? (int) $obj->object_id : NULL;
-		$obj->page_id	= $obj->page_id ? (int) $obj->page_id : NULL;
-
-		unset( $obj->slider_id );
-	}
+        unset($obj->slider_id);
+    }
 }
 
-
 // --------------------------------------------------------------------------
-
 
 /**
  * OVERLOADING NAILS' MODELS
@@ -161,14 +167,10 @@ class NAILS_Cms_slider_model extends NAILS_Model
  *
  **/
 
-if ( ! defined( 'NAILS_ALLOW_EXTENSION_CMS_SLIDER_MODEL' ) ) :
+if (!defined('NAILS_ALLOW_EXTENSION_CMS_SLIDER_MODEL')) {
 
-	class Cms_slider_model extends NAILS_Cms_slider_model
-	{
-	}
+    class Cms_slider_model extends NAILS_Cms_slider_model
+    {
+    }
+}
 
-endif;
-
-
-/* End of file cms_slider_model.php */
-/* Location: ./models/cms_slider_model.php */

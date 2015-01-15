@@ -1,263 +1,239 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+/**
+ * This class is the basic CMS template definition
+ *
+ * @package     Nails
+ * @subpackage  module-cms
+ * @category    Template
+ * @author      Nails Dev Team
+ * @link
+ */
 
 class Nails_CMS_Template
 {
+    protected $details;
+    protected $load;
+    protected $data;
 
-	protected $load;
-	protected $data;
+    // --------------------------------------------------------------------------
 
-	// --------------------------------------------------------------------------
+    /**
+     * Defines the basic template details object. Templates should extend this
+     * object and customise to it's own needs.
+     * @return stdClass
+     */
+    public static function details()
+    {
+        $d      = new stdClass();
+        $d->iam = get_called_class();
 
+        $reflect = new ReflectionClass($d->iam);
 
-	/**
-	 * Defines the base template details object
-	 *
-	 * Templates should extend this object and customise to their own needs
-	 *
-	 * @param none
-	 * @return stdClass
-	 *
-	 **/
-	static protected function _details()
-	{
-		$_d			= new stdClass();
-		$_d->iam	= get_called_class();
+        //  The human friendly name of this template
+        $d->label = 'Widget';
 
-		$_reflect	= new ReflectionClass( $_d->iam );
+        //  A brief description of the template, optional
+        $d->description = '';
 
-		//	The human friendly name of this template
-		$_d->label			= 'Widget';
+        /**
+         * Any additional fields to request
+         * @TODO: use the form builder library when it exists
+         */
 
-		//	A brief description of the template, optional
-		$_d->description	= '';
+        $d->additional_fields = array();
 
-		//	Any additional fields to request
-		//	TODO: use the form builder library
-		$_d->additional_fields = array();
+        //  Empty manual_config object
+        $d->manual_config = '';
 
-		//	Empty manual_config object
-		$_d->manual_config = '';
+        //  An icon/preview to render
+        $d->img       = new stdClass();
+        $d->img->icon = '';
 
-		//	An icon/preview to render
-		$_d->img			= new stdClass();
-		$_d->img->icon		= '';
+        //  Try to detect the icon
+        $extensions = array('png','jpg','jpeg','gif');
 
-		//	Try to detect the icon
-		$_extensions = array( 'png','jpg','jpeg','gif' );
+        $path = $reflect->getFileName();
+        $path = dirname($path);
 
-		$_path	= $_reflect->getFileName();
-		$_path	= dirname( $_path );
+        foreach ($extensions as $ext) {
 
-		foreach ( $_extensions AS $ext ) :
+            $icon = $path . '/icon.' . $ext;
 
-			$_icon = $_path . '/icon.' . $ext;
+            if (is_file($icon)) {
 
-			if ( is_file( $_icon ) ) :
+                $url = '';
+                if (preg_match('#^' . preg_quote(NAILS_PATH, '#') . '#', $icon)) {
 
-				$_url = '';
-				if ( preg_match( '#^' . preg_quote( NAILS_PATH, '#' ) . '#', $_icon ) ) :
+                    //  Nails asset
+                    $d->img->icon = preg_replace('#^' . preg_quote(NAILS_PATH, '#') . '#', NAILS_URL, $icon);
 
-					//	Nails asset
-					$_d->img->icon = preg_replace( '#^' . preg_quote( NAILS_PATH, '#' ) . '#', NAILS_URL, $_icon );
+                } elseif (preg_match('#^' . preg_quote(FCPATH . APPPATH, '#') . '#', $icon)) {
 
-				elseif ( preg_match( '#^' . preg_quote( FCPATH . APPPATH, '#' ) . '#', $_icon ) ) :
+                    if (isPageSecure()) {
 
-					if ( isPageSecure() ) :
+                        $pattern = '#^' . preg_quote(FCPATH . APPPATH, '#') . '#';
+                        $d->img->icon = preg_replace($pattern, SECURE_BASE_URL . APPPATH . '', $icon);
 
-						$_d->img->icon = preg_replace( '#^' . preg_quote( FCPATH . APPPATH, '#' ) . '#', SECURE_BASE_URL . APPPATH . '', $_icon );
+                    } else {
 
-					else :
+                        $pattern = '#^' . preg_quote(FCPATH . APPPATH, '#') . '#';
+                        $d->img->icon = preg_replace($pattern, BASE_URL . APPPATH . '', $icon);
+                    }
+                }
+                break;
+            }
+        }
 
-						$_d->img->icon = preg_replace( '#^' . preg_quote( FCPATH . APPPATH, '#' ) . '#', BASE_URL . APPPATH . '', $_icon );
+        //  An array of the widget-able areas
+        $d->widget_areas = array();
 
-					endif;
+        // --------------------------------------------------------------------------
 
-				endif;
+        //  Automatically calculated properties
+        $d->slug = '';
 
-				break;
+        // --------------------------------------------------------------------------
 
-			endif;
+        //  Work out slug - this should uniquely identify a type of template
+        $d->slug = $reflect->getFileName();
+        $d->slug = pathinfo($d->slug);
+        $d->slug = explode('/', $d->slug['dirname']);
+        $d->slug = array_pop($d->slug);
 
-		endforeach;
+        // --------------------------------------------------------------------------
 
-		//	an array of the widget-able areas
-		$_d->widget_areas	= array();
+        //  Define any assets need to be loaded by the template
+        $d->assets_editor = array();
+        $d->assets_render = array();
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Automatically calculated properties
-		$_d->slug	= '';
+        //  Path
+        $d->path = dirname($reflect->getFileName()) . '/';
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Work out slug - this should uniquely identify a type of template
-		$_d->slug	= $_reflect->getFileName();
-		$_d->slug	= pathinfo( $_d->slug );
-		$_d->slug	= explode( '/', $_d->slug['dirname'] );
-		$_d->slug	= array_pop( $_d->slug  );
+        //  Return the D
+        return $d;
+    }
 
-		// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
-		//	Define any assets need to be loaded by the template
-		$_d->assets_editor = array();
-		$_d->assets_render = array();
+    /**
+     * Defines the base widget area object. Each editable area needs to have certain
+     * properties defined. The template clone this object for each area and set the
+     * values appropriately.
+     * @return stdClass
+     */
+    protected static function editableAreaTemplate()
+    {
+        $d              = new stdClass();
+        $d->title       = '';
+        $d->description = '';
+        $d->view        = '';
 
-		// --------------------------------------------------------------------------
+        return $d;
+    }
 
-		//	Path
-		$_d->path = dirname( $_reflect->getFileName() ) . '/';
+    // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+    /**
+     * Constructs the template and sets the templates details as a class variable
+     */
+    public function __construct()
+    {
+        $this->details = $this::details();
+        $this->load =& get_instance()->load;
+    }
 
-		//	Return the D
-		return $_d;
-	}
+    // --------------------------------------------------------------------------
 
+    /**
+     * Renders the template with the provided data.
+     * @param  array  $tplWidgets          The widgets to include in the template
+     * @param  array  $tplAdditionalFields Additional data created by the template
+     * @return string
+     */
+    public function render($tplWidgets = array(), $tplAdditionalFields = array())
+    {
+        /**
+         * If the template wishes to execute any custom pre/post code then this method
+         * should be extended and parent::render($data) called at the appropriate point.
+         * But that's obvious, isn't it...?
+         */
 
-	// --------------------------------------------------------------------------
+        get_instance()->load->model('cms/cms_page_model');
 
-	/**
-	 * Defines the base widget area object
-	 *
-	 * Each editable area needs to have certain properties defined. The template
-	 * clone this object for each area and set the values appropriately.
-	 *
-	 * @param none
-	 * @return stdClass
-	 *
-	 **/
-	static protected function _editable_area_template()
-	{
-		$_d				= new stdClass();
-		$_d->title			= '';
-		$_d->description	= '';
-		$_d->view			= '';
+        // --------------------------------------------------------------------------
 
-		return $_d;
-	}
+        //  Process each widget area and render the HTML
+        $widgetAreas = array();
+        foreach ($this->details->widget_areas as $key => $details) {
 
+            $widgetAreas[$key] = '';
 
-	// --------------------------------------------------------------------------
+            //  Loop through all defined widgets and render each one
+            if (!empty($tplWidgets[$key])) {
 
+                foreach ($tplWidgets[$key] as $widget_data) {
 
-	/**
-	 * Template constructor
-	 *
-	 * Sets the templates details as a class variable
-	 *
-	 * @param none
-	 * @return void
-	 *
-	 **/
-	public function __construct()
-	{
-		$this->_details = $this::details();
-		$this->load	=& get_instance()->load;
-	}
+                    try {
 
+                        $widget = get_instance()->cms_page_model->get_widget($widget_data->widget, 'RENDER');
 
-	// --------------------------------------------------------------------------
+                        if ($widget) {
 
+                            parse_str($widget_data->data, $data);
 
-	/**
-	 * Renders the template with the provided data
-	 *
-	 * This method accepts a template data and renders the page appropriately
-	 *
-	 * @param stdClass $_tpl_data A normal template_data object, prefixed to avoid naming collisions
-	 * @return string
-	 *
-	 **/
-	public function render( $_tpl_widgets = array(), $_tpl_additional_fields = array() )
-	{
-		//	If the template wishes to execute any custom pre/post code then this method
-		//	should be extended and parent::render( $_data ) called at the appropriate
-		//	point. But that's obvious, isn't it...?
+                            $WIDGET = new $widget->iam();
+                            $widgetAreas[$key] .= $WIDGET->render($data, $tplAdditionalFields);
+                        }
 
-		// --------------------------------------------------------------------------
+                    } catch (Exception $e) {
 
-		get_instance()->load->model( 'cms/cms_page_model' );
+                        log_message('error', 'Failed to render widget');
+                    }
+                }
+            }
+        }
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Process each widget area and render the HTML
-		$_widget_areas = array();
-		foreach ( $this->_details->widget_areas AS $key => $details ) :
+        if (is_file($this->details->path . 'view.php')) {
 
-			$_widget_areas[$key] = '';
+            //  Get controller data, so that headers etc behave as expected
+            $NAILS_CONTROLLER_DATA =& getControllerData();
+            if ($NAILS_CONTROLLER_DATA) {
 
-			//	Loop through all defined widgets and render each one
-			if ( ! empty( $_tpl_widgets[$key] ) ) :
+                extract($NAILS_CONTROLLER_DATA);
+            }
 
-				foreach ( $_tpl_widgets[$key] AS $widget_data ) :
+            //  If passed, extract any $tplAdditionalFields
+            if ($tplAdditionalFields) {
 
-					try
-					{
-						$_widget = get_instance()->cms_page_model->get_widget( $widget_data->widget, 'RENDER' );
+                extract($tplAdditionalFields);
+            }
 
-						if ( $_widget ) :
+            //  Extract the variables, so that the view can use them
+            if ($widgetAreas) {
 
-							parse_str( $widget_data->data, $_data );
+                extract($widgetAreas);
+            }
 
-							$WIDGET = new $_widget->iam();
-							$_widget_areas[$key] .= $WIDGET->render( $_data, $_tpl_additional_fields );
+            //  Start the buffer, basically copying how CI does it's view loading
+            ob_start();
 
-						endif;
-					}
-					catch ( Exception $e )
-					{
-						log_message( 'error', 'Failed to render widget' );
-					}
+            include $this->details->path . 'view.php';
 
-				endforeach;
+            //  Flush buffer
+            $buffer = ob_get_contents();
+            @ob_end_clean();
 
-			endif;
+            //  Return the HTML
+            return $buffer;
+        }
 
-		endforeach;
-
-		// --------------------------------------------------------------------------
-
-		if ( is_file( $this->_details->path . 'view.php' ) ) :
-
-			//	If passed, extract any view data
-			$_NAILS_CONTROLLER_DATA =& getControllerData();
-			if ( $_NAILS_CONTROLLER_DATA ) :
-
-				extract( $_NAILS_CONTROLLER_DATA );
-
-			endif;
-
-			//	If passed, extract any additional_fields
-			if ( $_tpl_additional_fields ) :
-
-				extract( $_tpl_additional_fields );
-
-			endif;
-
-			//	Extract the variables, so that the view can use them
-			if ( $_widget_areas ) :
-
-				extract( $_widget_areas );
-
-			endif;
-
-			//	Start the buffer, basically copying how CI does it's view loading
-			ob_start();
-
-			include $this->_details->path . 'view.php';
-
-			//	Flush buffer
-			$_buffer = ob_get_contents();
-			@ob_end_clean();
-
-			//	Return the HTML
-			return $_buffer;
-
-		endif;
-
-		return '';
-	}
+        return '';
+    }
 }
-
-/* End of file _template.php */
-/* Location: ./modules/cms/templates/_template.php */

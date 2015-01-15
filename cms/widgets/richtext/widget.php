@@ -1,17 +1,31 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+/**
+ * This class is the "Rich Text" CMS widget definition
+ *
+ * @package     Nails
+ * @subpackage  module-cms
+ * @category    Widget
+ * @author      Nails Dev Team
+ * @link
+ */
 
 class NAILS_CMS_Widget_richtext extends NAILS_CMS_Widget
 {
-	static function details()
-	{
-		$_d					= parent::details();
-		$_d->label			= 'Rich Text';
-		$_d->description	= 'Build beautiful pages using the rich text editor; embed images, links and more.';
-		$_d->keywords		= 'rich text,formatted text,formatted,wysiwyg,embed';
+    /**
+     * Defines the basic widget details object.
+     * @return stdClass
+     */
+    public static function details()
+    {
+        $d              = parent::details();
+        $d->label       = 'Rich Text';
+        $d->description = 'Build beautiful pages using the rich text editor; embed images, links and more.';
+        $d->keywords    = 'rich text,formatted text,formatted,wysiwyg,embed';
 
-		$_d->assets_editor[]	= array( 'ckeditor/ckeditor.js', 		'BOWER' );
-		$_d->assets_editor[]	= array( 'ckeditor/adapters/jquery.js', 'BOWER' );
+        $d->assets_editor[] = array('ckeditor/ckeditor.js', 'BOWER');
+        $d->assets_editor[] = array('ckeditor/adapters/jquery.js', 'BOWER');
 
-		return $_d;
-	}
+        return $d;
+    }
 }

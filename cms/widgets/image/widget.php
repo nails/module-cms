@@ -1,14 +1,28 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+/**
+ * This class is the "Image" CMS widget definition
+ *
+ * @package     Nails
+ * @subpackage  module-cms
+ * @category    Widget
+ * @author      Nails Dev Team
+ * @link
+ */
 
 class NAILS_CMS_Widget_image extends NAILS_CMS_Widget
 {
-	static function details()
-	{
-		$_d					= parent::details();
-		$_d->label			= 'Image';
-		$_d->description	= 'A single image.';
-		$_d->keywords		= 'image,images,photo,photos';
+    /**
+     * Defines the basic widget details object.
+     * @return stdClass
+     */
+    static function details()
+    {
+        $d              = parent::details();
+        $d->label       = 'Image';
+        $d->description = 'A single image.';
+        $d->keywords    = 'image,images,photo,photos';
 
-		return $_d;
-	}
+        return $d;
+    }
 }

@@ -1,14 +1,28 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+/**
+ * This class is the "Table" CMS widget definition
+ *
+ * @package     Nails
+ * @subpackage  module-cms
+ * @category    Widget
+ * @author      Nails Dev Team
+ * @link
+ */
 
 class NAILS_CMS_Widget_table extends NAILS_CMS_Widget
 {
-	static function details()
-	{
-		$_d					= parent::details();
-		$_d->label			= 'Table';
-		$_d->description	= 'Easily build a table';
-		$_d->keywords		= 'table,tabular data,data';
+    /**
+     * Defines the basic widget details object.
+     * @return stdClass
+     */
+    public static function details()
+    {
+        $d              = parent::details();
+        $d->label       = 'Table';
+        $d->description = 'Easily build a table';
+        $d->keywords    = 'table,tabular data,data';
 
-		return $_d;
-	}
+        return $d;
+    }
 }

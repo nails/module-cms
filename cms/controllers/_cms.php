@@ -12,27 +12,25 @@
 
 class NAILS_CMS_Controller extends NAILS_Controller
 {
-	protected $_cdn_root;
+    /**
+     * Constructs the controller
+     */
+    public function __construct()
+    {
+        parent::__construct();
 
-	// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-	public function __construct()
-	{
-		parent::__construct();
+        //  Check this module is enabled in settings
+        if (! isModuleEnabled('cms')) {
 
-		// --------------------------------------------------------------------------
+            //  Cancel execution, module isn't enabled
+            show_404();
+        }
 
-		//	Check this module is enabled in settings
-		if ( ! isModuleEnabled( 'cms' ) ) :
+        // --------------------------------------------------------------------------
 
-			//	Cancel execution, module isn't enabled
-			show_404();
-
-		endif;
-
-		// --------------------------------------------------------------------------
-
-		//	Load language file
-		$this->lang->load( 'cms' );
-	}
+        //  Load language file
+        $this->lang->load('cms');
+    }
 }

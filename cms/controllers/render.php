@@ -1,234 +1,242 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
 
-/**
- * Name:		Render
- *
- * Description:	Renders a CMS controlled page
- *
- **/
-
-/**
- * OVERLOADING NAILS' AUTH MODULE
- *
- * Note the name of this class; done like this to allow apps to extend this class.
- * Read full explanation at the bottom of this file.
- *
- **/
-
-//	Include _cdn.php; executes common functionality
+//  Include _cdn.php; executes common functionality
 require_once '_cms.php';
+
+/**
+ * This class renders CMS pages
+ *
+ * @package     Nails
+ * @subpackage  module-cms
+ * @category    Controller
+ * @author      Nails Dev Team
+ * @link
+ */
 
 class NAILS_Render extends NAILS_CMS_Controller
 {
-	protected $_page_id;
-	protected $_is_preview;
+    protected $pageId;
+    protected $isPreview;
 
+    // --------------------------------------------------------------------------
 
-	// --------------------------------------------------------------------------
+    /**
+     * Constructs the controller
+     */
+    public function __construct()
+    {
+        parent::__construct();
 
+        // --------------------------------------------------------------------------
 
-	public function __construct()
-	{
-		parent::__construct();
+        $this->load->model('cms/cms_page_model');
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		$this->load->model( 'cms/cms_page_model' );
+        $this->pageId    = $this->uri->rsegment(3);
+        $this->isPreview = false;
+    }
 
-		// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
-		$this->_page_id		= $this->uri->rsegment( 3 );
-		$this->_is_preview	= FALSE;
-	}
+    /**
+     * Loads a published CMS page
+     * @return void
+     */
+    public function page()
+    {
+        if ($this->isPreview) {
 
+            $page = $this->cms_page_model->get_preview_by_id($this->pageId);
 
-	// --------------------------------------------------------------------------
+        } else {
 
+            $page = $this->cms_page_model->get_by_id($this->pageId, true);
+        }
 
-	public function page()
-	{
-		if ( $this->_is_preview ) :
+        if (!$page || $page->is_deleted) {
 
-			$_page = $this->cms_page_model->get_preview_by_id( $this->_page_id );
+            show_404();
+        }
 
-		else :
+        // --------------------------------------------------------------------------
 
-			$_page = $this->cms_page_model->get_by_id( $this->_page_id, TRUE );
+        //  If a page is not published and not being previewed, show_404()
+        if (!$page->is_published && !$this->isPreview) {
 
-		endif;
+            show_404();
+        }
 
-		if ( ! $_page || $_page->is_deleted ) :
+        // --------------------------------------------------------------------------
 
-			show_404();
+        //  Determine which data to use
+        if ($this->isPreview) {
 
-		endif;
+            $data = $page->draft;
 
-		// --------------------------------------------------------------------------
+        } else {
 
-		//	If a page is not published, show_404()
-		if ( ! $_page->is_published ) :
+            $data = $page->published;
+        }
 
-			if ( ! $this->_is_preview ) :
+        $this->data['page_data'] =& $data;
 
-				show_404();
+        // --------------------------------------------------------------------------
 
-			endif;
+        /**
+         * If the page is the homepage and we're viewing it by slug, then redirect to
+         * the non slug'd version
+         */
 
-		endif;
+        if ($page->is_homepage && uri_string() == $data->slug) {
 
-		// --------------------------------------------------------------------------
+            redirect('', 'location', 301);
+        }
 
-		//	Determine which data to use
-		if ( $this->_is_preview ) :
+        // --------------------------------------------------------------------------
 
-			$_data = $_page->draft;
+        //  Set some page level data
+        $this->data['page']->id               = $page->id;
+        $this->data['page']->title            = $data->title;
+        $this->data['page']->seo              = new stdClass();
+        $this->data['page']->seo->title       = $data->seo_title;
+        $this->data['page']->seo->description = $data->seo_description;
+        $this->data['page']->seo->keywords    = $data->seo_keywords;
+        $this->data['page']->is_preview       = $this->isPreview;
 
-		else :
+        //  Prepare data
+        $render                   = new stdClass();
+        $render->widgets          = new stdClass();
+        $render->additionalFields = new stdClass();
 
-			$_data = $_page->published;
+        if (isset($data->template_data->widget_areas->{$data->template})) {
 
-		endif;
+            $render->widgets = $data->template_data->widget_areas->{$data->template};
+        }
 
-		$this->data['page_data'] =& $_data;
+        if (isset($data->template_data->data->additionalFields->{$data->template})) {
 
-		// --------------------------------------------------------------------------
+            $render->additionalFields = $data->template_data->data->additionalFields->{$data->template};
+        }
+
+        //  Decode manual config
+        if (isset($render->additionalFields->manual_config)) {
 
-		/**
-		 * If the page is the homepage and we're viewing it by slug, then redirect to
-		 * the non slugg'd version
-		 */
+            $render->additionalFields->manual_config = json_decode($render->additionalFields->manual_config);
+        }
 
-		if ( $_page->is_homepage && uri_string() == $_data->slug ) :
+        // --------------------------------------------------------------------------
 
-			redirect( '', 'location', 301 );
+        /**
+         * If we're viewing a published page, but there are unpublished changes (and
+         * the user is someone with edit permissions) then highlight this fact using
+         * a system alert (which the templates *should* handle).
+         */
 
-		endif;
+        if (
+            !$this->data['message']
+            && !$this->isPreview
+            && $page->has_unpublished_changes
+            && $this->user_model->is_admin()
+            && user_has_permission('admin.cms:0.can_edit_page')
+        ) {
 
-		// --------------------------------------------------------------------------
+            $this->data['message'] = lang(
+                'cms_notice_unpublished_changes',
+                array(
+                    site_url('cms/render/preview/' . $page->id),
+                    site_url('admin/cms/pages/edit/' . $page->id)
+                )
+            );
+        }
 
-		//	Set some page level data
-		$this->data['page']->id					= $_page->id;
-		$this->data['page']->title				= $_data->title;
-		$this->data['page']->seo				= new stdClass();
-		$this->data['page']->seo->title			= $_data->seo_title;
-		$this->data['page']->seo->description	= $_data->seo_description;
-		$this->data['page']->seo->keywords		= $_data->seo_keywords;
-		$this->data['page']->is_preview			= $this->_is_preview;
+        // --------------------------------------------------------------------------
 
-		//	Prepare data
-		$_render					= new stdClass();
-		$_render->widgets			= isset( $_data->template_data->widget_areas->{$_data->template} ) ? $_data->template_data->widget_areas->{$_data->template} : array();
-		$_render->additional_fields	= isset( $_data->template_data->data->additional_fields->{$_data->template} ) ? $_data->template_data->data->additional_fields->{$_data->template} : array();
+        /**
+         * Add the page data as a reference to the additionalFields, so widgets can
+         * have some contect about the page they're being rendered on.
+         */
 
-		//	Decode manual config
-		if ( isset( $_render->additional_fields->manual_config ) ) :
+        $render->additionalFields->cmspage =& $data;
 
-			$_render->additional_fields->manual_config = json_decode( $_render->additional_fields->manual_config );
+        // --------------------------------------------------------------------------
 
-		endif;
+        //  Actually render
+        $html = $this->cms_page_model->render_template($data->template, $render->widgets, $render->additionalFields);
+        $this->output->set_output($html);
+    }
 
-		// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
-		/**
-		 * If we're viewing a published page, but there are unpublished changes (and
-		 * the user is someone with edit permissions) then highlight this fact using
-		 * a system alert (which the templates *should* handle).
-		 */
+    /**
+     * Loads a draft CMS page
+     * @return void
+     */
+    public function preview()
+    {
+        if ($this->user_model->is_admin() && user_has_permission('admin.cms:0.can_edit_page')) {
 
-		if ( ! $this->data['message'] && ! $this->_is_preview && $_page->has_unpublished_changes && $this->user_model->is_admin() && user_has_permission( 'admin.cms:0.can_edit_page' ) ) :
+            $this->isPreview = true;
+            return $this->page();
 
-			$this->data['message'] = lang( 'cms_notice_unpublished_changes', array( site_url( 'cms/render/preview/' . $_page->id ), site_url( 'admin/cms/pages/edit/' . $_page->id ) ) );
+        } else {
 
-		endif;
+            show_404();
+        }
+    }
 
-		// --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
-		/**
-		 * Add the page data as a reference to the additional_fields, so widgets can
-		 * have some contect about the page they're being rendered on.
-		 */
+    /**
+     * Loads the homepage
+     * @return void
+     */
+    public function homepage()
+    {
+        //  Attempt to get the site's homepage
+        $homepage = $this->cms_page_model->get_homepage();
 
-		$_render->additional_fields->cmspage =& $_data;
+        if ($homepage) {
 
-		// --------------------------------------------------------------------------
+            $this->pageId = $homepage->id;
+            $this->page();
 
-		//	Actually render
-		$_html	= $this->cms_page_model->render_template( $_data->template, $_render->widgets, $_render->additional_fields );
+        } else {
 
-		$this->output->set_output( $_html );
-	}
+            log_message('error', 'No homepage has been defined.');
+            show_404();
+        }
+    }
 
+    // --------------------------------------------------------------------------
 
-	// --------------------------------------------------------------------------
+    /**
+     * Loads a legacy slug and redirects to the new page if found
+     * @return void
+     */
+    public function legacy_slug()
+    {
+        //  Get the page and attempt to 301 redirect
+        $id = $this->uri->rsegment(3);
 
+        if ($id) {
 
-	public function preview()
-	{
-		if ( $this->user_model->is_admin() && user_has_permission( 'admin.cms:0.can_edit_page' ) ) :
+            $page = $this->cms_page_model->get_by_id($id);
 
-			$this->_is_preview = TRUE;
-			return $this->page();
+            if ($page && $page->is_published) {
 
-		else :
+                redirect($page->published->slug, 'location', 301);
+            }
+        }
 
-			show_404();
+        // --------------------------------------------------------------------------
 
-		endif;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	public function homepage()
-	{
-		//	Attempt to get the site's homepage
-		$_homepage = $this->cms_page_model->get_homepage();
-
-		if ( $_homepage ) :
-
-			$this->_page_id = $_homepage->id;
-			$this->page();
-
-		else :
-
-			log_message( 'error', 'No homepage has been defined.' );
-			show_404();
-
-		endif;
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	public function legacy_slug()
-	{
-		//	Get the page and attempt to 301 redirect
-		$_id = $this->uri->rsegment( 3 );
-
-		if ( $_id ) :
-
-			$_page = $this->cms_page_model->get_by_id( $_id );
-
-			if ( $_page && $_page->is_published ) :
-
-				redirect( $_page->published->slug, 'location', 301 );
-
-			endif;
-
-		endif;
-
-		// --------------------------------------------------------------------------
-
-		//	We don't know what to do, *falls over*
-		show_404();
-	}
+        //  We don't know what to do, *falls over*
+        show_404();
+    }
 }
 
-
 // --------------------------------------------------------------------------
-
 
 /**
  * OVERLOADING NAILS' CMS MODULE
@@ -254,10 +262,9 @@ class NAILS_Render extends NAILS_CMS_Controller
  *
  **/
 
-if ( ! defined( 'NAILS_ALLOW_EXTENSION_CMS_RENDER' ) ) :
+if (!defined('NAILS_ALLOW_EXTENSION_CMS_RENDER')) {
 
-	class Render extends NAILS_Render
-	{
-	}
-
-endif;
+    class Render extends NAILS_Render
+    {
+    }
+}

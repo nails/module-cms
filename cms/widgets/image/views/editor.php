@@ -1,110 +1,121 @@
-<div class="fieldset">
-	<?php
+<?php
 
-		$_field				= array();
-		$_field['key']		= 'image_id';
-		$_field['label']	= 'Image';
-		$_field['default']	= isset( ${$_field['key']} ) ? ${$_field['key']} : '';
-		$_field['bucket']	= 'cms-widget-image';
+/**
+ * This class is the "Image" CMS editor view
+ *
+ * @package     Nails
+ * @subpackage  module-cms
+ * @category    Widget
+ * @author      Nails Dev Team
+ * @link
+ */
 
-		echo form_field_mm_image( $_field );
+echo '<div class="fieldset">';
 
-		// --------------------------------------------------------------------------
+    $field            = array();
+    $field['key']     = 'image_id';
+    $field['label']   = 'Image';
+    $field['default'] = isset(${$field['key']}) ? ${$field['key']} : '';
+    $field['bucket']  = 'cms-widget-image';
 
-		$_field				= array();
-		$_field['key']		= 'scaling';
-		$_field['label']	= 'Scaling';
-		$_field['class']	= 'select2';
-		$_field['default']	= isset( ${$_field['key']} ) ? ${$_field['key']} : '';
+    echo form_field_mm_image($field);
 
-		$_options = array(
-			'NONE'	=> 'None, show fullsize',
-			'CROP'	=> 'Crop to size',
-			'SCALE'	=> 'Fit within boundary'
-		);
+    // --------------------------------------------------------------------------
 
-		echo form_field_dropdown( $_field, $_options );
+    $field            = array();
+    $field['key']     = 'scaling';
+    $field['label']   = 'Scaling';
+    $field['class']   = 'select2';
+    $field['default'] = isset(${$field['key']}) ? ${$field['key']} : '';
 
-		// --------------------------------------------------------------------------
+    $options = array(
+        'NONE'  => 'None, show fullsize',
+        'CROP'  => 'Crop to size',
+        'SCALE' => 'Fit within boundary'
+   );
 
-		$_field					= array();
-		$_field['key']			= 'width';
-		$_field['label']		= 'Width';
-		$_field['default']		= isset( ${$_field['key']} ) ? ${$_field['key']} : '';
-		$_field['placeholder']	= 'The maximum width of the image, in pixels.';
+    echo form_field_dropdown($field, $options);
 
-		echo form_field( $_field );
+    // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+    $field                = array();
+    $field['key']         = 'width';
+    $field['label']       = 'Width';
+    $field['default']     = isset(${$field['key']}) ? ${$field['key']} : '';
+    $field['placeholder'] = 'The maximum width of the image, in pixels.';
 
-		$_field					= array();
-		$_field['key']			= 'height';
-		$_field['label']		= 'Height';
-		$_field['default']		= isset( ${$_field['key']} ) ? ${$_field['key']} : '';
-		$_field['placeholder']	= 'The maximum height of the image, in pixels.';
+    echo form_field($field);
 
-		echo form_field( $_field );
+    // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+    $field                = array();
+    $field['key']         = 'height';
+    $field['label']       = 'Height';
+    $field['default']     = isset(${$field['key']}) ? ${$field['key']} : '';
+    $field['placeholder'] = 'The maximum height of the image, in pixels.';
 
-		$_field				= array();
-		$_field['key']		= 'linking';
-		$_field['label']	= 'Linking';
-		$_field['class']	= 'select2';
-		$_field['default']	= isset( ${$_field['key']} ) ? ${$_field['key']} : '';
+    echo form_field($field);
 
-		$_options = array(
-			'NONE'		=> 'Do not link',
-			'FULLSIZE'	=> 'Link to fullsize',
-			'CUSTOM'	=> 'Custom URL'
-		);
+    // --------------------------------------------------------------------------
 
-		echo form_field_dropdown( $_field, $_options );
+    $field            = array();
+    $field['key']     = 'linking';
+    $field['label']   = 'Linking';
+    $field['class']   = 'select2';
+    $field['default'] = isset(${$field['key']}) ? ${$field['key']} : '';
 
-		// --------------------------------------------------------------------------
+    $options = array(
+        'NONE'     => 'Do not link',
+        'FULLSIZE' => 'Link to fullsize',
+        'CUSTOM'   => 'Custom URL'
+   );
 
-		$_field					= array();
-		$_field['key']			= 'url';
-		$_field['label']		= 'URL';
-		$_field['default']		= isset( ${$_field['key']} ) ? ${$_field['key']} : '';
-		$_field['placeholder']	= 'http://www.example.com';
+    echo form_field_dropdown($field, $options);
 
-		echo form_field( $_field );
+    // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+    $field                = array();
+    $field['key']         = 'url';
+    $field['label']       = 'URL';
+    $field['default']     = isset(${$field['key']}) ? ${$field['key']} : '';
+    $field['placeholder'] = 'http://www.example.com';
 
-		$_field				= array();
-		$_field['key']		= 'target';
-		$_field['label']	= 'Target';
-		$_field['class']	= 'select2';
-		$_field['default']	= isset( ${$_field['key']} ) ? ${$_field['key']} : '';
+    echo form_field($field);
 
-		$_options = array(
-			''			=> 'None',
-			'_blank'	=> 'New window/tab',
-			'_parent'	=> 'Parent window/tab'
-		);
+    // --------------------------------------------------------------------------
 
-		echo form_field_dropdown( $_field, $_options );
+    $field            = array();
+    $field['key']     = 'target';
+    $field['label']   = 'Target';
+    $field['class']   = 'select2';
+    $field['default'] = isset(${$field['key']}) ? ${$field['key']} : '';
 
-		// --------------------------------------------------------------------------
+    $options = array(
+        ''        => 'None',
+        '_blank'  => 'New window/tab',
+        '_parent' => 'Parent window/tab'
+   );
 
-		$_field					= array();
-		$_field['key']			= 'img_attr';
-		$_field['label']		= 'Attributes';
-		$_field['default']		= isset( ${$_field['key']} ) ? ${$_field['key']} : '';
-		$_field['placeholder']	= 'Any additional attributes to include in the image tag.';
+    echo form_field_dropdown($field, $options);
 
-		echo form_field( $_field );
+    // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+    $field                = array();
+    $field['key']         = 'img_attr';
+    $field['label']       = 'Attributes';
+    $field['default']     = isset(${$field['key']}) ? ${$field['key']} : '';
+    $field['placeholder'] = 'Any additional attributes to include in the image tag.';
 
-		$_field					= array();
-		$_field['key']			= 'link_attr';
-		$_field['label']		= 'Link Attributes';
-		$_field['default']		= isset( ${$_field['key']} ) ? ${$_field['key']} : '';
-		$_field['placeholder']	= 'Any additional attributes to include in the link tag.';
+    echo form_field($field);
 
-		echo form_field( $_field );
-	?>
-</div>
+    // --------------------------------------------------------------------------
+
+    $field                = array();
+    $field['key']         = 'link_attr';
+    $field['label']       = 'Link Attributes';
+    $field['default']     = isset(${$field['key']}) ? ${$field['key']} : '';
+    $field['placeholder'] = 'Any additional attributes to include in the link tag.';
+
+    echo form_field($field);
+
+echo '</div>';

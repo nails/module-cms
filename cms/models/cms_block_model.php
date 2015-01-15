@@ -1,503 +1,457 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
 
 /**
- * Name:			cms_block_model.php
+ * This model handle CMS Blocks
  *
- * Description:		This model handles everything to do with CMS blocks
- *
- **/
-
-/**
- * OVERLOADING NAILS' MODELS
- *
- * Note the name of this class; done like this to allow apps to extend this class.
- * Read full explanation at the bottom of this file.
- *
- **/
+ * @package     Nails
+ * @subpackage  module-cms
+ * @category    Model
+ * @author      Nails Dev Team
+ * @link
+ */
 
 class NAILS_Cms_block_model extends NAILS_Model
 {
-	/**
-	 * Creates a new block object
-	 *
-	 * @access public
-	 * @param string $type The type of content the bock is
-	 * @param string $slug The slug to use for the block
-	 * @param string $title The title of the block
-	 * @param string $description The description of the block (i.e what it should represent)
-	 * @param string $located A description of where the block is intended to be seen
-	 * @param string $default_value The value of the block in the app's default langauge
-	 * @param bool $return_object Whether or not to return just the ID of the newly created object (FALSE) or the entire object (TRUE)
-	 * @return mixed
-	 **/
-	public function create_block( $type, $slug, $title, $description, $located, $default_value, $return_object = FALSE )
-	{
-		//	Test the slug
-		if ( $this->get_by_slug( $slug ) ) :
+    /**
+     * Creates a new block object
+     * @param  string $type         The type of content the bock is
+     * @param  string $slug         The slug to use for the block
+     * @param  string $title        The title of the block
+     * @param  string $description  The description of the block (i.e what it should represent)
+     * @param  string $located      A description of where the block is intended to be seen
+     * @param  string $defaultValue The value of the block in the app's default langauge
+     * @param  bool   $returnObject Whether or not to return just the ID of the newly created object (false) or the entire object (true)
+     * @return mixed
+     **/
+    public function create_block($type, $slug, $title, $description, $located, $defaultValue, $returnObject = false)
+    {
+        //  Test the slug
+        if ($this->get_by_slug($slug)) {
 
-			return FALSE;
+            return false;
+        }
 
-		endif;
+        // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+        $this->db->set('type', $type);
+        $this->db->set('slug', $slug);
+        $this->db->set('title', $title);
+        $this->db->set('description', $description);
+        $this->db->set('located', $located);
+        $this->db->set('created', 'NOW()', false);
+        $this->db->set('modified', 'NOW()', false);
 
-		$this->db->set( 'type', $type );
-		$this->db->set( 'slug', $slug );
-		$this->db->set( 'title', $title );
-		$this->db->set( 'description', $description );
-		$this->db->set( 'located', $located );
-		$this->db->set( 'created', 'NOW()', FALSE );
-		$this->db->set( 'modified', 'NOW()', FALSE );
+        if (active_user('id')) {
 
-		if ( active_user( 'id' ) ) :
+            $this->db->set('created_by', active_user('id'));
+            $this->db->set('modified_by', active_user('id'));
+        }
 
-			$this->db->set( 'created_by', active_user( 'id' ) );
-			$this->db->set( 'modified_by', active_user( 'id' ) );
+        $this->db->insert(NAILS_DB_PREFIX . 'cms_block');
 
-		endif;
+        if ($this->db->affected_rows()) {
 
-		$this->db->insert( NAILS_DB_PREFIX . 'cms_block' );
+            $id = $this->db->insert_id();
 
-		if ( $this->db->affected_rows() ) :
+            $this->db->set('block_id', $id);
+            $this->db->set('language', $this->language_model->get_default_code());
+            $this->db->set('value', $defaultValue);
+            $this->db->set('created', 'NOW()', false);
+            $this->db->set('modified', 'NOW()', false);
 
-			$_id = $this->db->insert_id();
+            if (active_user('id')) {
 
-			$this->db->set( 'block_id', $_id );
-			$this->db->set( 'language', $this->language_model->get_default_code() );
-			$this->db->set( 'value', $default_value );
-			$this->db->set( 'created', 'NOW()', FALSE );
-			$this->db->set( 'modified', 'NOW()', FALSE );
+                $this->db->set('created_by', active_user('id'));
+                $this->db->set('modified_by', active_user('id'));
+            }
 
-			if ( active_user( 'id' ) ) :
+            $this->db->insert(NAILS_DB_PREFIX . 'cms_block_translation');
 
-				$this->db->set( 'created_by', active_user( 'id' ) );
-				$this->db->set( 'modified_by', active_user( 'id' ) );
+            if ($this->db->affected_rows()) {
 
-			endif;
+                if ($returnObject) {
 
-			$this->db->insert( NAILS_DB_PREFIX . 'cms_block_translation' );
+                    return $this->get_by_id($id);
 
-			if ( $this->db->affected_rows() ) :
+                } else {
 
-				if ( $return_object ) :
+                    return $id;
+                }
 
-					return $this->get_by_id( $_id );
+            } else {
 
-				else :
+                $this->db->where('id', $id);
+                $this->db->delete(NAILS_DB_PREFIX . 'cms_block');
+                $this->_set_error('Failed to add translation');
+                return false;
+            }
 
-					return $_id;
+        } else {
 
-				endif;
+            $this->_set_error('Failed to create block');
+            return false;
+        }
+    }
 
-			else :
+    // --------------------------------------------------------------------------
 
-				$this->db->where( 'id', $_id );
-				$this->db->delete( NAILS_DB_PREFIX . 'cms_block' );
-				return FALSE;
+    /**
+     * Updates an existing block object
+     * @param  int   $id   The ID of the block
+     * @param  mixed $data The fields to update
+     * @return bool
+     **/
+    public function update_block($id, $data = array())
+    {
+        //  Can't change some things
+        unset($data['id']);
+        unset($data['created']);
+        unset($data['created_by']);
 
-			endif;
+        $this->db->set($data);
+        $this->db->set('modified', 'NOW()', false);
 
-		else :
+        if (active_user('id')) {
 
-			return FALSE;
+            $this->db->set('modified_by', active_user('id'));
 
-		endif;
-	}
+        } else {
 
+            $this->db->set('modified_by', null);
+        }
 
-	// --------------------------------------------------------------------------
+        $this->db->where('id', $id);
+        $this->db->update(NAILS_DB_PREFIX . 'cms_block');
 
+        return (bool) $this->db->affected_rows();
+    }
 
-	/**
-	 * Updates an existing block object
-	 *
-	 * @access public
-	 * @param int $id The ID of the block
-	 * @param mixed $data The fields to update
-	 * @return bool
-	 **/
-	public function update_block( $id, $data = array() )
-	{
-		//	Can't change some things
-		unset( $data['id'] );
-		unset( $data['created'] );
-		unset( $data['created_by'] );
+    // --------------------------------------------------------------------------
 
-		$this->db->set( $data );
-		$this->db->set( 'modified', 'NOW()', FALSE );
+    /**
+     * Delete a block object
+     * @param  mixed $idSlug The ID, or slug, of the block to delete
+     * @return bool
+     **/
+    public function delete_block($idSlug)
+    {
+        if (is_numeric($idSlug)) {
 
-		if ( active_user( 'id' ) ) :
+            $this->db->where('id', $idSlug);
 
-			$this->db->set( 'modified_by', active_user( 'id' ) );
+        } else {
 
-		else :
+            $this->db->where('slug', $idSlug);
+        }
 
-			$this->db->set( 'modified_by', NULL );
+        $this->db->delete(NAILS_DB_PREFIX . 'cms_block');
 
-		endif;
+        return (bool) $this->db->affected_rows();
+    }
 
-		$this->db->where( 'id', $id );
-		$this->db->update( NAILS_DB_PREFIX . 'cms_block' );
+    // --------------------------------------------------------------------------
 
-		return (bool) $this->db->affected_rows();
-	}
+    /**
+     * Creates a new translation object
+     * @param  int    $blockId  The ID of the block this translation belongs to
+     * @param  int    $language The ID of the language this block is written in
+     * @param  string $value    The contents of this translation
+     * @return mixed
+     **/
+    public function create_translation($blockId, $language, $value)
+    {
+        $this->db->set('block_id', $blockId);
+        $this->db->set('language', $language);
+        $this->db->set('value', trim($value));
+        $this->db->set('created', 'NOW()', false);
+        $this->db->set('modified', 'NOW()', false);
 
+        if (active_user('id')) {
 
-	// --------------------------------------------------------------------------
+            $this->db->set('created_by', active_user('id'));
+            $this->db->set('modified_by', active_user('id'));
 
+        } else {
 
-	/**
-	 * Delete a block object
-	 *
-	 * @access public
-	 * @param mixed $id_slug The ID, or slug, of the block to delete
-	 * @return bool
-	 **/
-	public function delete_block( $id_slug )
-	{
-		if ( is_numeric( $id_slug ) ) :
+            $this->db->set('created_by', null);
+            $this->db->set('modified_by', null);
+        }
 
-			$this->db->where( 'id', $id_slug );
+        $this->db->insert(NAILS_DB_PREFIX . 'cms_block_translation');
 
-		else :
+        if ($this->db->affected_rows()) {
 
-			$this->db->where( 'slug', $id_slug );
+            //  Upate the main block's modified date and user
+            $this->update_block($blockId);
 
-		endif;
+            return true;
 
-		$this->db->delete( NAILS_DB_PREFIX . 'cms_block' );
+        } else {
 
-		return (bool) $this->db->affected_rows();
-	}
+            $this->_set_error('Failed to create translation.');
+            return false;
+        }
+    }
 
+    // --------------------------------------------------------------------------
 
-	// --------------------------------------------------------------------------
+    /**
+     * Updates an existing translation object
+     * @param  int    $blockId  The ID of the block this translation belongs to
+     * @param  int    $language The ID of the language this block is written in
+     * @param  string $value    The contents of this translation
+     * @return bool
+     **/
+    public function update_translation($blockId, $language, $value)
+    {
+        //  Get existing translation
+        $this->db->where('block_id', $blockId);
+        $this->db->where('language', $language);
+        $old = $this->db->get(NAILS_DB_PREFIX . 'cms_block_translation')->row();
 
+        if (!$old){
 
-	/**
-	 * Creates a new translation object
-	 *
-	 * @access public
-	 * @param int $block_id The ID of the block this translation belongs to
-	 * @param int $language The ID of the language this block is written in
-	 * @param string $value The contents of this translation
-	 * @return mixed
-	 **/
-	public function create_translation( $block_id, $language, $value )
-	{
-		$this->db->set( 'block_id', $block_id );
-		$this->db->set( 'language', $language );
-		$this->db->set( 'value', trim( $value ) );
-		$this->db->set( 'created', 'NOW()', FALSE );
-		$this->db->set( 'modified', 'NOW()', FALSE );
+            $this->_set_error('Could not find existing translation');
+            return false;
+        }
 
-		if ( active_user( 'id' ) ) :
+        // --------------------------------------------------------------------------
 
-			$this->db->set( 'created_by', active_user( 'id' ) );
-			$this->db->set( 'modified_by', active_user( 'id' ) );
+        //  If the value hasn't changed then don't do anything
+        if ($old->value == trim($value)){
 
-		else :
+            $this->_set_error('Value has not changed.');
+            return false;
+        }
 
-			$this->db->set( 'created_by', NULL );
-			$this->db->set( 'modified_by', NULL );
+        // --------------------------------------------------------------------------
 
-		endif;
+        $this->db->set('value', trim($value));
+        $this->db->set('modified', 'NOW()', false);
 
-		$this->db->insert( NAILS_DB_PREFIX . 'cms_block_translation' );
+        if (active_user('id')) {
 
-		if ( $this->db->affected_rows() ) :
+            $this->db->set('modified_by', active_user('id'));
 
-			//	Upate the main block's modified date and user
-			$this->update_block( $block_id );
+        } else {
 
-			return TRUE;
+            $this->db->set('modified_by', null);
+        }
 
-		else :
+        $this->db->where('block_id', $block_id);
+        $this->db->where('language', $language);
+        $this->db->update(NAILS_DB_PREFIX . 'cms_block_translation');
 
-			return FALSE;
+        if ($this->db->affected_rows()) {
 
-		endif;
-	}
+            //  Create a new revision if value has changed
+            $this->db->select('id');
+            $this->db->where('block_id', $block_id);
+            $this->db->where('language', $language);
+            $blockTranslation = $this->db->get(NAILS_DB_PREFIX . 'cms_block_translation')->row();
 
+            if ($blockTranslation) {
 
-	// --------------------------------------------------------------------------
+                $this->db->set('block_translation_id', $blockTranslation->id);
+                $this->db->set('value', $old->value);
+                $this->db->set('created', $old->modified);
+                $this->db->set('created_by', $old->modified_by);
+                $this->db->insert(NAILS_DB_PREFIX . 'cms_block_translation_revision');
 
+                //  Upate the main block's modified date and user
+                $this->update_block($old->block_id);
+            }
 
-	/**
-	 * Updates an existing translation object
-	 *
-	 * @access public
-	 * @param int $block_id The ID of the block this translation belongs to
-	 * @param int $language The ID of the language this block is written in
-	 * @param string $value The contents of this translation
-	 * @return bool
-	 **/
-	public function update_translation( $block_id, $language, $value )
-	{
-		//	Get existing translation
-		$this->db->where( 'block_id', $block_id );
-		$this->db->where( 'language', $language );
-		$_old = $this->db->get( NAILS_DB_PREFIX . 'cms_block_translation' )->row();
+            return true;
 
-		if ( ! $_old )
-			return FALSE;
+        } else {
 
-		// --------------------------------------------------------------------------
+            $this->_set_error('Failed to update translation.');
+            return false;
+        }
+    }
 
-		//	If the value hasn't changed then don't do anything
-		if ( $_old->value == trim( $value ) )
-			return FALSE;
+    // --------------------------------------------------------------------------
 
-		// --------------------------------------------------------------------------
+    /**
+     * Updates an existing object
+     * @param  int  $blockId  The ID of the block the translation belongs to
+     * @param  int  $language The language ID of the block
+     * @return bool
+     **/
+    public function delete_translation($blockId, $language)
+    {
+        $this->db->where('block_id', $blockId);
+        $this->db->where('language', $language);
+        $this->db->delete(NAILS_DB_PREFIX . 'cms_block_translation');
 
-		$this->db->set( 'value', trim( $value ) );
-		$this->db->set( 'modified', 'NOW()', FALSE );
+        if ($this->db->affected_rows()) {
 
-		if ( active_user( 'id' ) ) :
+            //  Upate the main block's modified date and user
+            $this->update_block($blockId);
 
-			$this->db->set( 'modified_by', active_user( 'id' ) );
+            return true;
 
-		else :
+        } else {
 
-			$this->db->set( 'modified_by', NULL );
+            $this->_set_error('Failed to delete translation.');
+            return false;
+        }
+    }
 
-		endif;
+    // --------------------------------------------------------------------------
 
-		$this->db->where( 'block_id', $block_id );
-		$this->db->where( 'language', $language );
-		$this->db->update( NAILS_DB_PREFIX . 'cms_block_translation' );
+    /**
+     * Fetches all objects
+     * @param  bool  $includeRevisions Whether to include translation revisions
+     * @return array
+     **/
+    public function get_all($includeRevisions = false)
+    {
+        $this->db->select('cb.type, cb.slug, cb.title, cb.description, cb.located, cbv.*, u.first_name, ue.email, u.last_name, u.gender, u.profile_img');
 
-		if ( $this->db->affected_rows() ) :
+        $this->db->join(NAILS_DB_PREFIX . 'cms_block cb', 'cb.id = cbv.block_id');
+        $this->db->join(NAILS_DB_PREFIX . 'user u', 'u.id = cbv.created_by', 'LEFT');
+        $this->db->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
 
-			//	Create a new revision if value has changed
-			$this->db->select( 'id' );
-			$this->db->where( 'block_id', $block_id );
-			$this->db->where( 'language', $language );
-			$_block_translation = $this->db->get( NAILS_DB_PREFIX . 'cms_block_translation' )->row();
+        $this->db->order_by('cb.title');
 
-			if ( $_block_translation ) :
+        $blocks = $this->db->get(NAILS_DB_PREFIX . 'cms_block_translation cbv')->result();
 
-				$this->db->set( 'block_translation_id', $_block_translation->id );
-				$this->db->set( 'value', $_old->value );
-				$this->db->set( 'created', $_old->modified );
-				$this->db->set( 'created_by', $_old->modified_by );
-				$this->db->insert( NAILS_DB_PREFIX . 'cms_block_translation_revision' );
+        $_out = array();
 
-				//	Upate the main block's modified date and user
-				$this->update_block( $_old->block_id );
+        for ($i=0; $i < count($blocks); $i++) {
 
-			endif;
+            if (!isset($_out[$blocks[$i]->block_id])) {
 
-			return TRUE;
+                 $_out[$blocks[$i]->block_id]               = new stdClass();
+                 $_out[$blocks[$i]->block_id]->id           = $blocks[$i]->block_id;
+                 $_out[$blocks[$i]->block_id]->type         = $blocks[$i]->type;
+                 $_out[$blocks[$i]->block_id]->slug         = $blocks[$i]->slug;
+                 $_out[$blocks[$i]->block_id]->title        = $blocks[$i]->title;
+                 $_out[$blocks[$i]->block_id]->description  = $blocks[$i]->description;
+                 $_out[$blocks[$i]->block_id]->located      = $blocks[$i]->located;
+                 $_out[$blocks[$i]->block_id]->translations = array();
+            }
 
-		else :
+            $_temp                    = new stdClass();
+            $_temp->id                = (int) $blocks[$i]->id;
+            $_temp->value             = $blocks[$i]->value;
+            $_temp->language          = $blocks[$i]->language;
+            $_temp->created           = $blocks[$i]->created;
+            $_temp->modified          = $blocks[$i]->modified;
+            $_temp->user              = new stdClass();
+            $_temp->user->id          = $blocks[$i]->created_by ? (int) $blocks[$i]->created_by : null;
+            $_temp->user->email       = $blocks[$i]->email;
+            $_temp->user->first_name  = $blocks[$i]->first_name;
+            $_temp->user->last_name   = $blocks[$i]->last_name;
+            $_temp->user->gender      = $blocks[$i]->gender;
+            $_temp->user->profile_img = $blocks[$i]->profile_img;
 
-			return FALSE;
+            // --------------------------------------------------------------------------
 
-		endif;
-	}
+            //  Save the default version
+            if ($blocks[$i]->language == APP_DEFAULT_LANG_CODE) {
 
+                $_out[$blocks[$i]->block_id]->default_value = $blocks[$i]->value;
+            }
 
-	// --------------------------------------------------------------------------
+            // --------------------------------------------------------------------------
 
+            //  Are we including revisions?
+            if ($includeRevisions) {
 
-	/**
-	 * Updates an existing object
-	 *
-	 * @access public
-	 * @param int $block_id The ID of the block the translation belongs to
-	 * @param int $language The language ID of the block
-	 * @return bool
-	 **/
-	public function delete_translation( $block_id, $language )
-	{
-		$this->db->where( 'block_id', $block_id );
-		$this->db->where( 'language', $language );
-		$this->db->delete( NAILS_DB_PREFIX . 'cms_block_translation' );
+                $this->db->select('cbtr.*, ue.email, u.first_name, u.last_name, u.gender, u.profile_img');
+                $this->db->where('cbtr.block_translation_id', $blocks[$i]->id);
+                $this->db->join(NAILS_DB_PREFIX . 'user u', 'u.id = cbtr.created_by', 'LEFT');
+                $this->db->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
+                $this->db->order_by('created', 'DESC');
+                $_temp->revisions = $this->db->get(NAILS_DB_PREFIX . 'cms_block_translation_revision cbtr')->result();
 
-		if ( $this->db->affected_rows() ) :
+                foreach ($_temp->revisions as $revision) {
 
-			//	Upate the main block's modified date and user
-			$this->update_block( $block_id );
+                    $revision->user              = new stdClass();
+                    $revision->user->id          = $revision->created_by ? (int) $revision->created_by : null;
+                    $revision->user->email       = $revision->email;
+                    $revision->user->first_name  = $revision->first_name;
+                    $revision->user->last_name   = $revision->last_name;
+                    $revision->user->gender      = $revision->gender;
+                    $revision->user->profile_img = $revision->profile_img;
 
-			return TRUE;
+                    unset($revision->created_by);
+                    unset($revision->email);
+                    unset($revision->first_name);
+                    unset($revision->last_name);
+                    unset($revision->gender);
+                    unset($revision->profile_img);
+                }
 
-		else :
+                if ($blocks[$i]->language == APP_DEFAULT_LANG_CODE) {
 
-			return FALSE;
+                    $_out[$blocks[$i]->block_id]->default_value_revisions = $_temp->revisions;
+                }
+            }
 
-		endif;
-	}
+            $_out[$blocks[$i]->block_id]->translations[] = $_temp;
+        }
 
+        // --------------------------------------------------------------------------
 
-	// --------------------------------------------------------------------------
+        return array_values($_out);
+    }
 
+    // --------------------------------------------------------------------------
 
-	/**
-	 * Fetches all objects
-	 *
-	 * @access public
-	 * @param bool $include_revisions Whether to include translation revisions
-	 * @return array
-	 **/
-	public function get_all( $include_revisions = FALSE )
-	{
-		$this->db->select( 'cb.type, cb.slug, cb.title, cb.description, cb.located, cbv.*, u.first_name, ue.email, u.last_name, u.gender, u.profile_img' );
+    /**
+     * Fetch an object by it's ID
+     * @param  int      $id               The ID of the object to fetch
+     * @param  bool     $includeRevisions Whether to include translation revisions
+     * @return stdClass
+     **/
+    public function get_by_id($id, $includeRevisions = false)
+    {
+        $this->db->where('cb.id', $id);
+        $result = $this->get_all($includeRevisions);
 
-		$this->db->join( NAILS_DB_PREFIX . 'cms_block cb', 'cb.id = cbv.block_id' );
-		$this->db->join( NAILS_DB_PREFIX . 'user u', 'u.id = cbv.created_by', 'LEFT' );
-		$this->db->join( NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT' );
+        // --------------------------------------------------------------------------
 
-		$this->db->order_by( 'cb.title' );
+        if (!$result) {
 
-		$_blocks = $this->db->get( NAILS_DB_PREFIX . 'cms_block_translation cbv' )->result();
+            return false;
+        }
 
-		$_out = array();
+        // --------------------------------------------------------------------------
 
-		for ( $i=0; $i < count( $_blocks ); $i++ ) :
+        return $result[0];
+    }
 
-			if ( ! isset( $_out[$_blocks[$i]->block_id] ) ) :
+    // --------------------------------------------------------------------------
 
-				 $_out[$_blocks[$i]->block_id]				= new stdClass();
-				 $_out[$_blocks[$i]->block_id]->id			= $_blocks[$i]->block_id;
-				 $_out[$_blocks[$i]->block_id]->type		= $_blocks[$i]->type;
- 				 $_out[$_blocks[$i]->block_id]->slug		= $_blocks[$i]->slug;
- 				 $_out[$_blocks[$i]->block_id]->title		= $_blocks[$i]->title;
- 				 $_out[$_blocks[$i]->block_id]->description	= $_blocks[$i]->description;
- 				 $_out[$_blocks[$i]->block_id]->located		= $_blocks[$i]->located;
- 				 $_out[$_blocks[$i]->block_id]->translations	= array();
+    /**
+     * Fetch an object by it's slug
+     * @param  string   $slug             The slug of the object to fetch
+     * @param  bool     $includeRevisions Whether to include translation revisions
+     * @return stdClass
+     **/
+    public function get_by_slug($slug, $includeRevisions = false)
+    {
+        $this->db->where('cb.slug', $slug);
+        $result = $this->get_all($includeRevisions);
 
-			endif;
+        // --------------------------------------------------------------------------
 
-			$_temp						= new stdClass();
-			$_temp->id					= (int) $_blocks[$i]->id;
-			$_temp->value				= $_blocks[$i]->value;
-			$_temp->language			= $_blocks[$i]->language;
-			$_temp->created				= $_blocks[$i]->created;
-			$_temp->modified			= $_blocks[$i]->modified;
-			$_temp->user				= new stdClass();
-			$_temp->user->id			= $_blocks[$i]->created_by ? (int) $_blocks[$i]->created_by : NULL;
-			$_temp->user->email			= $_blocks[$i]->email;
-			$_temp->user->first_name	= $_blocks[$i]->first_name;
-			$_temp->user->last_name		= $_blocks[$i]->last_name;
-			$_temp->user->gender		= $_blocks[$i]->gender;
-			$_temp->user->profile_img	= $_blocks[$i]->profile_img;
+        if (!$result) {
 
-			// --------------------------------------------------------------------------
+            return false;
+        }
 
-			//	Save the default version
-			if ( $_blocks[$i]->language == APP_DEFAULT_LANG_CODE ) :
+        // --------------------------------------------------------------------------
 
-				$_out[$_blocks[$i]->block_id]->default_value = $_blocks[$i]->value;
-
-			endif;
-
-			// --------------------------------------------------------------------------
-
-			//	Are we including revisions?
-			if ( $include_revisions ) :
-
-				$this->db->select( 'cbtr.*, ue.email, u.first_name, u.last_name, u.gender, u.profile_img' );
-				$this->db->where( 'cbtr.block_translation_id', $_blocks[$i]->id );
-				$this->db->join( NAILS_DB_PREFIX . 'user u', 'u.id = cbtr.created_by', 'LEFT' );
-				$this->db->join( NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT' );
-				$this->db->order_by( 'created', 'DESC' );
-				$_temp->revisions = $this->db->get( NAILS_DB_PREFIX . 'cms_block_translation_revision cbtr' )->result();
-
-				foreach ( $_temp->revisions AS $revision ) :
-
-					$revision->user					= new stdClass();
-					$revision->user->id				= $revision->created_by ? (int) $revision->created_by : NULL;
-					$revision->user->email			= $revision->email;
-					$revision->user->first_name		= $revision->first_name;
-					$revision->user->last_name		= $revision->last_name;
-					$revision->user->gender			= $revision->gender;
-					$revision->user->profile_img	= $revision->profile_img;
-
-					unset( $revision->created_by );
-					unset( $revision->email );
-					unset( $revision->first_name );
-					unset( $revision->last_name );
-					unset( $revision->gender );
-					unset( $revision->profile_img );
-
-				endforeach;
-
-				if ( $_blocks[$i]->language == APP_DEFAULT_LANG_CODE) :
-
-					$_out[$_blocks[$i]->block_id]->default_value_revisions = $_temp->revisions;
-
-				endif;
-
-			endif;
-
-			$_out[$_blocks[$i]->block_id]->translations[] = $_temp;
-
-		endfor;
-
-		// --------------------------------------------------------------------------
-
-		return array_values( $_out );
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	/**
-	 * Fetch an object by it's ID
-	 *
-	 * @access public
-	 * @param int $id The ID of the object to fetch
-	 * @param bool $include_revisions Whether to include translation revisions
-	 * @return stdClass
-	 **/
-	public function get_by_id( $id, $include_revisions = FALSE )
-	{
-		$this->db->where( 'cb.id', $id );
-		$_result = $this->get_all( $include_revisions );
-
-		// --------------------------------------------------------------------------
-
-		if ( ! $_result )
-			return FALSE;
-
-		// --------------------------------------------------------------------------
-
-		return $_result[0];
-	}
-
-
-	// --------------------------------------------------------------------------
-
-
-	/**
-	 * Fetch an object by it's slug
-	 *
-	 * @access public
-	 * @param string $slug The slug of the object to fetch
-	 * @param bool $include_revisions Whether to include translation revisions
-	 * @return stdClass
-	 **/
-	public function get_by_slug( $slug, $include_revisions = FALSE )
-	{
-		$this->db->where( 'cb.slug', $slug );
-		$_result = $this->get_all( $include_revisions );
-
-		// --------------------------------------------------------------------------
-
-		if ( ! $_result )
-			return FALSE;
-
-		// --------------------------------------------------------------------------
-
-		return $_result[0];
-	}
+        return $result[0];
+    }
 }
 
-
 // --------------------------------------------------------------------------
-
 
 /**
  * OVERLOADING NAILS' MODELS
@@ -523,13 +477,9 @@ class NAILS_Cms_block_model extends NAILS_Model
  *
  **/
 
-if ( ! defined( 'NAILS_ALLOW_EXTENSION_CMS_BLOCK_MODEL' ) ) :
+if (!defined('NAILS_ALLOW_EXTENSION_CMS_BLOCK_MODEL')) {
 
-	class Cms_block_model extends NAILS_Cms_block_model
-	{
-	}
-
-endif;
-
-/* End of file cms_block_model.php */
-/* Location: ./application/models/cms_block_model.php */
+    class Cms_block_model extends NAILS_Cms_block_model
+    {
+    }
+}
