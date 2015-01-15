@@ -10,6 +10,6 @@
  * @link
  */
 
-echo '<textarea name="body wysiwyg">';
+echo '<textarea name="body" class="wysiwyg">';
     echo isset($body) ? $body : '';
 echo '</textarea>';
