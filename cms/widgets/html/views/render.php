@@ -10,4 +10,4 @@
  * @link
  */
 
-isset($body) ? $body : '';
+echo isset($body) ? $body : '';
