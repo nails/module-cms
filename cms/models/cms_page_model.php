@@ -1640,15 +1640,15 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $data                 = new stdClass();
-        $data->draft_hash     = isset($data->hash) ? $data->hash : '';
-        $data->draft_template = isset($data->data->template) ? $data->data->template : '';
+        $preview                 = new stdClass();
+        $preview->draft_hash     = isset($data->hash) ? $data->hash : '';
+        $preview->draft_template = isset($data->data->template) ? $data->data->template : '';
 
         // --------------------------------------------------------------------------
 
         //  Test to see if this preview has already been created
         $this->db->select('id');
-        $this->db->where('draft_hash', $data->draft_hash);
+        $this->db->where('draft_hash', $preview->draft_hash);
         $result = $this->db->get($this->_table_preview)->row();
 
         if ($result) {
@@ -1658,48 +1658,48 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $data->draft_parent_id       = !empty($data->data->parent_id) ? $data->data->parent_id : null;
-        $data->draft_template_data   = json_encode($data, JSON_UNESCAPED_SLASHES);
-        $data->draft_title           = isset($data->data->title) ? $data->data->title : '';
-        $data->draft_seo_title       = isset($data->data->seo_title) ? $data->data->seo_title : '';
-        $data->draft_seo_description = isset($data->data->seo_description) ? $data->data->seo_description : '';
-        $data->draft_seo_keywords    = isset($data->data->seo_keywords) ? $data->data->seo_keywords : '';
+        $preview->draft_parent_id       = !empty($data->data->parent_id) ? $data->data->parent_id : null;
+        $preview->draft_template_data   = json_encode($data, JSON_UNESCAPED_SLASHES);
+        $preview->draft_title           = isset($data->data->title) ? $data->data->title : '';
+        $preview->draft_seo_title       = isset($data->data->seo_title) ? $data->data->seo_title : '';
+        $preview->draft_seo_description = isset($data->data->seo_description) ? $data->data->seo_description : '';
+        $preview->draft_seo_keywords    = isset($data->data->seo_keywords) ? $data->data->seo_keywords : '';
 
         //  Generate the breadcrumbs
-        $data->draft_breadcrumbs = array();
+        $preview->draft_breadcrumbs = array();
 
-        if ($data->draft_parent_id) {
+        if ($preview->draft_parent_id) {
 
             /**
              * There is a parent, use it's breadcrumbs array as the starting point. No
              * need to fetch the parent again.
              */
 
-            $parent = $this->get_by_id($data->draft_parent_ud);
+            $parent = $this->get_by_id($preview->draft_parent_ud);
 
             if ($parent) {
 
-                $data->draft_breadcrumbs = $parent->published->breadcrumbs;
+                $preview->draft_breadcrumbs = $parent->published->breadcrumbs;
             }
         }
 
         $temp        = new stdClass();
         $temp->id    = null;
-        $temp->title = $data->draft_title;
+        $temp->title = $preview->draft_title;
         $temp->slug  = '';
 
-        $data->breadcrumbs[] = $temp;
+        $preview->breadcrumbs[] = $temp;
         unset($temp);
 
         //  Encode the breadcrumbs for the database
-        $data->draft_breadcrumbs = json_encode($data->draft_breadcrumbs);
+        $preview->draft_breadcrumbs = json_encode($preview->draft_breadcrumbs);
 
         // --------------------------------------------------------------------------
 
         //  Save to the DB
         $this->db->trans_begin();
 
-        $this->db->set($data);
+        $this->db->set($preview);
         $this->db->set('created', 'NOW()', false);
         $this->db->set('modified', 'NOW()', false);
 
