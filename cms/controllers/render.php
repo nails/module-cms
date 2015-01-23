@@ -114,9 +114,9 @@ class NAILS_Render extends NAILS_CMS_Controller
             $render->widgets = $data->template_data->widget_areas->{$data->template};
         }
 
-        if (isset($data->template_data->data->additionalFields->{$data->template})) {
+        if (isset($data->template_data->data->additional_fields->{$data->template})) {
 
-            $render->additionalFields = $data->template_data->data->additionalFields->{$data->template};
+            $render->additionalFields = $data->template_data->data->additional_fields->{$data->template};
         }
 
         //  Decode manual config
