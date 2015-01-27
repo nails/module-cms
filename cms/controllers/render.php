@@ -203,8 +203,7 @@ class NAILS_Render extends NAILS_CMS_Controller
 
         } else {
 
-            log_message('error', 'No homepage has been defined.');
-            show_404();
+            showFatalError('No homepage has been defined.');
         }
     }
 
