@@ -540,7 +540,7 @@ class NAILS_Cms_page_model extends NAILS_Model
             // --------------------------------------------------------------------------
 
             //  Regenerate sitemap
-            if (isModuleEnabled('sitemap')) {
+            if (isModuleEnabled('nailsapp/module-sitemap')) {
 
                 $this->load->model('sitemap/sitemap_model');
                 $this->sitemap_model->generate();
@@ -1590,7 +1590,7 @@ class NAILS_Cms_page_model extends NAILS_Model
             // --------------------------------------------------------------------------
 
             //  Regenerate sitemap
-            if (isModuleEnabled('sitemap')) {
+            if (isModuleEnabled('nailsapp/module-sitemap')) {
 
                 $this->load->model('sitemap/sitemap_model');
                 $this->sitemap_model->generate();
