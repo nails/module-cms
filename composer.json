@@ -37,6 +37,7 @@
     {
         "nails" :
         {
+            "moduleName": "cms",
             "type": "module"
         }
     }
