@@ -71,9 +71,7 @@ class Menus extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/cms/menus/index', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('index');
     }
 
     // --------------------------------------------------------------------------
@@ -149,9 +147,7 @@ class Menus extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/cms/menus/edit', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------
@@ -233,9 +229,7 @@ class Menus extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/cms/menus/edit', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------

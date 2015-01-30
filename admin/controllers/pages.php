@@ -74,9 +74,7 @@ class Pages extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/cms/pages/index', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('index');
     }
 
     // --------------------------------------------------------------------------
@@ -113,9 +111,7 @@ class Pages extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/cms/pages/edit', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------
@@ -165,9 +161,7 @@ class Pages extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/cms/pages/edit', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------

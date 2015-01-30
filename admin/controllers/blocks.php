@@ -82,9 +82,7 @@ class Blocks extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/cms/blocks/index', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('index');
     }
 
     // --------------------------------------------------------------------------
@@ -162,9 +160,7 @@ class Blocks extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/cms/blocks/edit', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------
@@ -227,9 +223,7 @@ class Blocks extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->load->view('structure/header', $this->data);
-        $this->load->view('admin/cms/blocks/create', $this->data);
-        $this->load->view('structure/footer', $this->data);
+        \Nails\Admin\Helper::loadView('create');
     }
 
     // --------------------------------------------------------------------------
