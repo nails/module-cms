@@ -4,7 +4,7 @@
 		Browse editable pages.
 		<?php
 
-			if ( user_has_permission( 'admin.cms:0.can_create_page' ) ) :
+			if ( userHasPermission( 'admin.cms:0.can_create_page' ) ) :
 
 				echo anchor( 'admin/cms/pages/create', 'Add New Page', 'class="awesome small green right"' );
 
@@ -100,14 +100,14 @@
 
 						echo '</td>';
 
-						$this->load->view( 'admin/_utilities/table-cell-user',		$page->modified_by );
-						$this->load->view( 'admin/_utilities/table-cell-datetime',	array( 'datetime' => $page->modified ) );
+						echo \Nails\Admin\Helper::loadUserCell($page->modified_by);
+						echo \Nails\Admin\Helper::loadDatetimeCell($page->modified);
 
 						echo '<td class="actions">';
 
 							echo anchor( $page->published->url, lang( 'action_view' ), 'class="awesome small" target="_blank"' );
 
-							if ( user_has_permission( 'admin.cms:0.can_edit_page' ) ) :
+							if ( userHasPermission( 'admin.cms:0.can_edit_page' ) ) :
 
 								echo anchor( 'admin/cms/pages/edit/' . $page->id, lang( 'action_edit' ), 'class="awesome small"' );
 
@@ -121,7 +121,7 @@
 
 							//echo anchor( $page->url . '?is_preview=1', lang( 'action_preview' ), 'target="_blank" class="fancybox awesome small green" data-fancybox-type="iframe" data-width="100%" data-height="100%"' );
 
-							if ( user_has_permission( 'admin.cms:0.can_delete_page' ) ) :
+							if ( userHasPermission( 'admin.cms:0.can_delete_page' ) ) :
 
 								echo anchor( 'admin/cms/pages/delete/' . $page->id, lang( 'action_delete' ), 'data-title="Are you sure?" data-body="This will remove the page, and any of it\'s children, from the site." class="confirm awesome small red"' );
 

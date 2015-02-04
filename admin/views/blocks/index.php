@@ -3,7 +3,7 @@
 	<p>
 		<?php
 
-			if ( user_has_permission( 'admin.cms:0.can_create_block' ) ) :
+			if ( userHasPermission( 'admin.cms:0.can_create_block' ) ) :
 
 				echo anchor( 'admin/cms/blocks/create', 'Add New Block', 'class="awesome small green right"' );
 

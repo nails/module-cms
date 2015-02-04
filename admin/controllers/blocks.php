@@ -20,7 +20,7 @@ class Blocks extends \AdminController
      */
     public static function announce()
     {
-        if (user_has_permission('admin.cms:0.can_manage_block')) {
+        if (userHasPermission('admin.cms:0.can_manage_block')) {
 
             $navGroup = new \Nails\Admin\Nav('CMS');
             $navGroup->addMethod('Manage Blocks');
@@ -36,7 +36,7 @@ class Blocks extends \AdminController
     public function __construct()
     {
         parent::__construct();
-        if (!user_has_permission('admin.accounts:0.can_manage_block')) {
+        if (!userHasPermission('admin.accounts:0.can_manage_block')) {
 
             unauthorised();
         }
@@ -92,7 +92,7 @@ class Blocks extends \AdminController
      */
     public function edit()
     {
-        if (!user_has_permission('admin.cms:0.can_edit_block')) {
+        if (!userHasPermission('admin.cms:0.can_edit_block')) {
 
             unauthorised();
         }
@@ -170,7 +170,7 @@ class Blocks extends \AdminController
      */
     public function create()
     {
-        if (!user_has_permission('admin.cms:0.can_create_block')) {
+        if (!userHasPermission('admin.cms:0.can_create_block')) {
 
             unauthorised();
         }

@@ -20,7 +20,7 @@ class Menus extends \AdminController
      */
     public static function announce()
     {
-        if (user_has_permission('admin.cms:0.can_manage_menu')) {
+        if (userHasPermission('admin.cms:0.can_manage_menu')) {
 
             $navGroup = new \Nails\Admin\Nav('CMS');
             $navGroup->addMethod('Manage Menus');
@@ -36,7 +36,7 @@ class Menus extends \AdminController
     public function __construct()
     {
         parent::__construct();
-        if (!user_has_permission('admin.accounts:0.can_manage_menu')) {
+        if (!userHasPermission('admin.accounts:0.can_manage_menu')) {
 
             unauthorised();
         }
@@ -81,7 +81,7 @@ class Menus extends \AdminController
      */
     public function create()
     {
-        if (!user_has_permission('admin.cms:0.can_create_menu')) {
+        if (!userHasPermission('admin.cms:0.can_create_menu')) {
 
             unauthorised();
         }
@@ -157,7 +157,7 @@ class Menus extends \AdminController
      */
     public function edit()
     {
-        if (!user_has_permission('admin.cms:0.can_edit_menu')) {
+        if (!userHasPermission('admin.cms:0.can_edit_menu')) {
 
             unauthorised();
         }
@@ -239,7 +239,7 @@ class Menus extends \AdminController
      */
     public function delete()
     {
-        if (!user_has_permission('admin.cms:0.can_delete_menu')) {
+        if (!userHasPermission('admin.cms:0.can_delete_menu')) {
 
             unauthorised();
         }

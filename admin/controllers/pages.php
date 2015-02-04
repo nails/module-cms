@@ -20,7 +20,7 @@ class Pages extends \AdminController
      */
     public static function announce()
     {
-        if (user_has_permission('admin.cms:0.can_manage_page')) {
+        if (userHasPermission('admin.cms:0.can_manage_page')) {
 
             $navGroup = new \Nails\Admin\Nav('CMS');
             $navGroup->addMethod('Manage Pages');
@@ -36,7 +36,7 @@ class Pages extends \AdminController
     public function __construct()
     {
         parent::__construct();
-        if (!user_has_permission('admin.accounts:0.can_manage_page')) {
+        if (!userHasPermission('admin.accounts:0.can_manage_page')) {
 
             unauthorised();
         }
@@ -84,7 +84,7 @@ class Pages extends \AdminController
      */
     public function create()
     {
-        if (!user_has_permission('admin.cms:0.can_create_page')) {
+        if (!userHasPermission('admin.cms:0.can_create_page')) {
 
             unauthorised();
         }
@@ -121,7 +121,7 @@ class Pages extends \AdminController
      */
     public function edit()
     {
-        if (!user_has_permission('admin.cms:0.can_edit_page')) {
+        if (!userHasPermission('admin.cms:0.can_edit_page')) {
 
             unauthorised();
         }
@@ -171,7 +171,7 @@ class Pages extends \AdminController
      */
     public function publish()
     {
-        if (!user_has_permission('admin.cms:0.can_edit_page')) {
+        if (!userHasPermission('admin.cms:0.can_edit_page')) {
 
             unauthorised();
         }
@@ -208,7 +208,7 @@ class Pages extends \AdminController
      */
     public function delete()
     {
-        if (!user_has_permission('admin.cms:0.can_delete_page')) {
+        if (!userHasPermission('admin.cms:0.can_delete_page')) {
 
             unauthorised();
         }
@@ -245,7 +245,7 @@ class Pages extends \AdminController
      */
     public function restore()
     {
-        if (!user_has_permission('admin.cms:0.can_restore_page')) {
+        if (!userHasPermission('admin.cms:0.can_restore_page')) {
 
             unauthorised();
         }
@@ -282,7 +282,7 @@ class Pages extends \AdminController
      */
     public function destroy()
     {
-        if (!user_has_permission('admin.cms:0.can_destroy_page')) {
+        if (!userHasPermission('admin.cms:0.can_destroy_page')) {
 
             unauthorised();
         }

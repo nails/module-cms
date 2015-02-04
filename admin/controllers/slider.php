@@ -20,7 +20,7 @@ class Slider extends \AdminController
      */
     public static function announce()
     {
-        if (user_has_permission('admin.cms:0.can_manage_slider')) {
+        if (userHasPermission('admin.cms:0.can_manage_slider')) {
 
             $navGroup = new \Nails\Admin\Nav('CMS');
             $navGroup->addMethod('Manage Sliders');
@@ -36,7 +36,7 @@ class Slider extends \AdminController
     public function __construct()
     {
         parent::__construct();
-        if (!user_has_permission('admin.accounts:0.can_manage_slider')) {
+        if (!userHasPermission('admin.accounts:0.can_manage_slider')) {
 
             unauthorised();
         }
@@ -81,7 +81,7 @@ class Slider extends \AdminController
      */
     public function create()
     {
-        if (!user_has_permission('admin.cms:0.can_create_slider')) {
+        if (!userHasPermission('admin.cms:0.can_create_slider')) {
 
             unauthorised();
         }
@@ -108,7 +108,7 @@ class Slider extends \AdminController
      */
     public function edit()
     {
-        if (!user_has_permission('admin.cms:0.can_edit_slider')) {
+        if (!userHasPermission('admin.cms:0.can_edit_slider')) {
 
             unauthorised();
         }
@@ -143,7 +143,7 @@ class Slider extends \AdminController
      */
     public function delete()
     {
-        if (!user_has_permission('admin.cms:0.can_delete_slider')) {
+        if (!userHasPermission('admin.cms:0.can_delete_slider')) {
 
             unauthorised();
         }
