@@ -20,13 +20,12 @@ class Menus extends \AdminController
      */
     public static function announce()
     {
-        $d = parent::announce();
         if (user_has_permission('admin.cms:0.can_manage_menu')) {
 
-            $d[''] = array('Content Management', 'Manage Menus');
-            return $d;
+            $navGroup = new \Nails\Admin\Nav('CMS');
+            $navGroup->addMethod('Manage Menus');
+            return $navGroup;
         }
-        return $d;
     }
 
     // --------------------------------------------------------------------------

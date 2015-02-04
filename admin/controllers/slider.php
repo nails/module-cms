@@ -20,13 +20,12 @@ class Slider extends \AdminController
      */
     public static function announce()
     {
-        $d = parent::announce();
         if (user_has_permission('admin.cms:0.can_manage_slider')) {
 
-            $d[''] = array('Content Management', 'Manage Sliders');
-            return $d;
+            $navGroup = new \Nails\Admin\Nav('CMS');
+            $navGroup->addMethod('Manage Sliders');
+            return $navGroup;
         }
-        return $d;
     }
 
     // --------------------------------------------------------------------------

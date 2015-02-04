@@ -20,13 +20,12 @@ class Pages extends \AdminController
      */
     public static function announce()
     {
-        $d = parent::announce();
         if (user_has_permission('admin.cms:0.can_manage_page')) {
 
-            $d[''] = array('Content Management', 'Manage Pages');
-            return $d;
+            $navGroup = new \Nails\Admin\Nav('CMS');
+            $navGroup->addMethod('Manage Pages');
+            return $navGroup;
         }
-        return $d;
     }
 
     // --------------------------------------------------------------------------

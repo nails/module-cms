@@ -20,13 +20,12 @@ class Blocks extends \AdminController
      */
     public static function announce()
     {
-        $d = parent::announce();
         if (user_has_permission('admin.cms:0.can_manage_block')) {
 
-            $d[''] = array('Content Management', 'Manage Blocks');
-            return $d;
+            $navGroup = new \Nails\Admin\Nav('CMS');
+            $navGroup->addMethod('Manage Blocks');
+            return $navGroup;
         }
-        return $d;
     }
 
     // --------------------------------------------------------------------------
