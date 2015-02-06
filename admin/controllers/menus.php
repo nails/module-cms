@@ -140,7 +140,7 @@ class Menus extends \AdminController
 
         //  Assets
         $this->asset->library('jqueryui');
-        $this->asset->load('nails.admin.cms.menus.create_edit.min.js', true);
+        $this->asset->load('nails.admin.cms.menus.createEdit.min.js', true);
         $this->asset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
         $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
 
@@ -222,7 +222,7 @@ class Menus extends \AdminController
 
         //  Assets
         $this->asset->library('jqueryui');
-        $this->asset->load('nails.admin.cms.menus.create_edit.min.js', true);
+        $this->asset->load('nails.admin.cms.menus.createEdit.min.js', true);
         $this->asset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
         $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
 

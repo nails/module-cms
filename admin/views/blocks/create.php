@@ -1,114 +1,79 @@
 <div class="group-cms blocks create">
+    <?=form_open()?>
+    <fieldset>
+        <legend>Block details</legend>
+        <?php
 
-	<?=form_open()?>
+        //  Slug
+        $field                = array();
+        $field['key']         = 'slug';
+        $field['label']       = 'Slug';
+        $field['default']     = '';
+        $field['required']    = true;
+        $field['placeholder'] = 'The block\'s unique slug';
 
-	<p>
-		Use this form to create a new CMS block. Blocks can be used within the code using the <code>cms_render_block()</code>
-		function made available by the CMS helper. Blocks may also be used within page content by using the appropriate shortcode.
-	</p>
+        echo form_field($field);
 
-	<fieldset>
-		<legend>Block details</legend>
-		<?php
+        // --------------------------------------------------------------------------
 
-		//	Slug
-		$_field					= array();
-		$_field['key']			= 'slug';
-		$_field['label']		= 'Slug';
-		$_field['default']		= '';
-		$_field['required']		= TRUE;
-		$_field['placeholder']	= 'The block\'s unique slug';
+        //  Title
+        $field                = array();
+        $field['key']         = 'label';
+        $field['label']       = 'Label';
+        $field['default']     = '';
+        $field['required']    = true;
+        $field['placeholder'] = 'The Human friendly block title';
 
-		echo form_field( $_field );
+        echo form_field($field);
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Title
-		$_field					= array();
-		$_field['key']			= 'title';
-		$_field['label']		= 'Title';
-		$_field['default']		= '';
-		$_field['required']		= TRUE;
-		$_field['placeholder']	= 'The Human friendly block title';
+        //  Description
+        $field                = array();
+        $field['key']         = 'description';
+        $field['label']       = 'Description';
+        $field['default']     = '';
+        $field['placeholder'] = 'A description of what this block\'s value should be';
 
-		echo form_field( $_field );
+        echo form_field($field);
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Description
-		$_field					= array();
-		$_field['key']			= 'description';
-		$_field['label']		= 'Description';
-		$_field['default']		= '';
-		$_field['required']		= FALSE;
-		$_field['placeholder']	= 'A description of what this block\'s value should be';
+        //  Located
+        $field                = array();
+        $field['key']         = 'located';
+        $field['label']       = 'Located';
+        $field['default']     = '';
+        $field['placeholder'] = 'A brief outline of where this block might be used';
 
-		echo form_field( $_field );
+        echo form_field($field);
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Located
-		$_field					= array();
-		$_field['key']			= 'located';
-		$_field['label']		= 'Located';
-		$_field['default']		= '';
-		$_field['required']		= FALSE;
-		$_field['placeholder']	= 'A brief outline of where this block might be used';
+        //  Block Type
+        $field             = array();
+        $field['key']      = 'type';
+        $field['label']    = 'Block Type';
+        $field['required'] = true;
+        $field['class']    = 'select2';
 
-		echo form_field( $_field );
+        echo form_field_dropdown($field, $block_types);
 
-		// --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-		//	Block Type
-		$_field					= array();
-		$_field['key']			= 'type';
-		$_field['label']		= 'Block Type';
-		$_field['required']		= TRUE;
-		$_field['class']		= 'select2';
+        $field                = array();
+        $field['key']         = 'value';
+        $field['label']       = 'Default Value';
+        $field['required']    = true;
+        $field['id']          = 'default_value';
+        $field['placeholder'] = 'Define the default value';
 
-		echo form_field_dropdown( $_field, $block_types );
+        echo form_field_textarea($field);
 
-		?>
-	</fieldset>
-
-	<fieldset id="default-value">
-		<?php
-
-			if ( count( $languages ) > 1 ) :
-
-				echo '<legend>' . APP_DEFAULT_LANG_LABEL . ' Value</legend>';
-				echo '<p class="system-alert message">';
-				echo '<strong>Note:</strong> All blocks must have an <?=APP_DEFAULT_LANG_LABEL?> value, define the initial ' . APP_DEFAULT_LANG_LABEL . ' value now.';
-				echo '</p>';
-
-			else :
-
-				echo '<legend>Value</legend>';
-
-			endif;
-
-			//	Value
-			echo form_textarea( 'value', set_value( 'value' ), 'placeholder="Define the default value" id="default_value"' );
-
-		?>
-	</fieldset>
-
-	<p>
-		<?=form_submit( 'submit', lang( 'action_create' ), 'class="awesome"' )?>
-	</p>
-
-	<?=form_close()?>
+        ?>
+    </fieldset>
+    <p>
+        <?=form_submit('submit', lang('action_create'), 'class="awesome"')?>
+    </p>
+    <?=form_close()?>
 </div>
-
-<script type="text/javascript">
-<!--//
-
-	$(function(){
-
-		var CMS_Blocks = new NAILS_Admin_CMS_Blocks;
-		CMS_Blocks.init_create();
-
-	});
-
-//-->
-</script>

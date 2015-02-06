@@ -1,120 +1,78 @@
 <div class="group-cms blocks overview">
+    <p>
+        Blocks allow you to update a single piece of content. Blocks might appear in more than one place so
+        any updates will be reflected across all instances. Blocks can be used within the code using the
+        <code>cms_render_block()</code> function made available by the CMS helper. Blocks may also be used
+        within page content by using the block's slug within the shortcode, e.g., <code>[:example-slug:]</code>
+        would render the block whose slug was example-slug.
+    </p>
+    <hr />
+    <?php
 
-	<p>
-		<?php
+        echo \Nails\Admin\Helper::loadSearch($search);
+        echo \Nails\Admin\Helper::loadPagination($pagination);
 
-			if ( userHasPermission( 'admin.cms:0.can_create_block' ) ) :
+    ?>
+    <table>
+        <thead>
+            <tr>
+                <th class="label">Block Title &amp; Description</th>
+                <th class="location">Location</th>
+                <th class="type">Type</th>
+                <th class="default">Value</th>
+                <th class="datetime">Modified</th>
+                <th class="actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php
 
-				echo anchor( 'admin/cms/blocks/create', 'Add New Block', 'class="awesome small green right"' );
+            if ($blocks) {
 
-			endif;
+                foreach ($blocks as $block) {
 
-		?>
-	</p>
-	<p>
-		Blocks allow you to update a single block of content. Blocks might appear in more than one place so any updates will be reflected across
-		all instances.
-	</p>
+                    echo '<tr class="block">';
 
-	<hr />
+                        echo '<td class="label">';
+                            echo '<strong>' . $block->label . '</strong>';
+                            echo '<small>';
+                            echo 'Slug: ' . $block->slug . '<br />';
+                            echo 'Description: ' . $block->description . '<br />';
+                            echo '</small>';
+                        echo '</td>';
+                        echo '<td class="default">';
+                            echo $block->located;
+                        echo '</td>';
+                        echo '<td class="type">';
+                            echo $block_types[$block->type];
+                        echo '</td>';
+                        echo '<td class="default">';
+                            echo character_limiter(strip_tags($block->value), 100);
+                        echo '</td>';
+                        echo \Nails\Admin\Helper::loadDatetimeCell($block->modified);
+                        echo '<td class="actions">';
+                            echo anchor('admin/cms/blocks/edit/' . $block->id, 'Edit', 'class="awesome small"');
+                            echo anchor('admin/cms/blocks/delete/' . $block->id, 'Delete', 'class="awesome small red confirm" data-title="Are you sure?" data-body="This action cannot be undone."');
+                        echo '</td>';
 
-	<div class="search">
-		<div class="search-text">
-			<input type="text" name="search" value="" autocomplete="off" placeholder="Search block titles by typing in here...">
-		</div>
-	</div>
+                    echo '</tr>';
+                }
 
-	<hr />
+            } else {
 
-	<table>
-		<thead>
-			<tr>
-				<th class="title">Block Title &amp; Description</th>
-				<th class="default">Value</th>
-				<th class="actions">Actions</th>
-			</tr>
-		</thead>
-		<tbody>
-		<?php
+                echo '<tr>';
+                    echo '<td colspan="6" class="no-data">';
+                        echo 'No editable blocks found';
+                    echo '</td>';
+                echo '</tr>';
+            }
 
-			if ( $blocks ) :
+        ?>
+        </tbody>
+    </table>
+    <?php
 
-				foreach ( $blocks as $block ) :
+        echo \Nails\Admin\Helper::loadPagination($pagination);
 
-					echo '<tr class="block" data-title="' . $block->title . '">';
-
-					echo '<td class="title">';
-					echo '<strong>' . $block->title . '</strong>';
-					echo '<small>';
-					echo 'Slug: ' . $block->slug . '<br />';
-					echo 'Description: ' . $block->description . '<br />';
-					echo ( ! empty( $block->located ) ? 'Located: ' . $block->located . '<br />' : NULL );
-					echo 'Type: ' . $block_types[$block->type] . '<br />';
-					echo '</small>';
-					echo '</td>';
-
-					// --------------------------------------------------------------------------
-
-					if ( count( $languages ) == 1 ) :
-
-						echo '<td class="default">';
-						echo character_limiter( strip_tags( $block->default_value ), 100 );
-						echo '</td>';
-
-					else :
-
-						echo '<td class="default">';
-						echo '<ul>';
-						foreach ( $block->translations as $variation ) :
-
-							$_label = ! empty( $languages[$variation->language] ) ? $languages[$variation->language] : $variation->language;
-
-							echo '<li>';
-								echo '<strong>' . $_label . ':</strong> ';
-								echo character_limiter( strip_tags( $variation->value ), 100 );
-							echo '</li>';
-
-						endforeach;
-						echo '</ul>';
-						echo'</td>';
-
-					endif;
-
-					// --------------------------------------------------------------------------
-
-					echo '<td class="actions">';
-					echo anchor( 'admin/cms/blocks/edit/' . $block->id, 'Edit', 'class="awesome small"' );
-					echo '</td>';
-
-					echo '</tr>';
-
-				endforeach;
-
-			else :
-
-					echo '<tr>';
-					echo '<td colspan="3" class="no-data">';
-					echo 'No editable blocks found';
-					echo '</td>';
-					echo '</tr>';
-
-			endif;
-
-		?>
-		</tbody>
-	</table>
+    ?>
 </div>
-
-<script type="text/javascript">
-<!--//
-
-	$(function(){
-
-		var CMS_Blocks = new NAILS_Admin_CMS_Blocks;
-		CMS_Blocks.init_search();
-
-
-	});
-
-//-->
-</script>

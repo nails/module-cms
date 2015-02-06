@@ -10,7 +10,7 @@
  * @link
  */
 
-class NAILS_Cms_block_model extends NAILS_Model
+class NAILS_Cms_block_model1 extends NAILS_Model
 {
     /**
      * Creates a new block object
@@ -54,7 +54,7 @@ class NAILS_Cms_block_model extends NAILS_Model
             $id = $this->db->insert_id();
 
             $this->db->set('block_id', $id);
-            $this->db->set('language', $this->language_model->get_default_code());
+            $this->db->set('language', $this->language_model->getDefaultCode());
             $this->db->set('value', $defaultValue);
             $this->db->set('created', 'NOW()', false);
             $this->db->set('modified', 'NOW()', false);
@@ -448,6 +448,46 @@ class NAILS_Cms_block_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         return $result[0];
+    }
+}
+
+class NAILS_Cms_block_model extends NAILS_Model
+{
+    /**
+     * Model constructor
+     **/
+    public function __construct()
+    {
+        parent::__construct();
+        $this->_table = NAILS_DB_PREFIX . 'cms_block';
+        $this->_table_prefix = 'b';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * This method applies the conditionals which are common across the get_*()
+     * methods and the count() method.
+     * @param array  $data    Data passed from the calling method
+     * @param string $_caller The name of the calling method
+     * @return void
+     **/
+    protected function _getcount_common($data = array(), $_caller = null)
+    {
+        if (!empty($data['keywords'])) {
+
+            if (!isset($data['or_like'])) {
+
+                $data['or_like'] = array();
+            }
+
+            $data['or_like'][] = array('b.label', $data['keywords']);
+            $data['or_like'][] = array('b.value', $data['keywords']);
+            $data['or_like'][] = array('b.located', $data['keywords']);
+            $data['or_like'][] = array('b.description', $data['keywords']);
+        }
+
+        parent::_getcount_common($data, $_caller);
     }
 }
 

@@ -46,8 +46,6 @@ class Blocks extends \AdminController
         //  Load common items
         $this->load->helper('cms');
         $this->load->model('cms/cms_block_model');
-        $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
-        $this->asset->load('nails.admin.cms.blocks.min.js', true);
 
         // --------------------------------------------------------------------------
 
@@ -76,8 +74,48 @@ class Blocks extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->data['blocks']    = $this->cms_block_model->get_all();
-        $this->data['languages'] = $this->language_model->get_all_enabled_flat();
+        //  Get pagination and search/sort variables
+        $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
+        $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
+        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : 'b.label';
+        $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'desc';
+        $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
+
+        // --------------------------------------------------------------------------
+
+        //  Define the sortable columns
+        $sortColumns = array(
+            'b.label'    => 'Label',
+            'b.located'  => 'Location',
+            'b.type'     => 'Type',
+            'b.created'  => 'Created',
+            'b.modified' => 'Modified'
+        );
+
+        // --------------------------------------------------------------------------
+
+        //  Define the $data variable for the queries
+        $data = array(
+            'sort'  => array(
+                'column' => $sortOn,
+                'order'  => $sortOrder
+            ),
+            'keywords' => $keywords
+        );
+
+        //  Get the items for the page
+        $totalRows            = $this->cms_block_model->count_all($data);
+        $this->data['blocks'] = $this->cms_block_model->get_all($page, $perPage, $data);
+
+        //  Set Search and Pagination objects for the view
+        $this->data['search']     = \Nails\Admin\Helper::searchObject($sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
+        $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
+
+        //  Add a header button
+        if (userHasPermission('admin.cms:0.can_create_block')) {
+
+            \Nails\Admin\Helper::addHeaderButton('admin/cms/blocks/create', 'Create Block');
+        }
 
         // --------------------------------------------------------------------------
 
@@ -103,59 +141,54 @@ class Blocks extends \AdminController
 
         if (!$this->data['block']) {
 
-            $this->session->set_flashdata('error', '<strong>Sorry,</strong> no block found by that ID');
+            show_404();
         }
 
         // --------------------------------------------------------------------------
 
         if ($this->input->post()) {
 
-            //  Loop through and update translations, keep track of translations which have been updated
-            $updated = array();
+            //  Form Validation
+            $this->load->library('form_validation');
+            $this->form_validation->set_rules('value', '', 'xss_clean');
+            $this->form_validation->set_message('required', lang('fv_required'));
 
-            if ($this->input->post('translation')) {
+            if ($this->form_validation->run($this)) {
 
-                foreach ($this->input->post('translation') as $translation) {
+                $blockData          = array();
+                $blockData['value'] = $this->input->post('value');
 
-                    $this->cms_block_model->update_translation($this->data['block']->id, $translation['language'], $translation['value']);
-                    $updated[] = $translation['language'];
+                if ($this->cms_block_model->update($this->data['block']->id, $blockData)) {
+
+                    $this->session->set_flashdata('success', '<strong>Success!</strong> Block updated successfully.');
+                    redirect('admin/cms/blocks');
+
+                } else {
+
+                    $this->data['error'] = '<strong>Sorry,</strong> there was a problem updating the new block.';
                 }
+
+            } else {
+
+                $this->data['error'] = lang('fv_there_were_errors');
             }
-
-            //  Delete translations that weren't updated (they have been removed)
-            if ($updated) {
-
-                $this->db->where('block_id', $this->data['block']->id);
-                $this->db->where_not_in('language', $updated);
-                $this->db->delete(NAILS_DB_PREFIX . 'cms_block_translation');
-            }
-
-            //  Loop through and add new translations
-            if ($this->input->post('new_translation')) {
-
-                foreach ($this->input->post('new_translation') as $translation) {
-
-                    $this->cms_block_model->create_translation($this->data['block']->id, $translation['language'], $translation['value']);
-                }
-            }
-
-            // --------------------------------------------------------------------------
-
-            //  Send the user on their merry way
-            $this->session->set_flashdata('success', '<strong>Success!</strong> The block was updated successfully!');
-            redirect('admin/cms/blocks');
         }
 
         // --------------------------------------------------------------------------
 
         //  Set method info
-        $this->data['page']->title = 'Edit Block "' . $this->data['block']->title . '"';
+        $this->data['page']->title = 'Edit Block &rsaquo; ' . $this->data['block']->label;
 
         // --------------------------------------------------------------------------
 
         //  Fetch data
-        $this->data['languages']    = $this->language_model->get_all_enabled_flat();
-        $this->data['default_code'] = $this->language_model->get_default_code();
+        $this->data['languages']    = $this->language_model->getAllEnabledFlat();
+        $this->data['default_code'] = $this->language_model->getDefaultCode();
+
+        // --------------------------------------------------------------------------
+
+        $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
+        $this->asset->load('nails.admin.cms.blocks.edit.min.js', true);
 
         // --------------------------------------------------------------------------
 
@@ -183,7 +216,7 @@ class Blocks extends \AdminController
             $this->load->library('form_validation');
 
             $this->form_validation->set_rules('slug', '', 'xss_clean|required|callback__callback_block_slug');
-            $this->form_validation->set_rules('title', '', 'xss_clean|required');
+            $this->form_validation->set_rules('label', '', 'xss_clean|required');
             $this->form_validation->set_rules('description', '', 'xss_clean');
             $this->form_validation->set_rules('located', '', 'xss_clean');
             $this->form_validation->set_rules('type', '', 'xss_clean|required|callback__callback_block_type');
@@ -193,14 +226,15 @@ class Blocks extends \AdminController
 
             if ($this->form_validation->run($this)) {
 
-                $type  = $this->input->post('type');
-                $slug  = $this->input->post('slug');
-                $title = $this->input->post('title');
-                $desc  = $this->input->post('description');
-                $loc   = $this->input->post('located');
-                $val   = $this->input->post('value');
+                $blockData                = array();
+                $blockData['type']        = $this->input->post('type');
+                $blockData['slug']        = $this->input->post('slug');
+                $blockData['label']       = $this->input->post('label');
+                $blockData['description'] = $this->input->post('description');
+                $blockData['located']     = $this->input->post('located');
+                $blockData['value']       = $this->input->post('value');
 
-                if ($this->cms_block_model->create_block($type, $slug, $title, $desc, $loc, $val)) {
+                if ($this->cms_block_model->create($blockData)) {
 
                     $this->session->set_flashdata('success', '<strong>Success!</strong> Block created successfully.');
                     redirect('admin/cms/blocks');
@@ -218,11 +252,28 @@ class Blocks extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->data['languages'] = $this->language_model->get_all_enabled_flat();
+        $this->data['page']->title = 'Create Block';
+
+        // --------------------------------------------------------------------------
+
+        $this->asset->load('nails.admin.cms.blocks.create.min.js', true);
 
         // --------------------------------------------------------------------------
 
         \Nails\Admin\Helper::loadView('create');
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function delete()
+    {
+        if (!userHasPermission('admin.cms:0.can_delete_block')) {
+
+            unauthorised();
+        }
+
+        $this->session->set_flashdata('message', '<strong>Coming soon!</strong> The ability to delete CMS blocks is on the roadmap.');
+        redirect('admin/cms/blocks');
     }
 
     // --------------------------------------------------------------------------

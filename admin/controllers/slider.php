@@ -93,7 +93,7 @@ class Slider extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Assets
-        $this->asset->load('nails.admin.cms.sliders.create_edit.min.js', true);
+        $this->asset->load('nails.admin.cms.sliders.createEdit.min.js', true);
 
         // --------------------------------------------------------------------------
 
@@ -128,7 +128,7 @@ class Slider extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Assets
-        $this->asset->load('nails.admin.cms.sliders.create_edit.min.js', true);
+        $this->asset->load('nails.admin.cms.sliders.createEdit.min.js', true);
 
         // --------------------------------------------------------------------------
 
