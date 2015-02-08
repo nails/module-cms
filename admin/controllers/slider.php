@@ -56,17 +56,50 @@ class Slider extends \AdminController
      */
     public function index()
     {
+        //  Set method info
         $this->data['page']->title = 'Manage Sliders';
 
         // --------------------------------------------------------------------------
 
-        //  Fetch all the menus in the DB
-        $this->data['sliders'] = $this->cms_slider_model->get_all();
+        //  Get pagination and search/sort variables
+        $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
+        $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
+        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : 's.label';
+        $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'asc';
+        $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
 
         // --------------------------------------------------------------------------
 
-        //  Assets
-        $this->asset->load('nails.admin.cms.sliders.min.js', true);
+        //  Define the sortable columns
+        $sortColumns = array(
+            's.label'    => 'Label',
+            's.modified' => 'Modified Date'
+        );
+
+        // --------------------------------------------------------------------------
+
+        //  Define the $data variable for the queries
+        $data = array(
+            'sort'  => array(
+                'column' => $sortOn,
+                'order'  => $sortOrder
+            ),
+            'keywords' => $keywords
+        );
+
+        //  Get the items for the page
+        $totalRows             = $this->cms_slider_model->count_all($data);
+        $this->data['sliders'] = $this->cms_slider_model->get_all($page, $perPage, $data);
+
+        //  Set Search and Pagination objects for the view
+        $this->data['search']     = \Nails\Admin\Helper::searchObject($sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
+        $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
+
+        //  Add a header button
+        if (userHasPermission('admin.cms:0.can_manage_slider')) {
+
+             \Nails\Admin\Helper::addHeaderButton('admin/cms/slider/create', 'Add New Slider');
+        }
 
         // --------------------------------------------------------------------------
 
@@ -84,6 +117,13 @@ class Slider extends \AdminController
         if (!userHasPermission('admin.cms:0.can_create_slider')) {
 
             unauthorised();
+        }
+
+        // --------------------------------------------------------------------------
+
+        if ($this->input->post())
+        {
+            here();
         }
 
         // --------------------------------------------------------------------------
@@ -123,7 +163,16 @@ class Slider extends \AdminController
             redirect('admin/cms/menus');
         }
 
-        $this->data['page']->title = 'Edit Slider "' . $this->data['slider']->label . '"';
+        // --------------------------------------------------------------------------
+
+        if ($this->input->post())
+        {
+            here();
+        }
+
+        // --------------------------------------------------------------------------
+
+        $this->data['page']->title = 'Edit Slider &rsaquo; ' . $this->data['slider']->label;
 
         // --------------------------------------------------------------------------
 
@@ -150,7 +199,31 @@ class Slider extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->session->set_flashdata('error', '<strong>Sorry,</strong> slider deletion is a TODO just now.');
-        redirect('admin/cms/sliders');
+        //  Fetch and check post
+        $sliderId = $this->uri->segment(5);
+        $slider   = $this->cms_slider_model->get_by_id($sliderId);
+
+        if (!$slider) {
+
+            $this->session->set_flashdata('error', '<strong>Sorry,</strong> I could\'t find a slider by that ID.');
+            redirect('admin/cms/slider');
+        }
+
+        // --------------------------------------------------------------------------
+
+        if ($this->cms_slider_model->delete($slider->id)) {
+
+            $status  = 'success';
+            $message = '<strong>Success!</strong> Slider was deleted successfully.';
+
+        } else {
+
+            $status   = 'error';
+            $message  = '<strong>Sorry,</strong> I failed to delete that slider. ';
+            $message .= $this->cms_slider_model->last_error();
+        }
+
+        $this->session->set_flashdata($status, $message);
+        redirect('admin/cms/slider');
     }
 }

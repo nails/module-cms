@@ -2,7 +2,7 @@
     <p>
         Blocks allow you to update a single piece of content. Blocks might appear in more than one place so
         any updates will be reflected across all instances. Blocks can be used within the code using the
-        <code>cms_render_block()</code> function made available by the CMS helper. Blocks may also be used
+        <code>cmsBlock()</code> function made available by the CMS helper. Blocks may also be used
         within page content by using the block's slug within the shortcode, e.g., <code>[:example-slug:]</code>
         would render the block whose slug was example-slug.
     </p>

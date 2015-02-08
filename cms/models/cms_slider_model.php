@@ -30,58 +30,73 @@ class NAILS_Cms_slider_model extends NAILS_Model
     // --------------------------------------------------------------------------
 
     /**
-     * Gets all the sliders
-     * @param  boolean $includeSliderItems Whether or not to include the slider items
-     * @return array
-     */
-    public function get_all($includeSliderItems = false)
+     * This method applies the conditionals which are common across the get_*()
+     * methods and the count() method.
+     * @param array  $data    Data passed from the calling method
+     * @param string $_caller The name of the calling method
+     * @return void
+     **/
+    protected function _getcount_common($data = array(), $_caller = null)
     {
         $this->db->select($this->_table_prefix . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
         $this->db->join(NAILS_DB_PREFIX . 'user u', $this->_table_prefix . '.modified_by = u.id');
         $this->db->join(NAILS_DB_PREFIX . 'user_email ue', $this->_table_prefix . '.modified_by = ue.user_id AND ue.is_primary = 1');
-        $sliders = parent::get_all();
-
-        foreach ($sliders as $m) {
-
-            if ($includeSliderItems) {
-
-                //  Fetch the nested slider items
-                $m->items = $this->get_slider_items($m->id);
-            }
-        }
 
         // --------------------------------------------------------------------------
 
-        return $sliders;
+        if (!empty($data['keywords'])) {
+
+            if (!isset($data['or_like'])) {
+
+                $data['or_like'] = array();
+            }
+
+            $data['or_like'][] = array($this->_table_prefix . '.label', $data['keywords']);
+        }
+
+        parent::_getcount_common($data, $_caller);
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * Gets a single slider
-     * @param  boolean $includeSliderItems Whther or not to include slider items
-     * @return mixed
+     * Formats a slider object
+     * @param  stdClass &$object The slider object to format
+     * @return void
      */
-    public function get_by_id($includeSliderItems = false)
+    protected function _format_object(&$object)
     {
-        $slder = $this->get_all($includeSliderItems);
+        parent::_format_object($object);
 
-        if (!$slder) {
+        $temp              = new stdClass();
+        $temp->id          = (int) $object->modified_by;
+        $temp->email       = $object->email;
+        $temp->first_name  = $object->first_name;
+        $temp->last_name   = $object->last_name;
+        $temp->gender      = $object->gender;
+        $temp->profile_img = $object->profile_img ? (int) $object->profile_img : null;
 
-            return false;
-        }
+        $object->modified_by = $temp;
 
-        return $slder[0];
+        unset($object->email);
+        unset($object->first_name);
+        unset($object->last_name);
+        unset($object->gender);
+        unset($object->profile_img);
+
+        // --------------------------------------------------------------------------
+
+        $object->slides = $this->getSliderItems($object->id);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Gets the slides of an individual slider
-     * @param  int   $sliderId the Slider's ID
+     * @param  int   $sliderId The Slider's ID
      * @return array
      */
-    public function get_slider_items($sliderId)
+    public function getSliderItems($sliderId)
     {
         $this->db->where('slider_id', $sliderId);
         $this->db->order_by('order');
@@ -89,35 +104,10 @@ class NAILS_Cms_slider_model extends NAILS_Model
 
         foreach ($items as $i) {
 
-            $this->_format_slider_item($i);
+            $this->_format_object_item($i);
         }
 
         return $items;
-    }
-    // --------------------------------------------------------------------------
-
-    /**
-     * Formats a slider object
-     * @param  stdClass &$obj The sldier object to format
-     * @return void
-     */
-    protected function _format_object(&$obj)
-    {
-        $temp              = new stdClass();
-        $temp->id          = $obj->modified_by;
-        $temp->email       = $obj->email;
-        $temp->first_name  = $obj->first_name;
-        $temp->last_name   = $obj->last_name;
-        $temp->gender      = $obj->gender;
-        $temp->profile_img = $obj->profile_img;
-
-        $obj->modified_by = $temp;
-
-        unset($obj->email);
-        unset($obj->first_name);
-        unset($obj->last_name);
-        unset($obj->gender);
-        unset($obj->profile_img);
     }
 
     // --------------------------------------------------------------------------
@@ -127,7 +117,7 @@ class NAILS_Cms_slider_model extends NAILS_Model
      * @param  stdClass &$obj The slider item to format
      * @return voud
      */
-    protected function _format_slider_item(&$obj)
+    protected function _format_object_item(&$obj)
     {
         parent::_format_object($obj);
 
@@ -138,6 +128,58 @@ class NAILS_Cms_slider_model extends NAILS_Model
         $obj->page_id   = $obj->page_id ? (int) $obj->page_id : null;
 
         unset($obj->slider_id);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Creates a new object
+     * @param  array   $data         The data to create the object with
+     * @param  boolean $returnObject Whether to return just the new ID or the full object
+     * @return mixed
+     */
+    public function create($data = array(), $returnObject = false)
+    {
+        if (isset($data['slides'])) {
+
+            $slides = $data['slides'];
+            unset($data['slides']);
+        }
+
+        $result = parent::create($data, $returnObject);
+
+        if ($result && $slides) {
+
+            dumpanddie('add slides');
+        }
+
+        return $result;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Updates an existing object
+     * @param int      $id   The ID of the object to update
+     * @param array    $data The data to update the object with
+     * @return boolean
+     **/
+    public function update($id, $data = array())
+    {
+        if (isset($data['slides'])) {
+
+            $slides = $data['slides'];
+            unset($data['slides']);
+        }
+
+        $result = parent::create($data, $returnObject);
+
+        if ($result && $slides) {
+
+            dumpanddie('update slides');
+        }
+
+        return $result;
     }
 }
 
@@ -173,4 +215,3 @@ if (!defined('NAILS_ALLOW_EXTENSION_CMS_SLIDER_MODEL')) {
     {
     }
 }
-
