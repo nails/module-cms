@@ -160,6 +160,7 @@ class NAILS_Cms_slider_model extends NAILS_Model
 
     /**
      * Updates an existing object
+     * @todo Add transactions
      * @param int      $id   The ID of the object to update
      * @param array    $data The data to update the object with
      * @return boolean
@@ -172,11 +173,75 @@ class NAILS_Cms_slider_model extends NAILS_Model
             unset($data['slides']);
         }
 
-        $result = parent::create($data, $returnObject);
+        $result = parent::update($id, $data);
 
         if ($result && $slides) {
 
-            dumpanddie('update slides');
+            /**
+             * Take a note of the table prefixes, we're swapping them quickly while
+             * we do this update, so we can leverage the parent methods for the slides.
+             */
+
+            $table       = $this->_table;
+            $tablePrefix = $this->_table_prefix;
+
+            $this->_table        = $this->_table_item;
+            $this->_table_prefix = $this->_table_item_prefix;
+
+            $idsUpdated = array();
+            foreach ($slides as $slide) {
+
+                $data = array();
+                $data['object_id'] = $slide['object_id'];
+                $data['caption'] = $slide['caption'];
+                $data['url'] = $slide['url'];
+                $data['order'] = $slide['order'];
+
+                //  Update or create? If create remember and save ID
+                if (!empty($slide['id'])) {
+
+                    $result = parent::update($slide['id'], $data);
+
+                    if (!$result) {
+
+                        $this->_set_error('Failed to update slide #' . $i);
+                        return false;
+
+                    } else {
+
+                        $idsUpdated[] = $slide['id'];
+                    }
+
+                } else {
+
+                    $data['slider_id'] = $id;
+                    $result = parent::create($data);
+
+                    if (!$result) {
+
+                        $this->_set_error('Failed to create slide #' . $i);
+                        return false;
+
+                    } else {
+
+                        $idsUpdated[] = $result;
+                    }
+                }
+            }
+
+            //  Remove any slides which weren't updated or created
+            $idsUpdated = array_filter($idsUpdated);
+            $idsUpdated = array_unique($idsUpdated);
+
+            if ($idsUpdated) {
+
+                $this->db->where_not_in('id', $idsUpdated);
+                $this->db->delete($this->_table);
+            }
+
+            //  Reset the table and table prefix
+            $this->_table        = $table;
+            $this->_table_prefix = $tablePrefix;
         }
 
         return $result;

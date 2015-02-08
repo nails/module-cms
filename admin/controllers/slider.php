@@ -133,7 +133,9 @@ class Slider extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Assets
+        $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
         $this->asset->load('nails.admin.cms.sliders.createEdit.min.js', true);
+        $this->asset->inline('var _slider = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
 
         // --------------------------------------------------------------------------
 
@@ -155,9 +157,10 @@ class Slider extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->data['slider'] = $this->cms_slider_model->get_by_id($this->uri->segment(5), true);
+        $slider = $this->cms_slider_model->get_by_id($this->uri->segment(5));
+        $this->data['slider'] = $slider;
 
-        if (!$this->data['slider']) {
+        if (!$slider) {
 
             $this->session->set_flashdata('error', '<strong>Sorry,</strong> invalid slider ID.');
             redirect('admin/cms/menus');
@@ -167,17 +170,66 @@ class Slider extends \AdminController
 
         if ($this->input->post())
         {
-            here();
+            //  Prepare the create data
+            $sliderData                = array();
+            $sliderData['label']       = $this->input->post('label');
+            $sliderData['description'] = strip_tags($this->input->post('description'));
+            $sliderData['slides']      = array();
+
+            $slideIds  = $this->input->post('slideId');
+            $objectIds = $this->input->post('objectId');
+            $captions  = $this->input->post('caption');
+            $urls      = $this->input->post('url');
+
+            for ($i=0; $i < count($slideIds); $i++) {
+
+                $sliderData['slides'][$i] = array();
+
+                $sliderData['slides'][$i]['id']        = !empty($slideIds[$i]) ? $slideIds[$i] : null;
+                $sliderData['slides'][$i]['object_id'] = !empty($objectIds[$i]) ? $objectIds[$i] : null;
+                $sliderData['slides'][$i]['caption']   = !empty($captions[$i]) ? $captions[$i] : null;
+                $sliderData['slides'][$i]['url']       = !empty($urls[$i]) ? $urls[$i] : null;
+                $sliderData['slides'][$i]['order']     = $i;
+            }
+
+            if ($this->cms_slider_model->update($slider->id, $sliderData)) {
+
+                $status  = 'success';
+                $message = '<strong>Success!</strong> Slider updated successfully.';
+
+                $this->session->set_flashdata($status, $message);
+                redirect('admin/cms/slider');
+
+            } else {
+
+                $this->data['error']  = '<strong>Sorry,</strong> failed to update slider';
+                $this->data['error'] .= $this->cms_slider_model->last_error();
+
+                //  @todo: Rebuild page based on post data
+            }
         }
 
         // --------------------------------------------------------------------------
 
-        $this->data['page']->title = 'Edit Slider &rsaquo; ' . $this->data['slider']->label;
+        $this->data['page']->title = 'Edit Slider &rsaquo; ' . $slider->label;
+
+        // --------------------------------------------------------------------------
+
+        //  Prep the slides for the view
+        foreach ($slider->slides as $slide) {
+
+            $slide->imgSourceUrl = !empty($slide->object_id) ? cdn_serve($slide->object_id) : null;
+            $slide->imgThumbUrl = !empty($slide->object_id) ? cdn_scale($slide->object_id, 130, 130) : null;
+        }
 
         // --------------------------------------------------------------------------
 
         //  Assets
+        $this->asset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
+        $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
         $this->asset->load('nails.admin.cms.sliders.createEdit.min.js', true);
+        $this->asset->inline('var _slider = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
+        $this->asset->inline('_slider.addSlides(' . json_encode($slider->slides) . ');', 'JS');
 
         // --------------------------------------------------------------------------
 

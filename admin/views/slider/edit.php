@@ -8,7 +8,6 @@
             $field                = array();
             $field['key']         = 'label';
             $field['label']       = 'Label';
-            $field['required']    = true;
             $field['placeholder'] = 'Give the slider a title';
             $field['default']     = isset($slider->label) ? $slider->label : '';
 
@@ -21,14 +20,15 @@
             $field['label']       = 'Description';
             $field['placeholder'] = 'Describe the purpose of the slider';
             $field['default']     = isset($slider->description) ? $slider->description : '';
+            $field['class']       = 'wysiwyg-basic';
 
-            echo form_field_textarea($field);
+            echo form_field_wysiwyg($field);
 
         ?>
     </fieldset>
     <fieldset>
         <legend>Slides</legend>
-        <table>
+        <table id="slides">
             <thead>
                 <tr>
                     <th class="order">&nbsp;</th>
@@ -38,43 +38,10 @@
                 </tr>
             </thead>
             <tbody>
-                <?php
-
-                    if (!empty($slider->slides)) {
-
-                        foreach ($slider->slides as $slide) {
-
-                            echo '<tr>';
-                                echo '<td class="order">';
-                                    echo '<b class="fa fa-bars fa-lg"></b>';
-                                echo '</td>';
-                                echo '<td class="image">';
-                                    if ($slide->object_id) {
-
-                                        echo img(cdn_scale($slide->object_id, 130, 130));
-                                        echo '<a href="#" class="awesome small orange">Change</a>';
-                                        echo '<a href="' . cdn_serve($slide->object_id) . '" class="awesome small green fancybox">Fullsize</a>';
-
-                                    } else {
-
-                                        echo '<a href="#" class="awesome small orange">Add Image</a>';
-                                    }
-
-                                echo '</td>';
-                                echo '<td class="caption">';
-                                    echo '<textarea name="">' . set_value('', $slide->caption) . '</textarea>';
-                                echo '</td>';
-                                echo '<td class="link">';
-                                    echo form_input('', set_value('', $slide->url));
-                                echo '</td>';
-                            echo '</tr>';
-                        }
-                    }
-                ?>
             </tbody>
         </table>
         <p>
-            <a href="#" class="awesome small orange">
+            <a href="#" class="awesome small orange" id="addSlide">
                 + Add Slide
             </a>
         </p>
@@ -84,19 +51,28 @@
     </p>
     <?=form_close();?>
 </div>
-<script type="text/template" id="slide-row">
+<script type="text/template" id="templateSlideRow">
 <tr>
     <td class="order">
-        [...]
+        <b class="sortHandle fa fa-bars fa-lg"></b>
+        <input type="text" style="width:20px;" name="slideId[]" value="{{id}}" />
     </td>
     <td class="image">
-        [...]
+        {{#object_id}}
+            <img src="{{imgThumbUrl}}" />
+            <a href="#" class="changeImg awesome small orange">Change</a>
+            <a href="{{imgSourceUrl}}" class="fancybox awesome small green">Fullsize</a>
+        {{/object_id}}
+        {{^object_id}}
+            <a href="#" class="setImg awesome small orange">Set Image</a>
+        {{/object_id}}
+        <input type="text" style="width:20px;" name="objectId[]" value="{{object_id}}" />
     </td>
     <td class="caption">
-        [...]
+        <textarea name="caption[]">{{caption}}</textarea>
     </td>
     <td class="link">
-        [...]
+        <input type="text" name="url[]" value="{{url}}" />
     </td>
 </tr>
 </script>
