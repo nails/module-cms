@@ -4,3 +4,5 @@ ALTER TABLE `{{NAILS_DB_PREFIX}}cms_block` MODIFY COLUMN `created_by` INT(11) UN
 UPDATE `{{NAILS_DB_PREFIX}}cms_block` cb SET `value` = (SELECT `cbt`.`value` FROM `nails_cms_block_translation` cbt WHERE `cbt`.`block_id` = `cb`.`id` AND `cbt`.`language` = 'english');
 DROP TABLE `{{NAILS_DB_PREFIX}}cms_block_translation_revision`;
 DROP TABLE `{{NAILS_DB_PREFIX}}cms_block_translation`;
+ALTER TABLE `nails_cms_slider_item` CHANGE `object_id` `object_id` INT(11)  UNSIGNED  NULL;
+
