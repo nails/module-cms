@@ -67,9 +67,18 @@ class Pages extends \AdminController
 
         // --------------------------------------------------------------------------
 
+        //  Add a header button
+        if (userHasPermission('admin.cms:0.can_create_page')) {
+
+            \Nails\Admin\Helper::addHeaderButton('admin/cms/pages/create', 'Add New Page');
+        }
+
+        // --------------------------------------------------------------------------
+
         //  Assets
         $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
-        $this->asset->load('nails.admin.cms.pages.min.js', true);
+        $this->asset->load('nails.admin.cms.pages.min.js', 'NAILS');
+        $this->asset->inline('var CMS_Pages = new NAILS_Admin_CMS_Pages();', 'JS');
 
         // --------------------------------------------------------------------------
 
@@ -106,7 +115,14 @@ class Pages extends \AdminController
         //  Assets
         $this->asset->library('jqueryui');
         $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
-        $this->asset->load('nails.admin.cms.pages.createEdit.min.js', true);
+        $this->asset->load('nails.admin.cms.pages.createEdit.min.js', 'NAILS');
+
+        $inlineJs  = 'CMS_PAGES = new NAILS_Admin_CMS_pages_Create_Edit(';
+        $inlineJs .= json_encode($this->data['templates']) . ',';
+        $inlineJs .= json_encode($this->data['widgets']);
+        $inlineJs .= ');';
+
+        $this->asset->inline($inlineJs, 'JS');
 
         // --------------------------------------------------------------------------
 
@@ -156,7 +172,16 @@ class Pages extends \AdminController
         //  Assets
         $this->asset->library('jqueryui');
         $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
-        $this->asset->load('nails.admin.cms.pages.createEdit.min.js', true);
+        $this->asset->load('nails.admin.cms.pages.createEdit.min.js', 'NAILS');
+
+        $inlineJs  = 'CMS_PAGES = new NAILS_Admin_CMS_pages_Create_Edit(';
+        $inlineJs .= json_encode($this->data['templates']) . ',';
+        $inlineJs .= json_encode($this->data['widgets']). ',';
+        $inlineJs .= $this->data['cmspage']->id . ',';
+        $inlineJs .= json_encode($this->data['cmspage']->draft->template_data);
+        $inlineJs .= ');';
+
+        $this->asset->inline($inlineJs, 'JS');
 
         // --------------------------------------------------------------------------
 

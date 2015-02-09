@@ -230,6 +230,24 @@ class Nails_CMS_Template
             $buffer = ob_get_contents();
             @ob_end_clean();
 
+            //  Look for blocks
+            preg_match_all('/\[:([a-zA-Z\-]+?):\]/', $buffer, $matches);
+
+            if ($matches[0]) {
+
+                //  Get all the blocks which were found
+                get_instance()->load->model('cms_block_model');
+                $blocks = get_instance()->cms_block_model->get_by_slugs($matches[1]);
+
+                //  Swap them in
+                if ($blocks) {
+                    foreach ($blocks as $block) {
+
+                        $buffer = str_replace('[:' . $block->slug . ':]', $block->value, $buffer);
+                    }
+                }
+            }
+
             //  Return the HTML
             return $buffer;
         }
