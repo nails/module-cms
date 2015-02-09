@@ -272,7 +272,31 @@ class Blocks extends \AdminController
             unauthorised();
         }
 
-        $this->session->set_flashdata('message', '<strong>Coming soon!</strong> The ability to delete CMS blocks is on the roadmap.');
+        // --------------------------------------------------------------------------
+
+        $block = $this->cms_block_model->get_by_id($this->uri->segment(5));
+
+        if (!$block) {
+
+            $this->session->set_flashdata('error', '<strong>Sorry,</strong> invalid block ID.');
+            redirect('admin/cms/blocks');
+        }
+
+        // --------------------------------------------------------------------------
+
+        if ($this->cms_block_model->delete($block->id)) {
+
+            $status = 'success';
+            $msg    = '<strong>Success!</strong> Block was deleted successfully.';
+
+        } else {
+
+            $status = 'error';
+            $msg    = '<strong>Sorry,</strong> failed to delete block. ';
+            $msg   .= $this->cms_menu_model->last_error();
+        }
+
+        $this->session->set_flashdata($status, $msg);
         redirect('admin/cms/blocks');
     }
 

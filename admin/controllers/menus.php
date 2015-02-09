@@ -251,7 +251,7 @@ class Menus extends \AdminController
         if (!$menu) {
 
             $this->session->set_flashdata('error', '<strong>Sorry,</strong> invalid menu ID.');
-            redirect('admin/cms/menus');
+            redirect('admin/cms/blocks');
         }
 
         // --------------------------------------------------------------------------
@@ -259,18 +259,16 @@ class Menus extends \AdminController
         if ($this->cms_menu_model->delete($menu->id)) {
 
             $status = 'success';
-            $msg    = '<strong>Sorry,</strong> failed to delete menu. ';
-            $msg   .= $this->cms_menu_model->last_error();
-            $this->session->set_flashdata($status, $msg);
+            $msg    = '<strong>Success!</strong> Menu was deleted successfully.';
 
         } else {
 
             $status = 'error';
             $msg    = '<strong>Sorry,</strong> failed to delete menu. ';
             $msg   .= $this->cms_menu_model->last_error();
-            $this->session->set_flashdata($status, $msg);
         }
 
+        $this->session->set_flashdata($status, $msg);
         redirect('admin/cms/menus');
     }
 }
