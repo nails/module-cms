@@ -21,9 +21,8 @@
             $field['label']       = 'Description';
             $field['placeholder'] = 'Describe the purpose of the slider';
             $field['default']     = isset($slider->description) ? $slider->description : '';
-            $field['class']       = 'wysiwyg-basic';
 
-            echo form_field_textarea($field);
+            echo form_field($field);
 
         ?>
     </fieldset>

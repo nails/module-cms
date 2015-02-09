@@ -56,17 +56,50 @@ class Menus extends \AdminController
      */
     public function index()
     {
+        //  Set method info
         $this->data['page']->title = 'Manage Menus';
 
         // --------------------------------------------------------------------------
 
-        //  Fetch all the menus in the DB
-        $this->data['menus'] = $this->cms_menu_model->get_all();
+        //  Get pagination and search/sort variables
+        $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
+        $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
+        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : 'm.label';
+        $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'asc';
+        $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
 
         // --------------------------------------------------------------------------
 
-        //  Assets
-        $this->asset->load('nails.admin.cms.menus.min.js', true);
+        //  Define the sortable columns
+        $sortColumns = array(
+            'm.label'    => 'Label',
+            'm.modified' => 'Modified'
+        );
+
+        // --------------------------------------------------------------------------
+
+        //  Define the $data variable for the queries
+        $data = array(
+            'sort'  => array(
+                'column' => $sortOn,
+                'order'  => $sortOrder
+            ),
+            'keywords' => $keywords
+        );
+
+        //  Get the items for the page
+        $totalRows           = $this->cms_menu_model->count_all($data);
+        $this->data['menus'] = $this->cms_menu_model->get_all($page, $perPage, $data);
+
+        //  Set Search and Pagination objects for the view
+        $this->data['search']     = \Nails\Admin\Helper::searchObject($sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
+        $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
+
+        //  Add a header button
+        if (userHasPermission('admin.cms:0.can_create_menu')) {
+
+            \Nails\Admin\Helper::addHeaderButton('admin/cms/menus/create', 'Create Menu');
+        }
 
         // --------------------------------------------------------------------------
 
@@ -79,6 +112,10 @@ class Menus extends \AdminController
      * Create a new CMS Menu
      * @return void
      */
+        /**
+     * Edit a CMS Menu
+     * @return void
+     */
     public function create()
     {
         if (!userHasPermission('admin.cms:0.can_create_menu')) {
@@ -88,61 +125,77 @@ class Menus extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->data['page']->title = 'Create Menu';
+        if ($this->input->post()) {
 
-        // --------------------------------------------------------------------------
-
-        $post = $this->input->post();
-
-        if (isset($post['menu_item'])) {
-
-            //  Validate
-            $errors = false;
+            //  Validate form
             $this->load->library('form_validation');
-            $this->form_validation->set_rules('label', '', 'xss_clean|required');
-            $this->form_validation->set_rules('description', '', 'xss_clean|required');
-
+            $this->form_validation->set_rules('label', '', 'xss_clean|trim|required');
+            $this->form_validation->set_rules('description', '', 'trim');
             $this->form_validation->set_message('required', lang('fv_required'));
 
-            foreach ($post['menu_item'] as $item) {
+            if ($this->form_validation->run()) {
 
-                if (empty($item['label']) || empty($item['url'])) {
+                //  Prepare the create data
+                $itemData                = array();
+                $itemData['label']       = $this->input->post('label');
+                $itemData['description'] = strip_tags($this->input->post('description'));
+                $itemData['items']       = $this->input->post('menuItem');
 
-                    $errors = 'All menu items are required to have a label and a URL.';
-                    break;
-                }
-            }
+                if ($this->cms_menu_model->create($itemData)) {
 
-            //  Execute
-            if ($this->form_validation->run() && !$errors) {
+                    $status  = 'success';
+                    $message = '<strong>Success!</strong> Menu created successfully.';
 
-                if ($this->cms_menu_model->create($post)) {
-
-                    $status = 'success';
-                    $msg    = '<strong>Success!</strong> Menu was created successfully.';
-                    $this->session->set_flashdata($status, $msg);
-
+                    $this->session->set_flashdata($status, $message);
                     redirect('admin/cms/menus');
 
                 } else {
 
-                    $this->data['error']  = '<strong>Sorry,</strong> there were errors. ';
+                    $this->data['error']  = '<strong>Sorry,</strong> failed to create menu. ';
                     $this->data['error'] .= $this->cms_menu_model->last_error();
                 }
 
             } else {
 
-                $this->data['error'] = '<strong>Sorry,</strong> there were errors. ' . $errors;
+                $this->data['error'] = lang('fv_there_were_errors');
             }
+
+        } else {
+
+            $items = array();
         }
 
         // --------------------------------------------------------------------------
 
+        $this->data['page']->title = 'Create Menu';
+
+        // --------------------------------------------------------------------------
+
+        //  Prepare the menu items
+        if ($this->input->post()) {
+
+            $menuItems = (array) json_decode(json_encode($this->input->post('menuItem')));
+            $menuItems = array_values($menuItems);
+
+        } else {
+
+            $menuItems = $items;
+        }
+
+        // --------------------------------------------------------------------------
+
+        //  Get the CMS Pages
+        $this->load->model('cms/cms_page_model');
+        $pages = $this->cms_page_model->get_all_nested_flat();
+        $this->data['pages'] = array('' => 'Select a CMS Page') + $pages;
+
+        // --------------------------------------------------------------------------
+
         //  Assets
-        $this->asset->library('jqueryui');
-        $this->asset->load('nails.admin.cms.menus.createEdit.min.js', true);
         $this->asset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
         $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
+        $this->asset->load('nails.admin.cms.menus.createEdit.min.js', 'NAILS');
+        $this->asset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($menuItems) . ');', 'JS');
 
         // --------------------------------------------------------------------------
 
@@ -164,67 +217,88 @@ class Menus extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->data['menu'] = $this->cms_menu_model->get_by_id($this->uri->segment(5), true, false);
+        $menu = $this->cms_menu_model->get_by_id($this->uri->segment(5));
+        $this->data['menu'] = $menu;
 
-        if (!$this->data['menu']) {
+        if (!$menu) {
 
             $this->session->set_flashdata('error', '<strong>Sorry,</strong> invalid menu ID.');
             redirect('admin/cms/menus');
         }
 
-        $this->data['page']->title = 'Edit Menu "' . $this->data['menu']->label . '"';
+        // --------------------------------------------------------------------------
 
-        $post = $this->input->post();
+        if ($this->input->post()) {
 
-        if (isset($post['menu_item'])) {
-
-            //  Validate
-            $errors = false;
+            //  Validate form
             $this->load->library('form_validation');
-            $this->form_validation->set_rules('label', '', 'xss_clean|required');
-            $this->form_validation->set_rules('description', '', 'xss_clean|required');
-
+            $this->form_validation->set_rules('label', '', 'xss_clean|trim|required');
+            $this->form_validation->set_rules('description', '', 'trim');
             $this->form_validation->set_message('required', lang('fv_required'));
 
-            foreach ($post['menu_item'] as $item) {
+            if ($this->form_validation->run()) {
 
-                if (empty($item['label']) || empty($item['url'])) {
+                //  Prepare the create data
+                $itemData                = array();
+                $itemData['label']       = $this->input->post('label');
+                $itemData['description'] = strip_tags($this->input->post('description'));
+                $itemData['items']       = $this->input->post('menuItem');
 
-                    $errors = 'All menu items are required to have a label and a URL.';
-                    break;
-                }
-            }
+                if ($this->cms_menu_model->update($menu->id, $itemData)) {
 
-            //  Execute
-            if ($this->form_validation->run() && !$errors) {
+                    $status  = 'success';
+                    $message = '<strong>Success!</strong> Menu updated successfully.';
 
-                if ($this->cms_menu_model->update($this->data['menu']->id, $post)) {
-
-                    $status = 'success';
-                    $msg    = '<strong>Success!</strong> Menu was updated successfully.';
-                    $this->session->set_flashdata($status, $msg);
-
+                    $this->session->set_flashdata($status, $message);
                     redirect('admin/cms/menus');
 
                 } else {
 
-                    $this->data['error']  = '<strong>Sorry,</strong> there were errors. ';
+                    $this->data['error']  = '<strong>Sorry,</strong> failed to update menu. ';
                     $this->data['error'] .= $this->cms_menu_model->last_error();
                 }
 
             } else {
 
-                $this->data['error'] = '<strong>Sorry,</strong> there were errors. ' . $errors;
+                $this->data['error'] = lang('fv_there_were_errors');
             }
+
+        } else {
+
+            $items = $menu->items;
         }
 
         // --------------------------------------------------------------------------
 
+        $this->data['page']->title = 'Edit Menu &rsaquo; ' . $menu->label;
+
+        // --------------------------------------------------------------------------
+
+        //  Prepare the menu items
+        if ($this->input->post()) {
+
+            $menuItems = (array) json_decode(json_encode($this->input->post('menuItem')));
+            $menuItems = array_values($menuItems);
+
+        } else {
+
+            $menuItems = $items;
+        }
+
+        // --------------------------------------------------------------------------
+
+        //  Get the CMS Pages
+        $this->load->model('cms/cms_page_model');
+        $pages = $this->cms_page_model->get_all_nested_flat();
+        $this->data['pages'] = array('' => 'Select a CMS Page') + $pages;
+
+        // --------------------------------------------------------------------------
+
         //  Assets
-        $this->asset->library('jqueryui');
-        $this->asset->load('nails.admin.cms.menus.createEdit.min.js', true);
         $this->asset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
         $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
+        $this->asset->load('nails.admin.cms.menus.createEdit.min.js', 'NAILS');
+        $this->asset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($menuItems) . ');', 'JS');
 
         // --------------------------------------------------------------------------
 

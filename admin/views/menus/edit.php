@@ -2,16 +2,13 @@
     <?=form_open()?>
     <fieldset>
         <legend>Menu Details</legend>
-        <p class="system-alert">
-            The following details help you identify the purpose and location of this menu in admin.
-            They are not used in the front-end.
-        </p>
         <?php
 
             $field                = array();
             $field['key']         = 'label';
             $field['label']       = 'Label';
             $field['default']     = isset($menu->label) ? $menu->label : '';
+            $field['required']    = true;
             $field['placeholder'] = 'The label to give this menu, for easy reference';
 
             echo form_field($field);
@@ -47,35 +44,6 @@
 
     ?>
 </div>
-<?php
-
-    if ($this->input->post()) {
-
-        $menuItems = (array) json_decode(json_encode($this->input->post('menu_item')));
-        $menuItems = array_values($menuItems);
-
-    } elseif(isset($menu)) {
-
-        $menuItems = $menu->items;
-
-    } else {
-
-        $menuItems = array();
-    }
-
-?>
-<script type="text/javascript">
-<!--//
-
-    $(function(){
-
-        var CMS_Menus_Create_Edit = new NAILS_Admin_CMS_Menus_Create_Edit;
-        CMS_Menus_Create_Edit.init(<?=json_encode($menuItems)?>);
-
-    });
-
-//-->
-</script>
 <script type="text/template" id="template-item">
     <li class="target target-{{id}}" data-id="{{id}}">
         <div class="item">
@@ -85,12 +53,29 @@
             <div class="content">
             <?php
 
-                echo '<input type="hidden" name="menu_item[{{counter}}][id]" value="{{id}}" class="input-id" />';
-                echo '<input type="hidden" name="menu_item[{{counter}}][parent_id]" value="{{parent_id}}" class="input-parent_id" />';
-                echo '<input type="hidden" name="menu_item[{{counter}}][order]" value="{{order}}" class="input-order" />';
+                echo '<input type="hidden" name="menuItem[{{counter}}][id]" value="{{id}}" class="input-id" />';
+                echo '<input type="hidden" name="menuItem[{{counter}}][parent_id]" value="{{parent_id}}" class="input-parent_id" />';
+                echo '<input type="hidden" name="menuItem[{{counter}}][order]" value="{{order}}" class="input-order" />';
 
-                echo form_input('menu_item[{{counter}}][label]', '{{label}}', 'placeholder="The label to give this menu item" class="input-label"');
-                echo form_input('menu_item[{{counter}}][url]', '{{url}}', 'placeholder="The URL this menu item should link to" class="input-url"');
+                echo '<div class="containerLabel">';
+                    echo form_input(
+                        'menuItem[{{counter}}][label]',
+                        '{{label}}',
+                        'placeholder="The label to give this menu item" class="input-label"'
+                    );
+                echo '</div>';
+                echo '<div class="containerUrl">';
+                    echo form_input(
+                        'menuItem[{{counter}}][url]',
+                        '{{url}}',
+                        'placeholder="The URL this menu item should link to" class="input-url"'
+                    );
+                    echo '<div class="or">Or</div>';
+                    echo form_dropdown(
+                        'menuItem[{{counter}}][page_id]',
+                        $pages
+                    );
+                echo '</div>';
 
             ?>
             </div>

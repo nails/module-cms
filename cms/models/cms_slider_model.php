@@ -39,8 +39,8 @@ class NAILS_Cms_slider_model extends NAILS_Model
     protected function _getcount_common($data = array(), $_caller = null)
     {
         $this->db->select($this->_table_prefix . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
-        $this->db->join(NAILS_DB_PREFIX . 'user u', $this->_table_prefix . '.modified_by = u.id');
-        $this->db->join(NAILS_DB_PREFIX . 'user_email ue', $this->_table_prefix . '.modified_by = ue.user_id AND ue.is_primary = 1');
+        $this->db->join(NAILS_DB_PREFIX . 'user u', $this->_table_prefix . '.modified_by = u.id', 'LEFT');
+        $this->db->join(NAILS_DB_PREFIX . 'user_email ue', $this->_table_prefix . '.modified_by = ue.user_id AND ue.is_primary = 1', 'LEFT');
 
         // --------------------------------------------------------------------------
 
@@ -52,6 +52,7 @@ class NAILS_Cms_slider_model extends NAILS_Model
             }
 
             $data['or_like'][] = array($this->_table_prefix . '.label', $data['keywords']);
+            $data['or_like'][] = array($this->_table_prefix . '.description', $data['keywords']);
         }
 
         parent::_getcount_common($data, $_caller);
@@ -186,7 +187,7 @@ class NAILS_Cms_slider_model extends NAILS_Model
 
                 if (!$result) {
 
-                    $this->_set_error('Failed to create slide #' . $i);
+                    $this->_set_error('Failed to create slide #' . ($i+1));
                     $this->db->trans_rollback();
                     return false;
 
@@ -254,13 +255,13 @@ class NAILS_Cms_slider_model extends NAILS_Model
                 $data['order']     = $i;
 
                 //  Update or create? If create remember and save ID
-                if (!empty($slide['id'])) {
+                if (!empty($slides[$i]->id)) {
 
                     $result = parent::update($slides[$i]->id, $data);
 
                     if (!$result) {
 
-                        $this->_set_error('Failed to update slide #' . $i);
+                        $this->_set_error('Failed to update slide #' . ($i+1));
                         $this->db->trans_rollback();
                         return false;
 
@@ -276,7 +277,7 @@ class NAILS_Cms_slider_model extends NAILS_Model
 
                     if (!$result) {
 
-                        $this->_set_error('Failed to create slide #' . $i);
+                        $this->_set_error('Failed to create slide #' . ($i+1));
                         $this->db->trans_rollback();
                         return false;
 
@@ -293,6 +294,7 @@ class NAILS_Cms_slider_model extends NAILS_Model
 
             if ($idsUpdated) {
 
+                $this->db->where('slider_id', $id);
                 $this->db->where_not_in('id', $idsUpdated);
                 $this->db->delete($this->_table);
             }

@@ -30,92 +30,74 @@ class NAILS_Cms_menu_model extends NAILS_Model
     // --------------------------------------------------------------------------
 
     /**
-     * Gets all menus
-     * @param  boolean $includeMenuItems Whether or not to include the menu items
-     * @param  boolean $nested           Whether or not to nest the menu items
-     * @return array
-     */
-    public function get_all($includeMenuItems = false, $nested = true)
+     * This method applies the conditionals which are common across the get_*()
+     * methods and the count() method.
+     * @param array  $data    Data passed from the calling method
+     * @param string $_caller The name of the calling method
+     * @return void
+     **/
+    protected function _getcount_common($data = array(), $_caller = null)
     {
         $this->db->select($this->_table_prefix . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
         $this->db->join(NAILS_DB_PREFIX . 'user u', $this->_table_prefix . '.modified_by = u.id', 'LEFT');
         $this->db->join(NAILS_DB_PREFIX . 'user_email ue', $this->_table_prefix . '.modified_by = ue.user_id AND ue.is_primary = 1', 'LEFT');
-        $menus = parent::get_all();
-
-        foreach ($menus as $m) {
-
-            if ($includeMenuItems) {
-
-                if ($nested) {
-
-                    //  Fetch the nested menu items
-                    $m->items = $this->nestItems($this->get_menu_items($m->id));
-
-                } else {
-
-                    //  Fetch the nested menu items
-                    $m->items = $this->get_menu_items($m->id);
-                }
-            }
-        }
 
         // --------------------------------------------------------------------------
 
-        return $menus;
-    }
+        if (!empty($data['keywords'])) {
 
-    // --------------------------------------------------------------------------
+            if (!isset($data['or_like'])) {
 
-    /**
-     * Fetch an individual menu item by its ID
-     * @param  int      $id               The ID of the menu to fetch
-     * @param  boolean  $includeMenuItems Whetehr or not to include the menu items
-     * @param  boolean  $nested           Whetehr or not to nest the menu items
-     * @return stdClass
-     */
-    public function get_by_id($id, $includeMenuItems = false, $nested = true)
-    {
-        $this->db->where($this->_table_prefix . '.' . $this->_table_id_column, $id);
-        $menu = $this->get_all($includeMenuItems, $nested);
+                $data['or_like'] = array();
+            }
 
-        if (!$menu) {
-
-            return false;
+            $data['or_like'][] = array($this->_table_prefix . '.label', $data['keywords']);
+            $data['or_like'][] = array($this->_table_prefix . '.description', $data['keywords']);
         }
 
-        return $menu[0];
+        parent::_getcount_common($data, $_caller);
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * Fetch an individual menu item by its slug
-     * @param  int      $slug             The slug of the menu to fetch
-     * @param  boolean  $includeMenuItems Whetehr or not to include the menu items
-     * @param  boolean  $nested           Whetehr or not to nest the menu items
-     * @return stdClass
+     * Formats a menu object
+     * @param  stdClass &$object The menu object to format
+     * @return void
      */
-    public function get_by_slug($slug, $includeMenuItems = false, $nested = true)
+    protected function _format_object(&$object)
     {
-        $this->db->where($this->_table_prefix . '.' . $this->_table_slug_column, $slug);
-        $menu = $this->get_all($includeMenuItems, $nested);
+        parent::_format_object($object);
 
-        if (!$menu) {
+        $temp              = new stdClass();
+        $temp->id          = (int) $object->modified_by;
+        $temp->email       = $object->email;
+        $temp->first_name  = $object->first_name;
+        $temp->last_name   = $object->last_name;
+        $temp->gender      = $object->gender;
+        $temp->profile_img = $object->profile_img ? (int) $object->profile_img : null;
 
-            return false;
-        }
+        $object->modified_by = $temp;
 
-        return $menu[0];
+        unset($object->email);
+        unset($object->first_name);
+        unset($object->last_name);
+        unset($object->gender);
+        unset($object->profile_img);
+
+        // --------------------------------------------------------------------------
+
+        $object->items = $this->getMenuItems($object->id);
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * Fetch all menu items for a given menu ID
-     * @param  int   $menuId The ID of the menu
+     * Gets the items of an individual menu
+     * @param  int   $menuId The Menu's ID
      * @return array
      */
-    public function get_menu_items($menuId)
+    public function getMenuItems($menuId)
     {
         $this->db->where('menu_id', $menuId);
         $this->db->order_by('order');
@@ -123,7 +105,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
 
         foreach ($items as $i) {
 
-            $this->_format_menu_item($i);
+            $this->_format_object_item($i);
         }
 
         return $items;
@@ -132,200 +114,286 @@ class NAILS_Cms_menu_model extends NAILS_Model
     // --------------------------------------------------------------------------
 
     /**
-     * Create a new menu
-     * @param  array $data The data to sue to create the menu
-     * @return mixed       ID on success, false on failure
+     * Format a menu item
+     * @param  stdClass &$obj The menu item to format
+     * @return voud
      */
-    public function create($data)
+    protected function _format_object_item(&$obj)
     {
-        $this->db->trans_begin();
+        parent::_format_object($obj);
 
-        $this->db->set('created', 'NOW()', false);
-        if ($this->user_model->is_logged_in()) {
+        // --------------------------------------------------------------------------
 
-            $this->db->set('created_by', active_user('id'));
-        }
+        $obj->menu_id = (int) $obj->menu_id;
+        $obj->page_id = $obj->page_id ? (int) $obj->page_id : null;
 
-        $this->db->insert($this->_table);
-
-        $id = $this->db->insert_id();
-
-        if ($id) {
-
-            if ($this->update($id, $data, false)) {
-
-                $this->db->trans_commit();
-                return $id;
-
-            } else {
-
-                $this->db->trans_rollback();
-            }
-
-        } else {
-
-            $this->_set_error('Failed to create menu.');
-            $this->db->trans_rollback();
-            return false;
-        }
+        unset($obj->menu_id);
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * Update a menu, including menu items
-     * @param  int   $id   The ID of the menu to update
-     * @param  array $data The data array of updates
-     * @return boolean
+     * Creates a new object
+     * @param  array   $data         The data to create the object with
+     * @param  boolean $returnObject Whether to return just the new ID or the full object
+     * @return mixed
      */
-    public function update($id, $data)
+    public function create($data = array(), $returnObject = false)
     {
-        $menu = $this->get_by_id($id);
-
-        if (!$menu) {
-
-            $this->_set_error('Invalid Menu ID');
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Validation
-        if (empty($data['label'])) {
-
-            $this->_set_error('"label" is a required field.');
-            return false;
-        }
-
-        if (empty($data['description'])) {
-
-            $this->_set_error('"description" is a required field.');
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  start the transaction
         $this->db->trans_begin();
 
-        //  Update the menu itself
-        $this->db->set('label', $data['label']);
+        if (isset($data['items'])) {
 
-        //  Decide on a slug, if need be
-        if (trim($data['label']) != $menu->label) {
-
-            //  Changed, generate a slug
-            $this->db->Set('slug', $this->_generate_slug( trim($data['label'])));
-        }
-        $this->db->set('description', $data['description']);
-        $this->db->set('modified', 'NOW()', false);
-
-        if ($this->user_model->is_logged_in()) {
-
-            $this->db->set('modified_by', active_user('id'));
+            $items = $data['items'];
+            unset($data['items']);
         }
 
-        $this->db->where('id', $menu->id);
+        $data['slug'] = $this->_generate_slug($data['label']);
 
-        if ($this->db->update($this->_table)) {
+        $result = parent::create($data, $returnObject);
 
-            if (isset($data['menu_item'])) {
+        if ($result && $items) {
 
-                //  All gone, loop new items and update/create
-                $idMap = array();
-                foreach ($data['menu_item'] as $item) {
+            if ($returnObject) {
 
-                    $data              = new stdClass();
-                    $data->order       = !empty($item['order'])   ? $item['order']   : 0;
-                    $data->page_id     = !empty($item['page_id']) ? $item['page_id'] : null;
-                    $data->url         = !empty($item['url'])     ? $item['url']     : null;
-                    $data->label       = !empty($item['label'])   ? $item['label']   : null;
-                    $data->modified    = date('Y-m-d H:i:s');
-                    $data->modified_by = $this->user_model->is_logged_in() ? active_user('id') : null;
-
-                    //  Work out the parent ID
-                    if (!empty($item['parent_id']) && isset($idMap[$item['parent_id']])) {
-
-                        $data->parent_id = $idMap[$item['parent_id']];
-
-                    } else {
-
-                        $data->parent_id = null;
-                    }
-
-                    if (empty($item['id']) || substr($item['id'], 0, 5) == 'newid') {
-
-                        $action = 'INSERT';
-                        $data->menu_id     = $menu->id;
-                        $data->created     = $data->modified;
-                        $data->created_by  = $data->modified_by;
-
-                    } else {
-
-                        $action = 'UPDATE';
-                    }
-
-                    //  what we doin'?
-                    if ($action == 'UPDATE') {
-
-                        $this->db->set($data);
-                        $this->db->where('id', $item['id']);
-                        if (!$this->db->update($this->_table_item)) {
-
-                            $this->db->trans_rollback();
-                            $this->_set_error('Failed to update menu item');
-                            return false;
-                        }
-
-                        $lastId = $item['id'];
-
-                    } elseif ($action == 'INSERT') {
-
-                        $this->db->set($data);
-
-                        if (!$this->db->insert($this->_table_item)) {
-
-                            $this->db->trans_rollback();
-                            $this->_set_error('Failed to update menu item');
-                            return false;
-                        }
-
-                        $lastId = $this->db->insert_id();
-                    }
-
-                    //  Add to the ID map
-                    $idMap[$item['id']] = $lastId;
-                }
-
-                //  Delete any untouched menu items
-                $idMap = array_values($idMap);
-
-                $this->db->where('menu_id', $menu->id);
-                $this->db->where_not_in('id', $idMap);
-
-                if (!$this->db->delete($this->_table_item)) {
-
-                    $this->db->trans_rollback();
-                    $this->_set_error('Failed to delete old menu items');
-                    return false;
-                }
-
-                $this->db->trans_commit();
-                return true;
+                $menuId = $result->id;
 
             } else {
 
-                //  No menu items specified, assume unchanged, done!
-                $this->db->trans_commit();
-                return true;
+                $menuId = $result;
             }
+
+            /**
+             * Take a note of the table prefixes, we're swapping them quickly while
+             * we do this update, so we can leverage the parent methods for the items.
+             */
+
+            $table       = $this->_table;
+            $tablePrefix = $this->_table_prefix;
+
+            $this->_table        = $this->_table_item;
+            $this->_table_prefix = $this->_table_item_prefix;
+
+            $newIds     = array();
+            for ($i=0; $i<count($items); $i++) {
+
+                $data            = array();
+                $data['menu_id'] = $menuId;
+                $data['page_id'] = !empty($items[$i]['page_id']) ? $items[$i]['page_id'] : null;
+                $data['url']     = !empty($items[$i]['url']) ? $items[$i]['url'] : null;
+                $data['label']   = !empty($items[$i]['label']) ? $items[$i]['label'] : null;
+                $data['order']   = $i;
+
+                /**
+                 * Is both a page_id _and_ url set? If so, complain
+                 */
+
+                if (!empty($data['page_id']) && !empty($data['url'])) {
+
+                        $this->_set_error('Can only set a URL or a CMS Page for item #' . ($i+1) . ', not both.');
+                        $this->db->trans_rollback();
+                        return false;
+                }
+
+                /**
+                 * Look at the parent_id, if it's numerica, then it's an existing menu item,
+                 * if not, then it's a new menu item. Non-numerical parents will be processed
+                 * _after_ their parents, so we can assume that the paren'ts [newly created]
+                 * ID is in $newIds - if it's not, then bugger,
+                 */
+
+                if (!empty($items[$i]['parent_id']) && is_numeric($items[$i]['parent_id'])) {
+
+                    $data['parent_id'] = $items[$i]['parent_id'];
+
+                } elseif (!empty($items[$i]['parent_id'])) {
+
+                    $parentId = $items[$i]['parent_id'];
+                    $data['parent_id'] = !empty($newIds[$parentId]) ? $newIds[$parentId] : null;
+
+                    if (empty($data['parent_id'])) {
+
+                        $this->_set_error('Failed to determine the parent item of item #' . ($i+1));
+                        $this->db->trans_rollback();
+                        return false;
+                    }
+                }
+
+                $result = parent::create($data);
+
+                if (!$result) {
+
+                    $this->_set_error('Failed to create item #' . ($i+1));
+                    $this->db->trans_rollback();
+                    return false;
+
+                } else {
+
+                    $newIds[$items[$i]['id']] = $result;
+                }
+            }
+
+            //  Reset the table and table prefix
+            $this->_table        = $table;
+            $this->_table_prefix = $tablePrefix;
+
+            //  Commit the transaction
+            $this->db->trans_commit();
 
         } else {
 
             $this->db->trans_rollback();
-            $this->_set_error('Failed to update menu data.');
-            return false;
         }
+
+        return $result;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Updates an existing object
+     * @todo Add transactions
+     * @param int      $id   The ID of the object to update
+     * @param array    $data The data to update the object with
+     * @return boolean
+     **/
+    public function update($id, $data = array())
+    {
+        $this->db->trans_begin();
+
+        if (isset($data['items'])) {
+
+            $items = $data['items'];
+            unset($data['items']);
+        }
+
+        $data['slug'] = $this->_generate_slug($data['label'], '', '', NULL, NULL, $id);
+
+        $result = parent::update($id, $data);
+
+        if ($result && $items) {
+
+            /**
+             * Take a note of the table prefixes, we're swapping them quickly while
+             * we do this update, so we can leverage the parent methods for the items.
+             */
+
+            $table       = $this->_table;
+            $tablePrefix = $this->_table_prefix;
+
+            $this->_table        = $this->_table_item;
+            $this->_table_prefix = $this->_table_item_prefix;
+
+            $idsUpdated = array();
+            $newIds     = array();
+            for ($i=0; $i<count($items); $i++) {
+
+                $data              = array();
+                $data['page_id']   = !empty($items[$i]['page_id']) ? $items[$i]['page_id'] : null;
+                $data['url']       = !empty($items[$i]['url']) ? $items[$i]['url'] : null;
+                $data['label']     = !empty($items[$i]['label']) ? $items[$i]['label'] : null;
+                $data['order']     = $i;
+
+                /**
+                 * Is both a page_id _and_ url set? If so, complain
+                 */
+
+                if (!empty($data['page_id']) && !empty($data['url'])) {
+
+                        $this->_set_error('Can only set a URL or a CMS Page for item #' . ($i+1) . ', not both.');
+                        $this->db->trans_rollback();
+                        return false;
+                }
+
+                /**
+                 * Look at the parent_id, if it's numerica, then it's an existing menu item,
+                 * if not, then it's a new menu item. Non-numerical parents will be processed
+                 * _after_ their parents, so we can assume that the paren'ts [newly created]
+                 * ID is in $newIds - if it's not, then bugger,
+                 */
+
+                if (!empty($items[$i]['parent_id']) && is_numeric($items[$i]['parent_id'])) {
+
+                    $data['parent_id'] = $items[$i]['parent_id'];
+
+                } elseif (!empty($items[$i]['parent_id'])) {
+
+                    $parentId = $items[$i]['parent_id'];
+                    $data['parent_id'] = !empty($newIds[$parentId]) ? $newIds[$parentId] : null;
+
+                    if (empty($data['parent_id'])) {
+
+                        $this->_set_error('Failed to determine the parent item of item #' . ($i+1));
+                        $this->db->trans_rollback();
+                        return false;
+                    }
+                }
+
+                /**
+                 * Look at the ID, is it numerical? If so it's an existing menu item, if
+                 * not it's a new item - create it and remember it's ID (in case it has
+                 * any kiddy winkles).
+                 */
+
+                //  Update or create? If create remember and save ID
+                if (is_numeric($items[$i]['id'])) {
+
+                    $result = parent::update($items[$i]['id'], $data);
+
+                    if (!$result) {
+
+                        $this->_set_error('Failed to update item #' . ($i+1));
+                        $this->db->trans_rollback();
+                        return false;
+
+                    } else {
+
+                        $idsUpdated[] = $items[$i]['id'];
+                    }
+
+                } else {
+
+                    $data['menu_id'] = $id;
+                    $result = parent::create($data);
+
+                    if (!$result) {
+
+                        $this->_set_error('Failed to create item #' . ($i+1));
+                        $this->db->trans_rollback();
+                        return false;
+
+                    } else {
+
+                        $idsUpdated[]             = $result;
+                        $newIds[$items[$i]['id']] = $result;
+                    }
+                }
+            }
+
+            //  Remove any items which weren't updated or created
+            $idsUpdated = array_filter($idsUpdated);
+            $idsUpdated = array_unique($idsUpdated);
+
+            if ($idsUpdated) {
+
+                $this->db->where('menu_id', $id);
+                $this->db->where_not_in('id', $idsUpdated);
+                $this->db->delete($this->_table);
+            }
+
+            //  Reset the table and table prefix
+            $this->_table        = $table;
+            $this->_table_prefix = $tablePrefix;
+
+            //  Commit the transaction
+            $this->db->trans_commit();
+
+        } else {
+
+            $this->db->trans_rollback();
+        }
+
+        return $result;
     }
 
     // --------------------------------------------------------------------------
@@ -334,7 +402,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
      * Nests menu items
      * Hat tip to Timur; http://stackoverflow.com/a/9224696/789224
      * @param  stdClass &$list  The list to nest
-     * @param  int      $parent The parent list's ID
+     * @param  int      $parent The parent list item's ID
      * @return array
      */
     protected function nestItems(&$list, $parent = null)
@@ -351,50 +419,6 @@ class NAILS_Cms_menu_model extends NAILS_Model
         }
 
         return $result;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Formats a menu object
-     * @param  stdClass &$obj The item to format
-     * @return void
-     */
-    protected function _format_object(&$obj)
-    {
-        $temp              = new stdClass();
-        $temp->id          = $obj->modified_by;
-        $temp->email       = $obj->email;
-        $temp->first_name  = $obj->first_name;
-        $temp->last_name   = $obj->last_name;
-        $temp->gender      = $obj->gender;
-        $temp->profile_img = $obj->profile_img;
-
-        $obj->modified_by   = $temp;
-
-        unset($obj->email);
-        unset($obj->first_name);
-        unset($obj->last_name);
-        unset($obj->gender);
-        unset($obj->profile_img);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Formats a menu item
-     * @param  stdClass &$obj The menu item to format
-     * @return void
-     */
-    protected function _format_menu_item(&$obj)
-    {
-        parent::_format_object($obj);
-
-        // --------------------------------------------------------------------------
-
-        $obj->menu_id   = (int) $obj->menu_id;
-        $obj->parent_id = $obj->parent_id ? (int) $obj->parent_id : null;
-        $obj->page_id   = $obj->page_id ? (int) $obj->page_id : null;
     }
 }
 

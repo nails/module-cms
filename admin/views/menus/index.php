@@ -1,97 +1,63 @@
 <div class="group-cms menus overview">
+    <p>
+        Listed below are all the editable menus on site.
+    </p>
+    <hr />
+    <?php
 
-	<p>
-		Listed below are all the editable menus on site.
-		<?php
+        echo \Nails\Admin\Helper::loadSearch($search);
+        echo \Nails\Admin\Helper::loadPagination($pagination);
 
-			if ( userHasPermission( 'admin.cms:0.can_create_menu' ) ) :
+    ?>
+    <table>
+        <thead>
+            <tr>
+                <th class="title">Menu</th>
+                <th class="user">Modified By</th>
+                <th class="datetime">Modified</th>
+                <th class="actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php
 
-				echo anchor( 'admin/cms/menus/create', 'Add New Menu', 'class="awesome small green right"' );
+            if ($menus) {
 
-			endif;
+                foreach ($menus as $menu) {
 
-		?>
-	</p>
+                    echo '<tr class="menu" data-label="' . $menu->label . '">';
+                        echo '<td class="label">';
+                            echo $menu->label;
+                            echo $menu->description ? '<small>' . $menu->description . '</small>' : '';
+                        echo '</td>';
+                        echo \Nails\Admin\Helper::loadUserCell($menu->modified_by);
+                        echo \Nails\Admin\Helper::loadDatetimeCell($menu->modified);
+                        echo '<td class="actions">';
 
-	<hr />
+                            if (userHasPermission('admin.cms:0.can_edit_menu')) {
 
-	<div class="search">
-		<div class="search-text">
-			<input type="text" name="search" value="" autocomplete="off" placeholder="Search menu titles by typing in here...">
-		</div>
-	</div>
+                                echo anchor('admin/cms/menus/edit/' . $menu->id, lang('action_edit'), 'class="awesome small"');
+                            }
 
-	<hr />
+                            if (userHasPermission('admin.cms:0.can_delete_menu')) {
 
-	<table>
-		<thead>
-			<tr>
-				<th class="title">Menu</th>
-				<th class="user">Modified By</th>
-				<th class="datetime">Modified</th>
-				<th class="actions">Actions</th>
-			</tr>
-		</thead>
-		<tbody>
-		<?php
+                                echo anchor('admin/cms/menus/delete/' . $menu->id, lang('action_delete'), 'data-title="Are you sure?" data-body="This will remove the menu from the site. This action cannot be undone." class="confirm awesome small red"');
+                            }
 
-			if ( $menus ) :
+                        echo '</td>';
+                    echo '</tr>';
+                }
 
-				foreach ( $menus as $menu ) :
+            } else {
 
-					echo '<tr class="menu" data-label="' . $menu->label . '">';
-						echo '<td class="label">';
-							echo $menu->label;
-							echo $menu->description ? '<small>' . $menu->description . '</small>' : '';
-						echo '</td>';
+                echo '<tr>';
+                    echo '<td colspan="4" class="no-data">';
+                        echo 'No editable menus found';
+                    echo '</td>';
+                echo '</tr>';
+            }
 
-						echo \Nails\Admin\Helper::loadUserCell($menu->modified_by);
-						echo \Nails\Admin\Helper::loadDatetimeCell($menu->modified);
-
-						echo '<td class="actions">';
-
-							if ( userHasPermission( 'admin.cms:0.can_edit_menu' ) ) :
-
-								echo anchor( 'admin/cms/menus/edit/' . $menu->id, lang( 'action_edit' ), 'class="awesome small"' );
-
-							endif;
-
-							if ( userHasPermission( 'admin.cms:0.can_delete_menu' ) ) :
-
-								echo anchor( 'admin/cms/menus/delete/' . $menu->id, lang( 'action_delete' ), 'data-title="Are you sure?" data-body="This will remove the menu from the site. This action cannot be undone." class="confirm awesome small red"' );
-
-							endif;
-
-						echo '</td>';
-					echo '</tr>';
-
-				endforeach;
-
-			else :
-
-					echo '<tr>';
-					echo '<td colspan="4" class="no-data">';
-					echo 'No editable menus found';
-					echo '</td>';
-					echo '</tr>';
-
-			endif;
-
-		?>
-		</tbody>
-	</table>
-
+        ?>
+        </tbody>
+    </table>
 </div>
-
-<script type="text/javascript">
-<!--//
-
-	$(function(){
-
-		var CMS_Menus = new NAILS_Admin_CMS_Menus;
-		CMS_Menus.init_search();
-
-	});
-
-//-->
-</script>

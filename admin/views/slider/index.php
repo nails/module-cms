@@ -2,7 +2,6 @@
     <p>
         Listed below are all the editable sliders on site.
     </p>
-
     <hr />
     <?php
 

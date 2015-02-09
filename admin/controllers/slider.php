@@ -165,7 +165,7 @@ class Slider extends \AdminController
 
                 } else {
 
-                    $this->data['error']  = '<strong>Sorry,</strong> failed to create slider';
+                    $this->data['error']  = '<strong>Sorry,</strong> failed to create slider. ';
                     $this->data['error'] .= $this->cms_slider_model->last_error();
                 }
 
@@ -235,7 +235,7 @@ class Slider extends \AdminController
         if (!$slider) {
 
             $this->session->set_flashdata('error', '<strong>Sorry,</strong> invalid slider ID.');
-            redirect('admin/cms/menus');
+            redirect('admin/cms/slider');
         }
 
         // --------------------------------------------------------------------------
@@ -284,7 +284,7 @@ class Slider extends \AdminController
 
                 } else {
 
-                    $this->data['error']  = '<strong>Sorry,</strong> failed to update slider';
+                    $this->data['error']  = '<strong>Sorry,</strong> failed to update slider. ';
                     $this->data['error'] .= $this->cms_slider_model->last_error();
                 }
 

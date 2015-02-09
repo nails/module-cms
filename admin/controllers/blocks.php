@@ -241,7 +241,8 @@ class Blocks extends \AdminController
 
                 } else {
 
-                    $this->data['error'] = '<strong>Sorry,</strong> there was a problem creating the new block.';
+                    $this->data['error']  = '<strong>Sorry,</strong> there was a problem creating the new block. ';
+                    $this->data['error'] .= $this->cms_block_model->last_error();
                 }
 
             } else {
@@ -293,7 +294,7 @@ class Blocks extends \AdminController
 
             $status = 'error';
             $msg    = '<strong>Sorry,</strong> failed to delete block. ';
-            $msg   .= $this->cms_menu_model->last_error();
+            $msg   .= $this->cms_block_model->last_error();
         }
 
         $this->session->set_flashdata($status, $msg);
