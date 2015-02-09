@@ -144,14 +144,14 @@ class Menus extends \AdminController
                 if ($this->cms_menu_model->create($itemData)) {
 
                     $status  = 'success';
-                    $message = '<strong>Success!</strong> Menu created successfully.';
+                    $message = 'Menu created successfully.';
 
                     $this->session->set_flashdata($status, $message);
                     redirect('admin/cms/menus');
 
                 } else {
 
-                    $this->data['error']  = '<strong>Sorry,</strong> failed to create menu. ';
+                    $this->data['error']  = 'Failed to create menu. ';
                     $this->data['error'] .= $this->cms_menu_model->last_error();
                 }
 
@@ -222,7 +222,7 @@ class Menus extends \AdminController
 
         if (!$menu) {
 
-            $this->session->set_flashdata('error', '<strong>Sorry,</strong> invalid menu ID.');
+            $this->session->set_flashdata('error', 'Invalid menu ID.');
             redirect('admin/cms/menus');
         }
 
@@ -247,14 +247,14 @@ class Menus extends \AdminController
                 if ($this->cms_menu_model->update($menu->id, $itemData)) {
 
                     $status  = 'success';
-                    $message = '<strong>Success!</strong> Menu updated successfully.';
+                    $message = 'Menu updated successfully.';
 
                     $this->session->set_flashdata($status, $message);
                     redirect('admin/cms/menus');
 
                 } else {
 
-                    $this->data['error']  = '<strong>Sorry,</strong> failed to update menu. ';
+                    $this->data['error']  = 'Failed to update menu. ';
                     $this->data['error'] .= $this->cms_menu_model->last_error();
                 }
 
@@ -324,7 +324,7 @@ class Menus extends \AdminController
 
         if (!$menu) {
 
-            $this->session->set_flashdata('error', '<strong>Sorry,</strong> invalid menu ID.');
+            $this->session->set_flashdata('error', 'Invalid menu ID.');
             redirect('admin/cms/blocks');
         }
 
@@ -333,12 +333,12 @@ class Menus extends \AdminController
         if ($this->cms_menu_model->delete($menu->id)) {
 
             $status = 'success';
-            $msg    = '<strong>Success!</strong> Menu was deleted successfully.';
+            $msg    = 'Menu was deleted successfully.';
 
         } else {
 
             $status = 'error';
-            $msg    = '<strong>Sorry,</strong> failed to delete menu. ';
+            $msg    = 'Failed to delete menu. ';
             $msg   .= $this->cms_menu_model->last_error();
         }
 

@@ -1,7 +1,7 @@
 <div class="group-cms menus edit">
     <?=form_open()?>
     <fieldset>
-        <legend>Menu Details</legend>
+        <legend>Details</legend>
         <?php
 
             $field                = array();
@@ -26,17 +26,15 @@
 
         ?>
     </fieldset>
-    <hr />
-    <p class="system-alert">
-        All menu items are shown below. Drag the menu item to nest beneath another item or to change
-        the order. A label and a URL is required for each menu item.
-    </p>
-    <div class="nested-sortable">
-        <ol class="nested-sortable"></ol>
-        <p>
-            <a href="#" class="add-item awesome small green">Add Menu Item</a>
-        </p>
-    </div>
+    <fieldset>
+        <legend>Items</legend>
+        <div class="nested-sortable">
+            <ol class="nested-sortable"></ol>
+            <p>
+                <a href="#" class="add-item awesome small green">Add Menu Item</a>
+            </p>
+        </div>
+    </fieldset>
     <?php
 
         echo form_submit('submit', lang('action_save_changes'), 'class="awesome"');

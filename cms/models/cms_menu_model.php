@@ -240,6 +240,10 @@ class NAILS_Cms_menu_model extends NAILS_Model
             //  Commit the transaction
             $this->db->trans_commit();
 
+        } elseif ($result) {
+
+            $this->db->trans_commit();
+
         } else {
 
             $this->db->trans_rollback();
@@ -386,6 +390,10 @@ class NAILS_Cms_menu_model extends NAILS_Model
             $this->_table_prefix = $tablePrefix;
 
             //  Commit the transaction
+            $this->db->trans_commit();
+
+        } elseif ($result) {
+
             $this->db->trans_commit();
 
         } else {

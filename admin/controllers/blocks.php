@@ -160,12 +160,12 @@ class Blocks extends \AdminController
 
                 if ($this->cms_block_model->update($this->data['block']->id, $blockData)) {
 
-                    $this->session->set_flashdata('success', '<strong>Success!</strong> Block updated successfully.');
+                    $this->session->set_flashdata('success', 'Block updated successfully.');
                     redirect('admin/cms/blocks');
 
                 } else {
 
-                    $this->data['error'] = '<strong>Sorry,</strong> there was a problem updating the new block.';
+                    $this->data['error'] = 'There was a problem updating the new block.';
                 }
 
             } else {
@@ -236,12 +236,12 @@ class Blocks extends \AdminController
 
                 if ($this->cms_block_model->create($blockData)) {
 
-                    $this->session->set_flashdata('success', '<strong>Success!</strong> Block created successfully.');
+                    $this->session->set_flashdata('success', 'Block created successfully.');
                     redirect('admin/cms/blocks');
 
                 } else {
 
-                    $this->data['error']  = '<strong>Sorry,</strong> there was a problem creating the new block. ';
+                    $this->data['error']  = 'There was a problem creating the new block. ';
                     $this->data['error'] .= $this->cms_block_model->last_error();
                 }
 
@@ -279,7 +279,7 @@ class Blocks extends \AdminController
 
         if (!$block) {
 
-            $this->session->set_flashdata('error', '<strong>Sorry,</strong> invalid block ID.');
+            $this->session->set_flashdata('error', 'Invalid block ID.');
             redirect('admin/cms/blocks');
         }
 
@@ -288,12 +288,12 @@ class Blocks extends \AdminController
         if ($this->cms_block_model->delete($block->id)) {
 
             $status = 'success';
-            $msg    = '<strong>Success!</strong> Block was deleted successfully.';
+            $msg    = 'Block was deleted successfully.';
 
         } else {
 
             $status = 'error';
-            $msg    = '<strong>Sorry,</strong> failed to delete block. ';
+            $msg    = 'Failed to delete block. ';
             $msg   .= $this->cms_block_model->last_error();
         }
 

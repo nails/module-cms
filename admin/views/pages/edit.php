@@ -32,7 +32,7 @@
             case 'saved' :
 
                 echo '<p class="system-alert success">';
-                    echo '<strong>Success!</strong> Your page was saved successfully. ' . anchor( 'cms/render/preview/' . $cmspage->id, 'Preview it here', 'class="main-action" data-action="preview" target="_blank"' );
+                    echo 'Your page was saved successfully. ' . anchor( 'cms/render/preview/' . $cmspage->id, 'Preview it here', 'class="main-action" data-action="preview" target="_blank"' );
                 echo '</p>';
 
             break;
@@ -42,7 +42,7 @@
             case 'published' :
 
                 echo '<p class="system-alert success">';
-                    echo '<strong>Success!</strong> Your page was published successfully. ' . anchor( $cmspage->published->url, 'View it here', 'target="_blank"' );
+                    echo 'Your page was published successfully. ' . anchor( $cmspage->published->url, 'View it here', 'target="_blank"' );
                 echo '</p>';
 
             break;
@@ -52,7 +52,7 @@
             case 'unpublished' :
 
                 echo '<p class="system-alert success">';
-                    echo '<strong>Success!</strong> Your page was unpublished successfully.';
+                    echo 'Your page was unpublished successfully.';
                 echo '</p>';
 
             break;

@@ -9,65 +9,67 @@
         echo \Nails\Admin\Helper::loadPagination($pagination);
 
     ?>
-    <table>
-        <thead>
-            <tr>
-                <th class="title">Slider</th>
-                <th class="user">Modified By</th>
-                <th class="datetime">Modified</th>
-                <th class="actions">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th class="title">Slider</th>
+                    <th class="user">Modified By</th>
+                    <th class="datetime">Modified</th>
+                    <th class="actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php
 
-            if ($sliders) {
+                if ($sliders) {
 
-                foreach ($sliders as $slider) {
+                    foreach ($sliders as $slider) {
 
-                    echo '<tr class="slider" data-label="' . $slider->label . '">';
-                        echo '<td class="label">';
-                            echo $slider->label;
-                            echo $slider->description ? '<small>' . $slider->description . '</small>' : '';
-                        echo '</td>';
+                        echo '<tr class="slider" data-label="' . $slider->label . '">';
+                            echo '<td class="label">';
+                                echo $slider->label;
+                                echo $slider->description ? '<small>' . $slider->description . '</small>' : '';
+                            echo '</td>';
 
-                        echo \Nails\Admin\Helper::loadUserCell($slider->modified_by);
-                        echo \Nails\Admin\Helper::loadDatetimeCell($slider->modified);
+                            echo \Nails\Admin\Helper::loadUserCell($slider->modified_by);
+                            echo \Nails\Admin\Helper::loadDatetimeCell($slider->modified);
 
-                        echo '<td class="actions">';
+                            echo '<td class="actions">';
 
-                            if (userHasPermission('admin.cms:0.can_edit_slider')) {
+                                if (userHasPermission('admin.cms:0.can_edit_slider')) {
 
-                                echo anchor(
-                                    'admin/cms/slider/edit/' . $slider->id,
-                                    lang('action_edit'),
-                                    'class="awesome small"'
-                                );
-                            }
+                                    echo anchor(
+                                        'admin/cms/slider/edit/' . $slider->id,
+                                        lang('action_edit'),
+                                        'class="awesome small"'
+                                    );
+                                }
 
-                            if (userHasPermission('admin.cms:0.can_delete_slider')) {
+                                if (userHasPermission('admin.cms:0.can_delete_slider')) {
 
-                                echo anchor(
-                                    'admin/cms/slider/delete/' . $slider->id,
-                                    lang('action_delete'),
-                                    'data-title="Are you sure?" data-body="This will remove the slider from the site. This action can be undone." class="confirm awesome small red"'
-                                );
-                            }
+                                    echo anchor(
+                                        'admin/cms/slider/delete/' . $slider->id,
+                                        lang('action_delete'),
+                                        'data-title="Are you sure?" data-body="This will remove the slider from the site. This action can be undone." class="confirm awesome small red"'
+                                    );
+                                }
 
+                            echo '</td>';
+                        echo '</tr>';
+                    }
+
+                } else {
+
+                    echo '<tr>';
+                        echo '<td colspan="4" class="no-data">';
+                            echo 'No editable sliders found';
                         echo '</td>';
                     echo '</tr>';
                 }
 
-            } else {
-
-                echo '<tr>';
-                    echo '<td colspan="4" class="no-data">';
-                        echo 'No editable sliders found';
-                    echo '</td>';
-                echo '</tr>';
-            }
-
-        ?>
-        </tbody>
-    </table>
+            ?>
+            </tbody>
+        </table>
+    </div>
 </div>

@@ -158,14 +158,14 @@ class Slider extends \AdminController
                 if ($this->cms_slider_model->create($sliderData)) {
 
                     $status  = 'success';
-                    $message = '<strong>Success!</strong> Slider created successfully.';
+                    $message = 'Slider created successfully.';
 
                     $this->session->set_flashdata($status, $message);
                     redirect('admin/cms/slider');
 
                 } else {
 
-                    $this->data['error']  = '<strong>Sorry,</strong> failed to create slider. ';
+                    $this->data['error']  = 'Failed to create slider. ';
                     $this->data['error'] .= $this->cms_slider_model->last_error();
                 }
 
@@ -234,7 +234,7 @@ class Slider extends \AdminController
 
         if (!$slider) {
 
-            $this->session->set_flashdata('error', '<strong>Sorry,</strong> invalid slider ID.');
+            $this->session->set_flashdata('error', 'Invalid slider ID.');
             redirect('admin/cms/slider');
         }
 
@@ -277,14 +277,14 @@ class Slider extends \AdminController
                 if ($this->cms_slider_model->update($slider->id, $sliderData)) {
 
                     $status  = 'success';
-                    $message = '<strong>Success!</strong> Slider updated successfully.';
+                    $message = 'Slider updated successfully.';
 
                     $this->session->set_flashdata($status, $message);
                     redirect('admin/cms/slider');
 
                 } else {
 
-                    $this->data['error']  = '<strong>Sorry,</strong> failed to update slider. ';
+                    $this->data['error']  = 'Failed to update slider. ';
                     $this->data['error'] .= $this->cms_slider_model->last_error();
                 }
 
@@ -355,7 +355,7 @@ class Slider extends \AdminController
 
         if (!$slider) {
 
-            $this->session->set_flashdata('error', '<strong>Sorry,</strong> I could\'t find a slider by that ID.');
+            $this->session->set_flashdata('error', 'I could\'t find a slider by that ID.');
             redirect('admin/cms/slider');
         }
 
@@ -364,12 +364,12 @@ class Slider extends \AdminController
         if ($this->cms_slider_model->delete($slider->id)) {
 
             $status  = 'success';
-            $message = '<strong>Success!</strong> Slider was deleted successfully.';
+            $message = 'Slider was deleted successfully.';
 
         } else {
 
             $status   = 'error';
-            $message  = '<strong>Sorry,</strong> I failed to delete that slider. ';
+            $message  = 'I failed to delete that slider. ';
             $message .= $this->cms_slider_model->last_error();
         }
 

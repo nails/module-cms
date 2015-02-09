@@ -148,7 +148,7 @@ class Pages extends \AdminController
 
         if (!$this->data['cmspage']) {
 
-            $this->session->set_flashdata('error', '<strong>Sorry,</strong> no page found by that ID');
+            $this->session->set_flashdata('error', 'No page found by that ID');
             redirect('admin/cms/pages');
         }
 
@@ -210,16 +210,16 @@ class Pages extends \AdminController
 
             if ($this->cms_page_model->publish($id)) {
 
-                $this->session->set_flashdata('success', '<strong>Success!</strong> Page was published successfully.');
+                $this->session->set_flashdata('success', 'Page was published successfully.');
 
             } else {
 
-                $this->session->set_flashdata('error', '<strong>Sorry,</strong> Could not publish page. ' . $this->cms_page_model->last_error());
+                $this->session->set_flashdata('error', 'Could not publish page. ' . $this->cms_page_model->last_error());
             }
 
         } else {
 
-            $this->session->set_flashdata('error', '<strong>Sorry,</strong> invalid page ID.');
+            $this->session->set_flashdata('error', 'Invalid page ID.');
         }
 
         redirect('admin/cms/pages');
@@ -247,16 +247,16 @@ class Pages extends \AdminController
 
             if ($this->cms_page_model->delete($id)) {
 
-                $this->session->set_flashdata('success', '<strong>Success!</strong> Page was deleted successfully.');
+                $this->session->set_flashdata('success', 'Page was deleted successfully.');
 
             } else {
 
-                $this->session->set_flashdata('error', '<strong>Sorry,</strong> Could not delete page. ' . $this->cms_page_model->last_error());
+                $this->session->set_flashdata('error', 'Could not delete page. ' . $this->cms_page_model->last_error());
             }
 
         } else {
 
-            $this->session->set_flashdata('error', '<strong>Sorry,</strong> invalid page ID.');
+            $this->session->set_flashdata('error', 'Invalid page ID.');
         }
 
         redirect('admin/cms/pages');
@@ -284,16 +284,16 @@ class Pages extends \AdminController
 
             if ($this->cms_page_model->restore($id)) {
 
-                $this->session->set_flashdata('success', '<strong>Success!</strong> Page was restored successfully. ');
+                $this->session->set_flashdata('success', 'Page was restored successfully. ');
 
             } else {
 
-                $this->session->set_flashdata('error', '<strong>Sorry,</strong> Could not restore page. ' . $this->cms_page_model->last_error());
+                $this->session->set_flashdata('error', 'Could not restore page. ' . $this->cms_page_model->last_error());
             }
 
         } else {
 
-            $this->session->set_flashdata('error', '<strong>Sorry,</strong> invalid page ID.');
+            $this->session->set_flashdata('error', 'Invalid page ID.');
         }
 
         redirect('admin/cms/pages');
@@ -321,16 +321,16 @@ class Pages extends \AdminController
 
             if ($this->cms_page_model->destroy($id)) {
 
-                $this->session->set_flashdata('success', '<strong>Success!</strong> Page was destroyed successfully. ');
+                $this->session->set_flashdata('success', 'Page was destroyed successfully. ');
 
             } else {
 
-                $this->session->set_flashdata('error', '<strong>Sorry,</strong> Could not destroy page. ' . $this->cms_page_model->last_error());
+                $this->session->set_flashdata('error', 'Could not destroy page. ' . $this->cms_page_model->last_error());
             }
 
         } else {
 
-            $this->session->set_flashdata('error', '<strong>Sorry,</strong> invalid page ID.');
+            $this->session->set_flashdata('error', 'Invalid page ID.');
         }
 
         redirect('admin/cms/pages');

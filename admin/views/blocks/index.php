@@ -13,63 +13,65 @@
         echo \Nails\Admin\Helper::loadPagination($pagination);
 
     ?>
-    <table>
-        <thead>
-            <tr>
-                <th class="label">Block Title &amp; Description</th>
-                <th class="location">Location</th>
-                <th class="type">Type</th>
-                <th class="default">Value</th>
-                <th class="datetime">Modified</th>
-                <th class="actions">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th class="label">Block Title &amp; Description</th>
+                    <th class="location">Location</th>
+                    <th class="type">Type</th>
+                    <th class="value">Value</th>
+                    <th class="datetime">Modified</th>
+                    <th class="actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php
 
-            if ($blocks) {
+                if ($blocks) {
 
-                foreach ($blocks as $block) {
+                    foreach ($blocks as $block) {
 
-                    echo '<tr class="block">';
+                        echo '<tr class="block">';
 
-                        echo '<td class="label">';
-                            echo '<strong>' . $block->label . '</strong>';
-                            echo '<small>';
-                            echo 'Slug: ' . $block->slug . '<br />';
-                            echo 'Description: ' . $block->description . '<br />';
-                            echo '</small>';
-                        echo '</td>';
-                        echo '<td class="default">';
-                            echo $block->located;
-                        echo '</td>';
-                        echo '<td class="type">';
-                            echo $block_types[$block->type];
-                        echo '</td>';
-                        echo '<td class="default">';
-                            echo character_limiter(strip_tags($block->value), 100);
-                        echo '</td>';
-                        echo \Nails\Admin\Helper::loadDatetimeCell($block->modified);
-                        echo '<td class="actions">';
-                            echo anchor('admin/cms/blocks/edit/' . $block->id, 'Edit', 'class="awesome small"');
-                            echo anchor('admin/cms/blocks/delete/' . $block->id, 'Delete', 'class="awesome small red confirm" data-title="Are you sure?" data-body="This action cannot be undone."');
-                        echo '</td>';
+                            echo '<td class="label">';
+                                echo '<strong>' . $block->label . '</strong>';
+                                echo '<small>';
+                                echo 'Slug: ' . $block->slug . '<br />';
+                                echo 'Description: ' . $block->description . '<br />';
+                                echo '</small>';
+                            echo '</td>';
+                            echo '<td class="value">';
+                                echo $block->located;
+                            echo '</td>';
+                            echo '<td class="type">';
+                                echo $block_types[$block->type];
+                            echo '</td>';
+                            echo '<td class="default">';
+                                echo character_limiter(strip_tags($block->value), 100);
+                            echo '</td>';
+                            echo \Nails\Admin\Helper::loadDatetimeCell($block->modified);
+                            echo '<td class="actions">';
+                                echo anchor('admin/cms/blocks/edit/' . $block->id, 'Edit', 'class="awesome small"');
+                                echo anchor('admin/cms/blocks/delete/' . $block->id, 'Delete', 'class="awesome small red confirm" data-title="Are you sure?" data-body="This action cannot be undone."');
+                            echo '</td>';
 
+                        echo '</tr>';
+                    }
+
+                } else {
+
+                    echo '<tr>';
+                        echo '<td colspan="6" class="no-data">';
+                            echo 'No editable blocks found';
+                        echo '</td>';
                     echo '</tr>';
                 }
 
-            } else {
-
-                echo '<tr>';
-                    echo '<td colspan="6" class="no-data">';
-                        echo 'No editable blocks found';
-                    echo '</td>';
-                echo '</tr>';
-            }
-
-        ?>
-        </tbody>
-    </table>
+            ?>
+            </tbody>
+        </table>
+    </div>
     <?php
 
         echo \Nails\Admin\Helper::loadPagination($pagination);
