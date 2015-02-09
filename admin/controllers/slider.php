@@ -123,7 +123,60 @@ class Slider extends \AdminController
 
         if ($this->input->post())
         {
-            here();
+            //  Rebuild sliders
+            $slideIds  = $this->input->post('slideId') ? $this->input->post('slideId') : array();
+            $objectIds = $this->input->post('objectId') ? $this->input->post('objectId') : array();
+            $captions  = $this->input->post('caption') ? $this->input->post('caption') : array();
+            $urls      = $this->input->post('url') ? $this->input->post('url') : array();
+
+            $slides = array();
+            for ($i=0; $i < count($slideIds); $i++) {
+
+                $slides[$i]            = new \stdClass();
+                $slides[$i]->id        = !empty($slideIds[$i]) ? $slideIds[$i] : null;
+                $slides[$i]->object_id = !empty($objectIds[$i]) ? $objectIds[$i] : null;
+                $slides[$i]->caption   = !empty($captions[$i]) ? $captions[$i] : null;
+                $slides[$i]->url       = !empty($urls[$i]) ? $urls[$i] : null;
+            }
+
+            // --------------------------------------------------------------------------
+
+            //  Validate form
+            $this->load->library('form_validation');
+            $this->form_validation->set_rules('label', '', 'xss_clean|trim|required');
+            $this->form_validation->set_rules('description', '', 'trim');
+            $this->form_validation->set_message('required', lang('fv_required'));
+
+            if ($this->form_validation->run()) {
+
+                //  Prepare the create data
+                $sliderData                = array();
+                $sliderData['label']       = $this->input->post('label');
+                $sliderData['description'] = strip_tags($this->input->post('description'));
+                $sliderData['slides']      = $slides;
+
+                if ($this->cms_slider_model->create($sliderData)) {
+
+                    $status  = 'success';
+                    $message = '<strong>Success!</strong> Slider created successfully.';
+
+                    $this->session->set_flashdata($status, $message);
+                    redirect('admin/cms/slider');
+
+                } else {
+
+                    $this->data['error']  = '<strong>Sorry,</strong> failed to create slider';
+                    $this->data['error'] .= $this->cms_slider_model->last_error();
+                }
+
+            } else {
+
+                $this->data['error'] = lang('fv_there_were_errors');
+            }
+
+        } else {
+
+            $slides = array();
         }
 
         // --------------------------------------------------------------------------
@@ -132,10 +185,29 @@ class Slider extends \AdminController
 
         // --------------------------------------------------------------------------
 
+        //  Prep the slides for the view
+        foreach ($slides as $slide) {
+
+            $slide->imgSourceUrl = !empty($slide->object_id) ? cdn_serve($slide->object_id) : null;
+            $slide->imgThumbUrl = !empty($slide->object_id) ? cdn_scale($slide->object_id, 130, 130) : null;
+        }
+
+        // --------------------------------------------------------------------------
+
+        //  Define the manager URL
+        $cdnManagerUrl = cdnManageUrl('cms-slider', array('sliderEdit','setImgCallback'), null, isPageSecure());
+
+        // --------------------------------------------------------------------------
+
         //  Assets
+        $this->asset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
         $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
         $this->asset->load('nails.admin.cms.sliders.createEdit.min.js', true);
-        $this->asset->inline('var _slider = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
+        $this->asset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
+        $this->asset->inline('sliderEdit.setScheme("serve", "' . $this->cdn->url_serve_scheme() . '");', 'JS');
+        $this->asset->inline('sliderEdit.setScheme("thumb", "' . $this->cdn->url_thumb_scheme() . '");', 'JS');
+        $this->asset->inline('sliderEdit.setManagerUrl("' . $cdnManagerUrl . '");', 'JS');
+        $this->asset->inline('sliderEdit.addSlides(' . json_encode($slides) . ');', 'JS');
 
         // --------------------------------------------------------------------------
 
@@ -170,43 +242,60 @@ class Slider extends \AdminController
 
         if ($this->input->post())
         {
-            //  Prepare the create data
-            $sliderData                = array();
-            $sliderData['label']       = $this->input->post('label');
-            $sliderData['description'] = strip_tags($this->input->post('description'));
-            $sliderData['slides']      = array();
+            //  Rebuild sliders
+            $slideIds  = $this->input->post('slideId') ? $this->input->post('slideId') : array();
+            $objectIds = $this->input->post('objectId') ? $this->input->post('objectId') : array();
+            $captions  = $this->input->post('caption') ? $this->input->post('caption') : array();
+            $urls      = $this->input->post('url') ? $this->input->post('url') : array();
 
-            $slideIds  = $this->input->post('slideId');
-            $objectIds = $this->input->post('objectId');
-            $captions  = $this->input->post('caption');
-            $urls      = $this->input->post('url');
-
+            $slides = array();
             for ($i=0; $i < count($slideIds); $i++) {
 
-                $sliderData['slides'][$i] = array();
-
-                $sliderData['slides'][$i]['id']        = !empty($slideIds[$i]) ? $slideIds[$i] : null;
-                $sliderData['slides'][$i]['object_id'] = !empty($objectIds[$i]) ? $objectIds[$i] : null;
-                $sliderData['slides'][$i]['caption']   = !empty($captions[$i]) ? $captions[$i] : null;
-                $sliderData['slides'][$i]['url']       = !empty($urls[$i]) ? $urls[$i] : null;
-                $sliderData['slides'][$i]['order']     = $i;
+                $slides[$i]            = new \stdClass();
+                $slides[$i]->id        = !empty($slideIds[$i]) ? $slideIds[$i] : null;
+                $slides[$i]->object_id = !empty($objectIds[$i]) ? $objectIds[$i] : null;
+                $slides[$i]->caption   = !empty($captions[$i]) ? $captions[$i] : null;
+                $slides[$i]->url       = !empty($urls[$i]) ? $urls[$i] : null;
             }
 
-            if ($this->cms_slider_model->update($slider->id, $sliderData)) {
+            // --------------------------------------------------------------------------
 
-                $status  = 'success';
-                $message = '<strong>Success!</strong> Slider updated successfully.';
+            //  Validate form
+            $this->load->library('form_validation');
+            $this->form_validation->set_rules('label', '', 'xss_clean|trim|required');
+            $this->form_validation->set_rules('description', '', 'trim');
+            $this->form_validation->set_message('required', lang('fv_required'));
 
-                $this->session->set_flashdata($status, $message);
-                redirect('admin/cms/slider');
+            if ($this->form_validation->run()) {
+
+                //  Prepare the create data
+                $sliderData                = array();
+                $sliderData['label']       = $this->input->post('label');
+                $sliderData['description'] = strip_tags($this->input->post('description'));
+                $sliderData['slides']      = $slides;
+
+                if ($this->cms_slider_model->update($slider->id, $sliderData)) {
+
+                    $status  = 'success';
+                    $message = '<strong>Success!</strong> Slider updated successfully.';
+
+                    $this->session->set_flashdata($status, $message);
+                    redirect('admin/cms/slider');
+
+                } else {
+
+                    $this->data['error']  = '<strong>Sorry,</strong> failed to update slider';
+                    $this->data['error'] .= $this->cms_slider_model->last_error();
+                }
 
             } else {
 
-                $this->data['error']  = '<strong>Sorry,</strong> failed to update slider';
-                $this->data['error'] .= $this->cms_slider_model->last_error();
-
-                //  @todo: Rebuild page based on post data
+                $this->data['error'] = lang('fv_there_were_errors');
             }
+
+        } else {
+
+            $slides = $slider->slides;
         }
 
         // --------------------------------------------------------------------------
@@ -216,7 +305,7 @@ class Slider extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Prep the slides for the view
-        foreach ($slider->slides as $slide) {
+        foreach ($slides as $slide) {
 
             $slide->imgSourceUrl = !empty($slide->object_id) ? cdn_serve($slide->object_id) : null;
             $slide->imgThumbUrl = !empty($slide->object_id) ? cdn_scale($slide->object_id, 130, 130) : null;
@@ -224,12 +313,21 @@ class Slider extends \AdminController
 
         // --------------------------------------------------------------------------
 
+        //  Define the manager URL
+        $cdnManagerUrl = cdnManageUrl('cms-slider', array('sliderEdit','setImgCallback'), null, isPageSecure());
+
+        // --------------------------------------------------------------------------
+
         //  Assets
         $this->asset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
         $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
         $this->asset->load('nails.admin.cms.sliders.createEdit.min.js', true);
-        $this->asset->inline('var _slider = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
-        $this->asset->inline('_slider.addSlides(' . json_encode($slider->slides) . ');', 'JS');
+        $this->asset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
+        $this->asset->inline('sliderEdit.setScheme("serve", "' . $this->cdn->url_serve_scheme() . '");', 'JS');
+        $this->asset->inline('sliderEdit.setScheme("thumb", "' . $this->cdn->url_thumb_scheme() . '");', 'JS');
+        $this->asset->inline('sliderEdit.setScheme("scale", "' . $this->cdn->url_scale_scheme() . '");', 'JS');
+        $this->asset->inline('sliderEdit.setManagerUrl("' . $cdnManagerUrl . '");', 'JS');
+        $this->asset->inline('sliderEdit.addSlides(' . json_encode($slides) . ');', 'JS');
 
         // --------------------------------------------------------------------------
 

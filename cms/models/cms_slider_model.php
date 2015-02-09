@@ -140,17 +140,69 @@ class NAILS_Cms_slider_model extends NAILS_Model
      */
     public function create($data = array(), $returnObject = false)
     {
+        $this->db->trans_begin();
+
         if (isset($data['slides'])) {
 
             $slides = $data['slides'];
             unset($data['slides']);
         }
 
+        $data['slug'] = $this->_generate_slug($data['label']);
+
         $result = parent::create($data, $returnObject);
 
         if ($result && $slides) {
 
-            dumpanddie('add slides');
+            if ($returnObject) {
+
+                $sliderId = $result->id;
+
+            } else {
+
+                $sliderId = $result;
+            }
+
+            /**
+             * Take a note of the table prefixes, we're swapping them quickly while
+             * we do this update, so we can leverage the parent methods for the slides.
+             */
+
+            $table       = $this->_table;
+            $tablePrefix = $this->_table_prefix;
+
+            $this->_table        = $this->_table_item;
+            $this->_table_prefix = $this->_table_item_prefix;
+
+            for ($i=0; $i<count($slides); $i++) {
+
+                $data              = array();
+                $data['slider_id'] = $sliderId;
+                $data['object_id'] = $slides[$i]->object_id;
+                $data['caption']   = $slides[$i]->caption;
+                $data['url']       = $slides[$i]->url;
+
+                $result = parent::create($data);
+
+                if (!$result) {
+
+                    $this->_set_error('Failed to create slide #' . $i);
+                    $this->db->trans_rollback();
+                    return false;
+
+                }
+            }
+
+            //  Reset the table and table prefix
+            $this->_table        = $table;
+            $this->_table_prefix = $tablePrefix;
+
+            //  Commit the transaction
+            $this->db->trans_commit();
+
+        } else {
+
+            $this->db->trans_rollback();
         }
 
         return $result;
@@ -167,11 +219,15 @@ class NAILS_Cms_slider_model extends NAILS_Model
      **/
     public function update($id, $data = array())
     {
+        $this->db->trans_begin();
+
         if (isset($data['slides'])) {
 
             $slides = $data['slides'];
             unset($data['slides']);
         }
+
+        $data['slug'] = $this->_generate_slug($data['label'], '', '', NULL, NULL, $id);
 
         $result = parent::update($id, $data);
 
@@ -189,27 +245,28 @@ class NAILS_Cms_slider_model extends NAILS_Model
             $this->_table_prefix = $this->_table_item_prefix;
 
             $idsUpdated = array();
-            foreach ($slides as $slide) {
+            for ($i=0; $i<count($slides); $i++) {
 
                 $data = array();
-                $data['object_id'] = $slide['object_id'];
-                $data['caption'] = $slide['caption'];
-                $data['url'] = $slide['url'];
-                $data['order'] = $slide['order'];
+                $data['object_id'] = $slides[$i]->object_id;
+                $data['caption']   = $slides[$i]->caption;
+                $data['url']       = $slides[$i]->url;
+                $data['order']     = $i;
 
                 //  Update or create? If create remember and save ID
                 if (!empty($slide['id'])) {
 
-                    $result = parent::update($slide['id'], $data);
+                    $result = parent::update($slides[$i]->id, $data);
 
                     if (!$result) {
 
                         $this->_set_error('Failed to update slide #' . $i);
+                        $this->db->trans_rollback();
                         return false;
 
                     } else {
 
-                        $idsUpdated[] = $slide['id'];
+                        $idsUpdated[] = $slides[$i]->id;
                     }
 
                 } else {
@@ -220,6 +277,7 @@ class NAILS_Cms_slider_model extends NAILS_Model
                     if (!$result) {
 
                         $this->_set_error('Failed to create slide #' . $i);
+                        $this->db->trans_rollback();
                         return false;
 
                     } else {
@@ -242,6 +300,13 @@ class NAILS_Cms_slider_model extends NAILS_Model
             //  Reset the table and table prefix
             $this->_table        = $table;
             $this->_table_prefix = $tablePrefix;
+
+            //  Commit the transaction
+            $this->db->trans_commit();
+
+        } else {
+
+            $this->db->trans_rollback();
         }
 
         return $result;

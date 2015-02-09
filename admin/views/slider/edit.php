@@ -9,6 +9,7 @@
             $field['key']         = 'label';
             $field['label']       = 'Label';
             $field['placeholder'] = 'Give the slider a title';
+            $_field['required']   = true;
             $field['default']     = isset($slider->label) ? $slider->label : '';
 
             echo form_field($field);
@@ -22,7 +23,7 @@
             $field['default']     = isset($slider->description) ? $slider->description : '';
             $field['class']       = 'wysiwyg-basic';
 
-            echo form_field_wysiwyg($field);
+            echo form_field_textarea($field);
 
         ?>
     </fieldset>
@@ -31,10 +32,11 @@
         <table id="slides">
             <thead>
                 <tr>
-                    <th class="order">&nbsp;</th>
+                    <th class="order">Order</th>
                     <th class="image">Image</th>
                     <th class="caption">Caption</th>
                     <th class="link">Link</th>
+                    <th class="remove">&nbsp;</th>
                 </tr>
             </thead>
             <tbody>
@@ -53,26 +55,34 @@
 </div>
 <script type="text/template" id="templateSlideRow">
 <tr>
-    <td class="order">
-        <b class="sortHandle fa fa-bars fa-lg"></b>
-        <input type="text" style="width:20px;" name="slideId[]" value="{{id}}" />
+    <td class="order sortHandle">
+        <b class="fa fa-bars fa-lg"></b>
+        <input type="hidden" style="width:20px;" name="slideId[]" value="{{id}}" />
     </td>
     <td class="image">
         {{#object_id}}
-            <img src="{{imgThumbUrl}}" />
-            <a href="#" class="changeImg awesome small orange">Change</a>
-            <a href="{{imgSourceUrl}}" class="fancybox awesome small green">Fullsize</a>
+            <a href="{{imgSourceUrl}}" class="fancybox">
+                <img src="{{imgThumbUrl}}" />
+            </a>
         {{/object_id}}
-        {{^object_id}}
-            <a href="#" class="setImg awesome small orange">Set Image</a>
-        {{/object_id}}
-        <input type="text" style="width:20px;" name="objectId[]" value="{{object_id}}" />
+        <a href="#" class="btnSetImg awesome small green">
+            Set Image
+        </a>
+        <a href="#" class="btnRemoveImg awesome small red {{^object_id}}hidden{{/object_id}}">
+            Remove Image
+        </a>
+        <input type="hidden" name="objectId[]" value="{{object_id}}" />
     </td>
     <td class="caption">
         <textarea name="caption[]">{{caption}}</textarea>
     </td>
     <td class="link">
         <input type="text" name="url[]" value="{{url}}" />
+    </td>
+    <td class="remove">
+        <a href="#" class="btnRemoveSlide">
+            <b class="fa fa-lg fa-times-circle"></b>
+        </a>
     </td>
 </tr>
 </script>
