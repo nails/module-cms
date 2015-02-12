@@ -6,7 +6,6 @@
         within page content by using the block's slug within the shortcode, e.g., <code>[:example-slug:]</code>
         would render the block whose slug was example-slug.
     </p>
-    <hr />
     <?php
 
         echo \Nails\Admin\Helper::loadSearch($search);
