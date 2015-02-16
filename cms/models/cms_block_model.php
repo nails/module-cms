@@ -35,15 +35,27 @@ class NAILS_Cms_block_model extends NAILS_Model
     {
         if (!empty($data['keywords'])) {
 
-            if (!isset($data['or_like'])) {
+            if (empty($data['or_like'])) {
 
                 $data['or_like'] = array();
             }
 
-            $data['or_like'][] = array($this->_table_prefix . '.label', $data['keywords']);
-            $data['or_like'][] = array($this->_table_prefix . '.value', $data['keywords']);
-            $data['or_like'][] = array($this->_table_prefix . '.located', $data['keywords']);
-            $data['or_like'][] = array($this->_table_prefix . '.description', $data['keywords']);
+            $data['or_like'][] = array(
+                'column' => $this->_table_prefix . '.label',
+                'value'  => $data['keywords']
+            );
+            $data['or_like'][] = array(
+                'column' => $this->_table_prefix . '.value',
+                'value'  => $data['keywords']
+            );
+            $data['or_like'][] = array(
+                'column' => $this->_table_prefix . '.located',
+                'value'  => $data['keywords']
+            );
+            $data['or_like'][] = array(
+                'column' => $this->_table_prefix . '.description',
+                'value'  => $data['keywords']
+            );
         }
 
         parent::_getcount_common($data, $_caller);
