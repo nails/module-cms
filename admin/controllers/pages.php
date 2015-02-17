@@ -31,6 +31,26 @@ class Pages extends \AdminController
     // --------------------------------------------------------------------------
 
     /**
+     * Returns an array of permissions which can be configured for the user
+     * @return array
+     */
+    public static function permissions()
+    {
+        $permissions = parent::permissions();
+
+        $permissions['manage']  = 'Can manage pages';
+        $permissions['create']  = 'Can create a new page';
+        $permissions['edit']    = 'Can edit an existing page';
+        $permissions['delete']  = 'Can delete an existing page';
+        $permissions['restore'] = 'Can restore a deleted page';
+        $permissions['destroy'] = 'Can permenantly delete a page';
+
+        return $permissions;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Construct the controller
      */
     public function __construct()

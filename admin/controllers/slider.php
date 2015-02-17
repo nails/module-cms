@@ -31,6 +31,25 @@ class Slider extends \AdminController
     // --------------------------------------------------------------------------
 
     /**
+     * Returns an array of permissions which can be configured for the user
+     * @return array
+     */
+    public static function permissions()
+    {
+        $permissions = parent::permissions();
+
+        $permissions['manage']  = 'Can manage sliders';
+        $permissions['create']  = 'Can create a new slider';
+        $permissions['edit']    = 'Can edit an existing slider';
+        $permissions['delete']  = 'Can delete an existing slider';
+        $permissions['restore'] = 'Can restore a deleted slider';
+
+        return $permissions;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Construct the controller
      */
     public function __construct()

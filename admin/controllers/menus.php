@@ -31,6 +31,25 @@ class Menus extends \AdminController
     // --------------------------------------------------------------------------
 
     /**
+     * Returns an array of permissions which can be configured for the user
+     * @return array
+     */
+    public static function permissions()
+    {
+        $permissions = parent::permissions();
+
+        $permissions['manage']  = 'Can manage menus';
+        $permissions['create']  = 'Can create a new menu';
+        $permissions['edit']    = 'Can edit an existing menu';
+        $permissions['delete']  = 'Can delete an existing menu';
+        $permissions['restore'] = 'Can restore a deleted menu';
+
+        return $permissions;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Construct the controller
      */
     public function __construct()

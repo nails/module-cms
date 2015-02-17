@@ -31,6 +31,25 @@ class Blocks extends \AdminController
     // --------------------------------------------------------------------------
 
     /**
+     * Returns an array of permissions which can be configured for the user
+     * @return array
+     */
+    public static function permissions()
+    {
+        $permissions = parent::permissions();
+
+        $permissions['manage']  = 'Can manage blocks';
+        $permissions['create']  = 'Can create a new block';
+        $permissions['edit']    = 'Can edit an existing block';
+        $permissions['delete']  = 'Can delete an existing block';
+        $permissions['restore'] = 'Can restore a deleted block';
+
+        return $permissions;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Construct the controller
      */
     public function __construct()
