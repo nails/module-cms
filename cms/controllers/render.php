@@ -137,7 +137,7 @@ class NAILS_Render extends NAILS_CMS_Controller
             !$this->data['message']
             && !$this->isPreview
             && $page->has_unpublished_changes
-            && $this->user_model->is_admin()
+            && $this->user_model->isAdmin()
             && userHasPermission('admin.cms:0.can_edit_page')
         ) {
 
@@ -174,7 +174,7 @@ class NAILS_Render extends NAILS_CMS_Controller
      */
     public function preview()
     {
-        if ($this->user_model->is_admin() && userHasPermission('admin.cms:0.can_edit_page')) {
+        if ($this->user_model->isAdmin() && userHasPermission('admin.cms:0.can_edit_page')) {
 
             $this->isPreview = true;
             return $this->page();

@@ -461,9 +461,9 @@ class NAILS_Cms_page_model extends NAILS_Model
         $this->db->set('is_published', true);
         $this->db->set('modified', date('Y-m-d H:i{s'));
 
-        if ($this->user_model->is_logged_in()) {
+        if ($this->user_model->isLoggedIn()) {
 
-            $this->db->set('modified_by', active_user('id'));
+            $this->db->set('modified_by', activeUser('id'));
         }
 
         $this->db->where('id', $page->id);
@@ -1552,9 +1552,9 @@ class NAILS_Cms_page_model extends NAILS_Model
         $this->db->set('is_deleted', true);
         $this->db->set('modified', 'NOW()', false);
 
-        if ($this->user_model->is_logged_in()) {
+        if ($this->user_model->isLoggedIn()) {
 
-            $this->db->set('modified_by', active_user('id'));
+            $this->db->set('modified_by', activeUser('id'));
         }
 
         if ($this->db->update($this->_table)) {
@@ -1568,9 +1568,9 @@ class NAILS_Cms_page_model extends NAILS_Model
                 $this->db->set('is_deleted', true);
                 $this->db->set('modified', 'NOW()', false);
 
-                if ($this->user_model->is_logged_in()) {
+                if ($this->user_model->isLoggedIn()) {
 
-                    $this->db->set('modified_by', active_user('id'));
+                    $this->db->set('modified_by', activeUser('id'));
                 }
 
                 if (!$this->db->update($this->_table)) {
@@ -1703,10 +1703,10 @@ class NAILS_Cms_page_model extends NAILS_Model
         $this->db->set('created', 'NOW()', false);
         $this->db->set('modified', 'NOW()', false);
 
-        if ($this->user_model->is_logged_in()) {
+        if ($this->user_model->isLoggedIn()) {
 
-            $this->db->set('created_by', active_user('id'));
-            $this->db->set('modified_by', active_user('id'));
+            $this->db->set('created_by', activeUser('id'));
+            $this->db->set('modified_by', activeUser('id'));
         }
 
         if (!$this->db->insert($this->_table_preview)) {
