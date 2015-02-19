@@ -15,15 +15,15 @@ namespace Nails\Admin\Cms;
 class Blocks extends \AdminController
 {
     /**
-     * Announces this controllers methods
+     * Announces this controller's navGroups
      * @return stdClass
      */
     public static function announce()
     {
-        if (userHasPermission('admin.cms:0.can_manage_block')) {
+        if (userHasPermission('admin:cms:blocks:manage')) {
 
-            $navGroup = new \Nails\Admin\Nav('CMS');
-            $navGroup->addMethod('Manage Blocks');
+            $navGroup = new \Nails\Admin\Nav('CMS', 'fa-file-text');
+            $navGroup->addAction('Manage Blocks');
             return $navGroup;
         }
     }
@@ -55,10 +55,6 @@ class Blocks extends \AdminController
     public function __construct()
     {
         parent::__construct();
-        if (!userHasPermission('admin.accounts:0.can_manage_block')) {
-
-            unauthorised();
-        }
 
         // --------------------------------------------------------------------------
 
@@ -73,7 +69,7 @@ class Blocks extends \AdminController
         $this->data['block_types']['plaintext'] = 'Plain Text';
         $this->data['block_types']['richtext']  = 'Rich Text';
 
-        // @TODO: Support these other types of block
+        // @todo: Support these other types of block
         //$this->data['block_types']['image']     = 'Image (*.jpg, *.png, *.gif)';
         //$this->data['block_types']['file']      = 'File (*.*)';
         //$this->data['block_types']['number']    = 'Number';
@@ -88,6 +84,13 @@ class Blocks extends \AdminController
      */
     public function index()
     {
+        if (!userHasPermission('admin:cms:blocks:manage')) {
+
+            unauthorised();
+        }
+
+        // --------------------------------------------------------------------------
+
         //  Set method info
         $this->data['page']->title = 'Manage Blocks';
 
@@ -130,7 +133,7 @@ class Blocks extends \AdminController
         $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
 
         //  Add a header button
-        if (userHasPermission('admin.cms:0.can_create_block')) {
+        if (userHasPermission('admin:cms:blocks:create')) {
 
             \Nails\Admin\Helper::addHeaderButton('admin/cms/blocks/create', 'Create Block');
         }
@@ -148,7 +151,7 @@ class Blocks extends \AdminController
      */
     public function edit()
     {
-        if (!userHasPermission('admin.cms:0.can_edit_block')) {
+        if (!userHasPermission('admin:cms:blocks:edit')) {
 
             unauthorised();
         }
@@ -221,7 +224,7 @@ class Blocks extends \AdminController
      */
     public function create()
     {
-        if (!userHasPermission('admin.cms:0.can_create_block')) {
+        if (!userHasPermission('admin:cms:blocks:create')) {
 
             unauthorised();
         }
@@ -286,7 +289,7 @@ class Blocks extends \AdminController
 
     public function delete()
     {
-        if (!userHasPermission('admin.cms:0.can_delete_block')) {
+        if (!userHasPermission('admin:cms:blocks:delete')) {
 
             unauthorised();
         }

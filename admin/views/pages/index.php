@@ -90,7 +90,7 @@
 
                             echo anchor($page->published->url, lang('action_view'), 'class="awesome small" target="cms-page-' . $page->id . '"');
 
-                            if (userHasPermission('admin.cms:0.can_edit_page')) {
+                            if (userHasPermission('admin:cms:pages:edit')) {
 
                                 echo anchor('admin/cms/pages/edit/' . $page->id, lang('action_edit'), 'class="awesome small"');
 
@@ -102,7 +102,7 @@
 
                             //echo anchor($page->url . '?is_preview=1', lang('action_preview'), 'target="_blank" class="fancybox awesome small green" data-fancybox-type="iframe" data-width="100%" data-height="100%"');
 
-                            if (userHasPermission('admin.cms:0.can_delete_page')) {
+                            if (userHasPermission('admin:cms:pages:delete')) {
 
                                 echo anchor('admin/cms/pages/delete/' . $page->id, lang('action_delete'), 'data-title="Are you sure?" data-body="This will remove the page, and any of it\'s children, from the site." class="confirm awesome small red"');
                             }

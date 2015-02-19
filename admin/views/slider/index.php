@@ -36,7 +36,7 @@
 
                             echo '<td class="actions">';
 
-                                if (userHasPermission('admin.cms:0.can_edit_slider')) {
+                                if (userHasPermission('admin:cms:slider:edit')) {
 
                                     echo anchor(
                                         'admin/cms/slider/edit/' . $slider->id,
@@ -45,7 +45,7 @@
                                     );
                                 }
 
-                                if (userHasPermission('admin.cms:0.can_delete_slider')) {
+                                if (userHasPermission('admin:cms:slider:delete')) {
 
                                     echo anchor(
                                         'admin/cms/slider/delete/' . $slider->id,

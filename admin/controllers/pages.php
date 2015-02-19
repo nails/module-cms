@@ -15,15 +15,25 @@ namespace Nails\Admin\Cms;
 class Pages extends \AdminController
 {
     /**
-     * Announces this controllers methods
+     * Announces this controller's navGroups
      * @return stdClass
      */
     public static function announce()
     {
-        if (userHasPermission('admin.cms:0.can_manage_page')) {
+        if (userHasPermission('admin:cms:pages:manage')) {
 
-            $navGroup = new \Nails\Admin\Nav('CMS');
-            $navGroup->addMethod('Manage Pages');
+            //  Alerts
+            $alerts = array();
+            $ci     =& get_instance();
+
+            //  Draft pages
+            $ci->db->where('is_published', false);
+            $ci->db->where('is_deleted', false);
+            $numDrafts = $ci->db->count_all_results(NAILS_DB_PREFIX . 'cms_page');
+            $alerts[]  = \Nails\Admin\Nav::alertObject($numDrafts, 'alert', 'Draft Pages');
+
+            $navGroup = new \Nails\Admin\Nav('CMS', 'fa-file-text');
+            $navGroup->addAction('Manage Pages', 'index', $alerts);
             return $navGroup;
         }
     }
@@ -41,6 +51,7 @@ class Pages extends \AdminController
         $permissions['manage']  = 'Can manage pages';
         $permissions['create']  = 'Can create a new page';
         $permissions['edit']    = 'Can edit an existing page';
+        $permissions['preview'] = 'Can preview pages';
         $permissions['delete']  = 'Can delete an existing page';
         $permissions['restore'] = 'Can restore a deleted page';
         $permissions['destroy'] = 'Can permenantly delete a page';
@@ -56,10 +67,6 @@ class Pages extends \AdminController
     public function __construct()
     {
         parent::__construct();
-        if (!userHasPermission('admin.accounts:0.can_manage_page')) {
-
-            unauthorised();
-        }
 
         // --------------------------------------------------------------------------
 
@@ -77,6 +84,13 @@ class Pages extends \AdminController
      */
     public function index()
     {
+        if (!userHasPermission('admin:accounts:0.manage')) {
+
+            unauthorised();
+        }
+
+        // --------------------------------------------------------------------------
+
         //  Page Title
         $this->data['page']->title = 'Manage Pages';
 
@@ -88,7 +102,7 @@ class Pages extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Add a header button
-        if (userHasPermission('admin.cms:0.can_create_page')) {
+        if (userHasPermission('admin:cms:pages:create')) {
 
             \Nails\Admin\Helper::addHeaderButton('admin/cms/pages/create', 'Add New Page');
         }
@@ -113,7 +127,7 @@ class Pages extends \AdminController
      */
     public function create()
     {
-        if (!userHasPermission('admin.cms:0.can_create_page')) {
+        if (!userHasPermission('admin:cms:pages:create')) {
 
             unauthorised();
         }
@@ -157,7 +171,7 @@ class Pages extends \AdminController
      */
     public function edit()
     {
-        if (!userHasPermission('admin.cms:0.can_edit_page')) {
+        if (!userHasPermission('admin:cms:pages:edit')) {
 
             unauthorised();
         }
@@ -216,7 +230,7 @@ class Pages extends \AdminController
      */
     public function publish()
     {
-        if (!userHasPermission('admin.cms:0.can_edit_page')) {
+        if (!userHasPermission('admin:cms:pages:edit')) {
 
             unauthorised();
         }
@@ -253,7 +267,7 @@ class Pages extends \AdminController
      */
     public function delete()
     {
-        if (!userHasPermission('admin.cms:0.can_delete_page')) {
+        if (!userHasPermission('admin:cms:pages:delete')) {
 
             unauthorised();
         }
@@ -290,7 +304,7 @@ class Pages extends \AdminController
      */
     public function restore()
     {
-        if (!userHasPermission('admin.cms:0.can_restore_page')) {
+        if (!userHasPermission('admin:cms:pages:restore')) {
 
             unauthorised();
         }
@@ -327,7 +341,7 @@ class Pages extends \AdminController
      */
     public function destroy()
     {
-        if (!userHasPermission('admin.cms:0.can_destroy_page')) {
+        if (!userHasPermission('admin:cms:pages:destroy')) {
 
             unauthorised();
         }

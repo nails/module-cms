@@ -15,15 +15,15 @@ namespace Nails\Admin\Cms;
 class Menus extends \AdminController
 {
     /**
-     * Announces this controllers methods
+     * Announces this controller's navGroups
      * @return stdClass
      */
     public static function announce()
     {
-        if (userHasPermission('admin.cms:0.can_manage_menu')) {
+        if (userHasPermission('admin:cms:menus:manage')) {
 
-            $navGroup = new \Nails\Admin\Nav('CMS');
-            $navGroup->addMethod('Manage Menus');
+            $navGroup = new \Nails\Admin\Nav('CMS', 'fa-file-text');
+            $navGroup->addAction('Manage Menus');
             return $navGroup;
         }
     }
@@ -55,14 +55,9 @@ class Menus extends \AdminController
     public function __construct()
     {
         parent::__construct();
-        if (!userHasPermission('admin.accounts:0.can_manage_menu')) {
-
-            unauthorised();
-        }
 
         // --------------------------------------------------------------------------
 
-        //  Load common items
         $this->load->helper('cms');
         $this->load->model('cms/cms_menu_model');
     }
@@ -75,6 +70,13 @@ class Menus extends \AdminController
      */
     public function index()
     {
+        if (!userHasPermission('admin:cms:menus:manage')) {
+
+            unauthorised();
+        }
+
+        // --------------------------------------------------------------------------
+
         //  Set method info
         $this->data['page']->title = 'Manage Menus';
 
@@ -114,7 +116,7 @@ class Menus extends \AdminController
         $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
 
         //  Add a header button
-        if (userHasPermission('admin.cms:0.can_create_menu')) {
+        if (userHasPermission('admin:cms:menus:create')) {
 
             \Nails\Admin\Helper::addHeaderButton('admin/cms/menus/create', 'Create Menu');
         }
@@ -136,7 +138,7 @@ class Menus extends \AdminController
      */
     public function create()
     {
-        if (!userHasPermission('admin.cms:0.can_create_menu')) {
+        if (!userHasPermission('admin:cms:menus:create')) {
 
             unauthorised();
         }
@@ -228,7 +230,7 @@ class Menus extends \AdminController
      */
     public function edit()
     {
-        if (!userHasPermission('admin.cms:0.can_edit_menu')) {
+        if (!userHasPermission('admin:cms:menus:edit')) {
 
             unauthorised();
         }
@@ -331,7 +333,7 @@ class Menus extends \AdminController
      */
     public function delete()
     {
-        if (!userHasPermission('admin.cms:0.can_delete_menu')) {
+        if (!userHasPermission('admin:cms:menus:delete')) {
 
             unauthorised();
         }
