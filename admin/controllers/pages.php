@@ -84,7 +84,7 @@ class Pages extends \AdminController
      */
     public function index()
     {
-        if (!userHasPermission('admin:accounts:0.manage')) {
+        if (!userHasPermission('admin:cms:pages:manage')) {
 
             unauthorised();
         }
