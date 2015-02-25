@@ -51,7 +51,7 @@ class NAILS_Render extends NAILS_CMS_Controller
 
         } else {
 
-            $page = $this->cms_page_model->get_by_id($this->pageId, true);
+            $page = $this->cms_page_model->get_by_id($this->pageId);
         }
 
         if (!$page || $page->is_deleted) {
@@ -141,10 +141,8 @@ class NAILS_Render extends NAILS_CMS_Controller
             && userHasPermission('admin:cms:pages:edit')
         ) {
 
-            $this->data['message'] = lang(
-                'cms_notice_unpublished_changes',
+            $this->data['message'] = lang('cms_notice_unpublished_changes',
                 array(
-                    site_url('cms/render/preview/' . $page->id),
                     site_url('admin/cms/pages/edit/' . $page->id)
                 )
             );
@@ -174,7 +172,7 @@ class NAILS_Render extends NAILS_CMS_Controller
      */
     public function preview()
     {
-        if ($this->user_model->isAdmin() && userHasPermission('admin:cms:pages:edit')) {
+        if (userHasPermission('admin:cms:pages:edit')) {
 
             $this->isPreview = true;
             return $this->page();
