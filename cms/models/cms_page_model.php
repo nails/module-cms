@@ -42,11 +42,11 @@ class NAILS_Cms_page_model extends NAILS_Model
         $this->nailsPrefix = 'NAILS_CMS_';
         $this->appPrefix   = 'CMS_';
 
-        $this->_table         = NAILS_DB_PREFIX . 'cms_page';
-        $this->_table_preview =  $this->_table . '_preview';
-        $this->_table_prefix  = 'p';
+        $this->table         = NAILS_DB_PREFIX . 'cms_page';
+        $this->table_preview =  $this->table . '_preview';
+        $this->tablePrefix  = 'p';
 
-        $this->_destructive_delete = false;
+        $this->destructiveDelete = false;
 
         // --------------------------------------------------------------------------
 
@@ -232,7 +232,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
             $this->db->set('draft_breadcrumbs', json_encode($breadcrumbs));
             $this->db->where('id', $current->id);
-            if (!$this->db->update($this->_table)) {
+            if (!$this->db->update($this->table)) {
 
                 $this->_set_error('Failed to generate breadcrumbs.');
                 $this->db->trans_rollback();
@@ -468,7 +468,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         $this->db->where('id', $page->id);
 
-        if ($this->db->update($this->_table)) {
+        if ($this->db->update($this->table)) {
 
             //  Fetch the children, returning the data we need for the updates
             $children = $this->get_ids_of_children($page->id);
@@ -512,7 +512,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
                     $this->db->where('id', $child->id);
 
-                    if (!$this->db->update($this->_table)) {
+                    if (!$this->db->update($this->table)) {
 
                         $this->_set_error('Failed to update a child page\'s data.');
                         $this->db->trans_rollback();
@@ -571,13 +571,13 @@ class NAILS_Cms_page_model extends NAILS_Model
      **/
     public function _getcount_common($data = array(), $_caller = null)
     {
-        $this->db->select($this->_table_prefix . '.*');
+        $this->db->select($this->tablePrefix . '.*');
         $this->db->select('ue.email, u.first_name, u.last_name, u.profile_img, u.gender');
 
-        $this->db->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->_table_prefix . '.modified_by', 'LEFT');
+        $this->db->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tablePrefix . '.modified_by', 'LEFT');
         $this->db->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
 
-        $this->db->order_by($this->_table_prefix . '.draft_slug');
+        $this->db->order_by($this->tablePrefix . '.draft_slug');
     }
 
     // --------------------------------------------------------------------------
@@ -872,7 +872,7 @@ class NAILS_Cms_page_model extends NAILS_Model
      */
     public function get_homepage()
     {
-        $this->db->where($this->_table_prefix . '.is_homepage', true);
+        $this->db->where($this->tablePrefix . '.is_homepage', true);
         $page = $this->get_all();
 
         if (!$page) {
@@ -1557,7 +1557,7 @@ class NAILS_Cms_page_model extends NAILS_Model
             $this->db->set('modified_by', activeUser('id'));
         }
 
-        if ($this->db->update($this->_table)) {
+        if ($this->db->update($this->table)) {
 
             //  Success, update children
             $children = $this->get_ids_of_children($id);
@@ -1573,7 +1573,7 @@ class NAILS_Cms_page_model extends NAILS_Model
                     $this->db->set('modified_by', activeUser('id'));
                 }
 
-                if (!$this->db->update($this->_table)) {
+                if (!$this->db->update($this->table)) {
 
                     $this->_set_error('Unable to delete children pages');
                     $this->db->trans_rollback();
@@ -1649,7 +1649,7 @@ class NAILS_Cms_page_model extends NAILS_Model
         //  Test to see if this preview has already been created
         $this->db->select('id');
         $this->db->where('draft_hash', $preview->draft_hash);
-        $result = $this->db->get($this->_table_preview)->row();
+        $result = $this->db->get($this->table_preview)->row();
 
         if ($result) {
 
@@ -1709,7 +1709,7 @@ class NAILS_Cms_page_model extends NAILS_Model
             $this->db->set('modified_by', activeUser('id'));
         }
 
-        if (!$this->db->insert($this->_table_preview)) {
+        if (!$this->db->insert($this->table_preview)) {
 
             $this->db->trans_rollback();
             $this->_set_error('Failed to create preview object.');
@@ -1733,7 +1733,7 @@ class NAILS_Cms_page_model extends NAILS_Model
     public function get_preview_by_id($previewId)
     {
         $this->db->where('id', $previewId);
-        $result = $this->db->get($this->_table_preview)->row();
+        $result = $this->db->get($this->table_preview)->row();
 
         // --------------------------------------------------------------------------
 

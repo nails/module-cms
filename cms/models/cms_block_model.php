@@ -18,8 +18,8 @@ class NAILS_Cms_block_model extends NAILS_Model
     public function __construct()
     {
         parent::__construct();
-        $this->_table = NAILS_DB_PREFIX . 'cms_block';
-        $this->_table_prefix = 'b';
+        $this->table = NAILS_DB_PREFIX . 'cms_block';
+        $this->tablePrefix = 'b';
     }
 
     // --------------------------------------------------------------------------
@@ -41,19 +41,19 @@ class NAILS_Cms_block_model extends NAILS_Model
             }
 
             $data['or_like'][] = array(
-                'column' => $this->_table_prefix . '.label',
+                'column' => $this->tablePrefix . '.label',
                 'value'  => $data['keywords']
             );
             $data['or_like'][] = array(
-                'column' => $this->_table_prefix . '.value',
+                'column' => $this->tablePrefix . '.value',
                 'value'  => $data['keywords']
             );
             $data['or_like'][] = array(
-                'column' => $this->_table_prefix . '.located',
+                'column' => $this->tablePrefix . '.located',
                 'value'  => $data['keywords']
             );
             $data['or_like'][] = array(
-                'column' => $this->_table_prefix . '.description',
+                'column' => $this->tablePrefix . '.description',
                 'value'  => $data['keywords']
             );
         }

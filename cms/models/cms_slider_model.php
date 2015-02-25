@@ -21,10 +21,10 @@ class NAILS_Cms_slider_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $this->_table             = NAILS_DB_PREFIX . 'cms_slider';
-        $this->_table_prefix      = 's';
-        $this->_table_item        = NAILS_DB_PREFIX . 'cms_slider_item';
-        $this->_table_item_prefix = 'si';
+        $this->table             = NAILS_DB_PREFIX . 'cms_slider';
+        $this->tablePrefix      = 's';
+        $this->table_item        = NAILS_DB_PREFIX . 'cms_slider_item';
+        $this->table_item_prefix = 'si';
     }
 
     // --------------------------------------------------------------------------
@@ -38,9 +38,9 @@ class NAILS_Cms_slider_model extends NAILS_Model
      **/
     protected function _getcount_common($data = array(), $_caller = null)
     {
-        $this->db->select($this->_table_prefix . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
-        $this->db->join(NAILS_DB_PREFIX . 'user u', $this->_table_prefix . '.modified_by = u.id', 'LEFT');
-        $this->db->join(NAILS_DB_PREFIX . 'user_email ue', $this->_table_prefix . '.modified_by = ue.user_id AND ue.is_primary = 1', 'LEFT');
+        $this->db->select($this->tablePrefix . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
+        $this->db->join(NAILS_DB_PREFIX . 'user u', $this->tablePrefix . '.modified_by = u.id', 'LEFT');
+        $this->db->join(NAILS_DB_PREFIX . 'user_email ue', $this->tablePrefix . '.modified_by = ue.user_id AND ue.is_primary = 1', 'LEFT');
 
         // --------------------------------------------------------------------------
 
@@ -52,11 +52,11 @@ class NAILS_Cms_slider_model extends NAILS_Model
             }
 
             $data['or_like'][] = array(
-                'column' => $this->_table_prefix . '.label',
+                'column' => $this->tablePrefix . '.label',
                 'value'  => $data['keywords']
             );
             $data['or_like'][] = array(
-                'column' => $this->_table_prefix . '.description',
+                'column' => $this->tablePrefix . '.description',
                 'value'  => $data['keywords']
             );
         }
@@ -107,7 +107,7 @@ class NAILS_Cms_slider_model extends NAILS_Model
     {
         $this->db->where('slider_id', $sliderId);
         $this->db->order_by('order');
-        $items = $this->db->get($this->_table_item)->result();
+        $items = $this->db->get($this->table_item)->result();
 
         foreach ($items as $i) {
 
@@ -175,11 +175,11 @@ class NAILS_Cms_slider_model extends NAILS_Model
              * we do this update, so we can leverage the parent methods for the slides.
              */
 
-            $table       = $this->_table;
-            $tablePrefix = $this->_table_prefix;
+            $table       = $this->table;
+            $tablePrefix = $this->tablePrefix;
 
-            $this->_table        = $this->_table_item;
-            $this->_table_prefix = $this->_table_item_prefix;
+            $this->table        = $this->table_item;
+            $this->tablePrefix = $this->table_item_prefix;
 
             for ($i=0; $i<count($slides); $i++) {
 
@@ -201,8 +201,8 @@ class NAILS_Cms_slider_model extends NAILS_Model
             }
 
             //  Reset the table and table prefix
-            $this->_table        = $table;
-            $this->_table_prefix = $tablePrefix;
+            $this->table        = $table;
+            $this->tablePrefix = $tablePrefix;
 
             //  Commit the transaction
             $this->db->trans_commit();
@@ -249,11 +249,11 @@ class NAILS_Cms_slider_model extends NAILS_Model
              * we do this update, so we can leverage the parent methods for the slides.
              */
 
-            $table       = $this->_table;
-            $tablePrefix = $this->_table_prefix;
+            $table       = $this->table;
+            $tablePrefix = $this->tablePrefix;
 
-            $this->_table        = $this->_table_item;
-            $this->_table_prefix = $this->_table_item_prefix;
+            $this->table        = $this->table_item;
+            $this->tablePrefix = $this->table_item_prefix;
 
             $idsUpdated = array();
             for ($i=0; $i<count($slides); $i++) {
@@ -306,12 +306,12 @@ class NAILS_Cms_slider_model extends NAILS_Model
 
                 $this->db->where('slider_id', $id);
                 $this->db->where_not_in('id', $idsUpdated);
-                $this->db->delete($this->_table);
+                $this->db->delete($this->table);
             }
 
             //  Reset the table and table prefix
-            $this->_table        = $table;
-            $this->_table_prefix = $tablePrefix;
+            $this->table        = $table;
+            $this->tablePrefix = $tablePrefix;
 
             //  Commit the transaction
             $this->db->trans_commit();
