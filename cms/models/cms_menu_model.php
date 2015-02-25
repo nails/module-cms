@@ -71,9 +71,9 @@ class NAILS_Cms_menu_model extends NAILS_Model
      * @param  stdClass &$object The menu object to format
      * @return void
      */
-    protected function _format_object(&$object)
+    protected function _format_object(&$object, $data = array())
     {
-        parent::_format_object($object);
+        parent::_format_object($object, $data);
 
         $temp              = new stdClass();
         $temp->id          = (int) $object->modified_by;
@@ -93,17 +93,19 @@ class NAILS_Cms_menu_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $object->items = $this->getMenuItems($object->id);
+        $nestMenuItems = !empty($data['nestItems']) ? true : false;
+        $object->items = $this->getMenuItems($object->id, $nestMenuItems);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Gets the items of an individual menu
-     * @param  int   $menuId The Menu's ID
+     * @param  int     $menuId The Menu's ID
+     * @param  boolean $nested Whether to nest the menu items or not
      * @return array
      */
-    public function getMenuItems($menuId)
+    public function getMenuItems($menuId, $nested = false)
     {
         $this->db->where('menu_id', $menuId);
         $this->db->order_by('order');
@@ -112,6 +114,11 @@ class NAILS_Cms_menu_model extends NAILS_Model
         foreach ($items as $i) {
 
             $this->_format_object_item($i);
+        }
+
+        if ($nested) {
+
+            $items = $this->nestItems($items);
         }
 
         return $items;
