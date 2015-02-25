@@ -178,7 +178,7 @@ class Pages extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->data['cmspage'] = $this->cms_page_model->get_by_id($this->uri->segment(5), true);
+        $this->data['cmspage'] = $this->cms_page_model->get_by_id($this->uri->segment(5));
 
         if (!$this->data['cmspage']) {
 

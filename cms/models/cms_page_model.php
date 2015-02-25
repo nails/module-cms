@@ -577,7 +577,13 @@ class NAILS_Cms_page_model extends NAILS_Model
         $this->db->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tablePrefix . '.modified_by', 'LEFT');
         $this->db->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
 
-        $this->db->order_by($this->tablePrefix . '.draft_slug');
+
+        if (empty($data['sort'])) {
+
+            $data['sort'] = array($this->tablePrefix . '.draft_slug', 'asc');
+        }
+
+        parent::_getcount_common($data, $_caller);
     }
 
     // --------------------------------------------------------------------------
