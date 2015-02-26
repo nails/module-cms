@@ -132,10 +132,6 @@ class Menus extends \AdminController
      * Create a new CMS Menu
      * @return void
      */
-        /**
-     * Edit a CMS Menu
-     * @return void
-     */
     public function create()
     {
         if (!userHasPermission('admin:cms:menus:create')) {
@@ -159,7 +155,21 @@ class Menus extends \AdminController
                 $itemData                = array();
                 $itemData['label']       = $this->input->post('label');
                 $itemData['description'] = strip_tags($this->input->post('description'));
-                $itemData['items']       = $this->input->post('menuItem');
+                $itemData['items']       = array();
+
+                //  Prepare the menu items
+                $menuItems = $this->input->post('menuItem');
+                $numItems  = isset($menuItems['id']) ? count($menuItems['id']) : 0;
+
+                for ($i=0; $i < $numItems; $i++) {
+
+                    $itemData['items'][$i]              = array();
+                    $itemData['items'][$i]['id']        = isset($menuItems['id'][$i]) ? $menuItems['id'][$i] : null;
+                    $itemData['items'][$i]['parent_id'] = isset($menuItems['parent_id'][$i]) ? $menuItems['parent_id'][$i] : null;
+                    $itemData['items'][$i]['label']     = isset($menuItems['label'][$i]) ? $menuItems['label'][$i] : null;
+                    $itemData['items'][$i]['url']       = isset($menuItems['url'][$i]) ? $menuItems['url'][$i] : null;
+                    $itemData['items'][$i]['page_id']   = isset($menuItems['page_id'][$i]) ? $menuItems['page_id'][$i] : null;
+                }
 
                 if ($this->cms_menu_model->create($itemData)) {
 
@@ -262,7 +272,22 @@ class Menus extends \AdminController
                 $itemData                = array();
                 $itemData['label']       = $this->input->post('label');
                 $itemData['description'] = strip_tags($this->input->post('description'));
-                $itemData['items']       = $this->input->post('menuItem');
+                $itemData['items']       = array();
+
+                //  Prepare the menu items
+                $menuItems = $this->input->post('menuItem');
+                $numItems  = isset($menuItems['id']) ? count($menuItems['id']) : 0;
+
+                for ($i=0; $i < $numItems; $i++) {
+
+                    $itemData['items'][$i]              = array();
+                    $itemData['items'][$i]['id']        = isset($menuItems['id'][$i]) ? $menuItems['id'][$i] : null;
+                    $itemData['items'][$i]['parent_id'] = isset($menuItems['parent_id'][$i]) ? $menuItems['parent_id'][$i] : null;
+                    $itemData['items'][$i]['label']     = isset($menuItems['label'][$i]) ? $menuItems['label'][$i] : null;
+                    $itemData['items'][$i]['url']       = isset($menuItems['url'][$i]) ? $menuItems['url'][$i] : null;
+                    $itemData['items'][$i]['page_id']   = isset($menuItems['page_id'][$i]) ? $menuItems['page_id'][$i] : null;
+                }
+
 
                 if ($this->cms_menu_model->update($menu->id, $itemData)) {
 

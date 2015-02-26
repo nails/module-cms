@@ -323,9 +323,9 @@ class NAILS_Cms_menu_model extends NAILS_Model
 
                 if (!empty($data['page_id']) && !empty($data['url'])) {
 
-                        $this->_set_error('Can only set a URL or a CMS Page for item #' . ($counter+1) . ', not both.');
-                        $this->db->trans_rollback();
-                        return false;
+                    $this->_set_error('Can only set a URL or a CMS Page for item #' . ($counter+1) . ', not both.');
+                    $this->db->trans_rollback();
+                    return false;
                 }
 
                 /**
@@ -350,6 +350,10 @@ class NAILS_Cms_menu_model extends NAILS_Model
                         $this->db->trans_rollback();
                         return false;
                     }
+
+                } else {
+
+                    $data['parent_id'] = null;
                 }
 
                 /**

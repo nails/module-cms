@@ -51,26 +51,25 @@
             <div class="content">
             <?php
 
-                echo '<input type="hidden" name="menuItem[{{counter}}][id]" value="{{id}}" class="input-id" />';
-                echo '<input type="hidden" name="menuItem[{{counter}}][parent_id]" value="{{parent_id}}" class="input-parent_id" />';
-                echo '<input type="hidden" name="menuItem[{{counter}}][order]" value="{{order}}" class="input-order" />';
+                echo '<input type="hidden" name="menuItem[id][]" value="{{id}}" class="input-id" />';
+                echo '<input type="hidden" name="menuItem[parent_id][]" value="{{parent_id}}" class="input-parent_id" />';
 
                 echo '<div class="containerLabel">';
                     echo form_input(
-                        'menuItem[{{counter}}][label]',
+                        'menuItem[label][]',
                         '{{label}}',
                         'placeholder="The label to give this menu item" class="input-label"'
                     );
                 echo '</div>';
                 echo '<div class="containerUrl">';
                     echo form_input(
-                        'menuItem[{{counter}}][url]',
+                        'menuItem[url][]',
                         '{{url}}',
                         'placeholder="The URL this menu item should link to" class="input-url"'
                     );
                     echo '<div class="or">Or</div>';
                     echo form_dropdown(
-                        'menuItem[{{counter}}][page_id]',
+                        'menuItem[page_id][]',
                         $pages
                     );
                 echo '</div>';
