@@ -22,7 +22,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         $this->table             = NAILS_DB_PREFIX . 'cms_menu';
-        $this->tablePrefix        = 'm';
+        $this->tablePrefix       = 'm';
         $this->table_item        = NAILS_DB_PREFIX . 'cms_menu_item';
         $this->table_item_prefix = 'mi';
     }
@@ -187,15 +187,17 @@ class NAILS_Cms_menu_model extends NAILS_Model
             $this->table        = $this->table_item;
             $this->tablePrefix = $this->table_item_prefix;
 
-            $newIds     = array();
-            for ($i=0; $i<count($items); $i++) {
+            $newIds  = array();
+            $counter = 0;
+
+            foreach ($items as $item) {
 
                 $data            = array();
                 $data['menu_id'] = $menuId;
-                $data['page_id'] = !empty($items[$i]['page_id']) ? $items[$i]['page_id'] : null;
-                $data['url']     = !empty($items[$i]['url']) ? $items[$i]['url'] : null;
-                $data['label']   = !empty($items[$i]['label']) ? $items[$i]['label'] : null;
-                $data['order']   = $i;
+                $data['page_id'] = !empty($item['page_id']) ? $item['page_id'] : null;
+                $data['url']     = !empty($item['url']) ? $item['url'] : null;
+                $data['label']   = !empty($item['label']) ? $item['label'] : null;
+                $data['order']   = $counter;
 
                 /**
                  * Is both a page_id _and_ url set? If so, complain
@@ -203,9 +205,9 @@ class NAILS_Cms_menu_model extends NAILS_Model
 
                 if (!empty($data['page_id']) && !empty($data['url'])) {
 
-                        $this->_set_error('Can only set a URL or a CMS Page for item #' . ($i+1) . ', not both.');
-                        $this->db->trans_rollback();
-                        return false;
+                    $this->_set_error('Can only set a URL or a CMS Page for item #' . ($counter+1) . ', not both.');
+                    $this->db->trans_rollback();
+                    return false;
                 }
 
                 /**
@@ -215,18 +217,18 @@ class NAILS_Cms_menu_model extends NAILS_Model
                  * ID is in $newIds - if it's not, then bugger,
                  */
 
-                if (!empty($items[$i]['parent_id']) && is_numeric($items[$i]['parent_id'])) {
+                if (!empty($item['parent_id']) && is_numeric($item['parent_id'])) {
 
-                    $data['parent_id'] = $items[$i]['parent_id'];
+                    $data['parent_id'] = $item['parent_id'];
 
-                } elseif (!empty($items[$i]['parent_id'])) {
+                } elseif (!empty($item['parent_id'])) {
 
-                    $parentId = $items[$i]['parent_id'];
+                    $parentId = $item['parent_id'];
                     $data['parent_id'] = !empty($newIds[$parentId]) ? $newIds[$parentId] : null;
 
                     if (empty($data['parent_id'])) {
 
-                        $this->_set_error('Failed to determine the parent item of item #' . ($i+1));
+                        $this->_set_error('Failed to determine the parent item of item #' . ($counter+1));
                         $this->db->trans_rollback();
                         return false;
                     }
@@ -236,18 +238,20 @@ class NAILS_Cms_menu_model extends NAILS_Model
 
                 if (!$result) {
 
-                    $this->_set_error('Failed to create item #' . ($i+1));
+                    $this->_set_error('Failed to create item #' . ($counter+1));
                     $this->db->trans_rollback();
                     return false;
 
                 } else {
 
-                    $newIds[$items[$i]['id']] = $result;
+                    $newIds[$item['id']] = $result;
                 }
+
+                $counter++;
             }
 
             //  Reset the table and table prefix
-            $this->table        = $table;
+            $this->table       = $table;
             $this->tablePrefix = $tablePrefix;
 
             //  Commit the transaction
@@ -298,18 +302,20 @@ class NAILS_Cms_menu_model extends NAILS_Model
             $table       = $this->table;
             $tablePrefix = $this->tablePrefix;
 
-            $this->table        = $this->table_item;
+            $this->table       = $this->table_item;
             $this->tablePrefix = $this->table_item_prefix;
 
             $idsUpdated = array();
             $newIds     = array();
-            for ($i=0; $i<count($items); $i++) {
+            $counter    = 0;
 
-                $data              = array();
-                $data['page_id']   = !empty($items[$i]['page_id']) ? $items[$i]['page_id'] : null;
-                $data['url']       = !empty($items[$i]['url']) ? $items[$i]['url'] : null;
-                $data['label']     = !empty($items[$i]['label']) ? $items[$i]['label'] : null;
-                $data['order']     = $i;
+            foreach ($items as $item) {
+
+                $data            = array();
+                $data['page_id'] = !empty($item['page_id']) ? $item['page_id'] : null;
+                $data['url']     = !empty($item['url']) ? $item['url'] : null;
+                $data['label']   = !empty($item['label']) ? $item['label'] : null;
+                $data['order']   = $counter;
 
                 /**
                  * Is both a page_id _and_ url set? If so, complain
@@ -317,30 +323,30 @@ class NAILS_Cms_menu_model extends NAILS_Model
 
                 if (!empty($data['page_id']) && !empty($data['url'])) {
 
-                        $this->_set_error('Can only set a URL or a CMS Page for item #' . ($i+1) . ', not both.');
+                        $this->_set_error('Can only set a URL or a CMS Page for item #' . ($counter+1) . ', not both.');
                         $this->db->trans_rollback();
                         return false;
                 }
 
                 /**
-                 * Look at the parent_id, if it's numerica, then it's an existing menu item,
+                 * Look at the parent_id, if it's numerical, then it's an existing menu item,
                  * if not, then it's a new menu item. Non-numerical parents will be processed
-                 * _after_ their parents, so we can assume that the paren'ts [newly created]
+                 * _after_ their parents, so we can assume that the parent's [newly created]
                  * ID is in $newIds - if it's not, then bugger,
                  */
 
-                if (!empty($items[$i]['parent_id']) && is_numeric($items[$i]['parent_id'])) {
+                if (!empty($item['parent_id']) && is_numeric($item['parent_id'])) {
 
-                    $data['parent_id'] = $items[$i]['parent_id'];
+                    $data['parent_id'] = $item['parent_id'];
 
-                } elseif (!empty($items[$i]['parent_id'])) {
+                } elseif (!empty($item['parent_id'])) {
 
-                    $parentId = $items[$i]['parent_id'];
+                    $parentId = $item['parent_id'];
                     $data['parent_id'] = !empty($newIds[$parentId]) ? $newIds[$parentId] : null;
 
                     if (empty($data['parent_id'])) {
 
-                        $this->_set_error('Failed to determine the parent item of item #' . ($i+1));
+                        $this->_set_error('Failed to determine the parent item of item #' . ($counter+1));
                         $this->db->trans_rollback();
                         return false;
                     }
@@ -353,19 +359,19 @@ class NAILS_Cms_menu_model extends NAILS_Model
                  */
 
                 //  Update or create? If create remember and save ID
-                if (is_numeric($items[$i]['id'])) {
+                if (!empty($item['id']) && is_numeric($item['id'])) {
 
-                    $result = parent::update($items[$i]['id'], $data);
+                    $result = parent::update($item['id'], $data);
 
                     if (!$result) {
 
-                        $this->_set_error('Failed to update item #' . ($i+1));
+                        $this->_set_error('Failed to update item #' . ($counter+1));
                         $this->db->trans_rollback();
                         return false;
 
                     } else {
 
-                        $idsUpdated[] = $items[$i]['id'];
+                        $idsUpdated[] = $item['id'];
                     }
 
                 } else {
@@ -375,16 +381,18 @@ class NAILS_Cms_menu_model extends NAILS_Model
 
                     if (!$result) {
 
-                        $this->_set_error('Failed to create item #' . ($i+1));
+                        $this->_set_error('Failed to create item #' . ($counter+1));
                         $this->db->trans_rollback();
                         return false;
 
                     } else {
 
-                        $idsUpdated[]             = $result;
-                        $newIds[$items[$i]['id']] = $result;
+                        $idsUpdated[]         = $result;
+                        $newIds[$items['id']] = $result;
                     }
                 }
+
+                $counter++;
             }
 
             //  Remove any items which weren't updated or created
@@ -399,7 +407,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
             }
 
             //  Reset the table and table prefix
-            $this->table        = $table;
+            $this->table       = $table;
             $this->tablePrefix = $tablePrefix;
 
             //  Commit the transaction
