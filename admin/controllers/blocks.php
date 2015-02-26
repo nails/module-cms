@@ -158,7 +158,7 @@ class Blocks extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->data['block'] = $this->cms_block_model->get_by_id($this->uri->segment(5), true);
+        $this->data['block'] = $this->cms_block_model->get_by_id($this->uri->segment(5));
 
         if (!$this->data['block']) {
 
