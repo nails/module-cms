@@ -26,9 +26,9 @@ var _scaling_change = function(value)
         break;
     }
 
-    if (typeof(_nails.add_stripes) === 'function')
+    if (typeof(_nails.addStripes) === 'function')
     {
-        _nails.add_stripes();
+        _nails.addStripes();
     }
 
     _this.resize_widget(ui);
@@ -61,9 +61,9 @@ var _linking_change = function(value)
         break;
     }
 
-    if (typeof(_nails.add_stripes) === 'function')
+    if (typeof(_nails.addStripes) === 'function')
     {
-        _nails.add_stripes();
+        _nails.addStripes();
     }
 
     _this.resize_widget(ui);
@@ -77,9 +77,9 @@ _url.hide();
 _target.hide();
 _a_attr.hide();
 
-if (typeof(_nails.add_stripes) === 'function')
+if (typeof(_nails.addStripes) === 'function')
 {
-    _nails.add_stripes();
+    _nails.addStripes();
 }
 
 // --------------------------------------------------------------------------
