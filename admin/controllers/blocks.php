@@ -208,11 +208,6 @@ class Blocks extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
-        $this->asset->load('nails.admin.cms.blocks.edit.min.js', true);
-
-        // --------------------------------------------------------------------------
-
         \Nails\Admin\Helper::loadView('edit');
     }
 
