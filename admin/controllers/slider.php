@@ -71,7 +71,7 @@ class Slider extends \AdminController
      */
     public function index()
     {
-        if (!userHasPermission('admin:accounts:0.manage')) {
+        if (!userHasPermission('admin:cms:slider:manage')) {
 
             unauthorised();
         }
@@ -135,7 +135,7 @@ class Slider extends \AdminController
      */
     public function create()
     {
-        if (!userHasPermission('admin:cms:slider:creae')) {
+        if (!userHasPermission('admin:cms:slider:create')) {
 
             unauthorised();
         }
