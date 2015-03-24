@@ -21,15 +21,6 @@ class NAILS_CMS_Controller extends NAILS_Controller
 
         // --------------------------------------------------------------------------
 
-        //  Check this module is enabled in settings
-        if (! isModuleEnabled('nailsapp/module-cms')) {
-
-            //  Cancel execution, module isn't enabled
-            show_404();
-        }
-
-        // --------------------------------------------------------------------------
-
         //  Load language file
         $this->lang->load('cms');
     }

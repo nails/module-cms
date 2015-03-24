@@ -535,7 +535,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
             //  Rewrite routes
             $this->load->model('routes_model');
-            $this->routes_model->update('cms');
+            $this->routes_model->update();
 
             // --------------------------------------------------------------------------
 
@@ -1591,7 +1591,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
             //  Rewrite routes
             $this->load->model('routes_model');
-            $this->routes_model->update('cms');
+            $this->routes_model->update();
 
             // --------------------------------------------------------------------------
 
