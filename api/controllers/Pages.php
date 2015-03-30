@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Api\Cms;
+namespace Nails\Api\Cms;
 
 /**
  * Admin API end points: Pages
