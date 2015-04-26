@@ -34,7 +34,7 @@ class NAILS_CMS_Template_redirect extends Nails_CMS_Template
         $d->additional_fields[0]['key']     = 'redirect_page_id';
         $d->additional_fields[0]['label']   = 'Redirect To Page';
         $d->additional_fields[0]['class']   = 'select2';
-        $d->additional_fields[0]['options'] = array('None') + get_instance()->cms_page_model->get_all_nested_flat();
+        $d->additional_fields[0]['options'] = array('None') + get_instance()->cms_page_model->getAllNestedFlat();
 
         $d->additional_fields[1]                = array();
         $d->additional_fields[1]['type']        = 'text';
@@ -52,7 +52,7 @@ class NAILS_CMS_Template_redirect extends Nails_CMS_Template
 
             '302' => '302 Moved Temporarily',
             '301' => '301 Moved Permanently'
-      );
+        );
 
         // --------------------------------------------------------------------------
 

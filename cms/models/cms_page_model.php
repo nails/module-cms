@@ -242,7 +242,7 @@ class NAILS_Cms_page_model extends NAILS_Model
             //  For each child regenerate the breadcrumbs and slugs (only if the title or slug has changed)
             if ($current->draft->title != $data->draft_title || $current->draft->slug != $data->draft_slug) {
 
-                $children = $this->get_ids_of_children($current->id);
+                $children = $this->getIdsOfChildren($current->id);
 
                 if ($children) {
 
@@ -360,9 +360,9 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param  array  $additionalFields Any additional fields to pass to the template
      * @return mixed                    String (the rendered template) on success, false on failure
      */
-    public function render_template($template, $widgets = array(), $additionalFields = array())
+    public function render($template, $widgets = array(), $additionalFields = array())
     {
-        $template = $this->get_template($template, 'RENDER');
+        $template = $this->getTemplate($template, 'RENDER');
 
         if (!$template) {
 
@@ -471,7 +471,7 @@ class NAILS_Cms_page_model extends NAILS_Model
         if ($this->db->update($this->table)) {
 
             //  Fetch the children, returning the data we need for the updates
-            $children = $this->get_ids_of_children($page->id);
+            $children = $this->getIdsOfChildren($page->id);
 
             if ($children) {
 
@@ -571,7 +571,40 @@ class NAILS_Cms_page_model extends NAILS_Model
      **/
     public function _getcount_common($data = array(), $_caller = null)
     {
-        $this->db->select($this->tablePrefix . '.*');
+        $select = array(
+            $this->tablePrefix . '.id',
+            $this->tablePrefix . '.published_hash',
+            $this->tablePrefix . '.published_slug',
+            $this->tablePrefix . '.published_slug_end',
+            $this->tablePrefix . '.published_parent_id',
+            $this->tablePrefix . '.published_template',
+            $this->tablePrefix . '.published_template_data',
+            $this->tablePrefix . '.published_title',
+            $this->tablePrefix . '.published_breadcrumbs',
+            $this->tablePrefix . '.published_seo_title',
+            $this->tablePrefix . '.published_seo_description',
+            $this->tablePrefix . '.published_seo_keywords',
+            $this->tablePrefix . '.draft_hash',
+            $this->tablePrefix . '.draft_slug',
+            $this->tablePrefix . '.draft_slug_end',
+            $this->tablePrefix . '.draft_parent_id',
+            $this->tablePrefix . '.draft_template',
+            $this->tablePrefix . '.draft_template_data',
+            $this->tablePrefix . '.draft_title',
+            $this->tablePrefix . '.draft_breadcrumbs',
+            $this->tablePrefix . '.draft_seo_title',
+            $this->tablePrefix . '.draft_seo_description',
+            $this->tablePrefix . '.draft_seo_keywords',
+            $this->tablePrefix . '.is_published',
+            $this->tablePrefix . '.is_deleted',
+            $this->tablePrefix . '.is_homepage',
+            $this->tablePrefix . '.created',
+            $this->tablePrefix . '.created_by',
+            $this->tablePrefix . '.modified',
+            $this->tablePrefix . '.modified_by'
+        );
+
+        $this->db->select($select);
         $this->db->select('ue.email, u.first_name, u.last_name, u.profile_img, u.gender');
 
         $this->db->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tablePrefix . '.modified_by', 'LEFT');
@@ -593,37 +626,9 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param  boolean $useDraft Whther to use the published or draft version of pages
      * @return array
      */
-    public function get_all_nested($useDraft = true)
+    public function getAllNested($useDraft = true)
     {
         return $this->nestPages($this->get_all(), null, $useDraft);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Nests pages
-     * Hat tip to Timur; http://stackoverflow.com/a/9224696/789224
-     * @param  array   &$list    The pages to nest
-     * @param  int     $parentId The parent ID of the page
-     * @param  boolean $useDraft Whether to use published data or draft data
-     * @return array
-     */
-    protected function nestPages(&$list, $parentId = null, $useDraft = true)
-    {
-        $result = array();
-
-        for ($i = 0, $c = count($list); $i < $c; $i++) {
-
-            $curParentId = $useDraft ? $list[$i]->draft->parent_id : $list[$i]->published->parent_id;
-
-            if ($curParentId == $parentId) {
-
-                $list[$i]->children = $this->nestPages($list, $list[$i]->id, $useDraft);
-                $result[]           = $list[$i];
-            }
-        }
-
-        return $result;
     }
 
     // --------------------------------------------------------------------------
@@ -634,7 +639,7 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param  boolean $murderParentsOfChildren Whether to include parents in the result
      * @return array
      */
-    public function get_all_nested_flat($separator = ' &rsaquo; ', $murderParentsOfChildren = true)
+    public function getAllNestedFlat($separator = ' &rsaquo; ', $murderParentsOfChildren = true)
     {
         $out   = array();
         $pages = $this->get_all();
@@ -674,6 +679,34 @@ class NAILS_Cms_page_model extends NAILS_Model
         }
 
         return $out;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Nests pages
+     * Hat tip to Timur; http://stackoverflow.com/a/9224696/789224
+     * @param  array   &$list    The pages to nest
+     * @param  int     $parentId The parent ID of the page
+     * @param  boolean $useDraft Whether to use published data or draft data
+     * @return array
+     */
+    protected function nestPages(&$list, $parentId = null, $useDraft = true)
+    {
+        $result = array();
+
+        for ($i = 0, $c = count($list); $i < $c; $i++) {
+
+            $curParentId = $useDraft ? $list[$i]->draft->parent_id : $list[$i]->published->parent_id;
+
+            if ($curParentId == $parentId) {
+
+                $list[$i]->children = $this->nestPages($list, $list[$i]->id, $useDraft);
+                $result[]           = $list[$i];
+            }
+        }
+
+        return $result;
     }
 
     // --------------------------------------------------------------------------
@@ -735,7 +768,7 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param  string $format How to return the data, one of ID, ID_SLUG, ID_SLUG_TITLE or ID_SLUG_TITLE_PUBLISHED
      * @return array
      */
-    public function get_ids_of_children($pageId, $format = 'ID')
+    public function getIdsOfChildren($pageId, $format = 'ID')
     {
         $out = array();
 
@@ -782,7 +815,7 @@ class NAILS_Cms_page_model extends NAILS_Model
                         break;
                 }
 
-                $out = array_merge($out, $this->get_ids_of_children($child->id, $format));
+                $out = array_merge($out, $this->getIdsOfChildren($child->id, $format));
             }
 
             return $out;
@@ -796,18 +829,22 @@ class NAILS_Cms_page_model extends NAILS_Model
     // --------------------------------------------------------------------------
 
     /**
-     * Get all pages as a flat array
-     * @param  boolean $useDraft Whether to use published data, or draft data
+     * Fetches all objects as a flat array, optionally paginated.
+     * @param int    $page           The page number of the results, if null then no pagination
+     * @param int    $perPage        How many items per page of paginated results
+     * @param mixed  $data           Any data to pass to _getcount_common()
+     * @param bool   $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
+     * @param string $_caller        Internal flag to pass to _getcount_common(), contains the calling method
      * @return array
      */
-    public function get_all_flat($useDraft = true)
+    public function get_all_flat($page = null, $perPage = null, $data = array(), $includeDeleted = false, $_caller = 'GET_ALL_FLAT')
     {
         $out   = array();
-        $pages = $this->get_all();
+        $pages = $this->get_all($page, $perPage, $data, $includeDeleted, $_caller);
 
         foreach ($pages as $page) {
 
-            if ($useDraft) {
+            if (!empty($data['useDraft'])) {
 
                 $out[$page->id] = $page->draft->title;
 
@@ -824,21 +861,30 @@ class NAILS_Cms_page_model extends NAILS_Model
 
     /**
      * Get the top level pages, i.e., those without a parent
-     * @param  boolean $useDraft Whether to use published data, or draft data
+     * @param int    $page           The page number of the results, if null then no pagination
+     * @param int    $perPage        How many items per page of paginated results
+     * @param mixed  $data           Any data to pass to _getcount_common()
+     * @param bool   $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
+     * @param string $_caller        Internal flag to pass to _getcount_common(), contains the calling method
      * @return array
      */
-    public function get_top_level($useDraft = true)
+    public function getTopLevel($page = null, $perPage = null, $data = array(), $includeDeleted = false, $_caller = 'GET_TOP_LEVEL')
     {
-        if ($useDraft) {
+        if (empty($data['where'])) {
 
-            $this->db->where('draft_parent_id', null);
+            $data['were'] = array();
+        }
+
+        if (!empty($data['useDraft'])) {
+
+            $data['where'][] = array('draft_parent_id', null);
 
         } else {
 
-            $this->db->where('published_parent_id', null);
+            $data['where'][] = array('published_parent_id', null);
         }
 
-        return $this->get_all();
+        return $this->get_all($page, $perPage, $data, $includeDeleted, $_caller);
     }
 
     // --------------------------------------------------------------------------
@@ -849,7 +895,7 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param  boolean $useDraft Whether to use published data, or draft data
      * @return array
      */
-    public function get_siblings($id, $useDraft = true)
+    public function getSiblings($id, $useDraft = true)
     {
         $page = $this->get_by_id($id);
 
@@ -858,16 +904,21 @@ class NAILS_Cms_page_model extends NAILS_Model
             return array();
         }
 
-        if ($useDraft) {
+        if (empty($data['where'])) {
 
-            $this->db->where('draft_parent_id', $page->draft->parent_id);
+            $data['were'] = array();
+        }
+
+        if (!empty($data['useDraft'])) {
+
+            $data['where'][] = array('draft_parent_id', $page->draft->parent_id);
 
         } else {
 
-            $this->db->where('published_parent_id', $page->published->parent_id);
+            $data['where'][] = array('published_parent_id', $page->published->parent_id);
         }
 
-        return $this->get_all();
+        return $this->get_all(null, null, $data);
     }
 
     // --------------------------------------------------------------------------
@@ -876,10 +927,15 @@ class NAILS_Cms_page_model extends NAILS_Model
      * Get the page marked as the homepage
      * @return mixed stdClass on success, false on failure
      */
-    public function get_homepage()
+    public function getHomepage()
     {
-        $this->db->where($this->tablePrefix . '.is_homepage', true);
-        $page = $this->get_all();
+        $data = array(
+            'where' => array(
+                array($this->tablePrefix . '.is_homepage', true)
+            )
+        );
+
+        $page = $this->get_all(null, null, $data);
 
         if (!$page) {
 
@@ -896,12 +952,15 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param  stdClass &$page The page to format
      * @return void
      */
-    protected function _format_object(&$page)
+    protected function _format_object(&$page, $data = array())
     {
-        parent::_format_object($page);
+        $integers = array();
 
-        $page->is_published = (bool) $page->is_published;
-        $page->is_deleted   = (bool) $page->is_deleted;
+        $booleans = array(
+            'is_homepage'
+        );
+
+        parent::_format_object($page, $data, $integers, $booleans);
 
         //  Loop properties and sort into published data and draft data
         $page->published = new stdClass();
@@ -973,7 +1032,7 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param  boolean $loadAssets Whether or not to laod assets defined by the widgets
      * @return array
      */
-    public function get_available_widgets($loadAssets = false)
+    public function getAvailableWidgets($loadAssets = false)
     {
         //  Have we done this already? Don't do it again.
         $key   = 'cms-page-available-widgets';
@@ -1047,7 +1106,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
             if ($details) {
 
-                $widgets[$widget] = $class::details();
+                $widgets[$widget] = $details;
             }
         }
 
@@ -1215,9 +1274,9 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param  boolean $loadAssets Whether or not to load the widget's assets
      * @return mixed               stdClass on success, false on failure
      */
-    public function get_widget($slug, $loadAssets = false)
+    public function getWidget($slug, $loadAssets = false)
     {
-        $widgets = $this->get_available_widgets();
+        $widgets = $this->getAvailableWidgets();
 
         foreach ($widgets as $widget_group) {
 
@@ -1263,7 +1322,7 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param  boolean $loadAssets Whether or not to load template's assets
      * @return array
      */
-    public function get_available_templates($loadAssets = false)
+    public function getAvailableTemplates($loadAssets = false)
     {
         //  Have we done this already? Don't do it again.
         $key   = 'cms-page-available-templates';
@@ -1337,12 +1396,12 @@ class NAILS_Cms_page_model extends NAILS_Model
 
             if ($details) {
 
-                $templates[$template] = $class::details();
+                $templates[$template] = $details;
 
             } else {
 
                 //  This template returned no details, ignore it.
-                log_message('warning', 'Static method "details()"" of Nails template "' . $template . '" returned empty data.');
+                log_message('warning', 'Static method "details()" of Nails template "' . $template . '" returned empty data.');
             }
 
             // --------------------------------------------------------------------------
@@ -1464,9 +1523,9 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param  boolean $loadAssets Whether or not to load the template's assets
      * @return mixed               stdClass on success, false on failure
      */
-    public function get_template($slug, $loadAssets = false)
+    public function getTemplate($slug, $loadAssets = false)
     {
-        $templates = $this->get_available_templates();
+        $templates = $this->getAvailableTemplates();
 
         foreach ($templates as $template) {
 
@@ -1566,7 +1625,7 @@ class NAILS_Cms_page_model extends NAILS_Model
         if ($this->db->update($this->table)) {
 
             //  Success, update children
-            $children = $this->get_ids_of_children($id);
+            $children = $this->getIdsOfChildren($id);
 
             if ($children) {
 
@@ -1636,7 +1695,7 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param  array $data The Page data
      * @return mixed       int on success, false on failure
      */
-    public function create_preview($data)
+    public function createPreview($data)
     {
         if (empty($data->data->template)) {
 
@@ -1681,7 +1740,7 @@ class NAILS_Cms_page_model extends NAILS_Model
              * need to fetch the parent again.
              */
 
-            $parent = $this->get_by_id($preview->draft_parent_ud);
+            $parent = $this->get_by_id($preview->draft_parent_id);
 
             if ($parent) {
 
@@ -1736,7 +1795,7 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param  int   $previewId The Id of the preview to get
      * @return mixed            stdClass on success, false on failure
      */
-    public function get_preview_by_id($previewId)
+    public function getPreviewById($previewId)
     {
         $this->db->where('id', $previewId);
         $result = $this->db->get($this->table_preview)->row();

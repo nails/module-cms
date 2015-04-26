@@ -1,66 +1,64 @@
 <style type="text/css">
-    div.ui-front
-    {
-        z-index:1000;
+    div.ui-front {
+        z-index: 1000;
     }
 </style>
 <?php
 
     //  Set the default template; either POST data, the one being used by the page, or the first in the list.
-    if ( $this->input->post( 'template' ) ) :
+    if ($this->input->post('template')) {
 
-        $_default_template = $this->input->post( 'template' );
+        $defaultTemplate = $this->input->post('template');
 
-    elseif ( ! empty( $cmspage->draft->template ) ) :
+    } elseif (!empty($cmspage->draft->template)) {
 
-        $_default_template = $cmspage->draft->template;
+        $defaultTemplate = $cmspage->draft->template;
 
-    else :
+    } else {
 
-        reset( $templates );
-        $_default_template = key( $templates );
-
-    endif;
+        reset($templates);
+        $defaultTemplate = key($templates);
+    }
 
 ?>
 <div class="group-cms pages edit">
-
     <?php
 
-        switch ( $this->input->get( 'message' ) ) :
+        switch ($this->input->get('message')) {
 
             case 'saved' :
 
                 echo '<p class="system-alert success">';
-                    echo 'Your page was saved successfully. ' . anchor( 'cms/render/preview/' . $cmspage->id, 'Preview it here', 'class="main-action" data-action="preview" target="_blank"' );
+                    echo 'Your page was saved successfully. ';
+                    echo anchor(
+                        'cms/render/preview/' . $cmspage->id,
+                        'Preview it here',
+                        'class="main-action" data-action="preview" target="_blank"'
+                    ) . '.';
                 echo '</p>';
-
-            break;
-
-            // --------------------------------------------------------------------------
+                break;
 
             case 'published' :
 
                 echo '<p class="system-alert success">';
-                    echo 'Your page was published successfully. ' . anchor( $cmspage->published->url, 'View it here', 'target="_blank"' );
+                    echo 'Your page was published successfully. ';
+                    echo anchor(
+                        $cmspage->published->url,
+                        'View it here',
+                        'target="_blank"'
+                    ) . '.';
                 echo '</p>';
-
-            break;
-
-            // --------------------------------------------------------------------------
+                break;
 
             case 'unpublished' :
 
                 echo '<p class="system-alert success">';
                     echo 'Your page was unpublished successfully.';
                 echo '</p>';
-
-            break;
-
-        endswitch;
+                break;
+        }
 
     ?>
-
     <div class="system-alert notice" id="save-status">
         <p>
             <small>
@@ -69,136 +67,133 @@
             </small>
         </p>
     </div>
-
     <fieldset>
         <legend>Page Data</legend>
         <?php
 
             //  Title
-            $_field                 = array();
-            $_field['key']          = 'title';
-            $_field['label']        = 'Title';
-            $_field['default']      = isset( $cmspage->draft->title ) ? html_entity_decode( $cmspage->draft->title, ENT_COMPAT | ENT_HTML5, 'UTF-8' ) : '';
-            $_field['placeholder']  = 'The title of the page';
+            $field                = array();
+            $field['key']         = 'title';
+            $field['label']       = 'Title';
+            $field['default']     = isset($cmspage->draft->title) ? html_entity_decode($cmspage->draft->title, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
+            $field['placeholder'] = 'The title of the page';
 
-            echo form_field( $_field );
+            echo form_field($field);
 
             // --------------------------------------------------------------------------
 
             //  Parent ID
-            $_field                     = array();
-            $_field['key']              = 'parent_id';
-            $_field['label']            = 'Parent Page';
-            $_field['placeholder']      = 'The Page\'s parent.';
-            $_field['class']            = 'select2';
-            $_field['default']          = isset( $cmspage->draft->parent_id ) ? $cmspage->draft->parent_id : '';
-            $_field['disabled_options'] = isset( $page_children ) ? $page_children : array();
+            $field                     = array();
+            $field['key']              = 'parent_id';
+            $field['label']            = 'Parent Page';
+            $field['placeholder']      = 'The Page\'s parent.';
+            $field['class']            = 'select2';
+            $field['default']          = isset($cmspage->draft->parent_id) ? $cmspage->draft->parent_id : '';
+            $field['disabled_options'] = isset($page_children) ? $page_children : array();
 
-            //  Remove this page from the available options; INFINITE LOOP
-            //  We also need to remove any items which are
+            /**
+             * Remove this page from the available options; INFINITE LOOP
+             */
 
-            if ( isset( $cmspage ) ) :
+            if (isset($cmspage)) {
 
-                foreach ( $pages_nested_flat as $id => $label ) :
+                foreach ($pagesNestedFlat as $id => $label) {
 
-                    if ( $id == $cmspage->id ) :
+                    if ($id == $cmspage->id) {
 
-                        $_field['disabled_options'][] = $id;
+                        $field['disabled_options'][] = $id;
                         break;
 
-                    endif;
+                    }
+                }
+            }
 
-                endforeach;
+            if (count($pagesNestedFlat) && count($field['disabled_options']) < count($pagesNestedFlat)) {
 
-            endif;
-
-            if ( count( $pages_nested_flat ) && count( $_field['disabled_options'] ) < count( $pages_nested_flat ) ) :
-
-                $pages_nested_flat = array( '' => 'No Parent Page' ) + $pages_nested_flat;
+                $pagesNestedFlat = array('' => 'No Parent Page') + $pagesNestedFlat;
 
                 // --------------------------------------------------------------------------
 
-                if ( count( $_field['disabled_options'] ) ) :
+                if (count($field['disabled_options'])) {
 
-                    $_field['info'] = '<strong>Some options have been disabled.</strong> You cannot set the parent page to this page or any existing child of this page.';
+                    $field['info']  = '<strong>Some options have been disabled.</strong> ';
+                    $field['info'] .= 'You cannot set the parent page to this page or any existing child of this page.';
+                }
 
-                endif;
+                echo form_field_dropdown($field, $pagesNestedFlat);
 
-                echo form_field_dropdown( $_field, $pages_nested_flat );
+            } else {
 
-            else :
-
-                echo form_hidden( $_field['key'], '' );
-
-            endif;
+                echo form_hidden($field['key'], '');
+            }
 
             // --------------------------------------------------------------------------
 
             //  SEO Title
-            $_field                 = array();
-            $_field['key']          = 'seo_title';
-            $_field['label']        = 'SEO Title';
-            $_field['default']      = isset( $cmspage->draft->seo_title ) ? html_entity_decode( $cmspage->draft->seo_title, ENT_COMPAT | ENT_HTML5, 'UTF-8' ) : '';
-            $_field['placeholder']  = 'The page\'s SEO title, keep this short and concise. If not set, this will fallback to the page title.';
+            $field                = array();
+            $field['key']         = 'seo_title';
+            $field['label']       = 'SEO Title';
+            $field['default']     = isset($cmspage->draft->seo_title) ? html_entity_decode($cmspage->draft->seo_title, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
+            $field['placeholder'] = 'The page\'s SEO title, keep this short and concise. If not set, this will fallback to the page title.';
 
-            echo form_field( $_field );
+            echo form_field($field);
 
             // --------------------------------------------------------------------------
 
             //  SEO Description
-            $_field                 = array();
-            $_field['key']          = 'seo_description';
-            $_field['label']        = 'SEO Description';
-            $_field['default']      = isset( $cmspage->draft->seo_description ) ? html_entity_decode( $cmspage->draft->seo_description, ENT_COMPAT | ENT_HTML5, 'UTF-8' ) : '';
-            $_field['placeholder']  = 'The page\'s SEO description, keep this short and concise. Recommended to keep below 160 characters.';
+            $field                = array();
+            $field['key']         = 'seo_description';
+            $field['label']       = 'SEO Description';
+            $field['default']     = isset($cmspage->draft->seo_description) ? html_entity_decode($cmspage->draft->seo_description, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
+            $field['placeholder'] = 'The page\'s SEO description, keep this short and concise. Recommended to keep below 160 characters.';
+            $field['tip']         = 'This should be kept short (< 160 characters) and concise. It\'ll be shown in search result listings and search engines will use it to help determine the page\'s content.';
 
-            echo form_field( $_field, 'This should be kept short (< 160 characters) and concise. It\'ll be shown in search result listings and search engines will use it to help determine the page\'s content.' );
+            echo form_field($field);
 
             // --------------------------------------------------------------------------
 
             //  SEO Keywords
-            $_field                 = array();
-            $_field['key']          = 'seo_keywords';
-            $_field['label']        = 'SEO Keywords';
-            $_field['default']      = isset( $cmspage->draft->seo_keywords ) ? html_entity_decode( $cmspage->draft->seo_keywords, ENT_COMPAT | ENT_HTML5, 'UTF-8' ) : '';
-            $_field['placeholder']  = 'Comma separated keywords relating to the content of the page. A maximum of 10 keywords is recommended.';
+            $field                = array();
+            $field['key']         = 'seo_keywords';
+            $field['label']       = 'SEO Keywords';
+            $field['default']     = isset($cmspage->draft->seo_keywords) ? html_entity_decode($cmspage->draft->seo_keywords, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
+            $field['placeholder'] = 'Comma separated keywords relating to the content of the page. A maximum of 10 keywords is recommended.';
+            $field['tip']         = 'SEO good practice recommend keeping the number of keyword phrases below 10 and less than 160 characters in total.';
 
-            echo form_field( $_field, 'SEO good practice recommend keeping the number of keyword phrases below 10 and less than 160 characters in total.' );
+            echo form_field($field);
 
         ?>
     </fieldset>
-
     <fieldset>
         <legend>Template</legend>
         <ul class="templates">
         <?php
 
-            foreach ( $templates as $template ) :
+            foreach ($templates as $template) {
 
                 echo '<li>';
 
                     //  This template selected?
-                    $_selected = $_default_template == $template->slug ? TRUE : FALSE;
+                    $selected = $defaultTemplate == $template->slug ? true : false;
 
                     //  Define attributes
-                    $_attr                          = array();
-                    $_attr['class']                 = $_selected ? 'template selected' : 'template';
-                    $_attr['data-template-slug']    = $template->slug;
+                    $attr                       = array();
+                    $attr['class']              = $selected ? 'template selected' : 'template';
+                    $attr['data-template-slug'] = $template->slug;
 
                     //  Glue together
-                    $_attr_str = '';
-                    foreach ( $_attr as $key => $value ) :
+                    $attrStr = '';
+                    foreach ($attr as $key => $value) {
 
-                        $_attr_str .= $key . '="' . $value . '" ';
+                        $attrStr .= $key . '="' . $value . '" ';
+                    }
 
-                    endforeach;
+                    echo '<label ' . trim($attrStr) . ' rel="tipsy-top" title="' . $template->description . '">';
 
-                    echo '<label ' . trim( $_attr_str ) . ' rel="tipsy-top" title="' . $template->description . '">';
+                        echo form_radio('template', $template->slug, set_radio('template', $template->slug, $selected));
 
-                        echo form_radio( 'template', $template->slug, set_radio( 'template', $template->slug, $_selected ) );
-
-                        $_background = $template->img->icon ? 'style="background-image:url(' . $template->img->icon . ');background-position:center top;"' : '';
-                        echo '<span class="icon" ' . $_background . '></span>';
+                        $background = $template->img->icon ? 'style="background-image:url(' . $template->img->icon . ');background-position:center top;"' : '';
+                        echo '<span class="icon" ' . $background . '></span>';
                         echo '<span class="newrow"></span>';
                         echo '<span class="name">';
                             echo '<span class="checkmark fa fa-check-circle"></span>';
@@ -206,75 +201,83 @@
                         echo '</span>';
                     echo '</label>';
                 echo '</li>';
-
-            endforeach;
+            }
 
         ?>
         </ul>
     </fieldset>
-
     <fieldset>
         <legend>Template Configurations</legend>
         <?php
 
             //  Any additional page data for the templates
-            foreach ( $templates as $template ) :
+            foreach ($templates as $template) {
 
-                $_visible = $_default_template == $template->slug ? 'block' : 'none';
-                echo '<div id="additional-fields-' . $template->slug . '" class="additional-fields" style="display:' . $_visible . '">';
+                //  Shortcut
+
+                if (property_exists($cmspage->draft->template_data->data->additional_fields, $template->slug)) {
+
+                    $additionalFields = $cmspage->draft->template_data->data->additional_fields->{$template->slug};
+
+                } else {
+
+                    $additionalFields = null;
+                }
+
+                $visible = $defaultTemplate == $template->slug ? 'block' : 'none';
+                echo '<div id="additional-fields-' . $template->slug . '" class="additional-fields" style="display:' . $visible . '">';
 
                 //  Common, manual config item
-                $_field                 = array();
-                $_field['key']          = 'additional_field[' . $template->slug . '][manual_config]';
-                $_field['label']        = 'Manual Config';
-                $_field['sub_label']    = 'Specify any manual config items here. This field should be '. anchor( 'http://en.wikipedia.org/wiki/JSON', 'JSON encoded', 'class="fancybox" data-fancybox-type="iframe" data-width="90%" data-height="90%"' ) . '.';
-                //  TODO: add a link to the docs here
-                $_field['type']         = 'textarea';
-                $_field['default']      = ! empty( $cmspage->draft->template_data->data->additional_fields->{$template->slug}->manual_config ) ? $cmspage->draft->template_data->data->additional_fields->{$template->slug}->manual_config : '';
+                $field                 = array();
+                $field['key']          = 'additional_field[' . $template->slug . '][manual_config]';
+                $field['label']        = 'Manual Config';
+                $field['sub_label']    = 'Specify any manual config items here. This field should be ';
+                $field['sub_label']   .= anchor(
+                    'http://en.wikipedia.org/wiki/JSON',
+                    'JSON encoded',
+                    'class="fancybox" data-fancybox-type="iframe" data-width="90%" data-height="90%"'
+                ) . '.';
+                $field['type']    = 'textarea';
+                $field['default'] = !empty($additionalFields->manual_config) ? $additionalFields->manual_config : '';
 
-                echo form_field( $_field );
+                echo form_field($field);
 
-                if ( $template->additional_fields ) :
+                //  Any other fields, if specified
+                if ($template->additional_fields) {
 
-                    foreach ( $template->additional_fields as $field ) :
+                    foreach ($template->additional_fields as $field) {
 
                         //  Set the default key
-                        $field['default'] = ! empty( $cmspage->draft->template_data->data->additional_fields->{$template->slug}->{$field['key']} ) ? $cmspage->draft->template_data->data->additional_fields->{$template->slug}->{$field['key']} : '';
+                        if (!empty($additionalFields) && property_exists($additionalFields, $field['key'])) {
+
+                            $field['default'] = $additionalFields->{$field['key']};
+
+                        }
 
                         //  Override the field key
                         $field['key'] = 'additional_field[' . $template->slug . '][' . $field['key'] . ']';
 
-                        //  Tip?
-                        $_tip = ! empty( $field['tip'] ) ? $field['tip'] : '';
-
-                        switch ( $field['type'] ) :
+                        switch ($field['type']) {
 
                             case 'dropdown' :
 
-                                $_options = ! empty( $field['options'] ) ? $field['options'] : array();
-                                echo form_field_dropdown( $field, $_options, $_tip );
-
-                            break;
+                                $options = !empty($field['options']) ? $field['options'] : array();
+                                echo form_field_dropdown($field, $options);
+                                break;
 
                             default :
 
-                                echo form_field( $field, $_tip );
-
-                            break;
-
-                        endswitch;
-
-                    endforeach;
-
-                endif;
+                                echo form_field($field);
+                                break;
+                        }
+                    }
+                }
 
                 echo '</div>';
-
-            endforeach;
+            }
 
         ?>
     </fieldset>
-
     <fieldset>
         <legend>Page Content</legend>
         <p>
@@ -283,71 +286,65 @@
         <p>
         <?php
 
-            foreach ( $templates as $template ) :
+            foreach ($templates as $template) {
 
                 //  This template selected?
-                $_selected = $_default_template == $template->slug ? TRUE : FALSE;
+                $selected = $defaultTemplate == $template->slug ? true : false;
 
-                foreach ( $template->widget_areas as $slug => $area ) :
-
-                    //  Define attributes
-                    $_data              = array();
-                    $_data['area-slug'] = $slug;
-
-                    $_attr = '';
-                    foreach ( $_data as $key => $value ) :
-
-                        $_attr .= 'data-' . $key . '="' . $value . '" ';
-
-                    endforeach;
+                foreach ($template->widget_areas as $slug => $area) {
 
                     //  Define attributes
-                    $_attr                  = array();
-                    $_attr['class']         = 'awesome launch-editor template-' . $template->slug;
-                    $_attr['style']         = $_selected ? 'display:inline-block;' : 'display:none;';
-                    $_attr['data-template'] = $template->slug;
-                    $_attr['data-area']     = $slug;
+                    $data              = array();
+                    $data['area-slug'] = $slug;
+
+                    $attr = '';
+                    foreach ($data as $key => $value) {
+
+                        $attr .= 'data-' . $key . '="' . $value . '" ';
+                    }
+
+                    //  Define attributes
+                    $attr                  = array();
+                    $attr['class']         = 'awesome launch-editor template-' . $template->slug;
+                    $attr['style']         = $selected ? 'display:inline-block;' : 'display:none;';
+                    $attr['data-template'] = $template->slug;
+                    $attr['data-area']     = $slug;
 
                     //  Glue together
-                    $_attr_str = '';
-                    foreach ( $_attr as $key => $value ) :
+                    $attrStr = '';
+                    foreach ($attr as $key => $value) {
 
-                        $_attr_str .= $key . '="' . $value . '" ';
+                        $attrStr .= $key . '="' . $value . '" ';
+                    }
 
-                    endforeach;
-
-                    echo '<a href="#" ' . trim( $_attr_str ) . '>' . $area->title . '</a>';
-
-                endforeach;
-
-            endforeach;
+                    echo '<a href="#" ' . trim($attrStr) . '>' . $area->title . '</a>';
+                }
+            }
 
         ?>
         </p>
     </fieldset>
-
     <?php
 
-        if ( isset( $cmspage ) && $cmspage->is_published && $cmspage->published->hash !== $cmspage->draft->hash ) :
+        if (isset($cmspage) && $cmspage->is_published && $cmspage->published->hash !== $cmspage->draft->hash) {
 
             echo '<p class="system-alert message">';
-                echo '<strong>You have unpublished changes.</strong><br />This version of the page is more recent than the version currently published on site. When you\'re done make sure you click "Publish Changes" below.';
+                echo '<strong>You have unpublished changes.</strong><br />This version of the page is more recent ';
+                echo 'than the version currently published on site. When you\'re done make sure you click ';
+                echo '"Publish Changes" below.';
             echo '</p>';
-
-        endif;
+        }
 
     ?>
-
     <p class="actions">
     <?php
 
         echo '<a href="#" data-action="save" class="main-action awesome orange large" rel="tipsy-top" title="Your changes will be saved so you can come back later, but won\'t be published on site.">Save Changes</a>';
         echo '<a href="#" data-action="publish" class="main-action awesome green large" rel="tipsy-top" title="Your changes will be published on site and will take hold immediately.">Publish Changes</a>';
-        echo '<a href="#" data-action="preview" class="main-action awesome large launch-preview right">' . lang( 'action_preview' ) . '</a>';
+        echo '<a href="#" data-action="preview" class="main-action awesome large launch-preview right">' . lang('action_preview') . '</a>';
 
     ?>
     </p>
-
 </div>
 <script type="text/template" id="template-loader">
     <span class="fa fa-refresh fa-spin"></span>

@@ -180,7 +180,7 @@ class Nails_CMS_Template
 
                     try {
 
-                        $widget = get_instance()->cms_page_model->get_widget($widget_data->widget, 'RENDER');
+                        $widget = get_instance()->cms_page_model->getWidget($widget_data->widget, 'RENDER');
 
                         if ($widget) {
 

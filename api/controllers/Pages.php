@@ -176,7 +176,7 @@ class Pages extends \ApiController
                     );
                 }
 
-                $id = $this->cms_page_model->create_preview($data);
+                $id = $this->cms_page_model->createPreview($data);
 
                 if (!$id) {
 
@@ -282,7 +282,7 @@ class Pages extends \ApiController
 
             $this->load->model('cms/cms_page_model');
 
-            $requestedWidget = $this->cms_page_model->get_widget($requestedWidget);
+            $requestedWidget = $this->cms_page_model->getWidget($requestedWidget);
 
             if ($requestedWidget) {
 

@@ -47,7 +47,7 @@ class NAILS_Render extends NAILS_CMS_Controller
     {
         if ($this->isPreview) {
 
-            $page = $this->cms_page_model->get_preview_by_id($this->pageId);
+            $page = $this->cms_page_model->getPreviewById($this->pageId);
 
         } else {
 
@@ -160,7 +160,7 @@ class NAILS_Render extends NAILS_CMS_Controller
         // --------------------------------------------------------------------------
 
         //  Actually render
-        $html = $this->cms_page_model->render_template($data->template, $render->widgets, $render->additionalFields);
+        $html = $this->cms_page_model->render($data->template, $render->widgets, $render->additionalFields);
         $this->output->set_output($html);
     }
 
@@ -192,7 +192,7 @@ class NAILS_Render extends NAILS_CMS_Controller
     public function homepage()
     {
         //  Attempt to get the site's homepage
-        $homepage = $this->cms_page_model->get_homepage();
+        $homepage = $this->cms_page_model->getHomepage();
 
         if ($homepage) {
 

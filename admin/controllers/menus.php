@@ -216,7 +216,7 @@ class Menus extends \AdminController
 
         //  Get the CMS Pages
         $this->load->model('cms/cms_page_model');
-        $pages = $this->cms_page_model->get_all_nested_flat();
+        $pages = $this->cms_page_model->getAllNestedFlat();
         $this->data['pages'] = array('' => 'Select a CMS Page') + $pages;
 
         // --------------------------------------------------------------------------
@@ -334,7 +334,7 @@ class Menus extends \AdminController
 
         //  Get the CMS Pages
         $this->load->model('cms/cms_page_model');
-        $pages = $this->cms_page_model->get_all_nested_flat();
+        $pages = $this->cms_page_model->getAllNestedFlat();
         $this->data['pages'] = array('' => 'Select a CMS Page') + $pages;
 
         // --------------------------------------------------------------------------

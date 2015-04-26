@@ -35,6 +35,22 @@ class Nails_CMS_Template_sidebar_left extends Nails_CMS_Template
         $d->widget_areas['mainbody']        = parent::editableAreaTemplate();
         $d->widget_areas['mainbody']->title = 'Main Body';
 
+        $d->additional_fields[0]            = array();
+        $d->additional_fields[0]['type']    = 'dropdown';
+        $d->additional_fields[0]['key']     = 'sidebarWidth';
+        $d->additional_fields[0]['label']   = 'Sidebar Width';
+        $d->additional_fields[0]['class']   = 'select2';
+        $d->additional_fields[0]['default'] = '4';
+        $d->additional_fields[0]['options'] = array(
+
+            '1' => '1 Column',
+            '2' => '2 Columns',
+            '3' => '3 Columns',
+            '4' => '4 Columns',
+            '5' => '5 Columns',
+            '6' => '6 Columns',
+        );
+
         // --------------------------------------------------------------------------
 
         return $d;

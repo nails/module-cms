@@ -135,14 +135,14 @@ class Pages extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Get data
-        $this->data['pages_nested_flat'] = $this->cms_page_model->get_all_nested_flat(' &rsaquo; ', false);
+        $this->data['pagesNestedFlat'] = $this->cms_page_model->getAllNestedFlat(' &rsaquo; ', false);
 
         //  Set method info
         $this->data['page']->title  = 'Create New Page';
 
         //  Get available templates & widgets
-        $this->data['templates'] = $this->cms_page_model->get_available_templates('EDITOR');
-        $this->data['widgets']  = $this->cms_page_model->get_available_widgets('EDITOR');
+        $this->data['templates'] = $this->cms_page_model->getAvailableTemplates('EDITOR');
+        $this->data['widgets']  = $this->cms_page_model->getAvailableWidgets('EDITOR');
 
         // --------------------------------------------------------------------------
 
@@ -189,17 +189,17 @@ class Pages extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Get data
-        $this->data['pages_nested_flat'] = $this->cms_page_model->get_all_nested_flat(' &rsaquo; ', false);
+        $this->data['pagesNestedFlat'] = $this->cms_page_model->getAllNestedFlat(' &rsaquo; ', false);
 
         //  Set method info
         $this->data['page']->title = 'Edit Page "' . $this->data['cmspage']->draft->title . '"';
 
         //  Get available templates & widgets
-        $this->data['templates'] = $this->cms_page_model->get_available_templates('EDITOR');
-        $this->data['widgets']   = $this->cms_page_model->get_available_widgets('EDITOR');
+        $this->data['templates'] = $this->cms_page_model->getAvailableTemplates('EDITOR');
+        $this->data['widgets']   = $this->cms_page_model->getAvailableWidgets('EDITOR');
 
         //  Get children of this page
-        $this->data['page_children'] = $this->cms_page_model->get_ids_of_children($this->data['cmspage']->id);
+        $this->data['page_children'] = $this->cms_page_model->getIdsOfChildren($this->data['cmspage']->id);
 
         // --------------------------------------------------------------------------
 
