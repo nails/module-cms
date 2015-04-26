@@ -192,8 +192,14 @@
 
                         echo form_radio('template', $template->slug, set_radio('template', $template->slug, $selected));
 
-                        $background = $template->img->icon ? 'style="background-image:url(' . $template->img->icon . ');background-position:center top;"' : '';
-                        echo '<span class="icon" ' . $background . '></span>';
+                        echo '<span class="icon">';
+                            if (!empty($template->img->icon)) {
+                                echo img(array(
+                                    'src' => $template->img->icon,
+                                    'class' => 'icon'
+                                ));
+                            }
+                        echo '</span>';
                         echo '<span class="newrow"></span>';
                         echo '<span class="name">';
                             echo '<span class="checkmark fa fa-check-circle"></span>';

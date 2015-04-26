@@ -52,6 +52,21 @@ class Nails_CMS_Template_columns extends Nails_CMS_Template
             '4' => '4 Columns'
         );
 
+        $d->additional_fields[1]            = array();
+        $d->additional_fields[1]['type']    = 'dropdown';
+        $d->additional_fields[1]['key']     = 'breakpoint';
+        $d->additional_fields[1]['label']   = 'Breakpoint';
+        $d->additional_fields[1]['class']   = 'select2';
+        $d->additional_fields[1]['default'] = 'md';
+        $d->additional_fields[1]['tip']     = 'The minimum size of screen to maintain columns, before breaking down into full width columns';
+        $d->additional_fields[1]['options'] = array(
+
+            'xs' => 'Extra small devices (phones)',
+            'sm' => 'Small devices (tablets)',
+            'md' => 'Medium devices (desktops)',
+            'lg' => 'Large devices (large desktops)'
+        );
+
         // --------------------------------------------------------------------------
 
         return $d;
