@@ -1812,6 +1812,28 @@ class NAILS_Cms_page_model extends NAILS_Model
         $this->_format_object($result);
         return $result;
     }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the URL of a page
+     * @param  integer $pageId       The ID of the page to look up
+     * @param  boolean $usePublished Whether to use the `published` data, or the `draft` data
+     * @return mixed                 String on success, false on failure
+     */
+    public function getUrl($pageId, $usePublished = true)
+    {
+        $page = $this->get_by_id($pageId);
+
+        if ($page) {
+
+            return $usePublished ? $page->published->url : $page->draft->url;
+
+        } else {
+
+            return false;
+        }
+    }
 }
 
 // --------------------------------------------------------------------------

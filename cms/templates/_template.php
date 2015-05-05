@@ -246,6 +246,16 @@ class Nails_CMS_Template
                         $buffer = str_replace('[:' . $block->slug . ':]', $block->value, $buffer);
                     }
                 }
+
+                //  Swap page variables
+                $pageShortTags = array(
+                    'page-title' => $tplAdditionalFields['cmspage']->title
+                );
+
+                foreach ($pageShortTags as $shortTag => $value) {
+
+                    $buffer = str_replace('[:' . $shortTag . ':]', $value, $buffer);
+                }
             }
 
             //  Return the HTML

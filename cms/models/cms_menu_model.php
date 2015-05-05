@@ -137,8 +137,16 @@ class NAILS_Cms_menu_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $obj->menu_id = (int) $obj->menu_id;
         $obj->page_id = $obj->page_id ? (int) $obj->page_id : null;
+
+        //  If the menu is tied to a page then fetch that page's URL
+        if ($obj->page_id) {
+
+            $this->load->model('cms/cms_page_model');
+            $obj->url = $this->cms_page_model->getUrl($obj->page_id);
+        }
+
+        // --------------------------------------------------------------------------
 
         unset($obj->menu_id);
     }
