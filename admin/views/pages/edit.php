@@ -220,8 +220,7 @@
             foreach ($templates as $template) {
 
                 //  Shortcut
-
-                if (property_exists($cmspage->draft->template_data->data->additional_fields, $template->slug)) {
+                if (isset($cmspage) && property_exists($cmspage->draft->template_data->data->additional_fields, $template->slug)) {
 
                     $additionalFields = $cmspage->draft->template_data->data->additional_fields->{$template->slug};
 
