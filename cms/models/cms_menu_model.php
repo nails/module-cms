@@ -143,7 +143,11 @@ class NAILS_Cms_menu_model extends NAILS_Model
         if ($obj->page_id) {
 
             $this->load->model('cms/cms_page_model');
-            $obj->url = $this->cms_page_model->getUrl($obj->page_id);
+            $obj->pageUrl = $this->cms_page_model->getUrl($obj->page_id);
+
+        } else {
+
+            $obj->pageUrl = null;
         }
 
         // --------------------------------------------------------------------------
