@@ -65,15 +65,14 @@ class Blocks extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Define block types; block types allow for proper validation
-        $this->data['block_types']              = array();
-        $this->data['block_types']['plaintext'] = 'Plain Text';
-        $this->data['block_types']['richtext']  = 'Rich Text';
-
-        // @todo: Support these other types of block
-        //$this->data['block_types']['image']     = 'Image (*.jpg, *.png, *.gif)';
-        //$this->data['block_types']['file']      = 'File (*.*)';
-        //$this->data['block_types']['number']    = 'Number';
-        //$this->data['block_types']['url']       = 'URL';
+        $this->data['blockTypes']              = array();
+        $this->data['blockTypes']['plaintext'] = 'Plain Text';
+        $this->data['blockTypes']['richtext']  = 'Rich Text';
+        $this->data['blockTypes']['image']     = 'Image (*.jpg, *.png, *.gif)';
+        $this->data['blockTypes']['file']      = 'File (*.*)';
+        $this->data['blockTypes']['number']    = 'Number';
+        $this->data['blockTypes']['url']       = 'URL';
+        $this->data['blockTypes']['email']       = 'Email';
     }
 
     // --------------------------------------------------------------------------
@@ -171,7 +170,27 @@ class Blocks extends \AdminController
 
             //  Form Validation
             $this->load->library('form_validation');
-            $this->form_validation->set_rules('value', '', 'xss_clean');
+
+            switch ($this->data['block']->type) {
+                case 'email':
+                    $this->form_validation->set_rules('value', '', 'valid_email|xss_clean');
+                    break;
+
+                case 'url':
+                    $this->form_validation->set_rules('value', '', 'valid_url|xss_clean');
+                    break;
+
+                case 'file':
+                case 'image':
+                case 'number':
+                    $this->form_validation->set_rules('value', '', 'numeric|xss_clean');
+                    break;
+
+                default:
+                    $this->form_validation->set_rules('value', '', 'xss_clean');
+                    break;
+            }
+
             $this->form_validation->set_message('required', lang('fv_required'));
 
             if ($this->form_validation->run($this)) {
@@ -236,7 +255,26 @@ class Blocks extends \AdminController
             $this->form_validation->set_rules('description', '', 'xss_clean');
             $this->form_validation->set_rules('located', '', 'xss_clean');
             $this->form_validation->set_rules('type', '', 'xss_clean|required|callback__callback_block_type');
-            $this->form_validation->set_rules('value', '', 'xss_clean');
+
+            switch ($this->input->post('type')) {
+                case 'email':
+                    $this->form_validation->set_rules('value', '', 'valid_email|xss_clean');
+                    break;
+
+                case 'url':
+                    $this->form_validation->set_rules('value', '', 'valid_url|xss_clean');
+                    break;
+
+                case 'file':
+                case 'image':
+                case 'number':
+                    $this->form_validation->set_rules('value', '', 'numeric|xss_clean');
+                    break;
+
+                default:
+                    $this->form_validation->set_rules('value', '', 'xss_clean');
+                    break;
+            }
 
             $this->form_validation->set_message('required', lang('fv_required'));
 
@@ -248,7 +286,7 @@ class Blocks extends \AdminController
                 $blockData['label']       = $this->input->post('label');
                 $blockData['description'] = $this->input->post('description');
                 $blockData['located']     = $this->input->post('located');
-                $blockData['value']       = $this->input->post('value');
+                $blockData['value']       = $this->input->post('value_' . $blockData['type']);
 
                 if ($this->cms_block_model->create($blockData)) {
 
@@ -320,35 +358,43 @@ class Blocks extends \AdminController
     // --------------------------------------------------------------------------
 
     /**
-     * Form Validation Callback: Validates a block's slug
-     * @param  string $slug The slug to validate
+     * Form validation callback: Validates a block's slug
+     * @param  string &$sSlug The slug to validate/sanitise
      * @return boolean
      */
-    public function _callback_block_slug($slug)
+    public function _callback_block_slug(&$sSlug)
     {
-        $slug = trim($slug);
+        $sSlug = trim($sSlug);
+        $sSlug = strtolower($sSlug);
 
         //  Check slug's characters are ok
-        if (!preg_match('/[^a-zA-Z0-9\-\_]/', $slug)) {
+        if (!preg_match('/[^a-z0-9\-\_]/', $sSlug)) {
 
-            $block = $this->cms_block_model->get_by_slug($slug);
+            $oBlock = $this->cms_block_model->get_by_slug($sSlug);
 
-            if (!$block) {
+            if (!$oBlock) {
 
                 //  OK!
-                return true;
+                $bResult = true;
 
             } else {
 
-                $this->form_validation->set_message('_callback_block_slug', 'Must be unique');
-                return false;
+                $this->form_validation->set_message(
+                    '_callback_block_slug',
+                    'Must be unique'
+                );
+                $bResult = false;
             }
 
         } else {
 
-            $this->form_validation->set_message('_callback_block_slug', 'Invalid characters');
-            return false;
+            $this->form_validation->set_message(
+                '_callback_block_slug',
+                'Invalid characters: a-z, 0-9, - and _ only, no spaces.'
+            );
+            $bResult = false;
         }
+        return $bResult;
     }
 
     // --------------------------------------------------------------------------
@@ -364,7 +410,7 @@ class Blocks extends \AdminController
 
         if ($type) {
 
-            if (isset($this->data['block_types'][$type])) {
+            if (isset($this->data['blockTypes'][$type])) {
 
                 return true;
 

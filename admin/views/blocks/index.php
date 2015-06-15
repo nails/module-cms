@@ -50,10 +50,33 @@
                                 echo $block->located;
                             echo '</td>';
                             echo '<td class="type">';
-                                echo $block_types[$block->type];
+                                echo $blockTypes[$block->type];
                             echo '</td>';
                             echo '<td class="default">';
-                                echo character_limiter(strip_tags($block->value), 100);
+
+                                if (!empty($block->value)) {
+                                    switch ($block->type) {
+
+                                        case 'image':
+
+                                            echo img(cdn_thumb($block->value, 50, 50));
+                                            break;
+
+                                        case 'file':
+
+                                            echo anchor(cdn_serve($block->value, true), 'Download', 'class="awesome small"');
+                                            break;
+
+                                        default:
+                                            echo character_limiter(strip_tags($block->value), 100);
+                                            break;
+                                    }
+                                } else {
+                                    echo '<span class="text-muted">';
+                                        echo '&mdash;';
+                                    echo '</span>';
+                                }
+
                             echo '</td>';
                             echo \Nails\Admin\Helper::loadDatetimeCell($block->modified);
                             echo '<td class="actions">';

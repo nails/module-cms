@@ -17,7 +17,7 @@
                     <td><?=$block->slug?></td>
                     <td><?=$block->description?></td>
                     <td><?=$block->located?></td>
-                    <td><?=$block_types[$block->type]?></td>
+                    <td><?=$blockTypes[$block->type]?></td>
                 </tr>
             </tbody>
         </table>
@@ -30,14 +30,49 @@
         //  Render the correct display
         switch ($block->type) {
 
-            case 'plaintext' :
+            case 'plaintext':
 
                 echo form_textarea('value', set_value('value', $block->value));
                 break;
 
-            case 'richtext' :
+            case 'richtext':
 
                 echo form_textarea('value', set_value('value', $block->value), 'class="wysiwyg"');
+                break;
+
+            case 'image':
+
+                $field            = array();
+                $field['key']     = 'value';
+                $field['bucket']  = 'cms-block-' . $block->slug;
+                $field['default'] = $block->value;
+
+                echo form_field_mm_image($field);
+                break;
+
+            case 'file':
+
+                $field            = array();
+                $field['key']     = 'value';
+                $field['bucket']  = 'cms-block-' . $block->slug;
+                $field['default'] = $block->value;
+
+                echo form_field_mm($field);
+                break;
+
+            case 'email':
+
+                echo form_email('value', set_value('value', $block->value));
+                break;
+
+            case 'number':
+
+                echo form_number('value', set_value('value', $block->value));
+                break;
+
+            case 'url':
+
+                echo form_url('value', set_value('value', $block->value));
                 break;
         }
 

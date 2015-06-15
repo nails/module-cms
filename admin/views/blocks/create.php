@@ -57,18 +57,96 @@
         $field['required'] = true;
         $field['class']    = 'select2';
 
-        echo form_field_dropdown($field, $block_types);
+        echo form_field_dropdown($field, $blockTypes);
 
         // --------------------------------------------------------------------------
 
         $field                = array();
-        $field['key']         = 'value';
+        $field['key']         = 'value_plaintext';
         $field['label']       = 'Default Value';
-        $field['required']    = true;
-        $field['id']          = 'default_value';
         $field['placeholder'] = 'Define the default value';
 
-        echo form_field_textarea($field);
+        $sDisplay = set_value('type') == 'plaintext' || !$this->input->post() ? 'block' : 'none';
+        echo '<div id="default-value-plaintext" class="default-value" style="display:' . $sDisplay . ';">';
+            echo form_field_textarea($field);
+        echo '</div>';
+
+        // --------------------------------------------------------------------------
+
+        $field                = array();
+        $field['key']         = 'value_richtext';
+        $field['label']       = 'Default Value';
+        $field['id']          = 'default-value-richtext-editor';
+        $field['placeholder'] = 'Define the default value';
+
+        $sDisplay = set_value('type') == 'richtext' ? 'block' : 'none';
+        echo '<div id="default-value-richtext" class="default-value" style="display:' . $sDisplay . ';">';
+            echo form_field_textarea($field);
+        echo '</div>';
+
+        // --------------------------------------------------------------------------
+
+        $field                = array();
+        $field['key']         = 'value_image';
+        $field['label']       = 'Default Value';
+        $field['placeholder'] = 'Define the default value';
+        $field['readonly']    = true;
+        $field['info']        = 'Blocks of type "Image" cannot have a default value set.';
+
+        $sDisplay = set_value('type') == 'image' ? 'block' : 'none';
+        echo '<div id="default-value-image" class="default-value" style="display:' . $sDisplay . ';">';
+            echo form_field($field);
+        echo '</div>';
+
+        // --------------------------------------------------------------------------
+
+        $field                = array();
+        $field['key']         = 'value_file';
+        $field['label']       = 'Default Value';
+        $field['placeholder'] = 'Define the default value';
+        $field['readonly']    = true;
+        $field['info']        = 'Blocks of type "File" cannot have a default value set.';
+
+        $sDisplay = set_value('type') == 'file' ? 'block' : 'none';
+        echo '<div id="default-value-file" class="default-value" style="display:' . $sDisplay . ';">';
+            echo form_field($field);
+        echo '</div>';
+
+        // --------------------------------------------------------------------------
+
+        $field                = array();
+        $field['key']         = 'value_number';
+        $field['label']       = 'Default Value';
+        $field['placeholder'] = 'Define the default value';
+
+        $sDisplay = set_value('type') == 'plaintext' ? 'block' : 'none';
+        echo '<div id="default-value-number" class="default-value" style="display:' . $sDisplay . ';">';
+            echo form_field_number($field);
+        echo '</div>';
+
+        // --------------------------------------------------------------------------
+
+        $field                = array();
+        $field['key']         = 'value_url';
+        $field['label']       = 'Default Value';
+        $field['placeholder'] = 'Define the default value';
+
+        $sDisplay = set_value('type') == 'url' ? 'block' : 'none';
+        echo '<div id="default-value-url" class="default-value" style="display:' . $sDisplay . ';">';
+            echo form_field_url($field);
+        echo '</div>';
+
+        // --------------------------------------------------------------------------
+
+        $field                = array();
+        $field['key']         = 'value_email';
+        $field['label']       = 'Default Value';
+        $field['placeholder'] = 'Define the default value';
+
+        $sDisplay = set_value('type') == 'url' ? 'block' : 'none';
+        echo '<div id="default-value-email" class="default-value" style="display:' . $sDisplay . ';">';
+            echo form_field_email($field);
+        echo '</div>';
 
         ?>
     </fieldset>
