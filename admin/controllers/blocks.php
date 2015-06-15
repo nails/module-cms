@@ -72,7 +72,7 @@ class Blocks extends \AdminController
         $this->data['blockTypes']['file']      = 'File (*.*)';
         $this->data['blockTypes']['number']    = 'Number';
         $this->data['blockTypes']['url']       = 'URL';
-        $this->data['blockTypes']['email']       = 'Email';
+        $this->data['blockTypes']['email']     = 'Email';
     }
 
     // --------------------------------------------------------------------------
@@ -95,10 +95,14 @@ class Blocks extends \AdminController
 
         // --------------------------------------------------------------------------
 
+        $tablePrefix = $this->cms_block_model->getTablePrefix();
+
+        // --------------------------------------------------------------------------
+
         //  Get pagination and search/sort variables
         $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
         $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
-        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : 'b.label';
+        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $tablePrefix . '.label';
         $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'desc';
         $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
 
@@ -106,12 +110,27 @@ class Blocks extends \AdminController
 
         //  Define the sortable columns
         $sortColumns = array(
-            'b.label'    => 'Label',
-            'b.located'  => 'Location',
-            'b.type'     => 'Type',
-            'b.created'  => 'Created',
-            'b.modified' => 'Modified'
+            $tablePrefix . '.label'    => 'Label',
+            $tablePrefix . '.located'  => 'Location',
+            $tablePrefix . '.type'     => 'Type',
+            $tablePrefix . '.created'  => 'Created',
+            $tablePrefix . '.modified' => 'Modified'
         );
+
+        // --------------------------------------------------------------------------
+
+        //  Checkbox filters
+        $cbFilters   = array();
+        $cbFilters[] = \Nails\Admin\Helper::searchFilterObject(
+            $tablePrefix . '.type',
+            'Type',
+            array()
+        );
+
+        foreach ($this->data['blockTypes'] as $slug => $label) {
+
+            $cbFilters[0]->options[] = \Nails\Admin\Helper::searchFilterObjectOption($label, $slug, true);
+        }
 
         // --------------------------------------------------------------------------
 
@@ -120,7 +139,8 @@ class Blocks extends \AdminController
             'sort' => array(
                 array($sortOn, $sortOrder)
             ),
-            'keywords' => $keywords
+            'keywords' => $keywords,
+            'cbFilters' => $cbFilters
         );
 
         //  Get the items for the page
@@ -128,7 +148,7 @@ class Blocks extends \AdminController
         $this->data['blocks'] = $this->cms_block_model->get_all($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
-        $this->data['search']     = \Nails\Admin\Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
+        $this->data['search']     = \Nails\Admin\Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords, $cbFilters);
         $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
 
         //  Add a header button
