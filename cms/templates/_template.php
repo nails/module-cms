@@ -243,6 +243,16 @@ class Nails_CMS_Template
                 if ($blocks) {
                     foreach ($blocks as $block) {
 
+                        //  Translate some block types
+                        switch ($block->type) {
+                            case 'file':
+                            case 'image':
+
+                                get_instance()->load->helper('cdn_helper');
+                                $block->value = cdn_serve($block->value);
+                                break;
+                        }
+
                         $buffer = str_replace('[:' . $block->slug . ':]', $block->value, $buffer);
                     }
                 }
