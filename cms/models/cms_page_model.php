@@ -79,7 +79,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         if (!$id) {
 
-            $this->_set_error('Unable to create base page object.');
+            $this->_set_error('Unable to create base page object. ' . $this->last_error());
             $this->db->trans_rollback();
             return false;
         }
