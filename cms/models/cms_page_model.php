@@ -59,12 +59,12 @@ class NAILS_Cms_page_model extends NAILS_Model
 
     /**
      * Create a new CMS page
-     * @param  array  $data The data to create the page with
-     * @return mixed        The ID of the page on success, false on failure
+     * @param  array  $aData The data to create the page with
+     * @return mixed         The ID of the page on success, false on failure
      */
-    public function create($data)
+    public function create($aData)
     {
-        if (empty($data->data->template)) {
+        if (empty($aData['data']->template)) {
 
             $this->_set_error('"data.template" is a required field.');
             return false;
@@ -75,9 +75,9 @@ class NAILS_Cms_page_model extends NAILS_Model
         $this->db->trans_begin();
 
         //  Create a new blank row to work with
-        $id = parent::create();
+        $iId = parent::create();
 
-        if (!$id) {
+        if (!$iId) {
 
             $this->_set_error('Unable to create base page object. ' . $this->last_error());
             $this->db->trans_rollback();
@@ -85,10 +85,10 @@ class NAILS_Cms_page_model extends NAILS_Model
         }
 
         //  Try and update it depending on how the update went, commit & update or rollback
-        if ($this->update($id, $data)) {
+        if ($this->update($iId, $aData)) {
 
             $this->db->trans_commit();
-            return $id;
+            return $iId;
 
         } else {
 
@@ -101,14 +101,14 @@ class NAILS_Cms_page_model extends NAILS_Model
 
     /**
      * Update a CMS page
-     * @param  int     $pageId The ID of the page to update
+     * @param  int     $iPageId The ID of the page to update
      * @param  array   $data   The data to update with
      * @return boolean
      */
-    public function update($pageId, $data)
+    public function update($iPageId, $aData)
     {
         //  Check the data
-        if (empty($data->data->template)) {
+        if (empty($aData['data']->template)) {
 
             $this->_set_error('"data.template" is a required field.');
             return false;
@@ -117,24 +117,13 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Fetch the current version of this page, for reference.
-        $current = $this->get_by_id($pageId);
+        $oCurrent = $this->get_by_id($iPageId);
 
-        if (!$current) {
+        if (!$oCurrent) {
 
             $this->_set_error('Invalid Page ID');
             return false;
         }
-
-        // --------------------------------------------------------------------------
-
-        /**
-         * Clone the data object so we can mutate it without worry. Unset id and hash
-         * as we don't need to store them
-         */
-
-        $clone = clone $data;
-        unset($clone->id);
-        unset($clone->hash);
 
         // --------------------------------------------------------------------------
 
@@ -144,16 +133,16 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Start prepping the data which doesn't require much thinking
-        $data = new stdClass();
+        $aInsertData = array();
 
-        $data->draft_parent_id       = !empty($clone->data->parent_id)       ? (int) $clone->data->parent_id       : null;
-        $data->draft_title           = !empty($clone->data->title)           ? trim($clone->data->title)           : 'Untitled';
-        $data->draft_seo_title       = !empty($clone->data->seo_title)       ? trim($clone->data->seo_title)       : '';
-        $data->draft_seo_description = !empty($clone->data->seo_description) ? trim($clone->data->seo_description) : '';
-        $data->draft_seo_keywords    = !empty($clone->data->seo_keywords)    ? trim($clone->data->seo_keywords)    : '';
-        $data->draft_template        = $clone->data->template;
-        $data->draft_template_data   = json_encode($clone, JSON_UNESCAPED_SLASHES);
-        $data->draft_hash            = md5($data->draft_template_data);
+        $aInsertData['draft_parent_id']       = !empty($aData['data']->parent_id)       ? (int) $aData['data']->parent_id       : null;
+        $aInsertData['draft_title']           = !empty($aData['data']->title)           ? trim($aData['data']->title)           : 'Untitled';
+        $aInsertData['draft_seo_title']       = !empty($aData['data']->seo_title)       ? trim($aData['data']->seo_title)       : '';
+        $aInsertData['draft_seo_description'] = !empty($aData['data']->seo_description) ? trim($aData['data']->seo_description) : '';
+        $aInsertData['draft_seo_keywords']    = !empty($aData['data']->seo_keywords)    ? trim($aData['data']->seo_keywords)    : '';
+        $aInsertData['draft_template']        = $aData['data']->template;
+        $aInsertData['draft_template_data']   = json_encode($aData, JSON_UNESCAPED_SLASHES);
+        $aInsertData['draft_hash']            = md5($aInsertData['draft_template_data']);
 
         // --------------------------------------------------------------------------
 
@@ -162,10 +151,10 @@ class NAILS_Cms_page_model extends NAILS_Model
          * in the title, so that it doesn't break our explode
          */
 
-        $data->draft_title           = htmlentities(str_replace('|', '&#124;', $data->draft_title), ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
-        $data->draft_seo_title       = htmlentities($data->draft_seo_title, ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
-        $data->draft_seo_description = htmlentities($data->draft_seo_description, ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
-        $data->draft_seo_keywords    = htmlentities($data->draft_seo_keywords, ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
+        $aInsertData['draft_title']           = htmlentities(str_replace('|', '&#124;', $aInsertData['draft_title']), ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
+        $aInsertData['draft_seo_title']       = htmlentities($aInsertData['draft_seo_title'], ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
+        $aInsertData['draft_seo_description'] = htmlentities($aInsertData['draft_seo_description'], ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
+        $aInsertData['draft_seo_keywords']    = htmlentities($aInsertData['draft_seo_keywords'], ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
 
         // --------------------------------------------------------------------------
 
@@ -174,64 +163,76 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Work out the slug
-        if ($data->draft_parent_id) {
+        if ($aInsertData['draft_parent_id']) {
 
             //  There is a parent, so set it's slug as the prefix
-            $parent = $this->get_by_id($data->draft_parent_id);
+            $oParent = $this->get_by_id($aInsertData['draft_parent_id']);
 
-            if (!$parent) {
+            if (!$oParent) {
 
                 $this->_set_error('Invalid Parent ID.');
                 $this->db->trans_rollback();
                 return false;
             }
 
-            $prefix = $parent->draft->slug . '/';
+            $sPrefix = $oParent->draft->slug . '/';
 
         } else {
 
             //  No parent, no need for a prefix
-            $prefix = '';
+            $sPrefix = '';
         }
 
-        $data->draft_slug     = $this->_generate_slug($data->draft_title, $prefix, '', null, 'draft_slug', $current->id);
-        $data->draft_slug_end = end(explode('/', $data->draft_slug));
+        $aInsertData['draft_slug'] = $this->_generate_slug(
+            $aInsertData['draft_title'],
+            $sPrefix,
+            '',
+            null,
+            'draft_slug',
+            $oCurrent->id
+        );
+
+        $aInsertData['draft_slug_end'] = end(
+            explode(
+                '/', $aInsertData['draft_slug']
+            )
+        );
 
         // --------------------------------------------------------------------------
 
         //  Generate the breadcrumbs
-        $data->draft_breadcrumbs = array();
+        $aInsertData['draft_breadcrumbs'] = array();
 
-        if ($data->draft_parent_id) {
+        if ($aInsertData['draft_parent_id']) {
 
             /**
              * There is a parent, use it's breadcrumbs array as the starting point.
              * No need to fetch the parent again.
              */
 
-            $data->draft_breadcrumbs = $parent->draft->breadcrumbs;
+            $aInsertData['draft_breadcrumbs'] = $oParent->draft->breadcrumbs;
         }
 
-        $temp        = new stdClass();
-        $temp->id    = $current->id;
-        $temp->title = $data->draft_title;
-        $temp->slug  = $data->draft_slug;
+        $oTemp        = new stdClass();
+        $oTemp->id    = $oCurrent->id;
+        $oTemp->title = $aInsertData['draft_title'];
+        $oTemp->slug  = $aInsertData['draft_slug'];
 
-        $data->draft_breadcrumbs[] = $temp;
-        unset($temp);
+        $aInsertData['draft_breadcrumbs'][] = $oTemp;
+        unset($oTemp);
 
         //  Encode the breadcrumbs for the database
-        $data->draft_breadcrumbs = json_encode($this->generateBreadcrumbs($current->id));
+        $aInsertData['draft_breadcrumbs'] = json_encode($this->generateBreadcrumbs($oCurrent->id));
 
         // --------------------------------------------------------------------------
 
-        if (parent::update($current->id, $data)) {
+        if (parent::update($oCurrent->id, $aInsertData)) {
 
             //  Update was successful, set the breadcrumbs
-            $breadcrumbs = $this->generateBreadcrumbs($current->id);
+            $aBreadcrumbs = $this->generateBreadcrumbs($oCurrent->id);
 
-            $this->db->set('draft_breadcrumbs', json_encode($breadcrumbs));
-            $this->db->where('id', $current->id);
+            $this->db->set('draft_breadcrumbs', json_encode($aBreadcrumbs));
+            $this->db->where('id', $oCurrent->id);
             if (!$this->db->update($this->table)) {
 
                 $this->_set_error('Failed to generate breadcrumbs.');
@@ -240,14 +241,14 @@ class NAILS_Cms_page_model extends NAILS_Model
             }
 
             //  For each child regenerate the breadcrumbs and slugs (only if the title or slug has changed)
-            if ($current->draft->title != $data->draft_title || $current->draft->slug != $data->draft_slug) {
+            if ($oCurrent->draft->title != $aInsertData['draft_title'] || $oCurrent->draft->slug != $aInsertData['draft_slug']) {
 
-                $children = $this->getIdsOfChildren($current->id);
+                $aChildren = $this->getIdsOfChildren($oCurrent->id);
 
-                if ($children) {
+                if ($aChildren) {
 
                     //  Loop each child and update it's details
-                    foreach ($children as $child_id) {
+                    foreach ($aChildren as $iChildId) {
 
                         /**
                          * We can assume that the children are in a sensible order, loop
@@ -255,44 +256,44 @@ class NAILS_Cms_page_model extends NAILS_Model
                          * been processed by the time we process it.
                          */
 
-                        $child = $this->get_by_id($child_id);
+                        $oChild = $this->get_by_id($iChildId);
 
-                        if (!$child) {
+                        if (!$oChild) {
 
                             continue;
                         }
 
-                        $data = new stdClass();
+                        $aUpdateData = array();
 
                         //  Generate the breadcrumbs
-                        $data->draft_breadcrumbs = json_encode($this->generateBreadcrumbs($child->id));
+                        $aUpdateData['draft_breadcrumbs'] = json_encode($this->generateBreadcrumbs($oChild->id));
 
                         //  Generate the slug
-                        if ($child->draft->parent_id) {
+                        if ($oChild->draft->parent_id) {
 
                             //  Child has a parent, fetch it and use it's slug as the prefix
-                            $parent = $this->get_by_id($child->draft->parent_id);
+                            $parent = $this->get_by_id($oChild->draft->parent_id);
 
                             if ($parent) {
 
-                                $data->draft_slug = $parent->draft->slug . '/' . $child->draft->slug_end;
+                                $aUpdateData['draft_slug'] = $parent->draft->slug . '/' . $oChild->draft->slug_end;
 
                             } else {
 
                                 //  Parent is bad, make this a parent page. Poor wee orphan.
-                                $data->draft_parent_id = null;
-                                $data->draft_slug      = $child->draft->slug_end;
+                                $aUpdateData['draft_parent_id'] = null;
+                                $aUpdateData['draft_slug']      = $oChild->draft->slug_end;
                             }
 
                         } else {
 
                             //  Would be weird if this happened, but ho hum handle it anyway
-                            $data->draft_parent_id = null;
-                            $data->draft_slug      = $child->draft->slug_end;
+                            $aUpdateData['draft_parent_id'] = null;
+                            $aUpdateData['draft_slug']      = $oChild->draft->slug_end;
                         }
 
                         //  Update the child and move on
-                        if (!parent::update($child->id, $data)) {
+                        if (!parent::update($oChild->id, $aUpdateData)) {
 
                             $this->_set_error('Failed to update breadcrumbs and/or slug of child page.');
                             $this->db->trans_rollback();
@@ -320,35 +321,35 @@ class NAILS_Cms_page_model extends NAILS_Model
 
     /**
      * Generate breadcrumbs for the page
-     * @param  int   $id The page to generate breadcrumbs for
-     * @return mixed     Array of breadcrumbs, or false on failure
+     * @param  integer $iId The page to generate breadcrumbs for
+     * @return mixed   Array of breadcrumbs, or false on failure
      */
-    protected function generateBreadcrumbs($id)
+    protected function generateBreadcrumbs($iId)
     {
-        $page = $this->get_by_id($id);
+        $oPage = $this->get_by_id($iId);
 
-        if (!$page) {
+        if (!$oPage) {
 
             return false;
         }
 
         // --------------------------------------------------------------------------
 
-        $breadcrumbs = array();
+        $aBreadcrumbs = array();
 
-        if ($page->draft->parent_id) {
+        if ($oPage->draft->parent_id) {
 
-            $breadcrumbs = array_merge($breadcrumbs, $this->generateBreadcrumbs($page->draft->parent_id));
+            $aBreadcrumbs = array_merge($aBreadcrumbs, $this->generateBreadcrumbs($oPage->draft->parent_id));
         }
 
-        $temp        = new stdClass();
-        $temp->id    = $page->id;
-        $temp->title = $page->draft->title;
+        $oTemp        = new stdClass();
+        $oTemp->id    = $oPage->id;
+        $oTemp->title = $oPage->draft->title;
 
-        $breadcrumbs[] = $temp;
-        unset($temp);
+        $aBreadcrumbs[] = $oTemp;
+        unset($oTemp);
 
-        return $breadcrumbs;
+        return $aBreadcrumbs;
     }
 
     // --------------------------------------------------------------------------
@@ -764,65 +765,65 @@ class NAILS_Cms_page_model extends NAILS_Model
 
     /**
      * Get the IDs of a page's children
-     * @param  int    $pageId The ID of the page to look at
-     * @param  string $format How to return the data, one of ID, ID_SLUG, ID_SLUG_TITLE or ID_SLUG_TITLE_PUBLISHED
+     * @param  int    $iPageId The ID of the page to look at
+     * @param  string $sFormat How to return the data, one of ID, ID_SLUG, ID_SLUG_TITLE or ID_SLUG_TITLE_PUBLISHED
      * @return array
      */
-    public function getIdsOfChildren($pageId, $format = 'ID')
+    public function getIdsOfChildren($iPageId, $sFormat = 'ID')
     {
-        $out = array();
+        $aOut = array();
 
         $this->db->select('id,draft_slug,draft_title,is_published');
-        $this->db->where('draft_parent_id', $pageId);
-        $children = $this->db->get(NAILS_DB_PREFIX . 'cms_page')->result();
+        $this->db->where('draft_parent_id', $iPageId);
+        $aChildren = $this->db->get(NAILS_DB_PREFIX . 'cms_page')->result();
 
-        if ($children) {
+        if ($aChildren) {
 
-            foreach ($children as $child) {
+            foreach ($aChildren as $oChild) {
 
-                switch ($format) {
+                switch ($sFormat) {
 
                     case 'ID':
 
-                        $out[] = $child->id;
+                        $aOut[] = $oChild->id;
                         break;
 
                     case 'ID_SLUG':
 
-                        $out[] = array(
-                            'id'   => $child->id,
-                            'slug' => $child->draft_slug
+                        $aOut[] = array(
+                            'id'   => $oChild->id,
+                            'slug' => $oChild->draft_slug
                         );
                         break;
 
                     case 'ID_SLUG_TITLE':
 
-                        $out[] = array(
-                            'id'    => $child->id,
-                            'slug'  => $child->draft_slug,
-                            'title' => $child->draft_title
+                        $aOut[] = array(
+                            'id'    => $oChild->id,
+                            'slug'  => $oChild->draft_slug,
+                            'title' => $oChild->draft_title
                         );
                         break;
 
                     case 'ID_SLUG_TITLE_PUBLISHED':
 
-                        $out[] = array(
-                            'id'           => $child->id,
-                            'slug'         => $child->draft_slug,
-                            'title'        => $child->draft_title,
-                            'is_published' => (bool) $child->is_published
+                        $aOut[] = array(
+                            'id'           => $oChild->id,
+                            'slug'         => $oChild->draft_slug,
+                            'title'        => $oChild->draft_title,
+                            'is_published' => (bool) $oChild->is_published
                         );
                         break;
                 }
 
-                $out = array_merge($out, $this->getIdsOfChildren($child->id, $format));
+                $aOut = array_merge($aOut, $this->getIdsOfChildren($oChild->id, $sFormat));
             }
 
-            return $out;
+            return $aOut;
 
         } else {
 
-            return $out;
+            return $aOut;
         }
     }
 
@@ -1692,12 +1693,12 @@ class NAILS_Cms_page_model extends NAILS_Model
 
     /**
      * Generate a page preview
-     * @param  array $data The Page data
+     * @param  array $aData The Page data
      * @return mixed       int on success, false on failure
      */
-    public function createPreview($data)
+    public function createPreview($aData)
     {
-        if (empty($data->data->template)) {
+        if (empty($aData['data']->template)) {
 
             $this->_set_error('"data.template" is a required field.');
             return false;
@@ -1705,74 +1706,77 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $preview                 = new stdClass();
-        $preview->draft_hash     = isset($data->hash) ? $data->hash : '';
-        $preview->draft_template = isset($data->data->template) ? $data->data->template : '';
+        $aInsertData                   = array();
+        $aInsertData['draft_hash']     = isset($aData['hash']) ? $aData['hash'] : '';
+        $aInsertData['draft_template'] = isset($aData['data']->template) ? $aData['data']->template : '';
 
         // --------------------------------------------------------------------------
 
         //  Test to see if this preview has already been created
         $this->db->select('id');
-        $this->db->where('draft_hash', $preview->draft_hash);
-        $result = $this->db->get($this->table_preview)->row();
+        $this->db->where('draft_hash', $aInsertData['draft_hash']);
+        $oResult = $this->db->get($this->table_preview)->row();
 
-        if ($result) {
+        if ($oResult) {
 
-            return $result->id;
+            return (int) $oResult->id;
         }
 
         // --------------------------------------------------------------------------
 
-        $preview->draft_parent_id       = !empty($data->data->parent_id) ? $data->data->parent_id : null;
-        $preview->draft_template_data   = json_encode($data, JSON_UNESCAPED_SLASHES);
-        $preview->draft_title           = isset($data->data->title) ? $data->data->title : '';
-        $preview->draft_seo_title       = isset($data->data->seo_title) ? $data->data->seo_title : '';
-        $preview->draft_seo_description = isset($data->data->seo_description) ? $data->data->seo_description : '';
-        $preview->draft_seo_keywords    = isset($data->data->seo_keywords) ? $data->data->seo_keywords : '';
+        $aInsertData['draft_parent_id']       = !empty($aData['data']->parent_id) ? $aData['data']->parent_id : null;
+        $aInsertData['draft_template_data']   = json_encode($aData, JSON_UNESCAPED_SLASHES);
+        $aInsertData['draft_title']           = isset($aData['data']->title) ? $aData['data']->title : '';
+        $aInsertData['draft_seo_title']       = isset($aData['data']->seo_title) ? $aData['data']->seo_title : '';
+        $aInsertData['draft_seo_description'] = isset($aData['data']->seo_description) ? $aData['data']->seo_description : '';
+        $aInsertData['draft_seo_keywords']    = isset($aData['data']->seo_keywords) ? $aData['data']->seo_keywords : '';
 
         //  Generate the breadcrumbs
-        $preview->draft_breadcrumbs = array();
+        $aInsertData['draft_breadcrumbs'] = array();
 
-        if ($preview->draft_parent_id) {
+        if ($aInsertData['draft_parent_id']) {
 
             /**
              * There is a parent, use it's breadcrumbs array as the starting point. No
              * need to fetch the parent again.
              */
 
-            $parent = $this->get_by_id($preview->draft_parent_id);
+            $oParent = $this->get_by_id($aInsertData['draft_parent_id']);
 
-            if ($parent) {
+            if ($oParent) {
 
-                $preview->draft_breadcrumbs = $parent->published->breadcrumbs;
+                $aInsertData['draft_breadcrumbs'] = $oParent->published->breadcrumbs;
             }
         }
 
-        $temp        = new stdClass();
-        $temp->id    = null;
-        $temp->title = $preview->draft_title;
-        $temp->slug  = '';
+        $oTemp        = new stdClass();
+        $oTemp->id    = null;
+        $oTemp->title = $aInsertData['draft_title'];
+        $oTemp->slug  = '';
 
-        $preview->breadcrumbs[] = $temp;
-        unset($temp);
+        $aInsertData['draft_breadcrumbs'][] = $oTemp;
+        unset($oTemp);
 
         //  Encode the breadcrumbs for the database
-        $preview->draft_breadcrumbs = json_encode($preview->draft_breadcrumbs);
+        $aInsertData['draft_breadcrumbs'] = json_encode($aInsertData['draft_breadcrumbs']);
+
+        // --------------------------------------------------------------------------
+
+        //  Meta data
+        $aInsertData['created']  = date('Y-m-d H:i:s');
+        $aInsertData['modified'] = date('Y-m-d H:i:s');
+
+        if ($this->user_model->isLoggedIn()) {
+
+            $aInsertData['created_by']  = activeUser('id');
+            $aInsertData['modified_by'] = activeUser('id');
+        }
 
         // --------------------------------------------------------------------------
 
         //  Save to the DB
         $this->db->trans_begin();
-
-        $this->db->set($preview);
-        $this->db->set('created', 'NOW()', false);
-        $this->db->set('modified', 'NOW()', false);
-
-        if ($this->user_model->isLoggedIn()) {
-
-            $this->db->set('created_by', activeUser('id'));
-            $this->db->set('modified_by', activeUser('id'));
-        }
+        $this->db->set($aInsertData);
 
         if (!$this->db->insert($this->table_preview)) {
 
@@ -1782,9 +1786,9 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         } else {
 
-            $id = $this->db->insert_id();
+            $iId = $this->db->insert_id();
             $this->db->trans_commit();
-            return $id;
+            return $iId;
         }
     }
 
@@ -1792,38 +1796,38 @@ class NAILS_Cms_page_model extends NAILS_Model
 
     /**
      * Get's a preview page by it's ID
-     * @param  int   $previewId The Id of the preview to get
-     * @return mixed            stdClass on success, false on failure
+     * @param  integer   $iPreviewId The Id of the preview to get
+     * @return mixed                 stdClass on success, false on failure
      */
-    public function getPreviewById($previewId)
+    public function getPreviewById($iPreviewId)
     {
-        $this->db->where('id', $previewId);
-        $result = $this->db->get($this->table_preview)->row();
+        $this->db->where('id', $iPreviewId);
+        $oResult = $this->db->get($this->table_preview)->row();
 
         // --------------------------------------------------------------------------
 
-        if (!$result) {
+        if (!$oResult) {
 
             return false;
         }
 
         // --------------------------------------------------------------------------
 
-        $this->_format_object($result);
-        return $result;
+        $this->_format_object($oResult);
+        return $oResult;
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Returns the URL of a page
-     * @param  integer $pageId       The ID of the page to look up
+     * @param  integer $iPageId       The ID of the page to look up
      * @param  boolean $usePublished Whether to use the `published` data, or the `draft` data
      * @return mixed                 String on success, false on failure
      */
-    public function getUrl($pageId, $usePublished = true)
+    public function getUrl($iPageId, $usePublished = true)
     {
-        $page = $this->get_by_id($pageId);
+        $page = $this->get_by_id($iPageId);
 
         if ($page) {
 

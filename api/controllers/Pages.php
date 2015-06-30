@@ -33,11 +33,11 @@ class Pages extends \ApiController
 
         } else {
 
-            $pageDataRaw     = $this->input->post('page_data');
-            $publishAction   = $this->input->post('publish_action');
-            $generatePreview = $this->input->post('generate_preview');
+            $sPageDataRaw     = $this->input->post('page_data');
+            $sPublishAction   = $this->input->post('publish_action');
+            $bGeneratePreview = (bool) $this->input->post('generate_preview');
 
-            if (!$pageDataRaw) {
+            if (!$sPageDataRaw) {
 
                 return array(
                     'status' => 400,
@@ -48,13 +48,13 @@ class Pages extends \ApiController
             // --------------------------------------------------------------------------
 
             //  Decode and check
-            $pageData = json_decode($pageDataRaw);
+            $oPageData = json_decode($sPageDataRaw);
 
-            if (is_null($pageData)) {
+            if (is_null($oPageData)) {
 
                 log_message(
                     'error',
-                    'API: cms/pages/save - Error decoding JSON: ' . $pageDataRaw
+                    'API: cms/pages/save - Error decoding JSON: ' . $sPageDataRaw
                 );
                 return array(
                     'status' => 400,
@@ -62,7 +62,7 @@ class Pages extends \ApiController
                 );
             }
 
-            if (empty($pageData->hash)) {
+            if (empty($oPageData->hash)) {
 
                 log_message(
                     'error',
@@ -75,7 +75,7 @@ class Pages extends \ApiController
             }
 
             //  A template must be defined
-            if (empty($pageData->data->template)) {
+            if (empty($oPageData->data->template)) {
 
                 return array(
                     'status' => 400,
@@ -91,21 +91,21 @@ class Pages extends \ApiController
              * both in case this is a cross browser issue.
              */
 
-            $hash                   = $pageData->hash;
-            $checkObj               = new \stdClass();
-            $checkObj->data         = $pageData->data;
-            $checkObj->widget_areas = $pageData->widget_areas;
-            $checkHash1             = md5(json_encode($checkObj, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE));
+            $sHash                   = $oPageData->hash;
+            $oCheckObj               = new \stdClass();
+            $oCheckObj->data         = $oPageData->data;
+            $oCheckObj->widget_areas = $oPageData->widget_areas;
+            $sCheckHash1             = md5(json_encode($oCheckObj, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE));
 
-            if ($hash !== $checkHash1) {
+            if ($sHash !== $sCheckHash1) {
 
-                $checkHash2 = md5(json_encode($checkObj));
+                $sCheckHash2 = md5(json_encode($oCheckObj));
 
-                if ($hash !== $checkHash2) {
+                if ($sHash !== $sCheckHash2) {
 
                     log_message(
                         'error',
-                        'API: cms/pages/save - Failed to verify hashes. Posted JSON{ ' .  $pageDataRaw
+                        'API: cms/pages/save - Failed to verify hashes. Posted JSON{ ' .  $sPageDataRaw
                     );
                     return array(
                         'status' => 400,
@@ -114,7 +114,7 @@ class Pages extends \ApiController
                 }
             }
 
-            $pageData->hash = $hash;
+            $oPageData->hash = $sHash;
 
             // --------------------------------------------------------------------------
 
@@ -123,30 +123,30 @@ class Pages extends \ApiController
              * just manually specifying things for supreme consistency. Multi-pass?
              */
 
-            $data                          = new \stdClass();
-            $data->hash                    = $pageData->hash;
-            $data->id                      = !empty($pageData->id) ? (int) $pageData->id : null;
-            $data->data                    = new \stdClass();
-            $data->data->title             = !empty($pageData->data->title) ? $pageData->data->title : '';
-            $data->data->parent_id         = !empty($pageData->data->parent_id) ? (int) $pageData->data->parent_id : '';
-            $data->data->seo_title         = !empty($pageData->data->seo_title) ? $pageData->data->seo_title : '';
-            $data->data->seo_description   = !empty($pageData->data->seo_description) ? $pageData->data->seo_description : '';
-            $data->data->seo_keywords      = !empty($pageData->data->seo_keywords) ? $pageData->data->seo_keywords : '';
-            $data->data->template          = $pageData->data->template;
-            $data->data->additional_fields = !empty($pageData->data->additional_fields) ? $pageData->data->additional_fields : '';
-            $data->widget_areas            = !empty($pageData->widget_areas) ? $pageData->widget_areas : new \stdClass;
+            $aData                            = array();
+            $aData['hash']                    = $oPageData->hash;
+            $aData['id']                      = !empty($oPageData->id) ? (int) $oPageData->id : null;
+            $aData['data']                    = new \stdClass();
+            $aData['data']->title             = !empty($oPageData->data->title) ? $oPageData->data->title : '';
+            $aData['data']->parent_id         = !empty($oPageData->data->parent_id) ? (int) $oPageData->data->parent_id : '';
+            $aData['data']->seo_title         = !empty($oPageData->data->seo_title) ? $oPageData->data->seo_title : '';
+            $aData['data']->seo_description   = !empty($oPageData->data->seo_description) ? $oPageData->data->seo_description : '';
+            $aData['data']->seo_keywords      = !empty($oPageData->data->seo_keywords) ? $oPageData->data->seo_keywords : '';
+            $aData['data']->template          = $oPageData->data->template;
+            $aData['data']->additional_fields = !empty($oPageData->data->additional_fields) ? $oPageData->data->additional_fields : '';
+            $aData['widget_areas']            = !empty($oPageData->widget_areas) ? $oPageData->widget_areas : new \stdClass;
 
-            if ($data->data->additional_fields) {
+            if ($aData['data']->additional_fields) {
 
-                parse_str($data->data->additional_fields, $_additional_fields);
+                parse_str($aData['data']->additional_fields, $_additional_fields);
 
                 if (!empty($_additional_fields['additional_field'])) {
 
-                    $data->data->additional_fields = $_additional_fields['additional_field'];
+                    $aData['data']->additional_fields = $_additional_fields['additional_field'];
 
                 } else {
 
-                    $data->data->additional_fields = array();
+                    $aData['data']->additional_fields = array();
                 }
 
                 /**
@@ -154,7 +154,7 @@ class Pages extends \ApiController
                  * consistent with the save objects
                  */
 
-                $data->data->additional_fields = json_decode(json_encode($data->data->additional_fields));
+                $aData['data']->additional_fields = json_decode(json_encode($aData['data']->additional_fields));
             }
 
             // --------------------------------------------------------------------------
@@ -166,7 +166,7 @@ class Pages extends \ApiController
 
             $this->load->model('cms/cms_page_model');
 
-            if (!empty($generatePreview)) {
+            if (!empty($bGeneratePreview)) {
 
                 if (!userHasPermission('admin:cms:pages:preview')) {
 
@@ -176,9 +176,9 @@ class Pages extends \ApiController
                     );
                 }
 
-                $id = $this->cms_page_model->createPreview($data);
+                $iId = $this->cms_page_model->createPreview($aData);
 
-                if (!$id) {
+                if (!$iId) {
 
                     return array(
                         'status' => 500,
@@ -186,12 +186,12 @@ class Pages extends \ApiController
                     );
                 }
 
-                $out       = array();
-                $out['id'] = $id;
+                $aOut       = array();
+                $aOut['id'] = $iId;
 
             } else {
 
-                if (empty($data->id)) {
+                if (empty($aData['id'])) {
 
                     if (!userHasPermission('admin:cms:pages:create')) {
 
@@ -202,9 +202,9 @@ class Pages extends \ApiController
                         return;
                     }
 
-                    $id = $this->cms_page_model->create($data);
+                    $iId = $this->cms_page_model->create($aData);
 
-                    if (!$id) {
+                    if (!$iId) {
 
                         return array(
                             'status' => 500,
@@ -225,9 +225,9 @@ class Pages extends \ApiController
 
                     }
 
-                    if ($this->cms_page_model->update($data->id, $data, $this->data)) {
+                    if ($this->cms_page_model->update($aData['id'], $aData)) {
 
-                        $id = $data->id;
+                        $iId = $aData['id'];
 
                     } else {
 
@@ -247,14 +247,14 @@ class Pages extends \ApiController
                  * - If is_published is null then we're leaving it as it is.
                  */
 
-                $out       = array();
-                $out['id'] = $id;
+                $aOut       = array();
+                $aOut['id'] = $iId;
 
-                switch ($publishAction) {
+                switch ($sPublishAction) {
 
                     case 'PUBLISH':
 
-                        $this->cms_page_model->publish($id);
+                        $this->cms_page_model->publish($iId);
                         break;
 
                     case 'NONE':
@@ -265,7 +265,7 @@ class Pages extends \ApiController
                 }
             }
 
-            return $out;
+            return $aOut;
         }
     }
 
@@ -273,56 +273,56 @@ class Pages extends \ApiController
 
     public function postWidgetEditor()
     {
-        $out             = array();
-        $requestedWidget = $this->input->post('widget');
+        $aOut             = array();
+        $sRequestedWidget = $this->input->post('widget');
 
-        parse_str($this->input->post('data'), $widgetData);
+        parse_str($this->input->post('data'), $aWidgetData);
 
-        if ($requestedWidget) {
+        if ($sRequestedWidget) {
 
             $this->load->model('cms/cms_page_model');
 
-            $requestedWidget = $this->cms_page_model->getWidget($requestedWidget);
+            $oRequestedWidget = $this->cms_page_model->getWidget($sRequestedWidget);
 
-            if ($requestedWidget) {
+            if ($oRequestedWidget) {
 
                 //  Instantiate the widget
-                include_once $requestedWidget->path . 'widget.php';
+                include_once $oRequestedWidget->path . 'widget.php';
 
                 try {
 
-                    $WIDGET       = new $requestedWidget->iam();
-                    $widgetEditor = $WIDGET->get_editor($widgetData);
+                    $oWidget       = new $oRequestedWidget->iam();
+                    $sWidgetEditor = $oWidget->get_editor($aWidgetData);
 
-                    if (!empty($widgetEditor)) {
+                    if (!empty($sWidgetEditor)) {
 
-                        $out['HTML'] = $widgetEditor;
+                        $aOut['HTML'] = $sWidgetEditor;
 
                     } else {
 
-                        $out['HTML'] = '<p class="static">This widget has no configurable options.</p>';
+                        $aOut['HTML'] = '<p class="static">This widget has no configurable options.</p>';
                     }
 
                 } catch (Exception $e) {
 
-                    $out['status'] = 500;
-                    $out['error']  = 'This widget has not been configured correctly. Please contact the developer ';
-                    $out['error'] .= 'quoting this error message: ';
-                    $out['error'] .= '<strong>"#3:' . $requestedWidget->iam . ':GetEditor"</strong>';
+                    $aOut['status'] = 500;
+                    $aOut['error']  = 'This widget has not been configured correctly. Please contact the developer ';
+                    $aOut['error'] .= 'quoting this error message: ';
+                    $aOut['error'] .= '<strong>"#3:' . $oRequestedWidget->iam . ':GetEditor"</strong>';
                 }
 
             } else {
 
-                $out['status'] = 400;
-                $out['error']  = 'Invalid Widget - Error number 2';
+                $aOut['status'] = 400;
+                $aOut['error']  = 'Invalid Widget - Error number 2';
             }
 
         } else {
 
-            $out['status'] = 400;
-            $out['error']  = 'Widget slug must be specified - Error number 1';
+            $aOut['status'] = 400;
+            $aOut['error']  = 'Widget slug must be specified - Error number 1';
         }
 
-        return $out;
+        return $aOut;
     }
 }

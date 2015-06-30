@@ -215,10 +215,10 @@ class Blocks extends \AdminController
 
             if ($this->form_validation->run($this)) {
 
-                $blockData          = array();
-                $blockData['value'] = $this->input->post('value');
+                $aBlockData          = array();
+                $aBlockData['value'] = $this->input->post('value');
 
-                if ($this->cms_block_model->update($this->data['block']->id, $blockData)) {
+                if ($this->cms_block_model->update($this->data['block']->id, $aBlockData)) {
 
                     $this->session->set_flashdata('success', 'Block updated successfully.');
                     redirect('admin/cms/blocks');
@@ -300,15 +300,15 @@ class Blocks extends \AdminController
 
             if ($this->form_validation->run($this)) {
 
-                $blockData                = array();
-                $blockData['type']        = $this->input->post('type');
-                $blockData['slug']        = $this->input->post('slug');
-                $blockData['label']       = $this->input->post('label');
-                $blockData['description'] = $this->input->post('description');
-                $blockData['located']     = $this->input->post('located');
-                $blockData['value']       = $this->input->post('value_' . $blockData['type']);
+                $aBlockData                = array();
+                $aBlockData['type']        = $this->input->post('type');
+                $aBlockData['slug']        = $this->input->post('slug');
+                $aBlockData['label']       = $this->input->post('label');
+                $aBlockData['description'] = $this->input->post('description');
+                $aBlockData['located']     = $this->input->post('located');
+                $aBlockData['value']       = $this->input->post('value_' . $aBlockData['type']);
 
-                if ($this->cms_block_model->create($blockData)) {
+                if ($this->cms_block_model->create($aBlockData)) {
 
                     $this->session->set_flashdata('success', 'Block created successfully.');
                     redirect('admin/cms/blocks');

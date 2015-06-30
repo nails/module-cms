@@ -171,12 +171,12 @@ class Slider extends \AdminController
             if ($this->form_validation->run()) {
 
                 //  Prepare the create data
-                $sliderData                = array();
-                $sliderData['label']       = $this->input->post('label');
-                $sliderData['description'] = strip_tags($this->input->post('description'));
-                $sliderData['slides']      = $slides;
+                $aSliderData                = array();
+                $aSliderData['label']       = $this->input->post('label');
+                $aSliderData['description'] = strip_tags($this->input->post('description'));
+                $aSliderData['slides']      = $slides;
 
-                if ($this->cms_slider_model->create($sliderData)) {
+                if ($this->cms_slider_model->create($aSliderData)) {
 
                     $status  = 'success';
                     $message = 'Slider created successfully.';
@@ -290,12 +290,12 @@ class Slider extends \AdminController
             if ($this->form_validation->run()) {
 
                 //  Prepare the create data
-                $sliderData                = array();
-                $sliderData['label']       = $this->input->post('label');
-                $sliderData['description'] = strip_tags($this->input->post('description'));
-                $sliderData['slides']      = $slides;
+                $aSliderData                = array();
+                $aSliderData['label']       = $this->input->post('label');
+                $aSliderData['description'] = strip_tags($this->input->post('description'));
+                $aSliderData['slides']      = $slides;
 
-                if ($this->cms_slider_model->update($slider->id, $sliderData)) {
+                if ($this->cms_slider_model->update($slider->id, $aSliderData)) {
 
                     $status  = 'success';
                     $message = 'Slider updated successfully.';
