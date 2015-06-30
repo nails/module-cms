@@ -132,7 +132,6 @@ class NAILS_Cms_slider_model extends NAILS_Model
 
         $obj->slider_id = (int) $obj->slider_id;
         $obj->object_id = $obj->object_id ? (int) $obj->object_id : null;
-        $obj->page_id   = $obj->page_id ? (int) $obj->page_id : null;
 
         unset($obj->slider_id);
     }

@@ -152,31 +152,31 @@ class Menus extends \AdminController
             if ($this->form_validation->run()) {
 
                 //  Prepare the create data
-                $itemData                = array();
-                $itemData['label']       = $this->input->post('label');
-                $itemData['description'] = strip_tags($this->input->post('description'));
-                $itemData['items']       = array();
+                $aItemData                = array();
+                $aItemData['label']       = $this->input->post('label');
+                $aItemData['description'] = strip_tags($this->input->post('description'));
+                $aItemData['items']       = array();
 
                 //  Prepare the menu items
-                $menuItems = $this->input->post('menuItem');
-                $numItems  = isset($menuItems['id']) ? count($menuItems['id']) : 0;
+                $aMenuItems = $this->input->post('menuItem');
+                $iNumItems  = isset($aMenuItems['id']) ? count($aMenuItems['id']) : 0;
 
-                for ($i=0; $i < $numItems; $i++) {
+                for ($i=0; $i < $iNumItems; $i++) {
 
-                    $itemData['items'][$i]              = array();
-                    $itemData['items'][$i]['id']        = isset($menuItems['id'][$i]) ? $menuItems['id'][$i] : null;
-                    $itemData['items'][$i]['parent_id'] = isset($menuItems['parent_id'][$i]) ? $menuItems['parent_id'][$i] : null;
-                    $itemData['items'][$i]['label']     = isset($menuItems['label'][$i]) ? $menuItems['label'][$i] : null;
-                    $itemData['items'][$i]['url']       = isset($menuItems['url'][$i]) ? $menuItems['url'][$i] : null;
-                    $itemData['items'][$i]['page_id']   = isset($menuItems['page_id'][$i]) ? $menuItems['page_id'][$i] : null;
+                    $aItemData['items'][$i]              = array();
+                    $aItemData['items'][$i]['id']        = isset($aMenuItems['id'][$i]) ? $aMenuItems['id'][$i] : null;
+                    $aItemData['items'][$i]['parent_id'] = isset($aMenuItems['parent_id'][$i]) ? $aMenuItems['parent_id'][$i] : null;
+                    $aItemData['items'][$i]['label']     = isset($aMenuItems['label'][$i]) ? $aMenuItems['label'][$i] : null;
+                    $aItemData['items'][$i]['url']       = isset($aMenuItems['url'][$i]) ? $aMenuItems['url'][$i] : null;
+                    $aItemData['items'][$i]['page_id']   = isset($aMenuItems['page_id'][$i]) ? $aMenuItems['page_id'][$i] : null;
                 }
 
-                if ($this->cms_menu_model->create($itemData)) {
+                if ($this->cms_menu_model->create($aItemData)) {
 
-                    $status  = 'success';
-                    $message = 'Menu created successfully.';
+                    $sStatus  = 'success';
+                    $sMessage = 'Menu created successfully.';
 
-                    $this->session->set_flashdata($status, $message);
+                    $this->session->set_flashdata($sStatus, $sMessage);
                     redirect('admin/cms/menus');
 
                 } else {
@@ -192,7 +192,7 @@ class Menus extends \AdminController
 
         } else {
 
-            $items = array();
+            $aItems = array();
         }
 
         // --------------------------------------------------------------------------
@@ -204,12 +204,23 @@ class Menus extends \AdminController
         //  Prepare the menu items
         if ($this->input->post()) {
 
-            $menuItems = (array) json_decode(json_encode($this->input->post('menuItem')));
-            $menuItems = array_values($menuItems);
+            $aMenuItems     = array();
+            $aPostMenuItems = $this->input->post('menuItem');
+            $iNumItems       = !empty($aPostMenuItems['id']) ? count($aPostMenuItems['id']) : 0;
+
+            for ($i=0; $i < $iNumItems; $i++) {
+
+                $aMenuItems[$i]              = array();
+                $aMenuItems[$i]['id']        = isset($aPostMenuItems['id'][$i]) ? $aPostMenuItems['id'][$i] : null;
+                $aMenuItems[$i]['parent_id'] = isset($aPostMenuItems['parent_id'][$i]) ? $aPostMenuItems['parent_id'][$i] : null;
+                $aMenuItems[$i]['label']     = isset($aPostMenuItems['label'][$i]) ? $aPostMenuItems['label'][$i] : null;
+                $aMenuItems[$i]['url']       = isset($aPostMenuItems['url'][$i]) ? $aPostMenuItems['url'][$i] : null;
+                $aMenuItems[$i]['page_id']   = isset($aPostMenuItems['page_id'][$i]) ? $aPostMenuItems['page_id'][$i] : null;
+            }
 
         } else {
 
-            $menuItems = $items;
+            $aMenuItems = $aItems;
         }
 
         // --------------------------------------------------------------------------
@@ -225,7 +236,7 @@ class Menus extends \AdminController
         $this->asset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
         $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
         $this->asset->load('nails.admin.cms.menus.createEdit.min.js', 'NAILS');
-        $this->asset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($menuItems) . ');', 'JS');
+        $this->asset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
 
         // --------------------------------------------------------------------------
 
@@ -269,32 +280,32 @@ class Menus extends \AdminController
             if ($this->form_validation->run()) {
 
                 //  Prepare the create data
-                $itemData                = array();
-                $itemData['label']       = $this->input->post('label');
-                $itemData['description'] = strip_tags($this->input->post('description'));
-                $itemData['items']       = array();
+                $aItemData                = array();
+                $aItemData['label']       = $this->input->post('label');
+                $aItemData['description'] = strip_tags($this->input->post('description'));
+                $aItemData['items']       = array();
 
                 //  Prepare the menu items
-                $menuItems = $this->input->post('menuItem');
-                $numItems  = isset($menuItems['id']) ? count($menuItems['id']) : 0;
+                $aMenuItems = $this->input->post('menuItem');
+                $iNumItems  = isset($aMenuItems['id']) ? count($aMenuItems['id']) : 0;
 
-                for ($i=0; $i < $numItems; $i++) {
+                for ($i=0; $i < $iNumItems; $i++) {
 
-                    $itemData['items'][$i]              = array();
-                    $itemData['items'][$i]['id']        = isset($menuItems['id'][$i]) ? $menuItems['id'][$i] : null;
-                    $itemData['items'][$i]['parent_id'] = isset($menuItems['parent_id'][$i]) ? $menuItems['parent_id'][$i] : null;
-                    $itemData['items'][$i]['label']     = isset($menuItems['label'][$i]) ? $menuItems['label'][$i] : null;
-                    $itemData['items'][$i]['url']       = isset($menuItems['url'][$i]) ? $menuItems['url'][$i] : null;
-                    $itemData['items'][$i]['page_id']   = isset($menuItems['page_id'][$i]) ? $menuItems['page_id'][$i] : null;
+                    $aItemData['items'][$i]              = array();
+                    $aItemData['items'][$i]['id']        = isset($aMenuItems['id'][$i]) ? $aMenuItems['id'][$i] : null;
+                    $aItemData['items'][$i]['parent_id'] = isset($aMenuItems['parent_id'][$i]) ? $aMenuItems['parent_id'][$i] : null;
+                    $aItemData['items'][$i]['label']     = isset($aMenuItems['label'][$i]) ? $aMenuItems['label'][$i] : null;
+                    $aItemData['items'][$i]['url']       = isset($aMenuItems['url'][$i]) ? $aMenuItems['url'][$i] : null;
+                    $aItemData['items'][$i]['page_id']   = isset($aMenuItems['page_id'][$i]) ? $aMenuItems['page_id'][$i] : null;
                 }
 
 
-                if ($this->cms_menu_model->update($menu->id, $itemData)) {
+                if ($this->cms_menu_model->update($menu->id, $aItemData)) {
 
-                    $status  = 'success';
-                    $message = 'Menu updated successfully.';
+                    $sStatus  = 'success';
+                    $sMessage = 'Menu updated successfully.';
 
-                    $this->session->set_flashdata($status, $message);
+                    $this->session->set_flashdata($sStatus, $sMessage);
                     redirect('admin/cms/menus');
 
                 } else {
@@ -310,7 +321,7 @@ class Menus extends \AdminController
 
         } else {
 
-            $items = $menu->items;
+            $aItems = $menu->items;
         }
 
         // --------------------------------------------------------------------------
@@ -319,15 +330,25 @@ class Menus extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        //  Prepare the menu items
         if ($this->input->post()) {
 
-            $menuItems = (array) json_decode(json_encode($this->input->post('menuItem')));
-            $menuItems = array_values($menuItems);
+            $aMenuItems     = array();
+            $aPostMenuItems = $this->input->post('menuItem');
+            $iNumItems       = !empty($aPostMenuItems['id']) ? count($aPostMenuItems['id']) : 0;
+
+            for ($i=0; $i < $iNumItems; $i++) {
+
+                $aMenuItems[$i]              = array();
+                $aMenuItems[$i]['id']        = isset($aPostMenuItems['id'][$i]) ? $aPostMenuItems['id'][$i] : null;
+                $aMenuItems[$i]['parent_id'] = isset($aPostMenuItems['parent_id'][$i]) ? $aPostMenuItems['parent_id'][$i] : null;
+                $aMenuItems[$i]['label']     = isset($aPostMenuItems['label'][$i]) ? $aPostMenuItems['label'][$i] : null;
+                $aMenuItems[$i]['url']       = isset($aPostMenuItems['url'][$i]) ? $aPostMenuItems['url'][$i] : null;
+                $aMenuItems[$i]['page_id']   = isset($aPostMenuItems['page_id'][$i]) ? $aPostMenuItems['page_id'][$i] : null;
+            }
 
         } else {
 
-            $menuItems = $items;
+            $aMenuItems = $aItems;
         }
 
         // --------------------------------------------------------------------------
@@ -343,7 +364,7 @@ class Menus extends \AdminController
         $this->asset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
         $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
         $this->asset->load('nails.admin.cms.menus.createEdit.min.js', 'NAILS');
-        $this->asset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($menuItems) . ');', 'JS');
+        $this->asset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
 
         // --------------------------------------------------------------------------
 
@@ -377,17 +398,17 @@ class Menus extends \AdminController
 
         if ($this->cms_menu_model->delete($menu->id)) {
 
-            $status = 'success';
+            $sStatus = 'success';
             $msg    = 'Menu was deleted successfully.';
 
         } else {
 
-            $status = 'error';
+            $sStatus = 'error';
             $msg    = 'Failed to delete menu. ';
             $msg   .= $this->cms_menu_model->last_error();
         }
 
-        $this->session->set_flashdata($status, $msg);
+        $this->session->set_flashdata($sStatus, $msg);
         redirect('admin/cms/menus');
     }
 }
