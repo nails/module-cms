@@ -1,12 +1,6 @@
 {
     "name": "nailsapp/module-cms",
-    "keywords":
-    [
-        "Nails",
-        "Shed Collective",
-        "CodeIgniter",
-        "CMS Module"
-    ],
+    "keywords": ["Nails", "Shed Collective", "CodeIgniter", "CMS Module"],
     "homepage": "http://nailsapp.co.uk/modules/cms",
     "description": "This is the \"CMS\" module for Nails.",
     "license": "MIT",
