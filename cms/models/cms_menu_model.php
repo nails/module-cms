@@ -403,8 +403,8 @@ class NAILS_Cms_menu_model extends NAILS_Model
 
                     } else {
 
-                        $idsUpdated[]         = $result;
-                        $newIds[$items['id']] = $result;
+                        $idsUpdated[]        = $result;
+                        $newIds[$item['id']] = $result;
                     }
                 }
 
