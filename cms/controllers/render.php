@@ -104,6 +104,10 @@ class NAILS_Render extends NAILS_CMS_Controller
         $this->data['page']->seo->keywords    = $data->seo_keywords;
         $this->data['page']->is_preview       = $this->isPreview;
 
+        //  Set some meta tags for the header
+        $this->meta->add('description', $data->seo_description);
+        $this->meta->add('keywords', $data->seo_keywords);
+
         //  Prepare data
         $render                   = new stdClass();
         $render->widgets          = new stdClass();
@@ -133,15 +137,14 @@ class NAILS_Render extends NAILS_CMS_Controller
          * a system alert (which the templates *should* handle).
          */
 
-        if (
-            !$this->data['message']
-            && !$this->isPreview
-            && $page->has_unpublished_changes
-            && $this->user_model->isAdmin()
-            && userHasPermission('admin:cms:pages:edit')
-        ) {
+        $hasDataAndNotPreview = !$this->data['message'] && !$this->isPreview;
+        $hasUnublishedChanges = $page->has_unpublished_changes;
+        $userHasPermission    = userHasPermission('admin:cms:pages:edit');
 
-            $this->data['message'] = lang('cms_notice_unpublished_changes',
+        if ($hasDataAndNotPreview && $hasUnublishedChanges && $userHasPermission) {
+
+            $this->data['message'] = lang(
+                'cms_notice_unpublished_changes',
                 array(
                     site_url('admin/cms/pages/edit/' . $page->id)
                 )
@@ -152,7 +155,7 @@ class NAILS_Render extends NAILS_CMS_Controller
 
         /**
          * Add the page data as a reference to the additionalFields, so widgets can
-         * have some contect about the page they're being rendered on.
+         * have some context about the page they're being rendered on.
          */
 
         $render->additionalFields->cmspage =& $data;
