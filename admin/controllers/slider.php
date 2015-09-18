@@ -209,8 +209,8 @@ class Slider extends \AdminController
         //  Prep the slides for the view
         foreach ($slides as $slide) {
 
-            $slide->imgSourceUrl = !empty($slide->object_id) ? cdn_serve($slide->object_id) : null;
-            $slide->imgThumbUrl = !empty($slide->object_id) ? cdn_scale($slide->object_id, 130, 130) : null;
+            $slide->imgSourceUrl = !empty($slide->object_id) ? cdnServe($slide->object_id) : null;
+            $slide->imgThumbUrl = !empty($slide->object_id) ? cdnScale($slide->object_id, 130, 130) : null;
         }
 
         // --------------------------------------------------------------------------
@@ -328,8 +328,8 @@ class Slider extends \AdminController
         //  Prep the slides for the view
         foreach ($slides as $slide) {
 
-            $slide->imgSourceUrl = !empty($slide->object_id) ? cdn_serve($slide->object_id) : null;
-            $slide->imgThumbUrl = !empty($slide->object_id) ? cdn_scale($slide->object_id, 130, 130) : null;
+            $slide->imgSourceUrl = !empty($slide->object_id) ? cdnServe($slide->object_id) : null;
+            $slide->imgThumbUrl = !empty($slide->object_id) ? cdnScale($slide->object_id, 130, 130) : null;
         }
 
         // --------------------------------------------------------------------------

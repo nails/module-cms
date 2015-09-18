@@ -249,7 +249,7 @@ class Nails_CMS_Template
                             case 'image':
 
                                 get_instance()->load->helper('cdn_helper');
-                                $block->value = cdn_serve($block->value);
+                                $block->value = cdnServe($block->value);
                                 break;
                         }
 

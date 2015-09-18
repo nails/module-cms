@@ -26,15 +26,15 @@ if ($imageId) {
     //  Determine image URL
     if ($scaling == 'CROP' && $width && $height) {
 
-        $imgUrl = cdn_thumb($imageId, $width, $height);
+        $imgUrl = cdnCrop($imageId, $width, $height);
 
     } elseif ($scaling == 'SCALE' && $width && $height) {
 
-        $imgUrl = cdn_scale($imageId, $width, $height);
+        $imgUrl = cdnScale($imageId, $width, $height);
 
     } else {
 
-        $imgUrl = cdn_serve($imageId);
+        $imgUrl = cdnServe($imageId);
     }
 
     // --------------------------------------------------------------------------
@@ -47,7 +47,7 @@ if ($imageId) {
 
     } elseif ($linking == 'FULLSIZE') {
 
-        $linkUrl    = cdn_serve($imageId);
+        $linkUrl    = cdnServe($imageId);
         $linkTarget = $target ? 'target="' . $target . '"' : '' ;
 
     } else {

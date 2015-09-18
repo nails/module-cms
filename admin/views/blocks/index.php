@@ -59,12 +59,12 @@
 
                                         case 'image':
 
-                                            echo img(cdn_thumb($block->value, 50, 50));
+                                            echo img(cdnCrop($block->value, 50, 50));
                                             break;
 
                                         case 'file':
 
-                                            echo anchor(cdn_serve($block->value, true), 'Download', 'class="awesome small"');
+                                            echo anchor(cdnServe($block->value, true), 'Download', 'class="awesome small"');
                                             break;
 
                                         default:
