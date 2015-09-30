@@ -174,12 +174,12 @@
                 echo '<li>';
 
                     //  This template selected?
-                    $selected = $defaultTemplate == $template->slug ? true : false;
-
+                    $selected = $defaultTemplate == $template->getSlug() ? true : false;
+    
                     //  Define attributes
                     $attr                       = array();
                     $attr['class']              = $selected ? 'template selected' : 'template';
-                    $attr['data-template-slug'] = $template->slug;
+                    $attr['data-template-slug'] = $template->getSlug();
 
                     //  Glue together
                     $attrStr = '';
@@ -188,22 +188,33 @@
                         $attrStr .= $key . '="' . $value . '" ';
                     }
 
-                    echo '<label ' . trim($attrStr) . ' rel="tipsy-top" title="' . $template->description . '">';
+                    echo '<label ' . trim($attrStr) . ' rel="tipsy-top" title="' . $template->getDescription() . '">';
 
-                        echo form_radio('template', $template->slug, set_radio('template', $template->slug, $selected));
+                        echo form_radio(
+                            'template',
+                            $template->getSlug(),
+                            set_radio(
+                                'template',
+                                $template->getSlug(),
+                                $selected
+                            )
+                        );
 
                         echo '<span class="icon">';
-                            if (!empty($template->img->icon)) {
-                                echo img(array(
-                                    'src' => $template->img->icon,
-                                    'class' => 'icon'
-                                ));
+                            if (!empty($template->getIcon())) {
+
+                                echo img(
+                                    array(
+                                        'src'   => $template->getIcon(),
+                                        'class' => 'icon'
+                                    )
+                                );
                             }
                         echo '</span>';
                         echo '<span class="newrow"></span>';
                         echo '<span class="name">';
                             echo '<span class="checkmark fa fa-check-circle"></span>';
-                            echo '<span>' . $template->label . '</span>';
+                            echo '<span>' . $template->getLabel() . '</span>';
                         echo '</span>';
                     echo '</label>';
                 echo '</li>';
@@ -220,21 +231,21 @@
             foreach ($templates as $template) {
 
                 //  Shortcut
-                if (isset($cmspage) && property_exists($cmspage->draft->template_data->data->additional_fields, $template->slug)) {
+                if (isset($cmspage) && property_exists($cmspage->draft->template_data->data->additional_fields, $template->getSlug())) {
 
-                    $additionalFields = $cmspage->draft->template_data->data->additional_fields->{$template->slug};
+                    $additionalFields = $cmspage->draft->template_data->data->additional_fields->{$template->getSlug()};
 
                 } else {
 
                     $additionalFields = null;
                 }
 
-                $visible = $defaultTemplate == $template->slug ? 'block' : 'none';
-                echo '<div id="additional-fields-' . $template->slug . '" class="additional-fields" style="display:' . $visible . '">';
+                $visible = $defaultTemplate == $template->getSlug() ? 'block' : 'none';
+                echo '<div id="additional-fields-' . $template->getSlug() . '" class="additional-fields" style="display:' . $visible . '">';
 
                 //  Common, manual config item
                 $field                 = array();
-                $field['key']          = 'additional_field[' . $template->slug . '][manual_config]';
+                $field['key']          = 'additional_field[' . $template->getSlug() . '][manual_config]';
                 $field['label']        = 'Manual Config';
                 $field['sub_label']    = 'Specify any manual config items here. This field should be ';
                 $field['sub_label']   .= anchor(
@@ -248,31 +259,31 @@
                 echo form_field($field);
 
                 //  Any other fields, if specified
-                if ($template->additional_fields) {
+                if ($template->getAdditionalFields()) {
 
-                    foreach ($template->additional_fields as $field) {
+                    foreach ($template->getAdditionalFields() as $field) {
 
                         //  Set the default key
-                        if (!empty($additionalFields) && property_exists($additionalFields, $field['key'])) {
+                        if (!empty($additionalFields) && property_exists($additionalFields, $field->key)) {
 
-                            $field['default'] = $additionalFields->{$field['key']};
+                            $field->default = $additionalFields->{$field->key};
 
                         }
 
                         //  Override the field key
-                        $field['key'] = 'additional_field[' . $template->slug . '][' . $field['key'] . ']';
+                        $field->key = 'additional_field[' . $template->getSlug() . '][' . $field->key . ']';
 
-                        switch ($field['type']) {
+                        switch ($field->type) {
 
                             case 'dropdown' :
 
-                                $options = !empty($field['options']) ? $field['options'] : array();
-                                echo form_field_dropdown($field, $options);
+                                $options = !empty($field->options) ? $field->options : array();
+                                echo form_field_dropdown($field->toArray(), $options);
                                 break;
 
                             default :
 
-                                echo form_field($field);
+                                echo form_field($field->toArray());
                                 break;
                         }
                     }
@@ -294,9 +305,9 @@
             foreach ($templates as $template) {
 
                 //  This template selected?
-                $selected = $defaultTemplate == $template->slug ? true : false;
+                $selected = $defaultTemplate == $template->getSlug() ? true : false;
 
-                foreach ($template->widget_areas as $slug => $area) {
+                foreach ($template->getWidgetAreas() as $slug => $area) {
 
                     //  Define attributes
                     $data              = array();
@@ -310,9 +321,9 @@
 
                     //  Define attributes
                     $attr                  = array();
-                    $attr['class']         = 'awesome launch-editor template-' . $template->slug;
+                    $attr['class']         = 'awesome launch-editor template-' . $template->getSlug();
                     $attr['style']         = $selected ? 'display:inline-block;' : 'display:none;';
-                    $attr['data-template'] = $template->slug;
+                    $attr['data-template'] = $template->getSlug();
                     $attr['data-area']     = $slug;
 
                     //  Glue together

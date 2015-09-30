@@ -10,7 +10,9 @@
  * @link
  */
 
-class NAILS_CMS_Widget_html extends NAILS_CMS_Widget
+namespace Nails\Cms\Widget;
+
+class Html extends WidgetBase
 {
     /**
      * Defines the basic widget details object.

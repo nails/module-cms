@@ -10,141 +10,204 @@
  * @link
  */
 
-class Nails_CMS_Template
+namespace Nails\Cms\Template;
+
+class TemplateBase
 {
-    protected $details;
-    protected $load;
-    protected $data;
+    protected static $isDisabled;
+
+    protected $label;
+    protected $description;
+    protected $widget_areas;
+    protected $additional_fields;
+    protected $manual_config;
+    protected $icon;
+    protected $slug;
+    protected $assets_editor;
+    protected $assets_render;
+    protected $path;
 
     // --------------------------------------------------------------------------
 
     /**
-     * Defines the basic template details object. Templates should extend this
-     * object and customise to it's own needs.
-     * @return stdClass
+     * Returns whether the template is disabled
+     * @return bool
      */
-    public static function details()
+    public static function isDisabled()
     {
-        $d      = new stdClass();
-        $d->iam = get_called_class();
+        return !empty(static::$isDisabled);
+    }
 
-        $reflect = new ReflectionClass($d->iam);
+    // --------------------------------------------------------------------------
 
-        //  The human friendly name of this template
-        $d->label = 'Widget';
+    /**
+     * Constructs the template
+     */
+    public function __construct()
+    {
+        $this->label             = 'Widget';
+        $this->description       = '';
+        $this->widget_areas      = array();
+        $this->additional_fields = array();
+        $this->manual_config     = null;
+        $this->icon              = null;
+        $this->slug              = '';
+        $this->assets_editor     = array();
+        $this->assets_render     = array();
+        $this->path              = '';
 
-        //  A brief description of the template, optional
-        $d->description = '';
+        // --------------------------------------------------------------------------
 
-        /**
-         * Any additional fields to request
-         * @TODO: use the form builder library when it exists
-         */
+        //  Autodetect some values
+        $oReflect = new \ReflectionClass(get_called_class());
 
-        $d->additional_fields = array();
+        //  Path
+        $this->path = dirname($oReflect->getFileName()) . '/';
 
-        //  Empty manual_config object
-        $d->manual_config = '';
+        //  Icon
+        $aExtensions = array('png','jpg','jpeg','gif');
 
-        //  An icon/preview to render
-        $d->img       = new stdClass();
-        $d->img->icon = '';
+        foreach ($aExtensions as $sExtension) {
 
-        //  Try to detect the icon
-        $extensions = array('png','jpg','jpeg','gif');
+            $sIconPath = $this->path  . 'icon.' . $sExtension;
 
-        $path = $reflect->getFileName();
-        $path = dirname($path);
+            if (is_file($sIconPath)) {
 
-        foreach ($extensions as $ext) {
-
-            $icon = $path . '/icon.' . $ext;
-
-            if (is_file($icon)) {
-
-                $url = '';
-                if (preg_match('#^' . preg_quote(NAILS_PATH, '#') . '#', $icon)) {
+                if (preg_match('#^' . preg_quote(NAILS_PATH, '#') . '#', $sIconPath)) {
 
                     //  Nails asset
-                    $d->img->icon = preg_replace('#^' . preg_quote(NAILS_PATH, '#') . '#', NAILS_URL, $icon);
+                    $this->icon = preg_replace('#^' . preg_quote(NAILS_PATH, '#') . '#', NAILS_URL, $sIconPath);
 
-                } elseif (preg_match('#^' . preg_quote(FCPATH . APPPATH, '#') . '#', $icon)) {
+                } elseif (preg_match('#^' . preg_quote(FCPATH . APPPATH, '#') . '#', $sIconPath)) {
 
                     if (isPageSecure()) {
 
-                        $pattern = '#^' . preg_quote(FCPATH . APPPATH, '#') . '#';
-                        $d->img->icon = preg_replace($pattern, SECURE_BASE_URL . APPPATH . '', $icon);
+                        $sPattern   = '#^' . preg_quote(FCPATH . APPPATH, '#') . '#';
+                        $this->icon = preg_replace($sPattern, SECURE_BASE_URL . APPPATH . '', $sIconPath);
 
                     } else {
 
-                        $pattern = '#^' . preg_quote(FCPATH . APPPATH, '#') . '#';
-                        $d->img->icon = preg_replace($pattern, BASE_URL . APPPATH . '', $icon);
+                        $sPattern   = '#^' . preg_quote(FCPATH . APPPATH, '#') . '#';
+                        $this->icon = preg_replace($sPattern, BASE_URL . APPPATH . '', $sIconPath);
                     }
                 }
                 break;
             }
         }
 
-        //  An array of the widget-able areas
-        $d->widget_areas = array();
-
-        // --------------------------------------------------------------------------
-
-        //  Automatically calculated properties
-        $d->slug = '';
-
-        // --------------------------------------------------------------------------
-
-        //  Work out slug - this should uniquely identify a type of template
-        $d->slug = $reflect->getFileName();
-        $d->slug = pathinfo($d->slug);
-        $d->slug = explode('/', $d->slug['dirname']);
-        $d->slug = array_pop($d->slug);
-
-        // --------------------------------------------------------------------------
-
-        //  Define any assets need to be loaded by the template
-        $d->assets_editor = array();
-        $d->assets_render = array();
-
-        // --------------------------------------------------------------------------
-
-        //  Path
-        $d->path = dirname($reflect->getFileName()) . '/';
-
-        // --------------------------------------------------------------------------
-
-        //  Return the D
-        return $d;
+        //  Slug - this should uniquely identify a type of template
+        $this->slug = pathinfo($this->path);
+        $this->slug = $this->slug['basename'];
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * Defines the base widget area object. Each editable area needs to have certain
-     * properties defined. The template clone this object for each area and set the
-     * values appropriately.
-     * @return stdClass
+     * Returns the template's label
+     * @return string
      */
-    protected static function editableAreaTemplate()
+    public function getLabel()
     {
-        $d              = new stdClass();
-        $d->title       = '';
-        $d->description = '';
-        $d->view        = '';
-
-        return $d;
+        return $this->label;
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * Constructs the template and sets the templates details as a class variable
+     * Returns the template's description
+     * @return string
      */
-    public function __construct()
+    public function getDescription()
     {
-        $this->details = $this::details();
-        $this->load =& get_instance()->load;
+        return $this->description;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the template's widget areas
+     * @return string
+     */
+    public function getWidgetAreas()
+    {
+        return $this->widget_areas;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the template's additional fields
+     * @return string
+     */
+    public function getAdditionalFields()
+    {
+        return $this->additional_fields;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the template's manual config
+     * @return string
+     */
+    public function getManualConfig()
+    {
+        return $this->manual_config;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the template's icon
+     * @return string
+     */
+    public function getIcon()
+    {
+        return $this->icon;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the template's slug
+     * @return string
+     */
+    public function getSlug()
+    {
+        return $this->slug;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the template's path
+     * @return string
+     */
+    public function getPath()
+    {
+        return $this->path;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the template's assets
+     * @return array
+     */
+    public function getAssets($sType)
+    {
+        if ($sType == 'EDITOR') {
+
+            return $this->assets_render;
+
+        } elseif ($sType == 'RENDER') {
+
+            return $this->assets_render;
+
+        } else {
+
+            return array();
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -157,6 +220,7 @@ class Nails_CMS_Template
      */
     public function render($tplWidgets = array(), $tplAdditionalFields = array())
     {
+        die('todo');
         /**
          * If the template wishes to execute any custom pre/post code then this method
          * should be extended and parent::render($data) called at the appropriate point.
@@ -190,7 +254,7 @@ class Nails_CMS_Template
                             $widgetAreas[$key] .= $WIDGET->render($data, $tplAdditionalFields);
                         }
 
-                    } catch (Exception $e) {
+                    } catch (\Exception $e) {
 
                         log_message('error', 'Failed to render widget');
                     }

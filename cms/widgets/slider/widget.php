@@ -10,7 +10,9 @@
  * @link
  */
 
-class NAILS_CMS_Widget_slider extends NAILS_CMS_Widget
+namespace Nails\Cms\Widget;
+
+class Slider extends WidgetBase
 {
     /**
      * Defines the basic widget details object.

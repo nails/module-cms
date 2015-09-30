@@ -10,31 +10,27 @@
  * @link
  */
 
-class Nails_CMS_Template_fullwidth extends Nails_CMS_Template
+namespace Nails\Cms\Template;
+
+class Fullwidth extends TemplateBase
 {
     /**
-     * Defines the basic template details object.
-     * @return stdClass
+     * Construct and define the template
      */
-    public static function details()
+    public function __construct()
     {
-        //  Base object
-        $d = parent::details();
+        parent::__construct();
 
-        //  Basic details; describe the template for the user
-        $d->label       = 'Full Width';
-        $d->description = 'A full width template';
+        $this->label       = 'Full Width';
+        $this->description = 'A full width template';
 
         /**
          * Widget areas; give each a unique index, the index will be passed as the
          * variable to the view
          */
 
-        $d->widget_areas['mainbody']        = parent::editableAreaTemplate();
-        $d->widget_areas['mainbody']->title = 'Main Body';
+        $this->widget_areas['mainbody']        = \Nails\Factory::factory('TemplateArea', 'nailsapp/module-cms');
+        $this->widget_areas['mainbody']->title = 'Main Body';
 
-        // --------------------------------------------------------------------------
-
-        return $d;
     }
 }

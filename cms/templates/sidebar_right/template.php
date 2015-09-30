@@ -10,38 +10,38 @@
  * @link
  */
 
-class Nails_CMS_Template_sidebar_right extends Nails_CMS_Template
+namespace Nails\Cms\Template;
+
+class Sidebar_right extends TemplateBase
 {
     /**
-     * Defines the basic template details object.
-     * @return stdClass
+     * Construct and define the template
      */
-    static function details()
+    public function __construct()
     {
-        //  Base object
-        $d = parent::details();
+        parent::__construct();
 
-        //  Basic details; describe the template for the user
-        $d->label           = 'Sidebar Right';
-        $d->description = 'Main body with a sidebar to the right.';
+        $this->label       = 'Sidebar Right';
+        $this->description = 'Main body with a sidebar to the right.';
 
         /**
          * Widget areas; give each a unique index, the index will be passed as the
          * variable to the view
          */
 
-        $d->widget_areas['mainbody']        = parent::editableAreaTemplate();
-        $d->widget_areas['mainbody']->title = 'Main Body';
-        $d->widget_areas['sidebar']         = parent::editableAreaTemplate();
-        $d->widget_areas['sidebar']->title  = 'Sidebar';
+        $this->widget_areas['mainbody']        = \Nails\Factory::factory('TemplateArea', 'nailsapp/module-cms');
+        $this->widget_areas['mainbody']->title = 'Main Body';
 
-        $d->additional_fields[0]            = array();
-        $d->additional_fields[0]['type']    = 'dropdown';
-        $d->additional_fields[0]['key']     = 'sidebarWidth';
-        $d->additional_fields[0]['label']   = 'Sidebar Width';
-        $d->additional_fields[0]['class']   = 'select2';
-        $d->additional_fields[0]['default'] = '4';
-        $d->additional_fields[0]['options'] = array(
+        $this->widget_areas['sidebar']         = \Nails\Factory::factory('TemplateArea', 'nailsapp/module-cms');
+        $this->widget_areas['sidebar']->title  = 'Sidebar';
+
+        $this->additional_fields[0]          = \Nails\Factory::factory('TemplateOption', 'nailsapp/module-cms');
+        $this->additional_fields[0]->type    = 'dropdown';
+        $this->additional_fields[0]->key     = 'sidebarWidth';
+        $this->additional_fields[0]->label   = 'Sidebar Width';
+        $this->additional_fields[0]->class   = 'select2';
+        $this->additional_fields[0]->default = '4';
+        $this->additional_fields[0]->options = array(
 
             '1' => '1 Column',
             '2' => '2 Columns',
@@ -50,9 +50,5 @@ class Nails_CMS_Template_sidebar_right extends Nails_CMS_Template
             '5' => '5 Columns',
             '6' => '6 Columns',
         );
-
-        // --------------------------------------------------------------------------
-
-        return $d;
     }
 }
