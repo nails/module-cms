@@ -16,10 +16,13 @@ class TemplateArea
 {
     protected $title       = '';
     protected $description = '';
-    protected $view        = '';
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Get the template area's title
+     * @return string
+     */
     public function setTitle($sTitle)
     {
         $this->title = $sTitle;
@@ -27,6 +30,10 @@ class TemplateArea
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Get the template area's title
+     * @return string
+     */
     public function getTitle()
     {
         return $this->title;
@@ -34,6 +41,10 @@ class TemplateArea
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Get the template area's description
+     * @return string
+     */
     public function setDescription($sDescription)
     {
         $this->description = $sDescription;
@@ -41,6 +52,10 @@ class TemplateArea
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Get the template area's description
+     * @return string
+     */
     public function getDescription()
     {
         return $this->description;
@@ -48,26 +63,15 @@ class TemplateArea
 
     // --------------------------------------------------------------------------
 
-    public function setView    ($sView)
-    {
-        $this->view = $sView;
-    }
-
-    // --------------------------------------------------------------------------
-
-    public function getView()
-    {
-        return $this->view;
-    }
-
-    // --------------------------------------------------------------------------
-
+    /**
+     * Return the template area as an array
+     * @return array
+     */
     public function toArray()
     {
         return array(
             'title' => $this->title,
-            'description' => $this->description,
-            'view' => $this->view
+            'description' => $this->description
         );
     }
 }

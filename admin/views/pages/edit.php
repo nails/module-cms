@@ -249,7 +249,10 @@
                 $sTplSlug = $oTemplate->getSlug();
                 $aTplAdditionalFields = $oTemplate->getAdditionalFields();
                 $bIssetCmsPage = isset($cmspage);
-                $bPropertyExists = property_exists($cmspage->draft->template_data->data->additional_fields, $sTplSlug);
+                $bPropertyExists = $bIssetCmsPage && property_exists(
+                    $cmspage->draft->template_data->data->additional_fields,
+                    $sTplSlug
+                );
 
                 if ($bIssetCmsPage && $bPropertyExists) {
 
@@ -358,7 +361,7 @@
     <?php
 
     $bIssetCmsPage = isset($cmspage);
-    $bHashMatch    = $cmspage->published->hash !== $cmspage->draft->hash;
+    $bHashMatch    = $bIssetCmsPage && $cmspage->published->hash !== $cmspage->draft->hash;
 
     if ($bIssetCmsPage && $cmspage->is_published && $bHashMatch) {
 

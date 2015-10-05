@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This is the "Sidebar Left" CMS template definition
+ * This is the "Sidebar" CMS template definition
  *
  * @package     Nails
  * @subpackage  module-cms
@@ -49,6 +49,19 @@ class Sidebar extends TemplateBase
                 '4' => '4 Columns',
                 '5' => '5 Columns',
                 '6' => '6 Columns',
+            )
+        );
+
+        $this->additional_fields[1] = \Nails\Factory::factory('TemplateOption', 'nailsapp/module-cms');
+        $this->additional_fields[1]->setType('dropdown');
+        $this->additional_fields[1]->setKey('sidebarSide');
+        $this->additional_fields[1]->setLabel('Sidebar Side');
+        $this->additional_fields[1]->setClass('select2');
+        $this->additional_fields[1]->setDefault('LEFT');
+        $this->additional_fields[1]->setOptions(
+            array(
+                'LEFT' => 'Left Hand Side',
+                'RIGHT' => 'Right Hand Side'
             )
         );
     }

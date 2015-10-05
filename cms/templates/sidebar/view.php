@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This is the "Sidebar Left" CMS template view
+ * This is the "Sidebar" CMS template view
  *
  * @package     Nails
  * @subpackage  module-cms
@@ -10,22 +10,46 @@
  * @link
  */
 
-echo $this->load->view('structure/header', getControllerData());
+echo $oCi->load->view('structure/header', getControllerData());
 
-$sidebarWidth = isset($sidebarWidth) ? (int) $sidebarWidth : 4;
+$sidebarSide  = !empty($sidebarSide) ? $sidebarSide : 'LEFT';
+$sidebarWidth = !empty($sidebarWidth) ? (int) $sidebarWidth : 4;
 $contentWidth = 12 - $sidebarWidth;
 
     ?>
-    <div class="cms-template-sidebar cms-template-sidebar-left">
+    <div class="cms-template-sidebar cms-template-sidebar-<?=strtolower($sidebarSide)?>">
         <div class="row">
-            <div class="cms-sidebar col-md-<?=$sidebarWidth?>">
-                <?=$sidebar?>
-            </div>
+            <?php
+
+            if ($sidebarSide === 'LEFT') {
+
+                ?>
+                <div class="cms-sidebar col-md-<?=$sidebarWidth?>">
+                    <?=$sidebar?>
+                </div>
+                <?php
+
+            }
+
+            ?>
             <div class="cms-body col-md-<?=$contentWidth?>">
                 <?=$mainbody?>
             </div>
+            <?php
+
+            if ($sidebarSide === 'RIGHT') {
+
+                ?>
+                <div class="cms-sidebar col-md-<?=$sidebarWidth?>">
+                    <?=$sidebar?>
+                </div>
+                <?php
+
+            }
+
+            ?>
         </div>
     </div>
     <?php
 
-echo $this->load->view('structure/footer', getControllerData());
+echo $oCi->load->view('structure/footer', getControllerData());

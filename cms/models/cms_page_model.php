@@ -368,58 +368,38 @@ class NAILS_Cms_page_model extends NAILS_Model
 
     /**
      * Render a template with the provided widgets and additional data
-     * @param  string $template         The template to render
-     * @param  array  $widgets          The widgets to render
-     * @param  array  $additionalFields Any additional fields to pass to the template
-     * @return mixed                    String (the rendered template) on success, false on failure
+     * @param  string $sSlug             The template to render
+     * @param  array  $aWidgets          The widgets to render
+     * @param  array  $aAdditionalFields Any additional fields to pass to the template
+     * @return mixed                     String (the rendered template) on success, false on failure
      */
-    public function render($template, $widgets = array(), $additionalFields = array())
+    public function render($sSlug, $aWidgets = array(), $aAdditionalFields = array())
     {
-        $template = $this->getTemplate($template, 'RENDER');
+        $oTemplate = $this->getTemplate($sSlug, 'RENDER');
 
-        if (!$template) {
+        if (!$oTemplate) {
 
-            $this->_set_error('"' . $template .'" is not a valid template.');
+            $this->_set_error('"' . $sSlug .'" is not a valid template.');
             return false;
         }
 
         // --------------------------------------------------------------------------
 
         //  Look for manual config items
-        if (!empty($additionalFields->manual_config->assets_render)) {
+        if (!empty($aAdditionalFields->manual_config->assets_render)) {
 
-            if (!is_array($additionalFields->manual_config->assets_render)) {
+            if (!is_array($aAdditionalFields->manual_config->assets_render)) {
 
-                $additionalFields->manual_config->assets_render = (array) $additionalFields->manual_config->assets_render;
+                $aAdditionalFields->manual_config->assets_render = (array) $aAdditionalFields->manual_config->assets_render;
             }
 
-            $this->loadAssets($additionalFields->manual_config->assets_render);
+            $this->loadAssets($aAdditionalFields->manual_config->assets_render);
         }
 
         // --------------------------------------------------------------------------
 
         //  Attempt to instantiate and render the template
-        try {
-
-            require_once $template->path . 'template.php';
-
-            $TEMPLATE = new $template->iam();
-
-            try {
-
-                return $TEMPLATE->render((array) $widgets, (array) $additionalFields);
-
-            } catch (Exception $e) {
-
-                $this->_set_error('Could not render template "' . $template . '".');
-                return false;
-            }
-
-        } catch (Exception $e) {
-
-            $this->_set_error('Could not instantiate template "' . $template . '".');
-            return false;
-        }
+        return $oTemplate->render((array) $aWidgets, (array) $aAdditionalFields);
     }
 
     // --------------------------------------------------------------------------
@@ -1184,44 +1164,29 @@ class NAILS_Cms_page_model extends NAILS_Model
 
     /**
      * Get an individual widget
-     * @param  string  $slug       The widget's slug
-     * @param  boolean $loadAssets Whether or not to load the widget's assets
+     * @param  string  $sSlug       The widget's slug
+     * @param  boolean $sLoadAssets Whether or not to load the widget's assets
      * @return mixed               stdClass on success, false on failure
      */
-    public function getWidget($slug, $loadAssets = false)
+    public function getWidget($sSlug, $sLoadAssets = false)
     {
-        $widgets = $this->getAvailableWidgets();
+        $aWidgetGroups = $this->getAvailableWidgets();
 
-        foreach ($widgets as $widget_group) {
+        foreach ($aWidgetGroups as $oWidgetGroup) {
 
-            foreach ($widget_group->widgets as $widget) {
+            $aWidgets = $oWidgetGroup->getWidgets();
 
-                if ($slug == $widget->slug) {
+            foreach ($aWidgets as $oWidget) {
 
-                    if ($loadAssets) {
+                if ($sSlug == $oWidget->getSlug()) {
 
-                        switch ($loadAssets) {
+                    if ($sLoadAssets) {
 
-                            case 'EDITOR':
-
-                                $assets = $widget->assets_editor;
-                                break;
-
-                            case 'RENDER':
-
-                                $assets = $widget->assets_render;
-                                break;
-
-                            default:
-
-                                $assets = array();
-                                break;
-                        }
-
-                        $this->loadAssets($assets);
+                        $aAssets = $oWidget->getAssets($sLoadAssets);
+                        $this->loadAssets($aAssets);
                     }
 
-                    return $widget;
+                    return $oWidget;
                 }
             }
         }
@@ -1355,42 +1320,30 @@ class NAILS_Cms_page_model extends NAILS_Model
 
     /**
      * Get an individual template
-     * @param  string  $slug       The template's slug
-     * @param  boolean $loadAssets Whether or not to load the template's assets
+     * @param  string  $sSlug       The template's slug
+     * @param  boolean $sLoadAssets Whether or not to load the template's assets
      * @return mixed               stdClass on success, false on failure
      */
-    public function getTemplate($slug, $loadAssets = false)
+    public function getTemplate($sSlug, $sLoadAssets = false)
     {
-        $templates = $this->getAvailableTemplates();
+        $oTemplateGroups = $this->getAvailableTemplates();
 
-        foreach ($templates as $template) {
+        foreach ($oTemplateGroups as $oTemplateGroup) {
 
-            if ($slug == $template->slug) {
+            $aTemplates = $oTemplateGroup->getTemplates();
 
-                if ($loadAssets) {
+            foreach ($aTemplates as $oTemplate) {
 
-                    switch ($loadAssets) {
+                if ($sSlug == $oTemplate->getSlug()) {
 
-                        case 'EDITOR':
+                    if ($sLoadAssets) {
 
-                            $assets = $template->assets_editor;
-                            break;
-
-                        case 'RENDER':
-
-                            $assets = $template->assets_render;
-                            break;
-
-                        default:
-
-                            $assets = array();
-                            break;
+                        $aAssets = $oTemplate->getAssets($sLoadAssets);
+                        $this->loadAssets($aAssets);
                     }
 
-                    $this->loadAssets($assets);
+                    return $oTemplate;
                 }
-
-                return $template;
             }
         }
 

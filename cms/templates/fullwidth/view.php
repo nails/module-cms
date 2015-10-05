@@ -10,6 +10,6 @@
  * @link
  */
 
-echo $this->load->view('structure/header', getControllerData());
+echo $oCi->load->view('structure/header', getControllerData());
 echo $mainbody;
-echo $this->load->view('structure/footer', getControllerData());
+echo $oCi->load->view('structure/footer', getControllerData());

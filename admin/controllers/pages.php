@@ -190,7 +190,7 @@ class Pages extends \AdminController
 
         $aWidgetsJson = array();
         foreach ($this->data['widgets'] as $oWidgetGroup) {
-            $aWidgetsJson[] = substr($oWidgetGroup->getWidgetsAsJson(), 1, -1);
+            $aWidgetsJson[] = $oWidgetGroup->toJson();
         }
 
         $inlineJs  = 'CMS_PAGES = new NAILS_Admin_CMS_pages_Create_Edit(';
@@ -289,7 +289,7 @@ class Pages extends \AdminController
 
         $aWidgetsJson = array();
         foreach ($this->data['widgets'] as $oWidgetGroup) {
-            $aWidgetsJson[] = substr($oWidgetGroup->getWidgetsAsJson(), 1, -1);
+            $aWidgetsJson[] = $oWidgetGroup->toJson();
         }
 
         $inlineJs  = 'CMS_PAGES = new NAILS_Admin_CMS_pages_Create_Edit(';

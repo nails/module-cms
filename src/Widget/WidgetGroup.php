@@ -96,6 +96,23 @@ class WidgetGroup
 
     // --------------------------------------------------------------------------
 
+    public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
+    {
+        $oObj = new \stdClass();
+        $oObj->label = $this->getLabel();
+        $oObj->widgets = array();
+
+        $aWidgets = $this->getWidgets();
+
+        foreach ($aWidgets as $oWidget) {
+            $oObj->widgets[] = $oWidget->toArray($iJsonOptions, $iJsonDepth);
+        }
+
+        return json_encode($oObj, $iJsonOptions, $iJsonDepth);
+    }
+
+    // --------------------------------------------------------------------------
+
     public function getWidgetsAsJson($iJsonOptions = 0, $iJsonDepth = 512)
     {
         $aWidgetsJson = array();

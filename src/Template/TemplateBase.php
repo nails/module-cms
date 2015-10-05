@@ -242,69 +242,81 @@ class TemplateBase
      */
     public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
     {
-        $oObj = new \stdClass();
-        $oObj->label = $this->getLabel();
-        $oObj->description = $this->getDescription();
-        $oObj->description = $this->getDescription();
-        $oObj->widget_areas = $this->getWidgetAreas();
-        $oObj->additional_fields = $this->getAdditionalFields();
-        $oObj->manual_config = $this->getManualConfig();
-        $oObj->icon = $this->getIcon();
-        $oObj->slug = $this->getSlug();
-        $oObj->assets_editor = $this->getAssets('EDITOR');
-        $oObj->assets_render = $this->getAssets('RENDER');
-        $oObj->path = $this->getPath();
+        $oTemplate = new \stdClass();
+        $oTemplate->label = $this->getLabel();
+        $oTemplate->description = $this->getDescription();
+        $oTemplate->description = $this->getDescription();
+        $oTemplate->widget_areas = $this->getWidgetAreas();
+        $oTemplate->additional_fields = $this->getAdditionalFields();
+        $oTemplate->manual_config = $this->getManualConfig();
+        $oTemplate->icon = $this->getIcon();
+        $oTemplate->slug = $this->getSlug();
+        $oTemplate->assets_editor = $this->getAssets('EDITOR');
+        $oTemplate->assets_render = $this->getAssets('RENDER');
+        $oTemplate->path = $this->getPath();
 
-        return json_encode($oObj, $iJsonOptions, $iJsonDepth);
+        return json_encode($oTemplate, $iJsonOptions, $iJsonDepth);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Format the template as an array
+     * @return string
+     */
+    public function toArray()
+    {
+        $aTemplate = array();
+        $aTemplate['label'] = $this->getLabel();
+        $aTemplate['description'] = $this->getDescription();
+        $aTemplate['description'] = $this->getDescription();
+        $aTemplate['widget_areas'] = $this->getWidgetAreas();
+        $aTemplate['additional_fields'] = $this->getAdditionalFields();
+        $aTemplate['manual_config'] = $this->getManualConfig();
+        $aTemplate['icon'] = $this->getIcon();
+        $aTemplate['slug'] = $this->getSlug();
+        $aTemplate['assets_editor'] = $this->getAssets('EDITOR');
+        $aTemplate['assets_render'] = $this->getAssets('RENDER');
+        $aTemplate['path'] = $this->getPath();
+
+        return $aTemplate;
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Renders the template with the provided data.
-     * @param  array  $tplWidgets          The widgets to include in the template
-     * @param  array  $tplAdditionalFields Additional data created by the template
+     * @param  array  $aTplWidgets          The widgets to include in the template
+     * @param  array  $aTplAdditionalFields Additional data created by the template
      * @return string
      */
-    public function render($tplWidgets = array(), $tplAdditionalFields = array())
+    public function render($aTplWidgets = array(), $aTplAdditionalFields = array())
     {
-        die('todo');
         /**
          * If the template wishes to execute any custom pre/post code then this method
          * should be extended and parent::render($data) called at the appropriate point.
          * But that's obvious, isn't it...?
          */
 
-        get_instance()->load->model('cms/cms_page_model');
-
         // --------------------------------------------------------------------------
 
         //  Process each widget area and render the HTML
-        $widgetAreas = array();
-        foreach ($this->details->widget_areas as $key => $details) {
+        $aWidgetAreas   = $this->getWidgetAreas();
+        $aRenderedAreas = array();
+        foreach ($aWidgetAreas as $sAreaSlug => $oAreaData) {
 
-            $widgetAreas[$key] = '';
+            $aRenderedAreas[$sAreaSlug] = '';
 
-            //  Loop through all defined widgets and render each one
-            if (!empty($tplWidgets[$key])) {
+            if (!empty($aTplWidgets[$sAreaSlug])) {
 
-                foreach ($tplWidgets[$key] as $widget_data) {
+                foreach ($aTplWidgets[$sAreaSlug] as $oWidgetData) {
 
-                    try {
+                    $oWidget = get_instance()->cms_page_model->getWidget($oWidgetData->widget, 'RENDER');
+                    if ($oWidget) {
 
-                        $widget = get_instance()->cms_page_model->getWidget($widget_data->widget, 'RENDER');
+                        parse_str($oWidgetData->data, $aWidgetData);
 
-                        if ($widget) {
-
-                            parse_str($widget_data->data, $data);
-
-                            $WIDGET = new $widget->iam();
-                            $widgetAreas[$key] .= $WIDGET->render($data, $tplAdditionalFields);
-                        }
-
-                    } catch (\Exception $e) {
-
-                        log_message('error', 'Failed to render widget');
+                        $aRenderedAreas[$sAreaSlug] .= $oWidget->render($aWidgetData, $aTplAdditionalFields);
                     }
                 }
             }
@@ -312,7 +324,10 @@ class TemplateBase
 
         // --------------------------------------------------------------------------
 
-        if (is_file($this->details->path . 'view.php')) {
+        if (is_file($this->path . 'view.php')) {
+
+            //  Add a reference to the CI super object, for view loading etc
+            $oCi = get_instance();
 
             //  Get controller data, so that headers etc behave as expected
             $NAILS_CONTROLLER_DATA =& getControllerData();
@@ -321,22 +336,22 @@ class TemplateBase
                 extract($NAILS_CONTROLLER_DATA);
             }
 
-            //  If passed, extract any $tplAdditionalFields
-            if ($tplAdditionalFields) {
+            //  If passed, extract any $aTplAdditionalFields
+            if ($aTplAdditionalFields) {
 
-                extract($tplAdditionalFields);
+                extract($aTplAdditionalFields);
             }
 
             //  Extract the variables, so that the view can use them
-            if ($widgetAreas) {
+            if ($aRenderedAreas) {
 
-                extract($widgetAreas);
+                extract($aRenderedAreas);
             }
 
             //  Start the buffer, basically copying how CI does it's view loading
             ob_start();
 
-            include $this->details->path . 'view.php';
+            include $this->path . 'view.php';
 
             //  Flush buffer
             $buffer = ob_get_contents();
@@ -348,8 +363,8 @@ class TemplateBase
             if ($matches[0]) {
 
                 //  Get all the blocks which were found
-                get_instance()->load->model('cms_block_model');
-                $blocks = get_instance()->cms_block_model->get_by_slugs($matches[1]);
+                $oCi->load->model('cms_block_model');
+                $blocks = $oCi->cms_block_model->get_by_slugs($matches[1]);
 
                 //  Swap them in
                 if ($blocks) {
@@ -360,7 +375,7 @@ class TemplateBase
                             case 'file':
                             case 'image':
 
-                                get_instance()->load->helper('cdn_helper');
+                                $oCi->load->helper('cdn_helper');
                                 $block->value = cdnServe($block->value);
                                 break;
                         }

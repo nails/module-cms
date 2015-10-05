@@ -271,14 +271,18 @@ class Pages extends \ApiController
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Get the widget's editor, preopulated with any POST'ed data
+     * @return array
+     */
     public function postWidgetEditor()
     {
         $aOut             = array();
         $sRequestedWidget = $this->input->post('widget');
 
-        parse_str($this->input->post('data'), $aWidgetData);
-
         if ($sRequestedWidget) {
+
+            parse_str($this->input->post('data'), $aWidgetData);
 
             $this->load->model('cms/cms_page_model');
 
@@ -286,29 +290,11 @@ class Pages extends \ApiController
 
             if ($oRequestedWidget) {
 
-                //  Instantiate the widget
-                include_once $oRequestedWidget->path . 'widget.php';
+                $aOut['HTML'] = $oRequestedWidget->getEditor($aWidgetData);
 
-                try {
+                if (empty($aOut['HTML'])) {
 
-                    $oWidget       = new $oRequestedWidget->iam();
-                    $sWidgetEditor = $oWidget->get_editor($aWidgetData);
-
-                    if (!empty($sWidgetEditor)) {
-
-                        $aOut['HTML'] = $sWidgetEditor;
-
-                    } else {
-
-                        $aOut['HTML'] = '<p class="static">This widget has no configurable options.</p>';
-                    }
-
-                } catch (Exception $e) {
-
-                    $aOut['status'] = 500;
-                    $aOut['error']  = 'This widget has not been configured correctly. Please contact the developer ';
-                    $aOut['error'] .= 'quoting this error message: ';
-                    $aOut['error'] .= '<strong>"#3:' . $oRequestedWidget->iam . ':GetEditor"</strong>';
+                    $aOut['HTML'] = '<p class="static">This widget has no configurable options.</p>';
                 }
 
             } else {

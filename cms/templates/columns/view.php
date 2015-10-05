@@ -10,7 +10,7 @@
  * @link
  */
 
-echo $this->load->view('structure/header', getControllerData());
+echo $oCi->load->view('structure/header', getControllerData());
 
 $numColumns = isset($numColumns) ? (int) $numColumns : 2;
 $breakpoint = isset($breakpoint) ? $breakpoint : 'md';
@@ -26,4 +26,4 @@ for ($i=1; $i <= $numColumns; $i++) {
 }
 echo '</div>';
 
-echo $this->load->view('structure/footer', getControllerData());
+echo $oCi->load->view('structure/footer', getControllerData());
