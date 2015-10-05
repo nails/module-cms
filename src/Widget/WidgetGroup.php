@@ -86,4 +86,25 @@ class WidgetGroup
         $this->aWidgets = array_filter($this->aWidgets);
         return $this;
     }
+
+    // --------------------------------------------------------------------------
+
+    public function getWidgets()
+    {
+        return $this->aWidgets;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function getWidgetsAsJson($iJsonOptions = 0, $iJsonDepth = 512)
+    {
+        $aWidgetsJson = array();
+        $aWidgets = $this->getWidgets();
+
+        foreach ($aWidgets as $oWidget) {
+            $aWidgetsJson[] = $oWidget->toJson($iJsonOptions, $iJsonDepth);
+        }
+
+        return '[' . implode(',', $aWidgetsJson) . ']';
+    }
 }

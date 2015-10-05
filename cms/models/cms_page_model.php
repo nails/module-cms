@@ -1086,14 +1086,14 @@ class NAILS_Cms_page_model extends NAILS_Model
 
                 log_message(
                     'error',
-                    'CMS Template discovered at "' . $aWidget['path'] . $aWidget['name'] .
+                    'CMS Widget discovered at "' . $aWidget['path'] . $aWidget['name'] .
                     '" but does not contain class "' . $sClassName . '"'
                 );
 
             } elseif (!empty($sClassName::isDisabled())) {
 
                 /**
-                 * This template is disabled, ignore this template. Don't log
+                 * This widget is disabled, ignore this template. Don't log
                  * anything as it's likely a developer override to hide a default
                  * template.
                  */
@@ -1113,7 +1113,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        //  Sort the widgets into their sub groupings and then alphabetically
+        //  Sort the widgets into their sub groupings
         $aOut          = array();
         $aGeneric      = array();
         $sGenericLabel = 'Generic';
@@ -1304,10 +1304,49 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        //  Sort into some alphabetical order and save for later
-        ksort($aLoadedTemplates);
+        //  Sort the Templates into their sub groupings
+        $aOut          = array();
+        $aGeneric      = array();
+        $sGenericLabel = 'Generic';
 
-        $this->loadedTemplates = $aLoadedTemplates;
+        foreach ($aLoadedTemplates as $sTemplateSlug => $oTemplate) {
+
+            $sTemplateGrouping = $oTemplate->getGrouping();
+
+            if (!empty($sTemplateGrouping)) {
+
+                $sKey = md5($sTemplateGrouping);
+
+                if (!isset($aOut[$sKey])) {
+
+                    $aOut[$sKey] = \Nails\Factory::factory('TemplateGroup', 'nailsapp/module-cms');
+                    $aOut[$sKey]->setLabel($sTemplateGrouping);
+                }
+
+                $aOut[$sKey]->add($oTemplate);
+
+            } else {
+
+                $sKey = md5($sGenericLabel);
+
+                if (!isset($aGeneric[$sKey])) {
+
+                    $aGeneric[$sKey] = \Nails\Factory::factory('TemplateGroup', 'nailsapp/module-cms');
+                    $aGeneric[$sKey]->setLabel($sGenericLabel);
+                }
+
+                $aGeneric[$sKey]->add($oTemplate);
+            }
+        }
+
+        //  Glue generic grouping to the beginning of the array
+        $aOut = array_merge($aGeneric, $aOut);
+        $aOut = array_values($aOut);
+
+        $this->loadedTemplates = $aOut;
+
+        //  Sort geoupings into alphabetical order
+        //  @todo
 
         return $this->loadedTemplates;
     }

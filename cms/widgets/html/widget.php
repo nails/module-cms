@@ -15,16 +15,14 @@ namespace Nails\Cms\Widget;
 class Html extends WidgetBase
 {
     /**
-     * Defines the basic widget details object.
-     * @return stdClass
+     * Construct and define the widget
      */
-    public static function details()
+    public function __construct()
     {
-        $d              = parent::details();
-        $d->label       = 'Plain Text';
-        $d->description = 'Plain, completely unformatted text. Perfect for custom HTML.';
-        $d->keywords    = 'text,html,code,plaintext,plain text';
+        parent::__construct();
 
-        return $d;
+        $this->label       = 'Plain Text';
+        $this->description = 'Plain, completely unformatted text. Perfect for custom HTML.';
+        $this->keywords    = 'text,html,code,plaintext,plain text';
     }
 }

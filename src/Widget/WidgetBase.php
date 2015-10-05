@@ -167,7 +167,7 @@ class WidgetBase
     {
         if ($sType == 'EDITOR') {
 
-            return $this->assets_render;
+            return $this->assets_editor;
 
         } elseif ($sType == 'RENDER') {
 
@@ -229,7 +229,7 @@ class WidgetBase
      * Returns the widget's callbacks
      * @return mixed
      */
-    public function getCallbacks($sType)
+    public function getCallbacks($sType = '')
     {
         if (property_exists($this->callbacks, $sType)) {
 
@@ -273,6 +273,32 @@ class WidgetBase
         }
 
         return '';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Format the widget as a JSON object
+     * @return string
+     */
+    public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
+    {
+        $oObj = new \stdClass();
+        $oObj->label = $this->getLabel();
+        $oObj->description = $this->getDescription();
+        $oObj->keywords = $this->getKeywords();
+        $oObj->grouping = $this->getGrouping();
+        $oObj->slug = $this->getSlug();
+        $oObj->restricted_to_template = $this->getRestrictedTo('TEMPLATE');
+        $oObj->restricted_to_area = $this->getRestrictedTo('AREA');
+        $oObj->restricted_from_template = $this->getRestrictedFrom('TEMPLATE');
+        $oObj->restricted_from_area = $this->getRestrictedFrom('AREA');
+        $oObj->assets_editor = $this->getAssets('EDITOR');
+        $oObj->assets_render = $this->getAssets('RENDER');
+        $oObj->path = $this->getPath();
+        $oObj->callbacks = $this->getCallbacks();
+
+        return json_encode($oObj, $iJsonOptions, $iJsonDepth);
     }
 
     // --------------------------------------------------------------------------

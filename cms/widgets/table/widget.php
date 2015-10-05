@@ -15,16 +15,14 @@ namespace Nails\Cms\Widget;
 class Table extends WidgetBase
 {
     /**
-     * Defines the basic widget details object.
-     * @return stdClass
+     * Construct and define the widget
      */
-    public static function details()
+    public function __construct()
     {
-        $d              = parent::details();
-        $d->label       = 'Table';
-        $d->description = 'Easily build a table';
-        $d->keywords    = 'table,tabular data,data';
+        parent::__construct();
 
-        return $d;
+        $this->label       = 'Table';
+        $this->description = 'Easily build a table';
+        $this->keywords    = 'table,tabular data,data';
     }
 }

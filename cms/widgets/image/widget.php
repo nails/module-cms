@@ -15,16 +15,14 @@ namespace Nails\Cms\Widget;
 class Image extends WidgetBase
 {
     /**
-     * Defines the basic widget details object.
-     * @return stdClass
+     * Construct and define the widget
      */
-    static function details()
+    public function __construct()
     {
-        $d              = parent::details();
-        $d->label       = 'Image';
-        $d->description = 'A single image.';
-        $d->keywords    = 'image,images,photo,photos';
+        parent::__construct();
 
-        return $d;
+        $this->label       = 'Image';
+        $this->description = 'A single image.';
+        $this->keywords    = 'image,images,photo,photos';
     }
 }

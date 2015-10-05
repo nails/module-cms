@@ -15,9 +15,11 @@ namespace Nails\Cms\Template;
 class TemplateBase
 {
     protected static $isDisabled;
+    protected static $isDefault;
 
     protected $label;
     protected $description;
+    protected $grouping;
     protected $widget_areas;
     protected $additional_fields;
     protected $manual_config;
@@ -41,11 +43,22 @@ class TemplateBase
     // --------------------------------------------------------------------------
 
     /**
+     * Returns whether the template is a default template or not
+     * @return bool
+     */
+    public static function isDefault()
+    {
+        return !empty(static::$isDefault);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Constructs the template
      */
     public function __construct()
     {
-        $this->label             = 'Widget';
+        $this->label             = 'Template';
         $this->description       = '';
         $this->widget_areas      = array();
         $this->additional_fields = array();
@@ -125,6 +138,17 @@ class TemplateBase
     // --------------------------------------------------------------------------
 
     /**
+     * Returns the template's grouping
+     * @return string
+     */
+    public function getGrouping()
+    {
+        return $this->grouping;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Returns the template's widget areas
      * @return string
      */
@@ -198,7 +222,7 @@ class TemplateBase
     {
         if ($sType == 'EDITOR') {
 
-            return $this->assets_render;
+            return $this->assets_editor;
 
         } elseif ($sType == 'RENDER') {
 
@@ -208,6 +232,30 @@ class TemplateBase
 
             return array();
         }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Format the template as a JSON object
+     * @return string
+     */
+    public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
+    {
+        $oObj = new \stdClass();
+        $oObj->label = $this->getLabel();
+        $oObj->description = $this->getDescription();
+        $oObj->description = $this->getDescription();
+        $oObj->widget_areas = $this->getWidgetAreas();
+        $oObj->additional_fields = $this->getAdditionalFields();
+        $oObj->manual_config = $this->getManualConfig();
+        $oObj->icon = $this->getIcon();
+        $oObj->slug = $this->getSlug();
+        $oObj->assets_editor = $this->getAssets('EDITOR');
+        $oObj->assets_render = $this->getAssets('RENDER');
+        $oObj->path = $this->getPath();
+
+        return json_encode($oObj, $iJsonOptions, $iJsonDepth);
     }
 
     // --------------------------------------------------------------------------

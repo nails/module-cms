@@ -15,6 +15,14 @@ namespace Nails\Cms\Template;
 class Fullwidth extends TemplateBase
 {
     /**
+     * Set this template as the default template so it is rendered first
+     * @var boolean
+     */
+    protected static $isDefault = true;
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Construct and define the template
      */
     public function __construct()
@@ -29,8 +37,7 @@ class Fullwidth extends TemplateBase
          * variable to the view
          */
 
-        $this->widget_areas['mainbody']        = \Nails\Factory::factory('TemplateArea', 'nailsapp/module-cms');
-        $this->widget_areas['mainbody']->title = 'Main Body';
-
+        $this->widget_areas['mainbody'] = \Nails\Factory::factory('TemplateArea', 'nailsapp/module-cms');
+        $this->widget_areas['mainbody']->setTitle('Main Body');
     }
 }

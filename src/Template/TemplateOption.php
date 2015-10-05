@@ -14,16 +14,156 @@ namespace Nails\Cms\Template;
 
 class TemplateOption
 {
-    public $type        = '';
-    public $key         = '';
-    public $label       = '';
-    public $subLabel    = '';
-    public $info        = '';
-    public $default     = '';
-    public $class       = '';
-    public $placeholder = '';
-    public $tip         = '';
-    public $options     = array();
+    protected $type        = '';
+    protected $key         = '';
+    protected $label       = '';
+    protected $subLabel    = '';
+    protected $info        = '';
+    protected $default     = '';
+    protected $class       = '';
+    protected $placeholder = '';
+    protected $tip         = '';
+    protected $options     = array();
+
+    // --------------------------------------------------------------------------
+
+    public function setType($sType)
+    {
+        $this->type = $sType;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function setKey($sKey)
+    {
+        $this->key = $sKey;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function getKey()
+    {
+        return $this->key;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function setLabel($sLabel)
+    {
+        $this->label = $sLabel;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function getLabel()
+    {
+        return $this->label;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function setSubLabel($sSubLabel)
+    {
+        $this->subLabel = $sSubLabel;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function getSubLabel()
+    {
+        return $this->subLabel;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function setInfo($sInfo)
+    {
+        $this->info = $sInfo;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function getInfo()
+    {
+        return $this->info;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function setDefault($sDefault)
+    {
+        $this->default = $sDefault;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function getDefault()
+    {
+        return $this->default;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function setClass($sClass)
+    {
+        $this->class = $sClass;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function getClass()
+    {
+        return $this->class;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function setPlaceholder($sPlaceholder)
+    {
+        $this->placeholder = $sPlaceholder;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function getPlaceholder()
+    {
+        return $this->placeholder;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function setTip($sTip)
+    {
+        $this->tip = $sTip;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function getTip()
+    {
+        return $this->tip;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function setOptions($sOptions)
+    {
+        $this->options = $sOptions;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function getOptions()
+    {
+        return $this->options;
+    }
 
     // --------------------------------------------------------------------------
 

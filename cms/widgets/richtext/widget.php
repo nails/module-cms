@@ -15,19 +15,15 @@ namespace Nails\Cms\Widget;
 class Richtext extends WidgetBase
 {
     /**
-     * Defines the basic widget details object.
-     * @return stdClass
+     * Construct and define the widget
      */
-    public static function details()
+    public function __construct()
     {
-        $d              = parent::details();
-        $d->label       = 'Rich Text';
-        $d->description = 'Build beautiful pages using the rich text editor; embed images, links and more.';
-        $d->keywords    = 'rich text,formatted text,formatted,wysiwyg,embed';
+        $this->label       = 'Rich Text';
+        $this->description = 'Build beautiful pages using the rich text editor; embed images, links and more.';
+        $this->keywords    = 'rich text,formatted text,formatted,wysiwyg,embed';
 
-        $d->assets_editor[] = array('ckeditor/ckeditor.js', 'NAILS-BOWER');
-        $d->assets_editor[] = array('ckeditor/adapters/jquery.js', 'NAILS-BOWER');
-
-        return $d;
+        $this->assets_editor[] = array('ckeditor/ckeditor.js', 'NAILS-BOWER');
+        $this->assets_editor[] = array('ckeditor/adapters/jquery.js', 'NAILS-BOWER');
     }
 }

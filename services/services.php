@@ -2,6 +2,9 @@
 
 return array(
     'factories' => array(
+        'TemplateGroup' => function () {
+            return new \Nails\Cms\Template\TemplateGroup();
+        },
         'TemplateArea' => function () {
             return new \Nails\Cms\Template\TemplateArea();
         },
