@@ -146,14 +146,56 @@ class Pages extends \AdminController
 
         // --------------------------------------------------------------------------
 
+        //  Set the default template; either POST data, the one being used by the page, or the first in the list.
+        $this->data['defaultTemplate'] = '';
+        if ($this->input->post('template')) {
+
+            $this->data['defaultTemplate'] = $this->input->post('template');
+
+        } elseif (!empty($cmspage->draft->template)) {
+
+            $this->data['defaultTemplate'] = $cmspage->draft->template;
+
+        } else {
+
+            $oFirstGroup = reset($this->data['templates']);
+            if (!empty($oFirstGroup)) {
+
+                $aTemplates = $oFirstGroup->getTemplates();
+                $oFirstTemplate = reset($aTemplates);
+                if (!empty($oFirstTemplate)) {
+                    $this->data['defaultTemplate'] = $oFirstTemplate->getSlug();
+                }
+            }
+        }
+
+        // --------------------------------------------------------------------------
+
         //  Assets
         $this->asset->library('jqueryui');
         $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
-        $this->asset->load('nails.admin.cms.pages.createEdit.min.js', 'NAILS');
+        $this->asset->load('nails.admin.cms.pages.createEdit.js', 'NAILS');
+
+        /**
+         * Create a JSON array of all the templates & widgets
+         * Each group will return an array of it's templates or widgets. In order to join them
+         * all into a single group we'll need to substr() the opening and closing []'s then
+         * apply them to the group as a whole.
+         */
+
+        $aTemplatesJson = array();
+        foreach ($this->data['templates'] as $oTemplateGroup) {
+            $aTemplatesJson[] = substr($oTemplateGroup->getTemplatesAsJson(), 1, -1);
+        }
+
+        $aWidgetsJson = array();
+        foreach ($this->data['widgets'] as $oWidgetGroup) {
+            $aWidgetsJson[] = $oWidgetGroup->toJson();
+        }
 
         $inlineJs  = 'CMS_PAGES = new NAILS_Admin_CMS_pages_Create_Edit(';
-        $inlineJs .= json_encode($this->data['templates']) . ',';
-        $inlineJs .= json_encode($this->data['widgets']);
+        $inlineJs .= '[' . implode(',', $aTemplatesJson) . '],';
+        $inlineJs .= '[' . implode(',', $aWidgetsJson) . ']';
         $inlineJs .= ');';
 
         $this->asset->inline($inlineJs, 'JS');
@@ -203,14 +245,56 @@ class Pages extends \AdminController
 
         // --------------------------------------------------------------------------
 
+        //  Set the default template; either POST data, the one being used by the page, or the first in the list.
+        $this->data['defaultTemplate'] = '';
+        if ($this->input->post('template')) {
+
+            $this->data['defaultTemplate'] = $this->input->post('template');
+
+        } elseif (!empty($cmspage->draft->template)) {
+
+            $this->data['defaultTemplate'] = $cmspage->draft->template;
+
+        } else {
+
+            $oFirstGroup = reset($this->data['templates']);
+            if (!empty($oFirstGroup)) {
+
+                $aTemplates = $oFirstGroup->getTemplates();
+                $oFirstTemplate = reset($aTemplates);
+                if (!empty($oFirstTemplate)) {
+                    $this->data['defaultTemplate'] = $oFirstTemplate->getSlug();
+                }
+            }
+        }
+
+        // --------------------------------------------------------------------------
+
         //  Assets
         $this->asset->library('jqueryui');
         $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
-        $this->asset->load('nails.admin.cms.pages.createEdit.min.js', 'NAILS');
+        $this->asset->load('nails.admin.cms.pages.createEdit.js', 'NAILS');
+
+        /**
+         * Create a JSON array of all the templates & widgets
+         * Each group will return an array of it's templates or widgets. In order to join them
+         * all into a single group we'll need to substr() the opening and closing []'s then
+         * apply them to the group as a whole.
+         */
+
+        $aTemplatesJson = array();
+        foreach ($this->data['templates'] as $oTemplateGroup) {
+            $aTemplatesJson[] = substr($oTemplateGroup->getTemplatesAsJson(), 1, -1);
+        }
+
+        $aWidgetsJson = array();
+        foreach ($this->data['widgets'] as $oWidgetGroup) {
+            $aWidgetsJson[] = $oWidgetGroup->toJson();
+        }
 
         $inlineJs  = 'CMS_PAGES = new NAILS_Admin_CMS_pages_Create_Edit(';
-        $inlineJs .= json_encode($this->data['templates']) . ',';
-        $inlineJs .= json_encode($this->data['widgets']). ',';
+        $inlineJs .= '[' . implode(',', $aTemplatesJson) . '],';
+        $inlineJs .= '[' . implode(',', $aWidgetsJson) . '],';
         $inlineJs .= $this->data['cmspage']->id . ',';
         $inlineJs .= json_encode($this->data['cmspage']->draft->template_data);
         $inlineJs .= ');';

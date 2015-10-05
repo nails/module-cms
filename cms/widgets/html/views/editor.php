@@ -10,6 +10,5 @@
  * @link
  */
 
-echo '<textarea name="body">';
-    echo isset($body) ? $body : '';
-echo '</textarea>';
+?>
+<textarea name="body"><?=!empty($body) ? $body : ''?></textarea>

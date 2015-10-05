@@ -10,19 +10,19 @@
  * @link
  */
 
-class NAILS_CMS_Widget_slider extends NAILS_CMS_Widget
+namespace Nails\Cms\Widget;
+
+class Slider extends WidgetBase
 {
     /**
-     * Defines the basic widget details object.
-     * @return stdClass
+     * Construct and define the widget
      */
-    public static function details()
+    public function __construct()
     {
-        $d              = parent::details();
-        $d->label       = 'Slider';
-        $d->description = 'Embed easily configurable photo sliders into your page.';
-        $d->keywords    = 'gallery,slider,image gallery,images';
+        parent::__construct();
 
-        return $d;
+        $this->label       = 'Slider';
+        $this->description = 'Embed easily configurable photo sliders into your page.';
+        $this->keywords    = 'gallery,slider,image gallery,images';
     }
 }

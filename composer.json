@@ -29,6 +29,10 @@
     {
         "nailsapp/module-cdn": "dev-develop"
     },
+    "autoload":
+    {
+        "psr-4": {"Nails\\Cms\\": "src/"}
+    },
     "extra":
     {
         "nails" :

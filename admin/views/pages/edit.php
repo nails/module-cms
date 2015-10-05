@@ -3,60 +3,51 @@
         z-index: 1000;
     }
 </style>
-<?php
-
-    //  Set the default template; either POST data, the one being used by the page, or the first in the list.
-    if ($this->input->post('template')) {
-
-        $defaultTemplate = $this->input->post('template');
-
-    } elseif (!empty($cmspage->draft->template)) {
-
-        $defaultTemplate = $cmspage->draft->template;
-
-    } else {
-
-        reset($templates);
-        $defaultTemplate = key($templates);
-    }
-
-?>
 <div class="group-cms pages edit">
     <?php
 
-        switch ($this->input->get('message')) {
+    switch ($this->input->get('message')) {
 
-            case 'saved' :
+        case 'saved' :
 
-                echo '<p class="system-alert success">';
-                    echo 'Your page was saved successfully. ';
-                    echo anchor(
-                        'cms/render/preview/' . $cmspage->id,
-                        'Preview it here',
-                        'class="main-action" data-action="preview" target="_blank"'
-                    ) . '.';
-                echo '</p>';
-                break;
+            ?>
+            <p class="system-alert success">
+                Your page was saved successfully.
+                <?php
 
-            case 'published' :
+                echo anchor(
+                    'cms/render/preview/' . $cmspage->id,
+                    'Preview it here',
+                    'class="main-action" data-action="preview" target="_blank"'
+                ) . '.';
 
-                echo '<p class="system-alert success">';
-                    echo 'Your page was published successfully. ';
-                    echo anchor(
-                        $cmspage->published->url,
-                        'View it here',
-                        'target="_blank"'
-                    ) . '.';
-                echo '</p>';
-                break;
+                ?>
+            </p>
+            <?php
 
-            case 'unpublished' :
+            break;
 
-                echo '<p class="system-alert success">';
-                    echo 'Your page was unpublished successfully.';
-                echo '</p>';
-                break;
-        }
+        case 'published' :
+
+            ?>
+            <p class="system-alert success">
+                Your page was published successfully.
+                <?=anchor( $cmspage->published->url, 'View it here', 'target="_blank"')?>.
+            </p>
+            <?php
+
+            break;
+
+        case 'unpublished' :
+
+            ?>
+            <p class="system-alert success">
+                Your page was unpublished successfully.
+            </p>
+            <?php
+
+            break;
+    }
 
     ?>
     <div class="system-alert notice" id="save-status">
@@ -71,96 +62,95 @@
         <legend>Page Data</legend>
         <?php
 
-            //  Title
-            $field                = array();
-            $field['key']         = 'title';
-            $field['label']       = 'Title';
-            $field['default']     = isset($cmspage->draft->title) ? html_entity_decode($cmspage->draft->title, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
-            $field['placeholder'] = 'The title of the page';
+        //  Title
+        $aField                = array();
+        $aField['key']         = 'title';
+        $aField['label']       = 'Title';
+        $aField['default']     = isset($cmspage->draft->title) ? html_entity_decode($cmspage->draft->title, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
+        $aField['placeholder'] = 'The title of the page';
 
-            echo form_field($field);
+        echo form_field($aField);
 
-            // --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-            //  Parent ID
-            $field                     = array();
-            $field['key']              = 'parent_id';
-            $field['label']            = 'Parent Page';
-            $field['placeholder']      = 'The Page\'s parent.';
-            $field['class']            = 'select2';
-            $field['default']          = isset($cmspage->draft->parent_id) ? $cmspage->draft->parent_id : '';
-            $field['disabled_options'] = isset($page_children) ? $page_children : array();
+        //  Parent ID
+        $aField                     = array();
+        $aField['key']              = 'parent_id';
+        $aField['label']            = 'Parent Page';
+        $aField['placeholder']      = 'The Page\'s parent.';
+        $aField['class']            = 'select2';
+        $aField['default']          = isset($cmspage->draft->parent_id) ? $cmspage->draft->parent_id : '';
+        $aField['disabled_options'] = isset($page_children) ? $page_children : array();
 
-            /**
-             * Remove this page from the available options; INFINITE LOOP
-             */
+        /**
+         * Remove this page from the available options; INFINITE LOOP
+         */
 
-            if (isset($cmspage)) {
+        if (isset($cmspage)) {
 
-                foreach ($pagesNestedFlat as $id => $label) {
+            foreach ($pagesNestedFlat as $id => $label) {
 
-                    if ($id == $cmspage->id) {
+                if ($id == $cmspage->id) {
 
-                        $field['disabled_options'][] = $id;
-                        break;
-
-                    }
+                    $aField['disabled_options'][] = $id;
+                    break;
                 }
             }
+        }
 
-            if (count($pagesNestedFlat) && count($field['disabled_options']) < count($pagesNestedFlat)) {
+        if (count($pagesNestedFlat) && count($aField['disabled_options']) < count($pagesNestedFlat)) {
 
-                $pagesNestedFlat = array('' => 'No Parent Page') + $pagesNestedFlat;
+            $pagesNestedFlat = array('' => 'No Parent Page') + $pagesNestedFlat;
 
-                // --------------------------------------------------------------------------
+            // --------------------------------------------------------------------------
 
-                if (count($field['disabled_options'])) {
+            if (count($aField['disabled_options'])) {
 
-                    $field['info']  = '<strong>Some options have been disabled.</strong> ';
-                    $field['info'] .= 'You cannot set the parent page to this page or any existing child of this page.';
-                }
-
-                echo form_field_dropdown($field, $pagesNestedFlat);
-
-            } else {
-
-                echo form_hidden($field['key'], '');
+                $aField['info']  = '<strong>Some options have been disabled.</strong> ';
+                $aField['info'] .= 'You cannot set the parent page to this page or any existing child of this page.';
             }
 
-            // --------------------------------------------------------------------------
+            echo form_field_dropdown($aField, $pagesNestedFlat);
 
-            //  SEO Title
-            $field                = array();
-            $field['key']         = 'seo_title';
-            $field['label']       = 'SEO Title';
-            $field['default']     = isset($cmspage->draft->seo_title) ? html_entity_decode($cmspage->draft->seo_title, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
-            $field['placeholder'] = 'The page\'s SEO title, keep this short and concise. If not set, this will fallback to the page title.';
+        } else {
 
-            echo form_field($field);
+            echo form_hidden($aField['key'], '');
+        }
 
-            // --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-            //  SEO Description
-            $field                = array();
-            $field['key']         = 'seo_description';
-            $field['label']       = 'SEO Description';
-            $field['default']     = isset($cmspage->draft->seo_description) ? html_entity_decode($cmspage->draft->seo_description, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
-            $field['placeholder'] = 'The page\'s SEO description, keep this short and concise. Recommended to keep below 160 characters.';
-            $field['tip']         = 'This should be kept short (< 160 characters) and concise. It\'ll be shown in search result listings and search engines will use it to help determine the page\'s content.';
+        //  SEO Title
+        $aField                = array();
+        $aField['key']         = 'seo_title';
+        $aField['label']       = 'SEO Title';
+        $aField['default']     = isset($cmspage->draft->seo_title) ? html_entity_decode($cmspage->draft->seo_title, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
+        $aField['placeholder'] = 'The page\'s SEO title, keep this short and concise. If not set, this will fallback to the page title.';
 
-            echo form_field($field);
+        echo form_field($aField);
 
-            // --------------------------------------------------------------------------
+        // --------------------------------------------------------------------------
 
-            //  SEO Keywords
-            $field                = array();
-            $field['key']         = 'seo_keywords';
-            $field['label']       = 'SEO Keywords';
-            $field['default']     = isset($cmspage->draft->seo_keywords) ? html_entity_decode($cmspage->draft->seo_keywords, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
-            $field['placeholder'] = 'Comma separated keywords relating to the content of the page. A maximum of 10 keywords is recommended.';
-            $field['tip']         = 'SEO good practice recommend keeping the number of keyword phrases below 10 and less than 160 characters in total.';
+        //  SEO Description
+        $aField                = array();
+        $aField['key']         = 'seo_description';
+        $aField['label']       = 'SEO Description';
+        $aField['default']     = isset($cmspage->draft->seo_description) ? html_entity_decode($cmspage->draft->seo_description, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
+        $aField['placeholder'] = 'The page\'s SEO description, keep this short and concise. Recommended to keep below 160 characters.';
+        $aField['tip']         = 'This should be kept short (< 160 characters) and concise. It\'ll be shown in search result listings and search engines will use it to help determine the page\'s content.';
 
-            echo form_field($field);
+        echo form_field($aField);
+
+        // --------------------------------------------------------------------------
+
+        //  SEO Keywords
+        $aField                = array();
+        $aField['key']         = 'seo_keywords';
+        $aField['label']       = 'SEO Keywords';
+        $aField['default']     = isset($cmspage->draft->seo_keywords) ? html_entity_decode($cmspage->draft->seo_keywords, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
+        $aField['placeholder'] = 'Comma separated keywords relating to the content of the page. A maximum of 10 keywords is recommended.';
+        $aField['tip']         = 'SEO good practice recommend keeping the number of keyword phrases below 10 and less than 160 characters in total.';
+
+        echo form_field($aField);
 
         ?>
     </fieldset>
@@ -169,45 +159,79 @@
         <ul class="templates">
         <?php
 
-            foreach ($templates as $template) {
+        $numTemplateGroups = count($templates);
+        foreach ($templates as $oTemplateGroup) {
 
-                echo '<li>';
+            if ($numTemplateGroups > 1) {
 
-                    //  This template selected?
-                    $selected = $defaultTemplate == $template->slug ? true : false;
-
-                    //  Define attributes
-                    $attr                       = array();
-                    $attr['class']              = $selected ? 'template selected' : 'template';
-                    $attr['data-template-slug'] = $template->slug;
-
-                    //  Glue together
-                    $attrStr = '';
-                    foreach ($attr as $key => $value) {
-
-                        $attrStr .= $key . '="' . $value . '" ';
-                    }
-
-                    echo '<label ' . trim($attrStr) . ' rel="tipsy-top" title="' . $template->description . '">';
-
-                        echo form_radio('template', $template->slug, set_radio('template', $template->slug, $selected));
-
-                        echo '<span class="icon">';
-                            if (!empty($template->img->icon)) {
-                                echo img(array(
-                                    'src' => $template->img->icon,
-                                    'class' => 'icon'
-                                ));
-                            }
-                        echo '</span>';
-                        echo '<span class="newrow"></span>';
-                        echo '<span class="name">';
-                            echo '<span class="checkmark fa fa-check-circle"></span>';
-                            echo '<span>' . $template->label . '</span>';
-                        echo '</span>';
-                    echo '</label>';
-                echo '</li>';
+                ?>
+                <li class="template-group-label">
+                    <?=$oTemplateGroup->getLabel()?>
+                </li>
+                <?php
             }
+
+            foreach ($oTemplateGroup->getTemplates() as $oTemplate) {
+
+                //  This template selected?
+                $selected = $defaultTemplate == $oTemplate->getSlug() ? true : false;
+
+                //  Define attributes
+                $attr                       = array();
+                $attr['class']              = $selected ? 'template selected' : 'template';
+                $attr['data-template-slug'] = $oTemplate->getSlug();
+
+                //  Glue together
+                $attrStr = '';
+                foreach ($attr as $key => $value) {
+
+                    $attrStr .= $key . '="' . $value . '" ';
+                }
+
+                ?>
+                <li>
+                    <label <?=trim($attrStr)?> rel="tipsy-top" title="<?=$oTemplate->getDescription()?>">
+                        <?php
+
+                        echo form_radio(
+                            'template',
+                            $oTemplate->getSlug(),
+                            set_radio(
+                                'template',
+                                $oTemplate->getSlug(),
+                                $selected
+                            )
+                        );
+
+                        ?>
+                        <span class="icon">
+                            <?php
+
+                            if (!empty($oTemplate->getIcon())) {
+
+                                echo img(
+                                    array(
+                                        'src'   => $oTemplate->getIcon(),
+                                        'class' => 'icon'
+                                    )
+                                );
+                            }
+
+                            ?>
+                        </span>
+                        <span class="newrow"></span>
+                        <span class="name">
+                            <span class="checkmark fa fa-check-circle"></span>
+                            <span>
+                                <?=$oTemplate->getLabel()?>
+                            </span>
+                        </span>
+                    </label>
+                </li>
+                <?php
+
+            }
+        }
 
         ?>
         </ul>
@@ -216,63 +240,74 @@
         <legend>Template Configurations</legend>
         <?php
 
-            //  Any additional page data for the templates
-            foreach ($templates as $template) {
+        //  Any additional page data for the templates
+        foreach ($templates as $oTemplateGroup) {
 
-                //  Shortcut
-                if (isset($cmspage) && property_exists($cmspage->draft->template_data->data->additional_fields, $template->slug)) {
+            $aTemplates = $oTemplateGroup->getTemplates();
+            foreach ($aTemplates as $oTemplate) {
 
-                    $additionalFields = $cmspage->draft->template_data->data->additional_fields->{$template->slug};
+                $sTplSlug = $oTemplate->getSlug();
+                $aTplAdditionalFields = $oTemplate->getAdditionalFields();
+                $bIssetCmsPage = isset($cmspage);
+                $bPropertyExists = $bIssetCmsPage && property_exists(
+                    $cmspage->draft->template_data->data->additional_fields,
+                    $sTplSlug
+                );
+
+                if ($bIssetCmsPage && $bPropertyExists) {
+
+                    $additionalFields = $cmspage->draft->template_data->data->additional_fields->{$sTplSlug};
 
                 } else {
 
                     $additionalFields = null;
                 }
 
-                $visible = $defaultTemplate == $template->slug ? 'block' : 'none';
-                echo '<div id="additional-fields-' . $template->slug . '" class="additional-fields" style="display:' . $visible . '">';
+                $bDisplay = $defaultTemplate == $sTplSlug ? 'block' : 'none';
+                echo '<div id="additional-fields-' . $sTplSlug . '" class="additional-fields" style="display:' . $bDisplay . '">';
 
                 //  Common, manual config item
-                $field                 = array();
-                $field['key']          = 'additional_field[' . $template->slug . '][manual_config]';
-                $field['label']        = 'Manual Config';
-                $field['sub_label']    = 'Specify any manual config items here. This field should be ';
-                $field['sub_label']   .= anchor(
+                $aField               = array();
+                $aField['key']        = 'additional_field[' . $sTplSlug . '][manual_config]';
+                $aField['label']      = 'Manual Config';
+                $aField['sub_label']  = 'Specify any manual config items here. This field should be ';
+                $aField['sub_label'] .= anchor(
                     'http://en.wikipedia.org/wiki/JSON',
                     'JSON encoded',
                     'class="fancybox" data-fancybox-type="iframe" data-width="90%" data-height="90%"'
                 ) . '.';
-                $field['type']    = 'textarea';
-                $field['default'] = !empty($additionalFields->manual_config) ? $additionalFields->manual_config : '';
+                $aField['type']    = 'textarea';
+                $aField['default'] = !empty($additionalFields->manual_config) ? $additionalFields->manual_config : '';
 
-                echo form_field($field);
+                echo form_field($aField);
 
                 //  Any other fields, if specified
-                if ($template->additional_fields) {
+                if (!empty($aTplAdditionalFields)) {
 
-                    foreach ($template->additional_fields as $field) {
+                    foreach ($aTplAdditionalFields as $aField) {
 
                         //  Set the default key
-                        if (!empty($additionalFields) && property_exists($additionalFields, $field['key'])) {
+                        $sFieldKey     = $aField->getKey();
+                        $sFieldType    = $aField->getType();
+                        $aFieldOptions = $aField->getOptions();
+                        if (!empty($additionalFields) && property_exists($additionalFields, $sFieldKey)) {
 
-                            $field['default'] = $additionalFields->{$field['key']};
-
+                            $aField->setDefault($additionalFields->{$sFieldKey});
                         }
 
                         //  Override the field key
-                        $field['key'] = 'additional_field[' . $template->slug . '][' . $field['key'] . ']';
+                        $aField->setKey('additional_field[' . $sTplSlug . '][' . $sFieldKey . ']');
 
-                        switch ($field['type']) {
+                        switch ($sFieldType) {
 
                             case 'dropdown' :
 
-                                $options = !empty($field['options']) ? $field['options'] : array();
-                                echo form_field_dropdown($field, $options);
+                                echo form_field_dropdown($aField->toArray(), $aFieldOptions);
                                 break;
 
                             default :
 
-                                echo form_field($field);
+                                echo form_field($aField->toArray());
                                 break;
                         }
                     }
@@ -280,6 +315,7 @@
 
                 echo '</div>';
             }
+        }
 
         ?>
     </fieldset>
@@ -291,64 +327,64 @@
         <p>
         <?php
 
-            foreach ($templates as $template) {
+        foreach ($templates as $oTemplateGroup) {
 
-                //  This template selected?
-                $selected = $defaultTemplate == $template->slug ? true : false;
+            $aTemplates = $oTemplateGroup->getTemplates();
+            foreach ($aTemplates as $oTemplate) {
 
-                foreach ($template->widget_areas as $slug => $area) {
+                $bSelected    = $defaultTemplate == $oTemplate->getSlug() ? true : false;
+                $sTplSlug     = $oTemplate->getSlug();
+                $aWidgetAreas = $oTemplate->getWidgetAreas();
 
-                    //  Define attributes
-                    $data              = array();
-                    $data['area-slug'] = $slug;
+                foreach ($aWidgetAreas as $sWidgetSlug => $oWidgetArea) {
 
-                    $attr = '';
-                    foreach ($data as $key => $value) {
+                    $aAttr                   = array();
+                    $aAttr['class']          = 'awesome launch-editor template-' . $sTplSlug;
+                    $aAttr['style']          = $bSelected ? 'display:inline-block;' : 'display:none;';
+                    $aAttr['data-template']  = $sTplSlug;
+                    $aAttr['data-area']      = $sWidgetSlug;
 
-                        $attr .= 'data-' . $key . '="' . $value . '" ';
-                    }
-
-                    //  Define attributes
-                    $attr                  = array();
-                    $attr['class']         = 'awesome launch-editor template-' . $template->slug;
-                    $attr['style']         = $selected ? 'display:inline-block;' : 'display:none;';
-                    $attr['data-template'] = $template->slug;
-                    $attr['data-area']     = $slug;
-
-                    //  Glue together
                     $attrStr = '';
-                    foreach ($attr as $key => $value) {
+                    foreach ($aAttr as $sKey => $sValue) {
 
-                        $attrStr .= $key . '="' . $value . '" ';
+                        $attrStr .= $sKey . '="' . $sValue . '" ';
                     }
 
-                    echo '<a href="#" ' . trim($attrStr) . '>' . $area->title . '</a>';
+                    echo '<a href="#" ' . trim($attrStr) . '>' . $oWidgetArea->getTitle() . '</a>';
                 }
             }
+        }
 
         ?>
         </p>
     </fieldset>
     <?php
 
-        if (isset($cmspage) && $cmspage->is_published && $cmspage->published->hash !== $cmspage->draft->hash) {
+    $bIssetCmsPage = isset($cmspage);
+    $bHashMatch    = $bIssetCmsPage && $cmspage->published->hash !== $cmspage->draft->hash;
 
-            echo '<p class="system-alert message">';
-                echo '<strong>You have unpublished changes.</strong><br />This version of the page is more recent ';
-                echo 'than the version currently published on site. When you\'re done make sure you click ';
-                echo '"Publish Changes" below.';
-            echo '</p>';
-        }
+    if ($bIssetCmsPage && $cmspage->is_published && $bHashMatch) {
+
+        ?>
+        <p class="system-alert message">
+            <strong>You have unpublished changes.</strong><br />This version of the page is more
+            recent  than the version currently published on site. When you\'re done make sure you
+            click  "Publish Changes" below.
+        </p>
+        <?php
+    }
 
     ?>
     <p class="actions">
-    <?php
-
-        echo '<a href="#" data-action="save" class="main-action awesome orange large" rel="tipsy-top" title="Your changes will be saved so you can come back later, but won\'t be published on site.">Save Changes</a>';
-        echo '<a href="#" data-action="publish" class="main-action awesome green large" rel="tipsy-top" title="Your changes will be published on site and will take hold immediately.">Publish Changes</a>';
-        echo '<a href="#" data-action="preview" class="main-action awesome large launch-preview right">' . lang('action_preview') . '</a>';
-
-    ?>
+        <a href="#" data-action="save" class="main-action awesome orange large" rel="tipsy-top" title="Your changes will be saved so you can come back later, but won\'t be published on site.">
+            Save Changes
+        </a>
+        <a href="#" data-action="publish" class="main-action awesome green large" rel="tipsy-top" title="Your changes will be published on site and will take hold immediately.">
+            Publish Changes
+        </a>
+        <a href="#" data-action="preview" class="main-action awesome large launch-preview right">
+            <?=lang('action_preview')?>
+        </a>
     </p>
 </div>
 <script type="text/template" id="template-loader">
@@ -361,8 +397,12 @@
         </li>
     </ul>
     <ul class="rhs">
-        <li><a href="#" class="main-action" data-action="preview">Preview</a></li>
-        <li><a href="#" class="action" data-action="close">Close</a></li>
+        <li>
+            <a href="#" class="main-action" data-action="preview">Preview</a>
+        </li>
+        <li>
+            <a href="#" class="action" data-action="close">Close</a>
+        </li>
     </ul>
 </script>
 <script type="text/template" id="template-widget-search">
@@ -389,8 +429,12 @@
 <script type="text/template" id="template-dropzone-empty">
     <li class="empty">
         <div class="valigned">
-            <p class="title">No widgets</p>
-            <p class="label">Drag widgets from the left to start building your page.</p>
+            <p class="title">
+                No widgets
+            </p>
+            <p class="label">
+                Drag widgets from the left to start building your page.
+            </p>
         </div>
         <div class="valigned-helper"></div>
     </li>

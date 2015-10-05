@@ -10,10 +10,12 @@
  * @link
  */
 
-if (isset($body)) {
+if (!empty($body)) {
 
-	echo '<div class="cms-widget cms-widget-richtext">';
-		echo $body;
-	echo '</div>';
+    ?>
+    <div class="cms-widget cms-widget-richtext">
+        <?=$body?>
+    </div>
+    <?php
+
 }
-

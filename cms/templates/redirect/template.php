@@ -10,53 +10,54 @@
  * @link
  */
 
-class NAILS_CMS_Template_redirect extends Nails_CMS_Template
+namespace Nails\Cms\Template;
+
+class Redirect extends TemplateBase
 {
     /**
-     * Defines the basic template details object.
-     * @return stdClass
+     * Construct and define the template
      */
-    public static function details()
+    public function __construct()
     {
-        //  Base object
-        $d = parent::details();
+        parent::__construct();
 
-        //  Basic details; describe the template for the user
-        $d->label       = 'Redirect';
-        $d->description = 'Redirects to another URL.';
+        $this->label       = 'Redirect';
+        $this->description = 'Redirects to another URL.';
 
         // --------------------------------------------------------------------------
 
         //  Additional fields
-        $d->additional_fields               = array();
-        $d->additional_fields[0]            = array();
-        $d->additional_fields[0]['type']    = 'dropdown';
-        $d->additional_fields[0]['key']     = 'redirect_page_id';
-        $d->additional_fields[0]['label']   = 'Redirect To Page';
-        $d->additional_fields[0]['class']   = 'select2';
-        $d->additional_fields[0]['options'] = array('None') + get_instance()->cms_page_model->getAllNestedFlat();
-
-        $d->additional_fields[1]                = array();
-        $d->additional_fields[1]['type']        = 'text';
-        $d->additional_fields[1]['key']         = 'redirect_url';
-        $d->additional_fields[1]['label']       = 'Redirect To URL';
-        $d->additional_fields[1]['placeholder'] = 'Manually set the URL to redirect to, this will override any option set above.';
-        $d->additional_fields[1]['tip']         = 'URLs which do not begin with http(s):// will automatically be prefixed with ' . site_url();
-
-        $d->additional_fields[2]            = array();
-        $d->additional_fields[2]['type']    = 'dropdown';
-        $d->additional_fields[2]['key']     = 'redirect_code';
-        $d->additional_fields[2]['label']   = 'Redirect Type';
-        $d->additional_fields[2]['class']   = 'select2';
-        $d->additional_fields[2]['options'] = array(
-
-            '302' => '302 Moved Temporarily',
-            '301' => '301 Moved Permanently'
+        $this->additional_fields[0] = \Nails\Factory::factory('TemplateOption', 'nailsapp/module-cms');
+        $this->additional_fields[0]->setType('dropdown');
+        $this->additional_fields[0]->setKey('redirect_page_id');
+        $this->additional_fields[0]->setLabel('Redirect To Page');
+        $this->additional_fields[0]->setClass('select2');
+        $this->additional_fields[0]->setOptions(
+            array('None') + get_instance()->cms_page_model->getAllNestedFlat()
         );
 
-        // --------------------------------------------------------------------------
+        $this->additional_fields[1] = \Nails\Factory::factory('TemplateOption', 'nailsapp/module-cms');
+        $this->additional_fields[1]->setType('text');
+        $this->additional_fields[1]->setKey('redirect_url');
+        $this->additional_fields[1]->setLabel('Redirect To URL');
+        $this->additional_fields[1]->setPlaceholder(
+            'Manually set the URL to redirect to, this will override any option set above.'
+        );
+        $this->additional_fields[1]->setTip(
+            'URLs which do not begin with http(s):// will automatically be prefixed with ' . site_url()
+        );
 
-        return $d;
+        $this->additional_fields[2] = \Nails\Factory::factory('TemplateOption', 'nailsapp/module-cms');
+        $this->additional_fields[2]->setType('dropdown');
+        $this->additional_fields[2]->setKey('redirect_code');
+        $this->additional_fields[2]->setLabel('Redirect Type');
+        $this->additional_fields[2]->setClass('select2');
+        $this->additional_fields[2]->setOptions(
+            array(
+                '302' => '302 Moved Temporarily',
+                '301' => '301 Moved Permanently'
+            )
+        );
     }
 
     // --------------------------------------------------------------------------
@@ -69,6 +70,7 @@ class NAILS_CMS_Template_redirect extends Nails_CMS_Template
      */
     public function render($tplWidgets = array(), $tplAdditionalFields = array())
     {
+        die('todo');
         $url = '';
 
         if (!empty($tplAdditionalFields['redirect_url'])) {

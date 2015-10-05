@@ -10,7 +10,9 @@
  * @link
  */
 
-echo '<div class="fieldset">';
+?>
+<div class="fieldset">
+    <?php
 
     $field            = array();
     $field['key']     = 'image_id';
@@ -118,4 +120,5 @@ echo '<div class="fieldset">';
 
     echo form_field($field);
 
-echo '</div>';
+    ?>
+</div>

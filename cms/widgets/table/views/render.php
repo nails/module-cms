@@ -10,6 +10,7 @@
  * @link
  */
 
-echo '<p class="system-alert message">';
-	echo '<strong>TODO:</strong> Table Render';
-echo '</p>';
+?>
+<p class="system-alert message">
+    <strong>TODO:</strong> Table Render
+</p>

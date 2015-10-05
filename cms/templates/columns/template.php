@@ -10,65 +10,70 @@
  * @link
  */
 
-class Nails_CMS_Template_columns extends Nails_CMS_Template
+namespace Nails\Cms\Template;
+
+class Columns extends TemplateBase
 {
     /**
-     * Defines the basic template details object.
-     * @return stdClass
+     * Construct and define the template
      */
-    static function details()
+    public function __construct()
     {
-        //  Base object
-        $d = parent::details();
+        parent::__construct();
 
-        //  Basic details; describe the template for the user
-        $d->label       = 'Columns';
-        $d->description = 'Up to four evenly spaced columns';
+        $this->label       = 'Columns';
+        $this->description = 'Up to four evenly spaced columns';
 
         /**
          * Widget areas; give each a unique index, the index will be passed as the
-         * variable to the view
+         * variable to the view.
          */
 
-        $d->widget_areas['col1']        = parent::editableAreaTemplate();
-        $d->widget_areas['col1']->title = 'First Column';
-        $d->widget_areas['col2']        = parent::editableAreaTemplate();
-        $d->widget_areas['col2']->title = 'Second Column';
-        $d->widget_areas['col3']        = parent::editableAreaTemplate();
-        $d->widget_areas['col3']->title = 'Third Column';
-        $d->widget_areas['col4']        = parent::editableAreaTemplate();
-        $d->widget_areas['col4']->title = 'Fourth Column';
+        $this->widget_areas['col1'] = \Nails\Factory::factory('TemplateArea', 'nailsapp/module-cms');
+        $this->widget_areas['col1']->setTitle('First Column');
 
-        $d->additional_fields[0]            = array();
-        $d->additional_fields[0]['type']    = 'dropdown';
-        $d->additional_fields[0]['key']     = 'numColumns';
-        $d->additional_fields[0]['label']   = 'Number of columns';
-        $d->additional_fields[0]['class']   = 'select2';
-        $d->additional_fields[0]['default'] = '2';
-        $d->additional_fields[0]['options'] = array(
+        $this->widget_areas['col2'] = \Nails\Factory::factory('TemplateArea', 'nailsapp/module-cms');
+        $this->widget_areas['col2']->setTitle('Second Column');
 
-            '2' => '2 Columns',
-            '3' => '3 Columns',
-            '4' => '4 Columns'
+        $this->widget_areas['col3'] = \Nails\Factory::factory('TemplateArea', 'nailsapp/module-cms');
+        $this->widget_areas['col3']->setTitle('Third Column');
+
+        $this->widget_areas['col4'] = \Nails\Factory::factory('TemplateArea', 'nailsapp/module-cms');
+        $this->widget_areas['col4']->setTitle('Fourth Column');
+
+        /**
+         * Widget additional fields.
+         */
+        $this->additional_fields[0] = \Nails\Factory::factory('TemplateOption', 'nailsapp/module-cms');
+        $this->additional_fields[0]->setType('dropdown');
+        $this->additional_fields[0]->setKey('numColumns');
+        $this->additional_fields[0]->setLabel('Number of columns');
+        $this->additional_fields[0]->setClass('select2');
+        $this->additional_fields[0]->setDefault('2');
+        $this->additional_fields[0]->setOptions(
+            array(
+                '2' => '2 Columns',
+                '3' => '3 Columns',
+                '4' => '4 Columns'
+            )
         );
 
-        $d->additional_fields[1]            = array();
-        $d->additional_fields[1]['type']    = 'dropdown';
-        $d->additional_fields[1]['key']     = 'breakpoint';
-        $d->additional_fields[1]['label']   = 'Breakpoint';
-        $d->additional_fields[1]['class']   = 'select2';
-        $d->additional_fields[1]['default'] = 'md';
-        $d->additional_fields[1]['tip']     = 'The minimum size of screen to maintain columns, before breaking down into full width columns';
-        $d->additional_fields[1]['options'] = array(
-
-            'xs' => 'Extra small devices (phones)',
-            'sm' => 'Small devices (tablets)',
-            'md' => 'Medium devices (desktops)',
-            'lg' => 'Large devices (large desktops)'
+        $this->additional_fields[1] = \Nails\Factory::factory('TemplateOption', 'nailsapp/module-cms');
+        $this->additional_fields[1]->setType('dropdown');
+        $this->additional_fields[1]->setKey('breakpoint');
+        $this->additional_fields[1]->setLabel('Breakpoint');
+        $this->additional_fields[1]->setClass('select2');
+        $this->additional_fields[1]->setDefault('md');
+        $this->additional_fields[1]->setTip(
+            'The minimum size of screen to maintain columns, before breaking down into full width columns'
         );
-
-        // --------------------------------------------------------------------------
-
-        return $d;
+        $this->additional_fields[1]->setOptions(
+            array(
+                'xs' => 'Extra small devices (phones)',
+                'sm' => 'Small devices (tablets)',
+                'md' => 'Medium devices (desktops)',
+                'lg' => 'Large devices (large desktops)'
+            )
+        );
     }
 }
