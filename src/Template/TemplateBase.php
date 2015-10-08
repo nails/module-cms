@@ -375,7 +375,6 @@ class TemplateBase
                             case 'file':
                             case 'image':
 
-                                $oCi->load->helper('cdn_helper');
                                 $block->value = cdnServe($block->value);
                                 break;
                         }

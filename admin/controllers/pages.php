@@ -71,7 +71,6 @@ class Pages extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Load common items
-        $this->load->helper('cms');
         $this->load->model('cms/cms_page_model');
         $this->load->model('routes_model');
     }

@@ -38,7 +38,10 @@
         "nails" :
         {
             "moduleName": "cms",
-            "type": "module"
+            "type": "module",
+            "autoload": {
+                "helpers": ["cms"]
+            }
         }
     }
 }

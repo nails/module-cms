@@ -44,11 +44,13 @@ class Routes
          *  often) then the router can work a little harder.
          **/
 
-        get_instance()->db->select('sh.slug,sh.page_id');
-        get_instance()->db->join(NAILS_DB_PREFIX . 'cms_page p', 'p.id = sh.page_id');
-        get_instance()->db->where('p.is_deleted', false);
-        get_instance()->db->where('p.is_published', true);
-        $slugs = get_instance()->db->get(NAILS_DB_PREFIX . 'cms_page_slug_history sh')->result();
+        $oDb = \Nails\Factory::service('Database');
+
+        $oDb->select('sh.slug,sh.page_id');
+        $oDb->join(NAILS_DB_PREFIX . 'cms_page p', 'p.id = sh.page_id');
+        $oDb->where('p.is_deleted', false);
+        $oDb->where('p.is_published', true);
+        $slugs = $oDb->get(NAILS_DB_PREFIX . 'cms_page_slug_history sh')->result();
 
         foreach ($slugs as $route) {
 

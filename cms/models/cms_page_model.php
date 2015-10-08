@@ -31,7 +31,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $this->load->helper('directory');
+        \Nails\Factory::helper('directory');
 
         // --------------------------------------------------------------------------
 

@@ -59,7 +59,6 @@ class Blocks extends \AdminController
         // --------------------------------------------------------------------------
 
         //  Load common items
-        $this->load->helper('cms');
         $this->load->model('cms/cms_block_model');
 
         // --------------------------------------------------------------------------

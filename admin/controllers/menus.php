@@ -58,7 +58,6 @@ class Menus extends \AdminController
 
         // --------------------------------------------------------------------------
 
-        $this->load->helper('cms');
         $this->load->model('cms/cms_menu_model');
     }
 
