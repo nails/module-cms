@@ -10,6 +10,8 @@
  * @link
  */
 
+use Nails\Factory;
+
 class NAILS_Cms_page_model extends NAILS_Model
 {
     protected $availableWidgets;
@@ -31,7 +33,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        \Nails\Factory::helper('directory');
+        Factory::helper('directory');
 
         // --------------------------------------------------------------------------
 
@@ -527,8 +529,8 @@ class NAILS_Cms_page_model extends NAILS_Model
             // --------------------------------------------------------------------------
 
             //  Rewrite routes
-            $this->load->model('routes_model');
-            $this->routes_model->update();
+            $oRoutesModel = Factory::model('Routes');
+            $oRoutesModel->update();
 
             // --------------------------------------------------------------------------
 
@@ -1108,7 +1110,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
                 if (!isset($aOut[$sKey])) {
 
-                    $aOut[$sKey] = \Nails\Factory::factory('WidgetGroup', 'nailsapp/module-cms');
+                    $aOut[$sKey] = Factory::factory('WidgetGroup', 'nailsapp/module-cms');
                     $aOut[$sKey]->setLabel($sWidgetGrouping);
                 }
 
@@ -1120,7 +1122,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
                 if (!isset($aGeneric[$sKey])) {
 
-                    $aGeneric[$sKey] = \Nails\Factory::factory('WidgetGroup', 'nailsapp/module-cms');
+                    $aGeneric[$sKey] = Factory::factory('WidgetGroup', 'nailsapp/module-cms');
                     $aGeneric[$sKey]->setLabel($sGenericLabel);
                 }
 
@@ -1284,7 +1286,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
                 if (!isset($aOut[$sKey])) {
 
-                    $aOut[$sKey] = \Nails\Factory::factory('TemplateGroup', 'nailsapp/module-cms');
+                    $aOut[$sKey] = Factory::factory('TemplateGroup', 'nailsapp/module-cms');
                     $aOut[$sKey]->setLabel($sTemplateGrouping);
                 }
 
@@ -1296,7 +1298,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
                 if (!isset($aGeneric[$sKey])) {
 
-                    $aGeneric[$sKey] = \Nails\Factory::factory('TemplateGroup', 'nailsapp/module-cms');
+                    $aGeneric[$sKey] = Factory::factory('TemplateGroup', 'nailsapp/module-cms');
                     $aGeneric[$sKey]->setLabel($sGenericLabel);
                 }
 
@@ -1438,8 +1440,8 @@ class NAILS_Cms_page_model extends NAILS_Model
             // --------------------------------------------------------------------------
 
             //  Rewrite routes
-            $this->load->model('routes_model');
-            $this->routes_model->update();
+            $oRoutesModel = Factory::model('Routes');
+            $oRoutesModel->update();
 
             // --------------------------------------------------------------------------
 

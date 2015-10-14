@@ -1,7 +1,5 @@
 <?php
 
-namespace Nails\Api\Cms;
-
 /**
  * Admin API end points: Pages
  *
@@ -11,6 +9,8 @@ namespace Nails\Api\Cms;
  * @author      Nails Dev Team
  * @link
  */
+
+namespace Nails\Api\Cms;
 
 class Pages extends \Nails\Api\Controller\Base
 {

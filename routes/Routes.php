@@ -1,7 +1,5 @@
 <?php
 
-namespace Nails\Routes\Cms;
-
 /**
  * Generates CMS routes
  *
@@ -11,6 +9,10 @@ namespace Nails\Routes\Cms;
  * @author      Nails Dev Team
  * @link
  */
+
+namespace Nails\Routes\Cms;
+
+use Nails\Factory;
 
 class Routes
 {
@@ -44,7 +46,7 @@ class Routes
          *  often) then the router can work a little harder.
          **/
 
-        $oDb = \Nails\Factory::service('Database');
+        $oDb = Factory::service('Database');
 
         $oDb->select('sh.slug,sh.page_id');
         $oDb->join(NAILS_DB_PREFIX . 'cms_page p', 'p.id = sh.page_id');
