@@ -12,7 +12,9 @@
 
 namespace Nails\Admin\Cms;
 
-class Slider extends \AdminController
+use Nails\Cms\Controller\BaseAdmin;
+
+class Slider extends BaseAdmin
 {
     /**
      * Announces this controller's navGroups

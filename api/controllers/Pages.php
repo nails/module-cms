@@ -12,7 +12,7 @@ namespace Nails\Api\Cms;
  * @link
  */
 
-class Pages extends \Nails\Api\Controllers\Base
+class Pages extends \Nails\Api\Controller\Base
 {
     public static $requiresAuthentication = true;
 

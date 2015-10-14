@@ -12,7 +12,9 @@
 
 namespace Nails\Admin\Cms;
 
-class Blocks extends \AdminController
+use Nails\Cms\Controller\BaseAdmin;
+
+class Blocks extends BaseAdmin
 {
     /**
      * Announces this controller's navGroups

@@ -12,7 +12,9 @@
 
 namespace Nails\Admin\Cms;
 
-class Menus extends \AdminController
+use Nails\Cms\Controller\BaseAdmin;
+
+class Menus extends BaseAdmin
 {
     /**
      * Announces this controller's navGroups
