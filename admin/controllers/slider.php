@@ -227,7 +227,7 @@ class Slider extends BaseAdmin
         $this->asset->load('nails.admin.cms.sliders.createEdit.min.js', true);
         $this->asset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
         $this->asset->inline('sliderEdit.setScheme("serve", "' . $this->cdn->url_serve_scheme() . '");', 'JS');
-        $this->asset->inline('sliderEdit.setScheme("thumb", "' . $this->cdn->url_thumb_scheme() . '");', 'JS');
+        $this->asset->inline('sliderEdit.setScheme("thumb", "' . $this->cdn->url_crop_scheme() . '");', 'JS');
         $this->asset->inline('sliderEdit.setManagerUrl("' . $cdnManagerUrl . '");', 'JS');
         $this->asset->inline('sliderEdit.addSlides(' . json_encode($slides) . ');', 'JS');
 
@@ -346,7 +346,7 @@ class Slider extends BaseAdmin
         $this->asset->load('nails.admin.cms.sliders.createEdit.min.js', true);
         $this->asset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
         $this->asset->inline('sliderEdit.setScheme("serve", "' . $this->cdn->url_serve_scheme() . '");', 'JS');
-        $this->asset->inline('sliderEdit.setScheme("thumb", "' . $this->cdn->url_thumb_scheme() . '");', 'JS');
+        $this->asset->inline('sliderEdit.setScheme("thumb", "' . $this->cdn->url_crop_scheme() . '");', 'JS');
         $this->asset->inline('sliderEdit.setScheme("scale", "' . $this->cdn->url_scale_scheme() . '");', 'JS');
         $this->asset->inline('sliderEdit.setManagerUrl("' . $cdnManagerUrl . '");', 'JS');
         $this->asset->inline('sliderEdit.addSlides(' . json_encode($slides) . ');', 'JS');
