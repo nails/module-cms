@@ -12,6 +12,7 @@
 
 namespace Nails\Admin\Cms;
 
+use Nails\Admin\Helper;
 use Nails\Cms\Controller\BaseAdmin;
 
 class Slider extends BaseAdmin
@@ -114,18 +115,18 @@ class Slider extends BaseAdmin
         $this->data['sliders'] = $this->cms_slider_model->get_all($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
-        $this->data['search']     = \Nails\Admin\Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
-        $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
+        $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
+        $this->data['pagination'] = Helper::paginationObject($page, $perPage, $totalRows);
 
         //  Add a header button
         if (userHasPermission('admin:cms:slider:create')) {
 
-             \Nails\Admin\Helper::addHeaderButton('admin/cms/slider/create', 'Add New Slider');
+             Helper::addHeaderButton('admin/cms/slider/create', 'Add New Slider');
         }
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('index');
+        Helper::loadView('index');
     }
 
     // --------------------------------------------------------------------------
@@ -233,7 +234,7 @@ class Slider extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('edit');
+        Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------
@@ -353,7 +354,7 @@ class Slider extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('edit');
+        Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------

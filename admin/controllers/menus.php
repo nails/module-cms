@@ -12,6 +12,7 @@
 
 namespace Nails\Admin\Cms;
 
+use Nails\Admin\Helper;
 use Nails\Cms\Controller\BaseAdmin;
 
 class Menus extends BaseAdmin
@@ -113,18 +114,18 @@ class Menus extends BaseAdmin
         $this->data['menus'] = $this->cms_menu_model->get_all($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
-        $this->data['search']     = \Nails\Admin\Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
-        $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
+        $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
+        $this->data['pagination'] = Helper::paginationObject($page, $perPage, $totalRows);
 
         //  Add a header button
         if (userHasPermission('admin:cms:menus:create')) {
 
-            \Nails\Admin\Helper::addHeaderButton('admin/cms/menus/create', 'Create Menu');
+            Helper::addHeaderButton('admin/cms/menus/create', 'Create Menu');
         }
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('index');
+        Helper::loadView('index');
     }
 
     // --------------------------------------------------------------------------
@@ -241,7 +242,7 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('edit');
+        Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------
@@ -369,7 +370,7 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('edit');
+        Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------

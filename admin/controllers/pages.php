@@ -12,6 +12,7 @@
 
 namespace Nails\Admin\Cms;
 
+use Nails\Admin\Helper;
 use Nails\Cms\Controller\BaseAdmin;
 
 class Pages extends BaseAdmin
@@ -104,7 +105,7 @@ class Pages extends BaseAdmin
         //  Add a header button
         if (userHasPermission('admin:cms:pages:create')) {
 
-            \Nails\Admin\Helper::addHeaderButton('admin/cms/pages/create', 'Add New Page');
+            Helper::addHeaderButton('admin/cms/pages/create', 'Add New Page');
         }
 
         // --------------------------------------------------------------------------
@@ -116,7 +117,7 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('index');
+        Helper::loadView('index');
     }
 
     // --------------------------------------------------------------------------
@@ -202,7 +203,7 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('edit');
+        Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------
@@ -303,7 +304,7 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('edit');
+        Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------

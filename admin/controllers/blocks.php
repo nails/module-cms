@@ -12,6 +12,7 @@
 
 namespace Nails\Admin\Cms;
 
+use Nails\Admin\Helper;
 use Nails\Cms\Controller\BaseAdmin;
 
 class Blocks extends BaseAdmin
@@ -122,7 +123,7 @@ class Blocks extends BaseAdmin
 
         //  Checkbox filters
         $cbFilters   = array();
-        $cbFilters[] = \Nails\Admin\Helper::searchFilterObject(
+        $cbFilters[] = Helper::searchFilterObject(
             $tablePrefix . '.type',
             'Type',
             array()
@@ -130,7 +131,7 @@ class Blocks extends BaseAdmin
 
         foreach ($this->data['blockTypes'] as $slug => $label) {
 
-            $cbFilters[0]->options[] = \Nails\Admin\Helper::searchFilterObjectOption($label, $slug, true);
+            $cbFilters[0]->options[] = Helper::searchFilterObjectOption($label, $slug, true);
         }
 
         // --------------------------------------------------------------------------
@@ -149,18 +150,18 @@ class Blocks extends BaseAdmin
         $this->data['blocks'] = $this->cms_block_model->get_all($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
-        $this->data['search']     = \Nails\Admin\Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords, $cbFilters);
-        $this->data['pagination'] = \Nails\Admin\Helper::paginationObject($page, $perPage, $totalRows);
+        $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords, $cbFilters);
+        $this->data['pagination'] = Helper::paginationObject($page, $perPage, $totalRows);
 
         //  Add a header button
         if (userHasPermission('admin:cms:blocks:create')) {
 
-            \Nails\Admin\Helper::addHeaderButton('admin/cms/blocks/create', 'Create Block');
+            Helper::addHeaderButton('admin/cms/blocks/create', 'Create Block');
         }
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('index');
+        Helper::loadView('index');
     }
 
     // --------------------------------------------------------------------------
@@ -248,7 +249,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('edit');
+        Helper::loadView('edit');
     }
 
     // --------------------------------------------------------------------------
@@ -336,7 +337,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        \Nails\Admin\Helper::loadView('create');
+        Helper::loadView('create');
     }
 
     // --------------------------------------------------------------------------
