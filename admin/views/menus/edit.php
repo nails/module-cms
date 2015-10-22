@@ -23,7 +23,6 @@
 
             echo form_field($field);
 
-
         ?>
     </fieldset>
     <fieldset>

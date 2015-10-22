@@ -12,6 +12,8 @@
 
 namespace Nails\Api\Cms;
 
+use Nails\Factory;
+
 class Pages extends \Nails\Api\Controller\Base
 {
     public static $requiresAuthentication = true;
@@ -164,7 +166,7 @@ class Pages extends \Nails\Api\Controller\Base
              * If an ID is missing then we're creating a new page otherwise we're updating.
              */
 
-            $this->load->model('cms/cms_page_model');
+            $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
 
             if (!empty($bGeneratePreview)) {
 
@@ -176,13 +178,13 @@ class Pages extends \Nails\Api\Controller\Base
                     );
                 }
 
-                $iId = $this->cms_page_model->createPreview($aData);
+                $iId = $oPageModel->createPreview($aData);
 
                 if (!$iId) {
 
                     return array(
                         'status' => 500,
-                        'error'  => 'There was a problem creating the page preview. ' . $this->cms_page_model->last_error()
+                        'error'  => 'There was a problem creating the page preview. ' . $oPageModel->last_error()
                     );
                 }
 
@@ -202,13 +204,13 @@ class Pages extends \Nails\Api\Controller\Base
                         return;
                     }
 
-                    $iId = $this->cms_page_model->create($aData);
+                    $iId = $oPageModel->create($aData);
 
                     if (!$iId) {
 
                         return array(
                             'status' => 500,
-                            'error'  => 'There was a problem saving the page. ' . $this->cms_page_model->last_error()
+                            'error'  => 'There was a problem saving the page. ' . $oPageModel->last_error()
                         );
                         return;
                     }
@@ -225,7 +227,7 @@ class Pages extends \Nails\Api\Controller\Base
 
                     }
 
-                    if ($this->cms_page_model->update($aData['id'], $aData)) {
+                    if ($oPageModel->update($aData['id'], $aData)) {
 
                         $iId = $aData['id'];
 
@@ -233,7 +235,7 @@ class Pages extends \Nails\Api\Controller\Base
 
                         return array(
                             'status' => 500,
-                            'error'  => 'There was a problem saving the page. ' . $this->cms_page_model->last_error()
+                            'error'  => 'There was a problem saving the page. ' . $oPageModel->last_error()
                         );
                         return;
                     }
@@ -254,7 +256,7 @@ class Pages extends \Nails\Api\Controller\Base
 
                     case 'PUBLISH':
 
-                        $this->cms_page_model->publish($iId);
+                        $oPageModel->publish($iId);
                         break;
 
                     case 'NONE':
@@ -284,9 +286,8 @@ class Pages extends \Nails\Api\Controller\Base
 
             parse_str($this->input->post('data'), $aWidgetData);
 
-            $this->load->model('cms/cms_page_model');
-
-            $oRequestedWidget = $this->cms_page_model->getWidget($sRequestedWidget);
+            $oPageModel       = Factory::model('Page', 'nailsapp/module-cms');
+            $oRequestedWidget = $oPageModel->getWidget($sRequestedWidget);
 
             if ($oRequestedWidget) {
 

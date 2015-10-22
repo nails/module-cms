@@ -303,6 +303,8 @@ class TemplateBase
         //  Process each widget area and render the HTML
         $aWidgetAreas   = $this->getWidgetAreas();
         $aRenderedAreas = array();
+        $oPageModel     = Factory::model('Page', 'nailsapp/module-cms');
+
         foreach ($aWidgetAreas as $sAreaSlug => $oAreaData) {
 
             $aRenderedAreas[$sAreaSlug] = '';
@@ -311,7 +313,7 @@ class TemplateBase
 
                 foreach ($aTplWidgets[$sAreaSlug] as $oWidgetData) {
 
-                    $oWidget = get_instance()->cms_page_model->getWidget($oWidgetData->widget, 'RENDER');
+                    $oWidget = $oPageModel->getWidget($oWidgetData->widget, 'RENDER');
                     if ($oWidget) {
 
                         parse_str($oWidgetData->data, $aWidgetData);
@@ -363,23 +365,23 @@ class TemplateBase
             if ($matches[0]) {
 
                 //  Get all the blocks which were found
-                $oCi->load->model('cms_block_model');
-                $blocks = $oCi->cms_block_model->get_by_slugs($matches[1]);
+                $oBlockModel = Factory::model('Block', 'nailsapp/module-cms');
+                $aBlocks     = $oBlockModel->get_by_slugs($matches[1]);
 
                 //  Swap them in
-                if ($blocks) {
-                    foreach ($blocks as $block) {
+                if ($aBlocks) {
+                    foreach ($aBlocks as $oBlock) {
 
                         //  Translate some block types
-                        switch ($block->type) {
+                        switch ($oBlock->type) {
                             case 'file':
                             case 'image':
 
-                                $block->value = cdnServe($block->value);
+                                $oBlock->value = cdnServe($oBlock->value);
                                 break;
                         }
 
-                        $buffer = str_replace('[:' . $block->slug . ':]', $block->value, $buffer);
+                        $buffer = str_replace('[:' . $oBlock->slug . ':]', $oBlock->value, $buffer);
                     }
                 }
 

@@ -376,7 +376,7 @@
 
     ?>
     <p class="actions">
-        <a href="#" data-action="save" class="main-action awesome orange large" rel="tipsy-top" title="Your changes will be saved so you can come back later, but won\'t be published on site.">
+        <a href="#" data-action="save" class="main-action awesome orange large" rel="tipsy-top" title="Your changes will be saved so you can come back later, but won't be published on site.">
             Save Changes
         </a>
         <a href="#" data-action="publish" class="main-action awesome green large" rel="tipsy-top" title="Your changes will be published on site and will take hold immediately.">

@@ -16,12 +16,18 @@ use Nails\Factory;
 
 class Redirect extends TemplateBase
 {
+    protected $oPageModel;
+
+    // --------------------------------------------------------------------------
+
     /**
      * Construct and define the template
      */
     public function __construct()
     {
         parent::__construct();
+
+        $this->oPageModel = Factory::model('Page', 'nailsapp/module-cms');
 
         $this->label       = 'Redirect';
         $this->description = 'Redirects to another URL.';
@@ -35,7 +41,7 @@ class Redirect extends TemplateBase
         $this->additional_fields[0]->setLabel('Redirect To Page');
         $this->additional_fields[0]->setClass('select2');
         $this->additional_fields[0]->setOptions(
-            array('None') + get_instance()->cms_page_model->getAllNestedFlat()
+            array('None') + $this->oPageModel->getAllNestedFlat()
         );
 
         $this->additional_fields[1] = Factory::factory('TemplateOption', 'nailsapp/module-cms');
@@ -81,7 +87,7 @@ class Redirect extends TemplateBase
 
         } elseif (!empty($tplAdditionalFields['redirect_page_id'])) {
 
-            $page = get_instance()->cms_page_model->get_by_id($tplAdditionalFields['redirect_page_id']);
+            $page = $this->oPageModel->get_by_id($tplAdditionalFields['redirect_page_id']);
 
             if ($page && ! $page->is_deleted && $page->is_published) {
 

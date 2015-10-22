@@ -10,10 +10,14 @@
  * @link
  */
 
-use Nails\Factory;
+namespace Nails\Cms\Model;
 
-class NAILS_Cms_page_model extends NAILS_Model
+use Nails\Factory;
+use Nails\Common\Model\Base;
+
+class Page extends Base
 {
+    protected $oDb;
     protected $availableWidgets;
     protected $widgetsDirs;
     protected $templatesDirs;
@@ -34,6 +38,10 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         Factory::helper('directory');
+
+        // --------------------------------------------------------------------------
+
+        $this->oDb = Factory::service('Database');
 
         // --------------------------------------------------------------------------
 
@@ -86,7 +94,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $this->db->trans_begin();
+        $this->oDb->trans_begin();
 
         //  Create a new blank row to work with
         $iId = parent::create();
@@ -94,19 +102,19 @@ class NAILS_Cms_page_model extends NAILS_Model
         if (!$iId) {
 
             $this->_set_error('Unable to create base page object. ' . $this->last_error());
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
             return false;
         }
 
         //  Try and update it depending on how the update went, commit & update or rollback
         if ($this->update($iId, $aData)) {
 
-            $this->db->trans_commit();
+            $this->oDb->trans_commit();
             return $iId;
 
         } else {
 
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
             return false;
         }
     }
@@ -142,7 +150,7 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Start the transaction
-        $this->db->trans_begin();
+        $this->oDb->trans_begin();
 
         // --------------------------------------------------------------------------
 
@@ -185,7 +193,7 @@ class NAILS_Cms_page_model extends NAILS_Model
             if (!$oParent) {
 
                 $this->_set_error('Invalid Parent ID.');
-                $this->db->trans_rollback();
+                $this->oDb->trans_rollback();
                 return false;
             }
 
@@ -208,7 +216,8 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         $aInsertData['draft_slug_end'] = end(
             explode(
-                '/', $aInsertData['draft_slug']
+                '/',
+                $aInsertData['draft_slug']
             )
         );
 
@@ -245,12 +254,12 @@ class NAILS_Cms_page_model extends NAILS_Model
             //  Update was successful, set the breadcrumbs
             $aBreadcrumbs = $this->generateBreadcrumbs($oCurrent->id);
 
-            $this->db->set('draft_breadcrumbs', json_encode($aBreadcrumbs));
-            $this->db->where('id', $oCurrent->id);
-            if (!$this->db->update($this->table)) {
+            $this->oDb->set('draft_breadcrumbs', json_encode($aBreadcrumbs));
+            $this->oDb->where('id', $oCurrent->id);
+            if (!$this->oDb->update($this->table)) {
 
                 $this->_set_error('Failed to generate breadcrumbs.');
-                $this->db->trans_rollback();
+                $this->oDb->trans_rollback();
                 return false;
             }
 
@@ -310,7 +319,7 @@ class NAILS_Cms_page_model extends NAILS_Model
                         if (!parent::update($oChild->id, $aUpdateData)) {
 
                             $this->_set_error('Failed to update breadcrumbs and/or slug of child page.');
-                            $this->db->trans_rollback();
+                            $this->oDb->trans_rollback();
                             return false;
                         }
                     }
@@ -320,13 +329,13 @@ class NAILS_Cms_page_model extends NAILS_Model
             // --------------------------------------------------------------------------
 
             //  Finish up.
-            $this->db->trans_commit();
+            $this->oDb->trans_commit();
             return true;
 
         } else {
 
             $this->_set_error('Failed to update page object.');
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
             return false;
         }
     }
@@ -425,7 +434,7 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Start the transaction
-        $this->db->trans_begin();
+        $this->oDb->trans_begin();
 
         // --------------------------------------------------------------------------
 
@@ -442,28 +451,28 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Update the published_* columns to be the same as the draft columns
-        $this->db->set('published_hash', 'draft_hash', false);
-        $this->db->set('published_parent_id', 'draft_parent_id', false);
-        $this->db->set('published_slug', 'draft_slug', false);
-        $this->db->set('published_slug_end', 'draft_slug_end', false);
-        $this->db->set('published_template', 'draft_template', false);
-        $this->db->set('published_template_data', 'draft_template_data', false);
-        $this->db->set('published_title', 'draft_title', false);
-        $this->db->set('published_breadcrumbs', 'draft_breadcrumbs', false);
-        $this->db->set('published_seo_title', 'draft_seo_title', false);
-        $this->db->set('published_seo_description', 'draft_seo_description', false);
-        $this->db->set('published_seo_keywords', 'draft_seo_keywords', false);
-        $this->db->set('is_published', true);
-        $this->db->set('modified', date('Y-m-d H:i{s'));
+        $this->oDb->set('published_hash', 'draft_hash', false);
+        $this->oDb->set('published_parent_id', 'draft_parent_id', false);
+        $this->oDb->set('published_slug', 'draft_slug', false);
+        $this->oDb->set('published_slug_end', 'draft_slug_end', false);
+        $this->oDb->set('published_template', 'draft_template', false);
+        $this->oDb->set('published_template_data', 'draft_template_data', false);
+        $this->oDb->set('published_title', 'draft_title', false);
+        $this->oDb->set('published_breadcrumbs', 'draft_breadcrumbs', false);
+        $this->oDb->set('published_seo_title', 'draft_seo_title', false);
+        $this->oDb->set('published_seo_description', 'draft_seo_description', false);
+        $this->oDb->set('published_seo_keywords', 'draft_seo_keywords', false);
+        $this->oDb->set('is_published', true);
+        $this->oDb->set('modified', date('Y-m-d H:i{s'));
 
         if ($this->user_model->isLoggedIn()) {
 
-            $this->db->set('modified_by', activeUser('id'));
+            $this->oDb->set('modified_by', activeUser('id'));
         }
 
-        $this->db->where('id', $page->id);
+        $this->oDb->where('id', $page->id);
 
-        if ($this->db->update($this->table)) {
+        if ($this->oDb->update($this->table)) {
 
             //  Fetch the children, returning the data we need for the updates
             $children = $this->getIdsOfChildren($page->id);
@@ -500,17 +509,17 @@ class NAILS_Cms_page_model extends NAILS_Model
                     }
 
                     //  Next we set the appropriate fields
-                    $this->db->set('published_slug', $child->draft->slug);
-                    $this->db->set('published_slug_end', $child->draft->slug_end);
-                    $this->db->set('published_breadcrumbs', json_encode($child->draft->breadcrumbs));
-                    $this->db->set('modified', date('Y-m-d H:i{s'));
+                    $this->oDb->set('published_slug', $child->draft->slug);
+                    $this->oDb->set('published_slug_end', $child->draft->slug_end);
+                    $this->oDb->set('published_breadcrumbs', json_encode($child->draft->breadcrumbs));
+                    $this->oDb->set('modified', date('Y-m-d H:i{s'));
 
-                    $this->db->where('id', $child->id);
+                    $this->oDb->where('id', $child->id);
 
-                    if (!$this->db->update($this->table)) {
+                    if (!$this->oDb->update($this->table)) {
 
                         $this->_set_error('Failed to update a child page\'s data.');
-                        $this->db->trans_rollback();
+                        $this->oDb->trans_rollback();
                         return false;
                     }
                 }
@@ -519,11 +528,11 @@ class NAILS_Cms_page_model extends NAILS_Model
             //  Add any slug_history thingmys
             foreach ($slugHistory as $item) {
 
-                $this->db->set('hash', md5($item['slug'] . $item['page_id']));
-                $this->db->set('slug', $item['slug']);
-                $this->db->set('page_id', $item['page_id']);
-                $this->db->set('created', 'NOW()', false);
-                $this->db->replace(NAILS_DB_PREFIX . 'cms_page_slug_history');
+                $this->oDb->set('hash', md5($item['slug'] . $item['page_id']));
+                $this->oDb->set('slug', $item['slug']);
+                $this->oDb->set('page_id', $item['page_id']);
+                $this->oDb->set('created', 'NOW()', false);
+                $this->oDb->replace(NAILS_DB_PREFIX . 'cms_page_slug_history');
             }
 
             // --------------------------------------------------------------------------
@@ -541,14 +550,14 @@ class NAILS_Cms_page_model extends NAILS_Model
                 $this->sitemap_model->generate();
             }
 
-            $this->db->trans_commit();
+            $this->oDb->trans_commit();
 
             //  @TODO: Kill caches for this page and all children
             return true;
 
         } else {
 
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
             return false;
         }
     }
@@ -599,11 +608,11 @@ class NAILS_Cms_page_model extends NAILS_Model
             $this->tablePrefix . '.modified_by'
         );
 
-        $this->db->select($select);
-        $this->db->select('ue.email, u.first_name, u.last_name, u.profile_img, u.gender');
+        $this->oDb->select($select);
+        $this->oDb->select('ue.email, u.first_name, u.last_name, u.profile_img, u.gender');
 
-        $this->db->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tablePrefix . '.modified_by', 'LEFT');
-        $this->db->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
+        $this->oDb->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tablePrefix . '.modified_by', 'LEFT');
+        $this->oDb->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
 
 
         if (empty($data['sort'])) {
@@ -767,9 +776,9 @@ class NAILS_Cms_page_model extends NAILS_Model
     {
         $aOut = array();
 
-        $this->db->select('id,draft_slug,draft_title,is_published');
-        $this->db->where('draft_parent_id', $iPageId);
-        $aChildren = $this->db->get(NAILS_DB_PREFIX . 'cms_page')->result();
+        $this->oDb->select('id,draft_slug,draft_title,is_published');
+        $this->oDb->where('draft_parent_id', $iPageId);
+        $aChildren = $this->oDb->get(NAILS_DB_PREFIX . 'cms_page')->result();
 
         if ($aChildren) {
 
@@ -832,8 +841,13 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param string $_caller        Internal flag to pass to _getcount_common(), contains the calling method
      * @return array
      */
-    public function get_all_flat($page = null, $perPage = null, $data = array(), $includeDeleted = false, $_caller = 'GET_ALL_FLAT')
-    {
+    public function get_all_flat(
+        $page = null,
+        $perPage = null,
+        $data = array(),
+        $includeDeleted = false,
+        $_caller = 'GET_ALL_FLAT'
+    ) {
         $out   = array();
         $pages = $this->get_all($page, $perPage, $data, $includeDeleted, $_caller);
 
@@ -1402,37 +1416,37 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $this->db->trans_begin();
+        $this->oDb->trans_begin();
 
-        $this->db->where('id', $id);
-        $this->db->set('is_deleted', true);
-        $this->db->set('modified', 'NOW()', false);
+        $this->oDb->where('id', $id);
+        $this->oDb->set('is_deleted', true);
+        $this->oDb->set('modified', 'NOW()', false);
 
         if ($this->user_model->isLoggedIn()) {
 
-            $this->db->set('modified_by', activeUser('id'));
+            $this->oDb->set('modified_by', activeUser('id'));
         }
 
-        if ($this->db->update($this->table)) {
+        if ($this->oDb->update($this->table)) {
 
             //  Success, update children
             $children = $this->getIdsOfChildren($id);
 
             if ($children) {
 
-                $this->db->where_in('id', $children);
-                $this->db->set('is_deleted', true);
-                $this->db->set('modified', 'NOW()', false);
+                $this->oDb->where_in('id', $children);
+                $this->oDb->set('is_deleted', true);
+                $this->oDb->set('modified', 'NOW()', false);
 
                 if ($this->user_model->isLoggedIn()) {
 
-                    $this->db->set('modified_by', activeUser('id'));
+                    $this->oDb->set('modified_by', activeUser('id'));
                 }
 
-                if (!$this->db->update($this->table)) {
+                if (!$this->oDb->update($this->table)) {
 
                     $this->_set_error('Unable to delete children pages');
-                    $this->db->trans_rollback();
+                    $this->oDb->trans_rollback();
                     return false;
                 }
             }
@@ -1454,13 +1468,13 @@ class NAILS_Cms_page_model extends NAILS_Model
 
             // --------------------------------------------------------------------------
 
-            $this->db->trans_commit();
+            $this->oDb->trans_commit();
             return true;
 
         } else {
 
             //  Failed
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
             return false;
         }
     }
@@ -1503,9 +1517,9 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Test to see if this preview has already been created
-        $this->db->select('id');
-        $this->db->where('draft_hash', $aInsertData['draft_hash']);
-        $oResult = $this->db->get($this->table_preview)->row();
+        $this->oDb->select('id');
+        $this->oDb->where('draft_hash', $aInsertData['draft_hash']);
+        $oResult = $this->oDb->get($this->table_preview)->row();
 
         if ($oResult) {
 
@@ -1565,19 +1579,19 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Save to the DB
-        $this->db->trans_begin();
-        $this->db->set($aInsertData);
+        $this->oDb->trans_begin();
+        $this->oDb->set($aInsertData);
 
-        if (!$this->db->insert($this->table_preview)) {
+        if (!$this->oDb->insert($this->table_preview)) {
 
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
             $this->_set_error('Failed to create preview object.');
             return false;
 
         } else {
 
-            $iId = $this->db->insert_id();
-            $this->db->trans_commit();
+            $iId = $this->oDb->insert_id();
+            $this->oDb->trans_commit();
             return $iId;
         }
     }
@@ -1591,8 +1605,8 @@ class NAILS_Cms_page_model extends NAILS_Model
      */
     public function getPreviewById($iPreviewId)
     {
-        $this->db->where('id', $iPreviewId);
-        $oResult = $this->db->get($this->table_preview)->row();
+        $this->oDb->where('id', $iPreviewId);
+        $oResult = $this->oDb->get($this->table_preview)->row();
 
         // --------------------------------------------------------------------------
 
@@ -1627,38 +1641,5 @@ class NAILS_Cms_page_model extends NAILS_Model
 
             return false;
         }
-    }
-}
-
-// --------------------------------------------------------------------------
-
-/**
- * OVERLOADING NAILS' MODELS
- *
- * The following block of code makes it simple to extend one of the core Nails
- * models. Some might argue it's a little hacky but it's a simple 'fix'
- * which negates the need to massively extend the CodeIgniter Loader class
- * even further (in all honesty I just can't face understanding the whole
- * Loader class well enough to change it 'properly').
- *
- * Here's how it works:
- *
- * CodeIgniter instantiate a class with the same name as the file, therefore
- * when we try to extend the parent class we get 'cannot redeclare class X' errors
- * and if we call our overloading class something else it will never get instantiated.
- *
- * We solve this by prefixing the main class with NAILS_ and then conditionally
- * declaring this helper class below; the helper gets instantiated et voila.
- *
- * If/when we want to extend the main class we simply define NAILS_ALLOW_EXTENSION
- * before including this PHP file and extend as normal (i.e in the same way as below);
- * the helper won't be declared so we can declare our own one, app specific.
- *
- **/
-
-if (!defined('NAILS_ALLOW_EXTENSION_CMS_PAGE_MODEL')) {
-
-    class Cms_page_model extends NAILS_Cms_page_model
-    {
     }
 }

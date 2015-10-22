@@ -12,11 +12,16 @@
 
 namespace Nails\Admin\Cms;
 
+use Nails\Factory;
 use Nails\Admin\Helper;
 use Nails\Cms\Controller\BaseAdmin;
 
 class Pages extends BaseAdmin
 {
+    protected $oPageModel;
+
+    // --------------------------------------------------------------------------
+
     /**
      * Announces this controller's navGroups
      * @return stdClass
@@ -74,7 +79,7 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load common items
-        $this->load->model('cms/cms_page_model');
+        $this->oPageModel = Factory::model('Page', 'nailsapp/module-cms');
     }
 
     // --------------------------------------------------------------------------
@@ -98,7 +103,7 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Fetch all the pages in the DB
-        $this->data['pages'] = $this->cms_page_model->get_all();
+        $this->data['pages'] = $this->oPageModel->get_all();
 
         // --------------------------------------------------------------------------
 
@@ -136,14 +141,14 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get data
-        $this->data['pagesNestedFlat'] = $this->cms_page_model->getAllNestedFlat(' &rsaquo; ', false);
+        $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
 
         //  Set method info
         $this->data['page']->title  = 'Create New Page';
 
         //  Get available templates & widgets
-        $this->data['templates'] = $this->cms_page_model->getAvailableTemplates('EDITOR');
-        $this->data['widgets']  = $this->cms_page_model->getAvailableWidgets('EDITOR');
+        $this->data['templates'] = $this->oPageModel->getAvailableTemplates('EDITOR');
+        $this->data['widgets']  = $this->oPageModel->getAvailableWidgets('EDITOR');
 
         // --------------------------------------------------------------------------
 
@@ -221,7 +226,7 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $this->data['cmspage'] = $this->cms_page_model->get_by_id($this->uri->segment(5));
+        $this->data['cmspage'] = $this->oPageModel->get_by_id($this->uri->segment(5));
 
         if (!$this->data['cmspage']) {
 
@@ -232,17 +237,17 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get data
-        $this->data['pagesNestedFlat'] = $this->cms_page_model->getAllNestedFlat(' &rsaquo; ', false);
+        $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
 
         //  Set method info
         $this->data['page']->title = 'Edit Page "' . $this->data['cmspage']->draft->title . '"';
 
         //  Get available templates & widgets
-        $this->data['templates'] = $this->cms_page_model->getAvailableTemplates('EDITOR');
-        $this->data['widgets']   = $this->cms_page_model->getAvailableWidgets('EDITOR');
+        $this->data['templates'] = $this->oPageModel->getAvailableTemplates('EDITOR');
+        $this->data['widgets']   = $this->oPageModel->getAvailableWidgets('EDITOR');
 
         //  Get children of this page
-        $this->data['page_children'] = $this->cms_page_model->getIdsOfChildren($this->data['cmspage']->id);
+        $this->data['page_children'] = $this->oPageModel->getIdsOfChildren($this->data['cmspage']->id);
 
         // --------------------------------------------------------------------------
 
@@ -323,17 +328,17 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $id   = $this->uri->segment(5);
-        $page = $this->cms_page_model->get_by_id($id);
+        $page = $this->oPageModel->get_by_id($id);
 
         if ($page && !$page->is_deleted) {
 
-            if ($this->cms_page_model->publish($id)) {
+            if ($this->oPageModel->publish($id)) {
 
                 $this->session->set_flashdata('success', 'Page was published successfully.');
 
             } else {
 
-                $this->session->set_flashdata('error', 'Could not publish page. ' . $this->cms_page_model->last_error());
+                $this->session->set_flashdata('error', 'Could not publish page. ' . $this->oPageModel->last_error());
             }
 
         } else {
@@ -360,17 +365,17 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $id   = $this->uri->segment(5);
-        $page = $this->cms_page_model->get_by_id($id);
+        $page = $this->oPageModel->get_by_id($id);
 
         if ($page && !$page->is_deleted) {
 
-            if ($this->cms_page_model->delete($id)) {
+            if ($this->oPageModel->delete($id)) {
 
                 $this->session->set_flashdata('success', 'Page was deleted successfully.');
 
             } else {
 
-                $this->session->set_flashdata('error', 'Could not delete page. ' . $this->cms_page_model->last_error());
+                $this->session->set_flashdata('error', 'Could not delete page. ' . $this->oPageModel->last_error());
             }
 
         } else {
@@ -397,17 +402,17 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $id   = $this->uri->segment(5);
-        $page = $this->cms_page_model->get_by_id($id);
+        $page = $this->oPageModel->get_by_id($id);
 
         if ($page && $page->is_deleted) {
 
-            if ($this->cms_page_model->restore($id)) {
+            if ($this->oPageModel->restore($id)) {
 
                 $this->session->set_flashdata('success', 'Page was restored successfully. ');
 
             } else {
 
-                $this->session->set_flashdata('error', 'Could not restore page. ' . $this->cms_page_model->last_error());
+                $this->session->set_flashdata('error', 'Could not restore page. ' . $this->oPageModel->last_error());
             }
 
         } else {
@@ -434,17 +439,17 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $id   = $this->uri->segment(5);
-        $page = $this->cms_page_model->get_by_id($id);
+        $page = $this->oPageModel->get_by_id($id);
 
         if ($page) {
 
-            if ($this->cms_page_model->destroy($id)) {
+            if ($this->oPageModel->destroy($id)) {
 
                 $this->session->set_flashdata('success', 'Page was destroyed successfully. ');
 
             } else {
 
-                $this->session->set_flashdata('error', 'Could not destroy page. ' . $this->cms_page_model->last_error());
+                $this->session->set_flashdata('error', 'Could not destroy page. ' . $this->oPageModel->last_error());
             }
 
         } else {

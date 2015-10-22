@@ -12,11 +12,16 @@
 
 namespace Nails\Admin\Cms;
 
+use Nails\Factory;
 use Nails\Admin\Helper;
 use Nails\Cms\Controller\BaseAdmin;
 
 class Blocks extends BaseAdmin
 {
+    protected $oBlockModel;
+
+    // --------------------------------------------------------------------------
+
     /**
      * Announces this controller's navGroups
      * @return stdClass
@@ -61,8 +66,8 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        //  Load common items
-        $this->load->model('cms/cms_block_model');
+        //  Load Model
+        $this->oBlockModel = Factory::model('Block', 'nailsapp/module-cms');
 
         // --------------------------------------------------------------------------
 
@@ -97,7 +102,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $tablePrefix = $this->cms_block_model->getTablePrefix();
+        $tablePrefix = $this->oBlockModel->getTablePrefix();
 
         // --------------------------------------------------------------------------
 
@@ -146,8 +151,8 @@ class Blocks extends BaseAdmin
         );
 
         //  Get the items for the page
-        $totalRows            = $this->cms_block_model->count_all($data);
-        $this->data['blocks'] = $this->cms_block_model->get_all($page, $perPage, $data);
+        $totalRows            = $this->oBlockModel->count_all($data);
+        $this->data['blocks'] = $this->oBlockModel->get_all($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
         $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords, $cbFilters);
@@ -179,7 +184,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $this->data['block'] = $this->cms_block_model->get_by_id($this->uri->segment(5));
+        $this->data['block'] = $this->oBlockModel->get_by_id($this->uri->segment(5));
 
         if (!$this->data['block']) {
 
@@ -220,7 +225,7 @@ class Blocks extends BaseAdmin
                 $aBlockData          = array();
                 $aBlockData['value'] = $this->input->post('value');
 
-                if ($this->cms_block_model->update($this->data['block']->id, $aBlockData)) {
+                if ($this->oBlockModel->update($this->data['block']->id, $aBlockData)) {
 
                     $this->session->set_flashdata('success', 'Block updated successfully.');
                     redirect('admin/cms/blocks');
@@ -310,7 +315,7 @@ class Blocks extends BaseAdmin
                 $aBlockData['located']     = $this->input->post('located');
                 $aBlockData['value']       = $this->input->post('value_' . $aBlockData['type']);
 
-                if ($this->cms_block_model->create($aBlockData)) {
+                if ($this->oBlockModel->create($aBlockData)) {
 
                     $this->session->set_flashdata('success', 'Block created successfully.');
                     redirect('admin/cms/blocks');
@@ -318,7 +323,7 @@ class Blocks extends BaseAdmin
                 } else {
 
                     $this->data['error']  = 'There was a problem creating the new block. ';
-                    $this->data['error'] .= $this->cms_block_model->last_error();
+                    $this->data['error'] .= $this->oBlockModel->last_error();
                 }
 
             } else {
@@ -351,7 +356,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $block = $this->cms_block_model->get_by_id($this->uri->segment(5));
+        $block = $this->oBlockModel->get_by_id($this->uri->segment(5));
 
         if (!$block) {
 
@@ -361,7 +366,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        if ($this->cms_block_model->delete($block->id)) {
+        if ($this->oBlockModel->delete($block->id)) {
 
             $status = 'success';
             $msg    = 'Block was deleted successfully.';
@@ -370,7 +375,7 @@ class Blocks extends BaseAdmin
 
             $status = 'error';
             $msg    = 'Failed to delete block. ';
-            $msg   .= $this->cms_block_model->last_error();
+            $msg   .= $this->oBlockModel->last_error();
         }
 
         $this->session->set_flashdata($status, $msg);
@@ -392,7 +397,7 @@ class Blocks extends BaseAdmin
         //  Check slug's characters are ok
         if (!preg_match('/[^a-z0-9\-\_]/', $sSlug)) {
 
-            $oBlock = $this->cms_block_model->get_by_slug($sSlug);
+            $oBlock = $this->oBlockModel->get_by_slug($sSlug);
 
             if (!$oBlock) {
 

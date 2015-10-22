@@ -12,11 +12,16 @@
 
 namespace Nails\Admin\Cms;
 
+use Nails\Factory;
 use Nails\Admin\Helper;
 use Nails\Cms\Controller\BaseAdmin;
 
 class Slider extends BaseAdmin
 {
+    protected $oSliderModel;
+
+    // --------------------------------------------------------------------------
+
     /**
      * Announces this controller's navGroups
      * @return stdClass
@@ -62,7 +67,7 @@ class Slider extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load common items
-        $this->load->model('cms/cms_slider_model');
+        $this->oSliderModel = Factory::model('Slider', 'nailsapp/module-cms');
     }
 
     // --------------------------------------------------------------------------
@@ -111,8 +116,8 @@ class Slider extends BaseAdmin
         );
 
         //  Get the items for the page
-        $totalRows             = $this->cms_slider_model->count_all($data);
-        $this->data['sliders'] = $this->cms_slider_model->get_all($page, $perPage, $data);
+        $totalRows             = $this->oSliderModel->count_all($data);
+        $this->data['sliders'] = $this->oSliderModel->get_all($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
         $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
@@ -144,8 +149,8 @@ class Slider extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        if ($this->input->post())
-        {
+        if ($this->input->post()) {
+
             //  Rebuild sliders
             $slideIds  = $this->input->post('slideId') ? $this->input->post('slideId') : array();
             $objectIds = $this->input->post('objectId') ? $this->input->post('objectId') : array();
@@ -178,7 +183,7 @@ class Slider extends BaseAdmin
                 $aSliderData['description'] = strip_tags($this->input->post('description'));
                 $aSliderData['slides']      = $slides;
 
-                if ($this->cms_slider_model->create($aSliderData)) {
+                if ($this->oSliderModel->create($aSliderData)) {
 
                     $status  = 'success';
                     $message = 'Slider created successfully.';
@@ -189,7 +194,7 @@ class Slider extends BaseAdmin
                 } else {
 
                     $this->data['error']  = 'Failed to create slider. ';
-                    $this->data['error'] .= $this->cms_slider_model->last_error();
+                    $this->data['error'] .= $this->oSliderModel->last_error();
                 }
 
             } else {
@@ -252,7 +257,7 @@ class Slider extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $slider = $this->cms_slider_model->get_by_id($this->uri->segment(5));
+        $slider = $this->oSliderModel->get_by_id($this->uri->segment(5));
         $this->data['slider'] = $slider;
 
         if (!$slider) {
@@ -263,8 +268,8 @@ class Slider extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        if ($this->input->post())
-        {
+        if ($this->input->post()) {
+
             //  Rebuild sliders
             $slideIds  = $this->input->post('slideId') ? $this->input->post('slideId') : array();
             $objectIds = $this->input->post('objectId') ? $this->input->post('objectId') : array();
@@ -297,7 +302,7 @@ class Slider extends BaseAdmin
                 $aSliderData['description'] = strip_tags($this->input->post('description'));
                 $aSliderData['slides']      = $slides;
 
-                if ($this->cms_slider_model->update($slider->id, $aSliderData)) {
+                if ($this->oSliderModel->update($slider->id, $aSliderData)) {
 
                     $status  = 'success';
                     $message = 'Slider updated successfully.';
@@ -308,7 +313,7 @@ class Slider extends BaseAdmin
                 } else {
 
                     $this->data['error']  = 'Failed to update slider. ';
-                    $this->data['error'] .= $this->cms_slider_model->last_error();
+                    $this->data['error'] .= $this->oSliderModel->last_error();
                 }
 
             } else {
@@ -374,7 +379,7 @@ class Slider extends BaseAdmin
 
         //  Fetch and check post
         $sliderId = $this->uri->segment(5);
-        $slider   = $this->cms_slider_model->get_by_id($sliderId);
+        $slider   = $this->oSliderModel->get_by_id($sliderId);
 
         if (!$slider) {
 
@@ -384,7 +389,7 @@ class Slider extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        if ($this->cms_slider_model->delete($slider->id)) {
+        if ($this->oSliderModel->delete($slider->id)) {
 
             $status  = 'success';
             $message = 'Slider was deleted successfully.';
@@ -393,7 +398,7 @@ class Slider extends BaseAdmin
 
             $status   = 'error';
             $message  = 'I failed to delete that slider. ';
-            $message .= $this->cms_slider_model->last_error();
+            $message .= $this->oSliderModel->last_error();
         }
 
         $this->session->set_flashdata($status, $message);

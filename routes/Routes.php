@@ -22,16 +22,17 @@ class Routes
      */
     public function getRoutes()
     {
-        $routes = array();
+        $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
+        $oDb        = Factory::service('Database');
 
-        get_instance()->load->model('cms/cms_page_model');
-        $pages = get_instance()->cms_page_model->get_all();
+        $aRoutes = array();
+        $aPages = $oPageModel->get_all();
 
-        foreach ($pages as $page) {
+        foreach ($aPages as $oPage) {
 
-            if ($page->is_published) {
+            if ($oPage->is_published) {
 
-                $routes[$page->published->slug] = 'cms/render/page/' . $page->id;
+                $aRoutes[$oPage->published->slug] = 'cms/render/page/' . $oPage->id;
             }
         }
 
@@ -46,22 +47,20 @@ class Routes
          *  often) then the router can work a little harder.
          **/
 
-        $oDb = Factory::service('Database');
-
         $oDb->select('sh.slug,sh.page_id');
         $oDb->join(NAILS_DB_PREFIX . 'cms_page p', 'p.id = sh.page_id');
         $oDb->where('p.is_deleted', false);
         $oDb->where('p.is_published', true);
-        $slugs = $oDb->get(NAILS_DB_PREFIX . 'cms_page_slug_history sh')->result();
+        $aSlugs = $oDb->get(NAILS_DB_PREFIX . 'cms_page_slug_history sh')->result();
 
-        foreach ($slugs as $route) {
+        foreach ($aSlugs as $oRoute) {
 
-            if (!isset($routes[$route->slug])) {
+            if (!isset($aRoutes[$oRoute->slug])) {
 
-                $routes[$route->slug] = 'cms/render/legacy_slug/' . $route->page_id;
+                $aRoutes[$oRoute->slug] = 'cms/render/legacy_slug/' . $oRoute->page_id;
             }
         }
 
-        return $routes;
+        return $aRoutes;
     }
 }
