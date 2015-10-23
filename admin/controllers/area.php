@@ -234,8 +234,7 @@ class Area extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $this->asset->load('nails.admin.module.cms.css', 'NAILS');
-        $this->asset->load('nails.admin.cms.widgeteditor.min.js', 'NAILS');
+        $this->asset->library('CMSWIDGETEDITOR');
         $this->asset->load('nails.admin.cms.areas.createEdit.min.js', 'NAILS');
         $this->asset->inline('var widgetEditor = new NAILS_Admin_CMS_WidgetEditor();', 'JS');
         $this->asset->inline('var areaEdit = new NAILS_Admin_CMS_Areas_CreateEdit(widgetEditor);', 'JS');

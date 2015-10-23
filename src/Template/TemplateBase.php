@@ -303,7 +303,7 @@ class TemplateBase
         //  Process each widget area and render the HTML
         $aWidgetAreas   = $this->getWidgetAreas();
         $aRenderedAreas = array();
-        $oPageModel     = Factory::model('Page', 'nailsapp/module-cms');
+        $oWidgetModel   = Factory::model('Page', 'nailsapp/module-cms');
 
         foreach ($aWidgetAreas as $sAreaSlug => $oAreaData) {
 
@@ -313,7 +313,7 @@ class TemplateBase
 
                 foreach ($aTplWidgets[$sAreaSlug] as $oWidgetData) {
 
-                    $oWidget = $oPageModel->getWidget($oWidgetData->widget, 'RENDER');
+                    $oWidget = $oWidgetModel->getBySlug($oWidgetData->widget, 'RENDER');
                     if ($oWidget) {
 
                         parse_str($oWidgetData->data, $aWidgetData);

@@ -36,6 +36,20 @@ return array(
             } else {
                 return new \Nails\Cms\Model\Slider();
             }
+        },
+        'Widget' => function () {
+            if (class_exists('\App\Cms\Model\Widget')) {
+                return new \App\Cms\Model\Widget();
+            } else {
+                return new \Nails\Cms\Model\Widget();
+            }
+        },
+        'Template' => function () {
+            if (class_exists('\App\Cms\Model\Template')) {
+                return new \App\Cms\Model\Template();
+            } else {
+                return new \Nails\Cms\Model\Template();
+            }
         }
     ),
     'factories' => array(

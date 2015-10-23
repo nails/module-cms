@@ -22,6 +22,7 @@ class Table extends WidgetBase
         parent::__construct();
 
         $this->label       = 'Table';
+        $this->icon        = 'fa-table';
         $this->description = 'Easily build a table';
         $this->keywords    = 'table,tabular data,data';
     }

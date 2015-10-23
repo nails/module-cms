@@ -79,7 +79,9 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load common items
-        $this->oPageModel = Factory::model('Page', 'nailsapp/module-cms');
+        $this->oPageModel     = Factory::model('Page', 'nailsapp/module-cms');
+        $this->oWidgetModel   = Factory::model('Widget', 'nailsapp/module-cms');
+        $this->oTemplateModel = Factory::model('Template', 'nailsapp/module-cms');
     }
 
     // --------------------------------------------------------------------------
@@ -147,8 +149,8 @@ class Pages extends BaseAdmin
         $this->data['page']->title  = 'Create New Page';
 
         //  Get available templates & widgets
-        $this->data['templates'] = $this->oPageModel->getAvailableTemplates('EDITOR');
-        $this->data['widgets']  = $this->oPageModel->getAvailableWidgets('EDITOR');
+        $this->data['templates'] = $this->oTemplateModel->getAvailable('EDITOR');
+        $this->data['widgets']   = $this->oWidgetModel->getAvailable('EDITOR');
 
         // --------------------------------------------------------------------------
 
@@ -243,8 +245,8 @@ class Pages extends BaseAdmin
         $this->data['page']->title = 'Edit Page "' . $this->data['cmspage']->draft->title . '"';
 
         //  Get available templates & widgets
-        $this->data['templates'] = $this->oPageModel->getAvailableTemplates('EDITOR');
-        $this->data['widgets']   = $this->oPageModel->getAvailableWidgets('EDITOR');
+        $this->data['templates'] = $this->oTemplateModel->getAvailable('EDITOR');
+        $this->data['widgets']   = $this->oWidgetModel->getAvailable('EDITOR');
 
         //  Get children of this page
         $this->data['page_children'] = $this->oPageModel->getIdsOfChildren($this->data['cmspage']->id);

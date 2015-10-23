@@ -17,6 +17,7 @@ class WidgetBase
     protected static $isDisabled;
 
     protected $label;
+    protected $icon;
     protected $description;
     protected $keywords;
     protected $grouping;
@@ -49,6 +50,7 @@ class WidgetBase
     public function __construct()
     {
         $this->label                    = 'Widget';
+        $this->icon                     = 'fa-cube';
         $this->description              = '';
         $this->keywords                 = '';
         $this->grouping                 = '';
@@ -100,6 +102,17 @@ class WidgetBase
     public function getLabel()
     {
         return $this->label;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the widget's icon
+     * @return string
+     */
+    public function getIcon()
+    {
+        return $this->icon;
     }
 
     // --------------------------------------------------------------------------
@@ -286,20 +299,21 @@ class WidgetBase
      */
     public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
     {
-        $oWidget = new \stdClass();
-        $oWidget->label = $this->getLabel();
-        $oWidget->description = $this->getDescription();
-        $oWidget->keywords = $this->getKeywords();
-        $oWidget->grouping = $this->getGrouping();
-        $oWidget->slug = $this->getSlug();
-        $oWidget->restricted_to_template = $this->getRestrictedTo('TEMPLATE');
-        $oWidget->restricted_to_area = $this->getRestrictedTo('AREA');
+        $oWidget                           = new \stdClass();
+        $oWidget->label                    = $this->getLabel();
+        $oWidget->icon                     = $this->getIcon();
+        $oWidget->description              = $this->getDescription();
+        $oWidget->keywords                 = $this->getKeywords();
+        $oWidget->grouping                 = $this->getGrouping();
+        $oWidget->slug                     = $this->getSlug();
+        $oWidget->restricted_to_template   = $this->getRestrictedTo('TEMPLATE');
+        $oWidget->restricted_to_area       = $this->getRestrictedTo('AREA');
         $oWidget->restricted_from_template = $this->getRestrictedFrom('TEMPLATE');
-        $oWidget->restricted_from_area = $this->getRestrictedFrom('AREA');
-        $oWidget->assets_editor = $this->getAssets('EDITOR');
-        $oWidget->assets_render = $this->getAssets('RENDER');
-        $oWidget->path = $this->getPath();
-        $oWidget->callbacks = $this->getCallbacks();
+        $oWidget->restricted_from_area     = $this->getRestrictedFrom('AREA');
+        $oWidget->assets_editor            = $this->getAssets('EDITOR');
+        $oWidget->assets_render            = $this->getAssets('RENDER');
+        $oWidget->path                     = $this->getPath();
+        $oWidget->callbacks                = $this->getCallbacks();
 
         return json_encode($oWidget, $iJsonOptions, $iJsonDepth);
     }
@@ -312,20 +326,21 @@ class WidgetBase
      */
     public function toArray()
     {
-        $aWidget = array();
-        $aWidget['label'] = $this->getLabel();
-        $aWidget['description'] = $this->getDescription();
-        $aWidget['keywords'] = $this->getKeywords();
-        $aWidget['grouping'] = $this->getGrouping();
-        $aWidget['slug'] = $this->getSlug();
-        $aWidget['restricted_to_template'] = $this->getRestrictedTo('TEMPLATE');
-        $aWidget['restricted_to_area'] = $this->getRestrictedTo('AREA');
+        $aWidget                             = array();
+        $aWidget['label']                    = $this->getLabel();
+        $aWidget['icon']                     = $this->getIcon();
+        $aWidget['description']              = $this->getDescription();
+        $aWidget['keywords']                 = $this->getKeywords();
+        $aWidget['grouping']                 = $this->getGrouping();
+        $aWidget['slug']                     = $this->getSlug();
+        $aWidget['restricted_to_template']   = $this->getRestrictedTo('TEMPLATE');
+        $aWidget['restricted_to_area']       = $this->getRestrictedTo('AREA');
         $aWidget['restricted_from_template'] = $this->getRestrictedFrom('TEMPLATE');
-        $aWidget['restricted_from_area'] = $this->getRestrictedFrom('AREA');
-        $aWidget['assets_editor'] = $this->getAssets('EDITOR');
-        $aWidget['assets_render'] = $this->getAssets('RENDER');
-        $aWidget['path'] = $this->getPath();
-        $aWidget['callbacks'] = $this->getCallbacks();
+        $aWidget['restricted_from_area']     = $this->getRestrictedFrom('AREA');
+        $aWidget['assets_editor']            = $this->getAssets('EDITOR');
+        $aWidget['assets_render']            = $this->getAssets('RENDER');
+        $aWidget['path']                     = $this->getPath();
+        $aWidget['callbacks']                = $this->getCallbacks();
 
         return $aWidget;
     }

@@ -28,9 +28,10 @@
     <fieldset>
         <legend>Widgets</legend>
         <p>
-            <button class="btn btn-warning btn-block btn-sm">
+            <a href="#" id="open-widget-editor" class="btn btn-warning btn-block btn-sm">
                 Manage Widgets
-            </button>
+            </a>
+            <input type="hidden" id="widget-data" />
         </p>
     </fieldset>
     <hr />

@@ -22,6 +22,7 @@ class Html extends WidgetBase
         parent::__construct();
 
         $this->label       = 'Plain Text';
+        $this->icon        = 'fa-code';
         $this->description = 'Plain, completely unformatted text. Perfect for custom HTML.';
         $this->keywords    = 'text,html,code,plaintext,plain text';
     }

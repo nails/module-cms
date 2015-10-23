@@ -18,13 +18,8 @@ use Nails\Common\Model\Base;
 class Page extends Base
 {
     protected $oDb;
-    protected $availableWidgets;
-    protected $widgetsDirs;
-    protected $templatesDirs;
     protected $nailsPrefix;
     protected $appPrefix;
-    protected $loadedTemplates;
-    protected $loadedWidgets;
 
     // --------------------------------------------------------------------------
 
@@ -42,28 +37,6 @@ class Page extends Base
         // --------------------------------------------------------------------------
 
         $this->oDb = Factory::service('Database');
-
-        // --------------------------------------------------------------------------
-
-        //  Discover templates and widgets
-        $aModules = _NAILS_GET_MODULES();
-
-        $this->widgetsDirs   = array();
-        $this->templatesDirs = array();
-
-        foreach ($aModules as $oModule) {
-
-            $this->templatesDirs[] = $oModule->path . 'cms/templates/';
-            $this->widgetsDirs[]   = $oModule->path . 'cms/widgets/';
-        }
-
-        /**
-         * Load App templates and widgets afterwards so that they may override
-         * the module supplied ones.
-         */
-
-        $this->templatesDirs[] = FCPATH . APPPATH . 'modules/cms/templates/';
-        $this->widgetsDirs[]   = FCPATH . APPPATH . 'modules/cms/widgets/';
 
         // --------------------------------------------------------------------------
 
@@ -386,25 +359,13 @@ class Page extends Base
      */
     public function render($sSlug, $aWidgets = array(), $aAdditionalFields = array())
     {
-        $oTemplate = $this->getTemplate($sSlug, 'RENDER');
+        $oTemplateModel = Factory::model('Template', 'nailsapp/module-cms');
+        $oTemplate      = $oTemplateModel->getBySlug($sSlug, 'RENDER');
 
         if (!$oTemplate) {
 
             $this->_set_error('"' . $sSlug .'" is not a valid template.');
             return false;
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Look for manual config items
-        if (!empty($aAdditionalFields->manual_config->assets_render)) {
-
-            if (!is_array($aAdditionalFields->manual_config->assets_render)) {
-
-                $aAdditionalFields->manual_config->assets_render = (array) $aAdditionalFields->manual_config->assets_render;
-            }
-
-            $this->loadAssets($aAdditionalFields->manual_config->assets_render);
         }
 
         // --------------------------------------------------------------------------
@@ -1037,364 +998,13 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Get all available widgets to the system
-     * @param  string $loadAssets Whether or not to load widget's assets, and
-     *                            if so whether EDITOR or RENDER assets.
-     * @return array
-     */
-    public function getAvailableWidgets($loadAssets = false)
-    {
-        if (!empty($this->loadedWidgets)) {
-
-            return $this->loadedWidgets;
-        }
-
-        $aAvailableWidgets = array();
-
-        foreach ($this->widgetsDirs as $sDir) {
-
-            if (is_dir($sDir)) {
-
-                $aWidgets = directory_map($sDir);
-
-                foreach ($aWidgets as $sWidgetDir => $aWidgetFiles) {
-
-                    if (is_file($sDir . $sWidgetDir . '/widget.php')) {
-
-                        $aAvailableWidgets[$sWidgetDir] = array(
-                            'path' => $sDir,
-                            'name' => $sWidgetDir
-                        );
-                    }
-                }
-            }
-        }
-
-        //  Instantiate widgets
-        $aLoadedWidgets = array();
-        foreach ($aAvailableWidgets as $aWidget) {
-
-            include_once $aWidget['path'] . $aWidget['name'] . '/widget.php';
-
-            $sClassName = '\Nails\Cms\Widget\\' . ucfirst(strtolower($aWidget['name']));
-
-            if (!class_exists($sClassName)) {
-
-                log_message(
-                    'error',
-                    'CMS Widget discovered at "' . $aWidget['path'] . $aWidget['name'] .
-                    '" but does not contain class "' . $sClassName . '"'
-                );
-
-            } elseif (!empty($sClassName::isDisabled())) {
-
-                /**
-                 * This widget is disabled, ignore this template. Don't log
-                 * anything as it's likely a developer override to hide a default
-                 * template.
-                 */
-
-            } else {
-
-                $aLoadedWidgets[$aWidget['name']] = new $sClassName();
-
-                //  Load the template's assets if requested
-                if ($loadAssets) {
-
-                    $aAssets = $aLoadedWidgets[$aWidget['name']]->getAssets($loadAssets);
-                    $this->loadAssets($aAssets);
-                }
-            }
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Sort the widgets into their sub groupings
-        $aOut          = array();
-        $aGeneric      = array();
-        $sGenericLabel = 'Generic';
-
-        foreach ($aLoadedWidgets as $sWidgetSlug => $oWidget) {
-
-            $sWidgetGrouping = $oWidget->getGrouping();
-
-            if (!empty($sWidgetGrouping)) {
-
-                $sKey = md5($sWidgetGrouping);
-
-                if (!isset($aOut[$sKey])) {
-
-                    $aOut[$sKey] = Factory::factory('WidgetGroup', 'nailsapp/module-cms');
-                    $aOut[$sKey]->setLabel($sWidgetGrouping);
-                }
-
-                $aOut[$sKey]->add($oWidget);
-
-            } else {
-
-                $sKey = md5($sGenericLabel);
-
-                if (!isset($aGeneric[$sKey])) {
-
-                    $aGeneric[$sKey] = Factory::factory('WidgetGroup', 'nailsapp/module-cms');
-                    $aGeneric[$sKey]->setLabel($sGenericLabel);
-                }
-
-                $aGeneric[$sKey]->add($oWidget);
-            }
-        }
-
-        //  Glue generic grouping to the beginning of the array
-        $aOut = array_merge($aGeneric, $aOut);
-        $aOut = array_values($aOut);
-
-        $this->loadedWidgets = $aOut;
-
-        return $this->loadedWidgets;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * The sorting function for widgets, called by usort()
-     * @param  stdClass $a The first widget
-     * @param  stdClass $b The second widget
-     * @return int
-     */
-    protected function sortWidgets($a, $b)
-    {
-        //  Equal?
-        if (trim($a->label) == trim($b->label)) {
-
-            return 0;
-        }
-
-        //  Not equal, work out which takes precedence
-        $sort = array($a->label, $b->label);
-        sort($sort);
-
-        return $sort[0] == $a->label ? -1 : 1;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Get an individual widget
-     * @param  string  $sSlug       The widget's slug
-     * @param  boolean $sLoadAssets Whether or not to load the widget's assets
-     * @return mixed               stdClass on success, false on failure
-     */
-    public function getWidget($sSlug, $sLoadAssets = false)
-    {
-        $aWidgetGroups = $this->getAvailableWidgets();
-
-        foreach ($aWidgetGroups as $oWidgetGroup) {
-
-            $aWidgets = $oWidgetGroup->getWidgets();
-
-            foreach ($aWidgets as $oWidget) {
-
-                if ($sSlug == $oWidget->getSlug()) {
-
-                    if ($sLoadAssets) {
-
-                        $aAssets = $oWidget->getAssets($sLoadAssets);
-                        $this->loadAssets($aAssets);
-                    }
-
-                    return $oWidget;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Get all available templates to the system
-     * @param  string $loadAssets Whether or not to load template's assets, and
-     *                            if so whether EDITOR or RENDER assets.
-     * @return array
-     */
-    public function getAvailableTemplates($loadAssets = '')
-    {
-        if (!empty($this->loadedTemplates)) {
-
-            return $this->loadedTemplates;
-        }
-
-        $aAvailableTemplates = array();
-
-        foreach ($this->templatesDirs as $sDir) {
-
-            if (is_dir($sDir)) {
-
-                $aTemplates = directory_map($sDir);
-
-                foreach ($aTemplates as $sTemplateDir => $aTemplateFiles) {
-
-                    if (is_file($sDir . $sTemplateDir . '/template.php')) {
-
-                        $aAvailableTemplates[$sTemplateDir] = array(
-                            'path' => $sDir,
-                            'name' => $sTemplateDir
-                        );
-                    }
-                }
-            }
-        }
-
-        //  Instantiate templates
-        $aLoadedTemplates = array();
-        foreach ($aAvailableTemplates as $aTemplate) {
-
-            include_once $aTemplate['path'] . $aTemplate['name'] . '/template.php';
-
-            $sClassName = '\Nails\Cms\Template\\' . ucfirst(strtolower($aTemplate['name']));
-
-            if (!class_exists($sClassName)) {
-
-                log_message(
-                    'error',
-                    'CMS Template discovered at "' . $aTemplate['path'] . $aTemplate['name'] .
-                    '" but does not contain class "' . $sClassName . '"'
-                );
-
-            } elseif ($sClassName::isDisabled()) {
-
-                /**
-                 * This template is disabled, ignore this template. Don't log
-                 * anything as it's likely a developer override to hide a default
-                 * template.
-                 */
-
-            } else {
-
-                $aLoadedTemplates[$aTemplate['name']] = new $sClassName();
-
-                //  Load the template's assets if requested
-                if ($loadAssets) {
-
-                    $aAssets = $aLoadedTemplates[$aTemplate['name']]->getAssets($loadAssets);
-                    $this->loadAssets($aAssets);
-                }
-            }
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Sort the Templates into their sub groupings
-        $aOut          = array();
-        $aGeneric      = array();
-        $sGenericLabel = 'Generic';
-
-        foreach ($aLoadedTemplates as $sTemplateSlug => $oTemplate) {
-
-            $sTemplateGrouping = $oTemplate->getGrouping();
-
-            if (!empty($sTemplateGrouping)) {
-
-                $sKey = md5($sTemplateGrouping);
-
-                if (!isset($aOut[$sKey])) {
-
-                    $aOut[$sKey] = Factory::factory('TemplateGroup', 'nailsapp/module-cms');
-                    $aOut[$sKey]->setLabel($sTemplateGrouping);
-                }
-
-                $aOut[$sKey]->add($oTemplate);
-
-            } else {
-
-                $sKey = md5($sGenericLabel);
-
-                if (!isset($aGeneric[$sKey])) {
-
-                    $aGeneric[$sKey] = Factory::factory('TemplateGroup', 'nailsapp/module-cms');
-                    $aGeneric[$sKey]->setLabel($sGenericLabel);
-                }
-
-                $aGeneric[$sKey]->add($oTemplate);
-            }
-        }
-
-        //  Glue generic grouping to the beginning of the array
-        $aOut = array_merge($aGeneric, $aOut);
-        $aOut = array_values($aOut);
-
-        $this->loadedTemplates = $aOut;
-
-        //  Sort geoupings into alphabetical order
-        //  @todo
-
-        return $this->loadedTemplates;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Get an individual template
-     * @param  string  $sSlug       The template's slug
-     * @param  boolean $sLoadAssets Whether or not to load the template's assets
-     * @return mixed               stdClass on success, false on failure
-     */
-    public function getTemplate($sSlug, $sLoadAssets = false)
-    {
-        $oTemplateGroups = $this->getAvailableTemplates();
-
-        foreach ($oTemplateGroups as $oTemplateGroup) {
-
-            $aTemplates = $oTemplateGroup->getTemplates();
-
-            foreach ($aTemplates as $oTemplate) {
-
-                if ($sSlug == $oTemplate->getSlug()) {
-
-                    if ($sLoadAssets) {
-
-                        $aAssets = $oTemplate->getAssets($sLoadAssets);
-                        $this->loadAssets($aAssets);
-                    }
-
-                    return $oTemplate;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
      * Load widget/template assets
      * @param  array  $assets An array of assets to load
      * @return void
      */
     protected function loadAssets($assets = array())
     {
-        foreach ($assets as $asset) {
-
-            if (is_array($asset)) {
-
-                if (!empty($asset[1])) {
-
-                    $isNails = $asset[1];
-
-                } else {
-
-                    $isNails = false;
-                }
-
-                $this->asset->load($asset[0], $isNails);
-
-            } elseif (is_string($asset)) {
-
-                $this->asset->load($asset);
-            }
-        }
+        die('moved');
     }
 
     // --------------------------------------------------------------------------

@@ -26,11 +26,11 @@ class Pages extends \Nails\Api\Controller\Base
      */
     public function postSave()
     {
-        if (!$this->user_model->isAdmin()) {
+        if (!userHasPermission('admin:cms:pages:create') && !userHasPermission('admin:cms:pages:edit')) {
 
             return array(
                 'status' => 401,
-                'error'  => 'You must be an administrator.'
+                'error'  => 'You do not have permission to save pages.'
             );
 
         } else {
@@ -286,8 +286,8 @@ class Pages extends \Nails\Api\Controller\Base
 
             parse_str($this->input->post('data'), $aWidgetData);
 
-            $oPageModel       = Factory::model('Page', 'nailsapp/module-cms');
-            $oRequestedWidget = $oPageModel->getWidget($sRequestedWidget);
+            $oWidgetModel     = Factory::model('Widget', 'nailsapp/module-cms');
+            $oRequestedWidget = $oWidgetModel->getBySlug($sRequestedWidget);
 
             if ($oRequestedWidget) {
 
