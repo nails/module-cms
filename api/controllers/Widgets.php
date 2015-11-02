@@ -41,4 +41,38 @@ class Widgets extends \Nails\Api\Controller\Base
             );
         }
     }
+
+    // --------------------------------------------------------------------------
+
+    public function postEditor()
+    {
+        if (userHasPermission('admin:cms:pages:*') || userHasPermission('admin:cms:area:*')) {
+
+            $sWidgetSlug  = $this->input->post('slug');
+            $aWidgetData  = $this->input->post('data');
+            $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
+            $oWidget      = $oWidgetModel->getBySlug($sWidgetSlug);
+
+            if ($oWidget) {
+
+                return array(
+                    'editor' => $oWidget->getEditor($aWidgetData)
+                );
+
+            } else {
+
+                return array(
+                    'status' => 400,
+                    'error'  => '"' . $sWidgetSlug . '" is not a valid widget.'
+                );
+            }
+
+        } else {
+
+            return array(
+                'status' => 401,
+                'error'  => 'You do not have permission to view widgets.'
+            );
+        }
+    }
 }
