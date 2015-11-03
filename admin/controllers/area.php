@@ -154,30 +154,29 @@ class Area extends BaseAdmin
             //  Validate form
             $this->load->library('form_validation');
             $this->form_validation->set_rules('label', '', 'xss_clean|trim|required');
-            $this->form_validation->set_rules('description', '', 'trim');
+            $this->form_validation->set_rules('description', '', 'xss_clean|trim|max_length[255]');
+            $this->form_validation->set_rules('widget-data', '', 'trim');
+
+            if ($this->input->post('slug')) {
+
+                $sTable = $this->oAreaModel->getTableName();
+                $this->form_validation->set_rules(
+                    'slug',
+                    '',
+                    'xss_clean|trim|alpha_dash|is_unique[' . $sTable . '.slug]'
+                );
+            }
+
             $this->form_validation->set_message('required', lang('fv_required'));
+            $this->form_validation->set_message('alpha_dash', lang('fv_alpha_dash'));
 
             if ($this->form_validation->run()) {
 
-                //  Prepare the create data
                 $aItemData                = array();
                 $aItemData['label']       = $this->input->post('label');
+                $aItemData['slug']        = $this->input->post('slug');
                 $aItemData['description'] = strip_tags($this->input->post('description'));
-                $aItemData['items']       = array();
-
-                //  Prepare the area items
-                $aAreaItems = $this->input->post('areaItem');
-                $iNumItems  = isset($aAreaItems['id']) ? count($aAreaItems['id']) : 0;
-
-                for ($i=0; $i < $iNumItems; $i++) {
-
-                    $aItemData['items'][$i]              = array();
-                    $aItemData['items'][$i]['id']        = isset($aAreaItems['id'][$i]) ? $aAreaItems['id'][$i] : null;
-                    $aItemData['items'][$i]['parent_id'] = isset($aAreaItems['parent_id'][$i]) ? $aAreaItems['parent_id'][$i] : null;
-                    $aItemData['items'][$i]['label']     = isset($aAreaItems['label'][$i]) ? $aAreaItems['label'][$i] : null;
-                    $aItemData['items'][$i]['url']       = isset($aAreaItems['url'][$i]) ? $aAreaItems['url'][$i] : null;
-                    $aItemData['items'][$i]['page_id']   = isset($aAreaItems['page_id'][$i]) ? $aAreaItems['page_id'][$i] : null;
-                }
+                $aItemData['widget_data'] = $this->input->post('widget_data');
 
                 if ($this->oAreaModel->create($aItemData)) {
 
@@ -206,30 +205,6 @@ class Area extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $this->data['page']->title = 'Create Area';
-
-        // --------------------------------------------------------------------------
-
-        //  Prepare the area items
-        if ($this->input->post()) {
-
-            $aAreaItems     = array();
-            $aPostAreaItems = $this->input->post('areaItem');
-            $iNumItems       = !empty($aPostAreaItems['id']) ? count($aPostAreaItems['id']) : 0;
-
-            for ($i=0; $i < $iNumItems; $i++) {
-
-                $aAreaItems[$i]              = array();
-                $aAreaItems[$i]['id']        = isset($aPostAreaItems['id'][$i]) ? $aPostAreaItems['id'][$i] : null;
-                $aAreaItems[$i]['parent_id'] = isset($aPostAreaItems['parent_id'][$i]) ? $aPostAreaItems['parent_id'][$i] : null;
-                $aAreaItems[$i]['label']     = isset($aPostAreaItems['label'][$i]) ? $aPostAreaItems['label'][$i] : null;
-                $aAreaItems[$i]['url']       = isset($aPostAreaItems['url'][$i]) ? $aPostAreaItems['url'][$i] : null;
-                $aAreaItems[$i]['page_id']   = isset($aPostAreaItems['page_id'][$i]) ? $aPostAreaItems['page_id'][$i] : null;
-            }
-
-        } else {
-
-            $aAreaItems = $aItems;
-        }
 
         // --------------------------------------------------------------------------
 
@@ -275,16 +250,29 @@ class Area extends BaseAdmin
             //  Validate form
             $this->load->library('form_validation');
             $this->form_validation->set_rules('label', '', 'xss_clean|trim|required');
-            $this->form_validation->set_rules('description', '', 'trim');
+            $this->form_validation->set_rules('description', '', 'xss_clean|trim|max_length[255]');
+            $this->form_validation->set_rules('widget-data', '', 'trim');
+
+            if ($this->input->post('slug')) {
+
+                $sTable = $this->oAreaModel->getTableName();
+                $this->form_validation->set_rules(
+                    'slug',
+                    '',
+                    'xss_clean|trim|alpha_dash|unique_if_diff[' . $sTable . '.slug.' . $this->data['area']->slug . ']'
+                );
+            }
+
             $this->form_validation->set_message('required', lang('fv_required'));
+            $this->form_validation->set_message('alpha_dash', lang('fv_alpha_dash'));
 
             if ($this->form_validation->run()) {
 
-                //  Prepare the create data
                 $aItemData                = array();
                 $aItemData['label']       = $this->input->post('label');
+                $aItemData['slug']        = $this->input->post('slug');
                 $aItemData['description'] = strip_tags($this->input->post('description'));
-                $aItemData['items']       = array();
+                $aItemData['widget_data'] = $this->input->post('widget_data');
 
                 if ($this->oAreaModel->update($area->id, $aItemData)) {
 
@@ -304,10 +292,6 @@ class Area extends BaseAdmin
 
                 $this->data['error'] = lang('fv_there_were_errors');
             }
-
-        } else {
-
-            $aItems = $area->items;
         }
 
         // --------------------------------------------------------------------------
@@ -317,9 +301,10 @@ class Area extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
-        $this->asset->load('nails.admin.cms.area.createEdit.min.js', 'NAILS');
-        $this->asset->inline('var areaEdit = new NAILS_Admin_CMS_Area_Create_Edit();', 'JS');
+        $this->asset->library('CMSWIDGETEDITOR');
+        $this->asset->load('nails.admin.cms.areas.createEdit.min.js', 'NAILS');
+        $this->asset->inline('var widgetEditor = new NAILS_Admin_CMS_WidgetEditor();', 'JS');
+        $this->asset->inline('var areaEdit = new NAILS_Admin_CMS_Areas_CreateEdit(widgetEditor);', 'JS');
 
         // --------------------------------------------------------------------------
 

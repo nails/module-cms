@@ -101,13 +101,13 @@ if (!function_exists('cmsPage')) {
 if (!function_exists('cmsArea')) {
 
     /**
-     * Returns a CMS area
+     * Returns a rendered CMS area
      * @param  string $mIdSlug The area's ID or slug
-     * @return mixed
+     * @return string
      */
     function cmsArea($mIdSlug)
     {
         $oAreaModel = \Nails\Factory::model('Area', 'nailsapp/module-cms');
-        return $oAreaModel->get_by_id_or_slug($mIdSlug);
+        return $oAreaModel->render($mIdSlug);
     }
 }

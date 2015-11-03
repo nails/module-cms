@@ -108,7 +108,12 @@ class WidgetGroup
             $oObj->widgets[] = $oWidget->toArray($iJsonOptions, $iJsonDepth);
         }
 
-        return json_encode($oObj, $iJsonOptions, $iJsonDepth);
+        $sJson = json_encode($oObj, $iJsonOptions, $iJsonDepth);
+
+        //  Un-stringify functions
+        $sJson = preg_replace('/"(function\(.*?\) ?\{.*?\})"/im', '$1', $sJson);
+
+        return $sJson;
     }
 
     // --------------------------------------------------------------------------

@@ -16,6 +16,16 @@
             // --------------------------------------------------------------------------
 
             $field                = array();
+            $field['key']         = 'slug';
+            $field['label']       = 'Slug';
+            $field['default']     = isset($area->slug) ? $area->slug : '';
+            $field['placeholder'] = 'The slug, leave blank to auto-generate';
+
+            echo form_field($field);
+
+            // --------------------------------------------------------------------------
+
+            $field                = array();
             $field['key']         = 'description';
             $field['label']       = 'Description';
             $field['default']     = isset($area->description) ? $area->description : '';
@@ -31,7 +41,23 @@
             <a href="#" id="open-widget-editor" class="btn btn-warning btn-block btn-sm">
                 Manage Widgets
             </a>
-            <input type="hidden" id="widget-data" />
+            <?php
+
+            if ($this->input->post('widget_data')) {
+
+                $sDefault = $this->input->post('widget_data');
+
+            } elseif (isset($area->widget_data)) {
+
+                $sDefault = json_encode($area->widget_data);
+
+            } else {
+
+                $sDefault = '';
+            }
+
+            ?>
+            <input type="hidden" name="widget_data" id="widget-data" value="<?=htmlentities($sDefault)?>" />
         </p>
     </fieldset>
     <hr />

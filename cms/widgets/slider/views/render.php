@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This class is the "Slider" CMS widget view
+ * This is the "Slider" CMS widget view
  *
  * @package     Nails
  * @subpackage  module-cms
@@ -10,7 +10,17 @@
  * @link
  */
 
-?>
-<p class="system-alert message">
-    <strong>TODO:</strong> Slider Render
-</p>
+$iSliderId = !empty($sliderId) ? (int) $sliderId: null;
+
+if (!empty($iSliderId)) {
+
+    $oSliderModel = \Nails\Factory::model('Slider', 'nailsapp/module-cms');
+    $oSlider      = $oSliderModel->get_by_id($iSliderId);
+
+    ?>
+    <div class="cms-widget cms-widget-slider">
+        <?php dump($oSlider) ?>
+    </div>
+    <?php
+
+}

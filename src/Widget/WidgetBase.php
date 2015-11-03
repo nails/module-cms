@@ -84,11 +84,11 @@ class WidgetBase
 
             if (is_file($this->path . 'js/' . $sProperty . '.min.js')) {
 
-                $sCallback = file_get_contents($this->path . 'js/' . $sProperty . '.min.js');
+                $sCallback = 'function() {' . file_get_contents($this->path . 'js/' . $sProperty . '.min.js') . '}';
 
             } elseif (is_file($this->path . 'js/' . $sProperty . '.js')) {
 
-                $sCallback = file_get_contents($this->path . 'js/' . $sProperty . '.js');
+                $sCallback = 'function() {' . file_get_contents($this->path . 'js/' . $sProperty . '.js') . '}';
             }
         }
     }
@@ -130,7 +130,7 @@ class WidgetBase
 
     /**
      * Returns the widget's keywords
-     * @return string
+     * @return array
      */
     public function getKeywords()
     {
@@ -315,7 +315,12 @@ class WidgetBase
         $oWidget->path                     = $this->getPath();
         $oWidget->callbacks                = $this->getCallbacks();
 
-        return json_encode($oWidget, $iJsonOptions, $iJsonDepth);
+        $sJson = json_encode($oWidget, $iJsonOptions, $iJsonDepth);
+
+        //  Un-stringify functions
+        $sJson = preg_replace('/"(function\(.*?\) ?\{.*?\})"/im', '$1', $sJson);
+
+        return $sJson;
     }
 
     // --------------------------------------------------------------------------
