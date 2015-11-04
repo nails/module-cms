@@ -22,6 +22,7 @@ class Slider extends WidgetBase
         parent::__construct();
 
         $this->label       = 'Slider';
+        $this->icon        = 'fa-clone';
         $this->description = 'Embed easily configurable photo sliders into your page.';
         $this->keywords    = 'gallery,slider,image gallery,images';
     }

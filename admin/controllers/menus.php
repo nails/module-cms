@@ -12,11 +12,16 @@
 
 namespace Nails\Admin\Cms;
 
+use Nails\Factory;
 use Nails\Admin\Helper;
 use Nails\Cms\Controller\BaseAdmin;
 
 class Menus extends BaseAdmin
 {
+    protected $oMenuModel;
+
+    // --------------------------------------------------------------------------
+
     /**
      * Announces this controller's navGroups
      * @return stdClass
@@ -61,7 +66,7 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $this->load->model('cms/cms_menu_model');
+        $this->oMenuModel = Factory::model('Menu', 'nailsapp/module-cms');
     }
 
     // --------------------------------------------------------------------------
@@ -84,10 +89,12 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
+        $sTablePrefix = $this->oMenuModel->getTablePrefix();
+
         //  Get pagination and search/sort variables
         $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
         $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
-        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : 'm.label';
+        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $sTablePrefix . '.label';
         $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'asc';
         $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
 
@@ -95,8 +102,8 @@ class Menus extends BaseAdmin
 
         //  Define the sortable columns
         $sortColumns = array(
-            'm.label'    => 'Label',
-            'm.modified' => 'Modified'
+            $sTablePrefix . '.label'    => 'Label',
+            $sTablePrefix . '.modified' => 'Modified'
         );
 
         // --------------------------------------------------------------------------
@@ -110,8 +117,8 @@ class Menus extends BaseAdmin
         );
 
         //  Get the items for the page
-        $totalRows           = $this->cms_menu_model->count_all($data);
-        $this->data['menus'] = $this->cms_menu_model->get_all($page, $perPage, $data);
+        $totalRows           = $this->oMenuModel->count_all($data);
+        $this->data['menus'] = $this->oMenuModel->get_all($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
         $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
@@ -173,7 +180,7 @@ class Menus extends BaseAdmin
                     $aItemData['items'][$i]['page_id']   = isset($aMenuItems['page_id'][$i]) ? $aMenuItems['page_id'][$i] : null;
                 }
 
-                if ($this->cms_menu_model->create($aItemData)) {
+                if ($this->oMenuModel->create($aItemData)) {
 
                     $sStatus  = 'success';
                     $sMessage = 'Menu created successfully.';
@@ -184,7 +191,7 @@ class Menus extends BaseAdmin
                 } else {
 
                     $this->data['error']  = 'Failed to create menu. ';
-                    $this->data['error'] .= $this->cms_menu_model->last_error();
+                    $this->data['error'] .= $this->oMenuModel->last_error();
                 }
 
             } else {
@@ -228,9 +235,9 @@ class Menus extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the CMS Pages
-        $this->load->model('cms/cms_page_model');
-        $pages = $this->cms_page_model->getAllNestedFlat();
-        $this->data['pages'] = array('' => 'Select a CMS Page') + $pages;
+        $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
+        $aPages     = $oPageModel->getAllNestedFlat();
+        $this->data['pages'] = array('' => 'Select a CMS Page') + $aPages;
 
         // --------------------------------------------------------------------------
 
@@ -260,7 +267,7 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $menu = $this->cms_menu_model->get_by_id($this->uri->segment(5));
+        $menu = $this->oMenuModel->get_by_id($this->uri->segment(5));
         $this->data['menu'] = $menu;
 
         if (!$menu) {
@@ -302,7 +309,7 @@ class Menus extends BaseAdmin
                 }
 
 
-                if ($this->cms_menu_model->update($menu->id, $aItemData)) {
+                if ($this->oMenuModel->update($menu->id, $aItemData)) {
 
                     $sStatus  = 'success';
                     $sMessage = 'Menu updated successfully.';
@@ -313,7 +320,7 @@ class Menus extends BaseAdmin
                 } else {
 
                     $this->data['error']  = 'Failed to update menu. ';
-                    $this->data['error'] .= $this->cms_menu_model->last_error();
+                    $this->data['error'] .= $this->oMenuModel->last_error();
                 }
 
             } else {
@@ -356,9 +363,9 @@ class Menus extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the CMS Pages
-        $this->load->model('cms/cms_page_model');
-        $pages = $this->cms_page_model->getAllNestedFlat();
-        $this->data['pages'] = array('' => 'Select a CMS Page') + $pages;
+        $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
+        $aPages     = $oPageModel->getAllNestedFlat();
+        $this->data['pages'] = array('' => 'Select a CMS Page') + $aPages;
 
         // --------------------------------------------------------------------------
 
@@ -388,17 +395,17 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $menu = $this->cms_menu_model->get_by_id($this->uri->segment(5));
+        $menu = $this->oMenuModel->get_by_id($this->uri->segment(5));
 
         if (!$menu) {
 
             $this->session->set_flashdata('error', 'Invalid menu ID.');
-            redirect('admin/cms/blocks');
+            redirect('admin/cms/menus');
         }
 
         // --------------------------------------------------------------------------
 
-        if ($this->cms_menu_model->delete($menu->id)) {
+        if ($this->oMenuModel->delete($menu->id)) {
 
             $sStatus = 'success';
             $msg    = 'Menu was deleted successfully.';
@@ -407,7 +414,7 @@ class Menus extends BaseAdmin
 
             $sStatus = 'error';
             $msg    = 'Failed to delete menu. ';
-            $msg   .= $this->cms_menu_model->last_error();
+            $msg   .= $this->oMenuModel->last_error();
         }
 
         $this->session->set_flashdata($sStatus, $msg);

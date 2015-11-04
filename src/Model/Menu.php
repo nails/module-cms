@@ -10,14 +10,27 @@
  * @link
  */
 
-class NAILS_Cms_menu_model extends NAILS_Model
+namespace Nails\Cms\Model;
+
+use Nails\Factory;
+use Nails\Common\Model\Base;
+
+class Menu extends Base
 {
+    private $oDb;
+
+    // --------------------------------------------------------------------------
+
     /**
      * Constructs the model
      */
     public function __construct()
     {
         parent::__construct();
+
+        // --------------------------------------------------------------------------
+
+        $this->oDb = Factory::service('Database');
 
         // --------------------------------------------------------------------------
 
@@ -38,9 +51,17 @@ class NAILS_Cms_menu_model extends NAILS_Model
      **/
     protected function _getcount_common($data = array(), $_caller = null)
     {
-        $this->db->select($this->tablePrefix . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
-        $this->db->join(NAILS_DB_PREFIX . 'user u', $this->tablePrefix . '.modified_by = u.id', 'LEFT');
-        $this->db->join(NAILS_DB_PREFIX . 'user_email ue', $this->tablePrefix . '.modified_by = ue.user_id AND ue.is_primary = 1', 'LEFT');
+        $this->oDb->select($this->tablePrefix . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
+        $this->oDb->join(
+            NAILS_DB_PREFIX . 'user u',
+            $this->tablePrefix . '.modified_by = u.id',
+            'LEFT'
+        );
+        $this->oDb->join(
+            NAILS_DB_PREFIX . 'user_email ue',
+            $this->tablePrefix . '.modified_by = ue.user_id AND ue.is_primary = 1',
+            'LEFT'
+        );
 
         // --------------------------------------------------------------------------
 
@@ -107,9 +128,9 @@ class NAILS_Cms_menu_model extends NAILS_Model
      */
     public function getMenuItems($menuId, $nested = false)
     {
-        $this->db->where('menu_id', $menuId);
-        $this->db->order_by('order');
-        $items = $this->db->get($this->table_item)->result();
+        $this->oDb->where('menu_id', $menuId);
+        $this->oDb->order_by('order');
+        $items = $this->oDb->get($this->table_item)->result();
 
         foreach ($items as $i) {
 
@@ -142,8 +163,8 @@ class NAILS_Cms_menu_model extends NAILS_Model
         //  If the menu is tied to a page then fetch that page's URL
         if ($obj->page_id) {
 
-            $this->load->model('cms/cms_page_model');
-            $obj->pageUrl = $this->cms_page_model->getUrl($obj->page_id);
+            $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
+            $obj->pageUrl = $oPageModel->getUrl($obj->page_id);
 
         } else {
 
@@ -165,7 +186,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
      */
     public function create($data = array(), $returnObject = false)
     {
-        $this->db->trans_begin();
+        $this->oDb->trans_begin();
 
         if (isset($data['items'])) {
 
@@ -218,7 +239,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
                 if (!empty($data['page_id']) && !empty($data['url'])) {
 
                     $this->_set_error('Can only set a URL or a CMS Page for item #' . ($counter+1) . ', not both.');
-                    $this->db->trans_rollback();
+                    $this->oDb->trans_rollback();
                     return false;
                 }
 
@@ -241,7 +262,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
                     if (empty($data['parent_id'])) {
 
                         $this->_set_error('Failed to determine the parent item of item #' . ($counter+1));
-                        $this->db->trans_rollback();
+                        $this->oDb->trans_rollback();
                         return false;
                     }
                 }
@@ -251,7 +272,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
                 if (!$result) {
 
                     $this->_set_error('Failed to create item #' . ($counter+1));
-                    $this->db->trans_rollback();
+                    $this->oDb->trans_rollback();
                     return false;
 
                 } else {
@@ -267,15 +288,15 @@ class NAILS_Cms_menu_model extends NAILS_Model
             $this->tablePrefix = $tablePrefix;
 
             //  Commit the transaction
-            $this->db->trans_commit();
+            $this->oDb->trans_commit();
 
         } elseif ($result) {
 
-            $this->db->trans_commit();
+            $this->oDb->trans_commit();
 
         } else {
 
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
         }
 
         return $result;
@@ -292,7 +313,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
      **/
     public function update($id, $data = array())
     {
-        $this->db->trans_begin();
+        $this->oDb->trans_begin();
 
         if (isset($data['items'])) {
 
@@ -300,7 +321,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
             unset($data['items']);
         }
 
-        $data['slug'] = $this->_generate_slug($data['label'], '', '', NULL, NULL, $id);
+        $data['slug'] = $this->_generate_slug($data['label'], '', '', null, null, $id);
 
         $result = parent::update($id, $data);
 
@@ -336,7 +357,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
                 if (!empty($data['page_id']) && !empty($data['url'])) {
 
                     $this->_set_error('Can only set a URL or a CMS Page for item #' . ($counter+1) . ', not both.');
-                    $this->db->trans_rollback();
+                    $this->oDb->trans_rollback();
                     return false;
                 }
 
@@ -359,7 +380,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
                     if (empty($data['parent_id'])) {
 
                         $this->_set_error('Failed to determine the parent item of item #' . ($counter+1));
-                        $this->db->trans_rollback();
+                        $this->oDb->trans_rollback();
                         return false;
                     }
 
@@ -382,7 +403,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
                     if (!$result) {
 
                         $this->_set_error('Failed to update item #' . ($counter+1));
-                        $this->db->trans_rollback();
+                        $this->oDb->trans_rollback();
                         return false;
 
                     } else {
@@ -398,7 +419,7 @@ class NAILS_Cms_menu_model extends NAILS_Model
                     if (!$result) {
 
                         $this->_set_error('Failed to create item #' . ($counter+1));
-                        $this->db->trans_rollback();
+                        $this->oDb->trans_rollback();
                         return false;
 
                     } else {
@@ -417,9 +438,9 @@ class NAILS_Cms_menu_model extends NAILS_Model
 
             if ($idsUpdated) {
 
-                $this->db->where('menu_id', $id);
-                $this->db->where_not_in('id', $idsUpdated);
-                $this->db->delete($this->table);
+                $this->oDb->where('menu_id', $id);
+                $this->oDb->where_not_in('id', $idsUpdated);
+                $this->oDb->delete($this->table);
             }
 
             //  Reset the table and table prefix
@@ -427,15 +448,15 @@ class NAILS_Cms_menu_model extends NAILS_Model
             $this->tablePrefix = $tablePrefix;
 
             //  Commit the transaction
-            $this->db->trans_commit();
+            $this->oDb->trans_commit();
 
         } elseif ($result) {
 
-            $this->db->trans_commit();
+            $this->oDb->trans_commit();
 
         } else {
 
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
         }
 
         return $result;
@@ -464,38 +485,5 @@ class NAILS_Cms_menu_model extends NAILS_Model
         }
 
         return $result;
-    }
-}
-
-// --------------------------------------------------------------------------
-
-/**
- * OVERLOADING NAILS' MODELS
- *
- * The following block of code makes it simple to extend one of the core Nails
- * models. Some might argue it's a little hacky but it's a simple 'fix'
- * which negates the need to massively extend the CodeIgniter Loader class
- * even further (in all honesty I just can't face understanding the whole
- * Loader class well enough to change it 'properly').
- *
- * Here's how it works:
- *
- * CodeIgniter instantiate a class with the same name as the file, therefore
- * when we try to extend the parent class we get 'cannot redeclare class X' errors
- * and if we call our overloading class something else it will never get instantiated.
- *
- * We solve this by prefixing the main class with NAILS_ and then conditionally
- * declaring this helper class below; the helper gets instantiated et voila.
- *
- * If/when we want to extend the main class we simply define NAILS_ALLOW_EXTENSION
- * before including this PHP file and extend as normal (i.e in the same way as below);
- * the helper won't be declared so we can declare our own one, app specific.
- *
- **/
-
-if (!defined('NAILS_ALLOW_EXTENSION_CMS_MENU_MODEL')) {
-
-    class Cms_menu_model extends NAILS_Cms_menu_model
-    {
     }
 }

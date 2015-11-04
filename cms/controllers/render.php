@@ -13,10 +13,13 @@ require_once '_cms.php';
  * @link
  */
 
+use Nails\Factory;
+
 class NAILS_Render extends NAILS_CMS_Controller
 {
     protected $pageId;
     protected $isPreview;
+    protected $oPageModel;
 
     // --------------------------------------------------------------------------
 
@@ -29,7 +32,7 @@ class NAILS_Render extends NAILS_CMS_Controller
 
         // --------------------------------------------------------------------------
 
-        $this->load->model('cms/cms_page_model');
+        $this->oPageModel = Factory::model('Page', 'nailsapp/module-cms');
 
         // --------------------------------------------------------------------------
 
@@ -47,11 +50,11 @@ class NAILS_Render extends NAILS_CMS_Controller
     {
         if ($this->isPreview) {
 
-            $page = $this->cms_page_model->getPreviewById($this->pageId);
+            $page = $this->oPageModel->getPreviewById($this->pageId);
 
         } else {
 
-            $page = $this->cms_page_model->get_by_id($this->pageId);
+            $page = $this->oPageModel->get_by_id($this->pageId);
         }
 
         if (!$page || $page->is_deleted) {
@@ -163,7 +166,7 @@ class NAILS_Render extends NAILS_CMS_Controller
         // --------------------------------------------------------------------------
 
         //  Actually render
-        $html = $this->cms_page_model->render($data->template, $render->widgets, $render->additionalFields);
+        $html = $this->oPageModel->render($data->template, $render->widgets, $render->additionalFields);
         $this->output->set_output($html);
     }
 
@@ -195,7 +198,7 @@ class NAILS_Render extends NAILS_CMS_Controller
     public function homepage()
     {
         //  Attempt to get the site's homepage
-        $homepage = $this->cms_page_model->getHomepage();
+        $homepage = $this->oPageModel->getHomepage();
 
         if ($homepage) {
 
@@ -221,7 +224,7 @@ class NAILS_Render extends NAILS_CMS_Controller
 
         if ($id) {
 
-            $page = $this->cms_page_model->get_by_id($id);
+            $page = $this->oPageModel->get_by_id($id);
 
             if ($page && $page->is_published) {
 

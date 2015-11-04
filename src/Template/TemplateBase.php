@@ -12,6 +12,8 @@
 
 namespace Nails\Cms\Template;
 
+use Nails\Factory;
+
 class TemplateBase
 {
     protected static $isDisabled;
@@ -303,6 +305,8 @@ class TemplateBase
         //  Process each widget area and render the HTML
         $aWidgetAreas   = $this->getWidgetAreas();
         $aRenderedAreas = array();
+        $oWidgetModel   = Factory::model('Widget', 'nailsapp/module-cms');
+
         foreach ($aWidgetAreas as $sAreaSlug => $oAreaData) {
 
             $aRenderedAreas[$sAreaSlug] = '';
@@ -311,7 +315,7 @@ class TemplateBase
 
                 foreach ($aTplWidgets[$sAreaSlug] as $oWidgetData) {
 
-                    $oWidget = get_instance()->cms_page_model->getWidget($oWidgetData->widget, 'RENDER');
+                    $oWidget = $oWidgetModel->getBySlug($oWidgetData->widget, 'RENDER');
                     if ($oWidget) {
 
                         parse_str($oWidgetData->data, $aWidgetData);
@@ -358,34 +362,35 @@ class TemplateBase
             @ob_end_clean();
 
             //  Look for blocks
-            preg_match_all('/\[:([a-zA-Z\-]+?):\]/', $buffer, $matches);
+            preg_match_all('/\[:([a-zA-Z0-9\-]+?):\]/', $buffer, $matches);
 
             if ($matches[0]) {
 
                 //  Get all the blocks which were found
-                $oCi->load->model('cms_block_model');
-                $blocks = $oCi->cms_block_model->get_by_slugs($matches[1]);
+                $oBlockModel = Factory::model('Block', 'nailsapp/module-cms');
+                $aBlocks     = $oBlockModel->get_by_slugs($matches[1]);
 
                 //  Swap them in
-                if ($blocks) {
-                    foreach ($blocks as $block) {
+                if ($aBlocks) {
+                    foreach ($aBlocks as $oBlock) {
 
                         //  Translate some block types
-                        switch ($block->type) {
+                        switch ($oBlock->type) {
                             case 'file':
                             case 'image':
 
-                                $block->value = cdnServe($block->value);
+                                $oBlock->value = cdnServe($oBlock->value);
                                 break;
                         }
 
-                        $buffer = str_replace('[:' . $block->slug . ':]', $block->value, $buffer);
+                        $buffer = str_replace('[:' . $oBlock->slug . ':]', $oBlock->value, $buffer);
                     }
                 }
 
                 //  Swap page variables
+                $sPageTitle    = !empty($tplAdditionalFields['cmspage']) ? $tplAdditionalFields['cmspage']->title : '';
                 $pageShortTags = array(
-                    'page-title' => $tplAdditionalFields['cmspage']->title
+                    'page-title' => $sPageTitle
                 );
 
                 foreach ($pageShortTags as $shortTag => $value) {

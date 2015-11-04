@@ -10,17 +10,16 @@
  * @link
  */
 
-use Nails\Factory;
+namespace Nails\Cms\Model;
 
-class NAILS_Cms_page_model extends NAILS_Model
+use Nails\Factory;
+use Nails\Common\Model\Base;
+
+class Page extends Base
 {
-    protected $availableWidgets;
-    protected $widgetsDirs;
-    protected $templatesDirs;
+    protected $oDb;
     protected $nailsPrefix;
     protected $appPrefix;
-    protected $loadedTemplates;
-    protected $loadedWidgets;
 
     // --------------------------------------------------------------------------
 
@@ -37,25 +36,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        //  Discover templates and widgets
-        $aModules = _NAILS_GET_MODULES();
-
-        $this->widgetsDirs   = array();
-        $this->templatesDirs = array();
-
-        foreach ($aModules as $oModule) {
-
-            $this->templatesDirs[] = $oModule->path . 'cms/templates/';
-            $this->widgetsDirs[]   = $oModule->path . 'cms/widgets/';
-        }
-
-        /**
-         * Load App templates and widgets afterwards so that they may override
-         * the module supplied ones.
-         */
-
-        $this->templatesDirs[] = FCPATH . APPPATH . 'modules/cms/templates/';
-        $this->widgetsDirs[]   = FCPATH . APPPATH . 'modules/cms/widgets/';
+        $this->oDb = Factory::service('Database');
 
         // --------------------------------------------------------------------------
 
@@ -86,7 +67,7 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $this->db->trans_begin();
+        $this->oDb->trans_begin();
 
         //  Create a new blank row to work with
         $iId = parent::create();
@@ -94,19 +75,19 @@ class NAILS_Cms_page_model extends NAILS_Model
         if (!$iId) {
 
             $this->_set_error('Unable to create base page object. ' . $this->last_error());
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
             return false;
         }
 
         //  Try and update it depending on how the update went, commit & update or rollback
         if ($this->update($iId, $aData)) {
 
-            $this->db->trans_commit();
+            $this->oDb->trans_commit();
             return $iId;
 
         } else {
 
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
             return false;
         }
     }
@@ -142,7 +123,7 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Start the transaction
-        $this->db->trans_begin();
+        $this->oDb->trans_begin();
 
         // --------------------------------------------------------------------------
 
@@ -185,7 +166,7 @@ class NAILS_Cms_page_model extends NAILS_Model
             if (!$oParent) {
 
                 $this->_set_error('Invalid Parent ID.');
-                $this->db->trans_rollback();
+                $this->oDb->trans_rollback();
                 return false;
             }
 
@@ -208,7 +189,8 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         $aInsertData['draft_slug_end'] = end(
             explode(
-                '/', $aInsertData['draft_slug']
+                '/',
+                $aInsertData['draft_slug']
             )
         );
 
@@ -245,12 +227,12 @@ class NAILS_Cms_page_model extends NAILS_Model
             //  Update was successful, set the breadcrumbs
             $aBreadcrumbs = $this->generateBreadcrumbs($oCurrent->id);
 
-            $this->db->set('draft_breadcrumbs', json_encode($aBreadcrumbs));
-            $this->db->where('id', $oCurrent->id);
-            if (!$this->db->update($this->table)) {
+            $this->oDb->set('draft_breadcrumbs', json_encode($aBreadcrumbs));
+            $this->oDb->where('id', $oCurrent->id);
+            if (!$this->oDb->update($this->table)) {
 
                 $this->_set_error('Failed to generate breadcrumbs.');
-                $this->db->trans_rollback();
+                $this->oDb->trans_rollback();
                 return false;
             }
 
@@ -310,7 +292,7 @@ class NAILS_Cms_page_model extends NAILS_Model
                         if (!parent::update($oChild->id, $aUpdateData)) {
 
                             $this->_set_error('Failed to update breadcrumbs and/or slug of child page.');
-                            $this->db->trans_rollback();
+                            $this->oDb->trans_rollback();
                             return false;
                         }
                     }
@@ -320,13 +302,13 @@ class NAILS_Cms_page_model extends NAILS_Model
             // --------------------------------------------------------------------------
 
             //  Finish up.
-            $this->db->trans_commit();
+            $this->oDb->trans_commit();
             return true;
 
         } else {
 
             $this->_set_error('Failed to update page object.');
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
             return false;
         }
     }
@@ -377,25 +359,13 @@ class NAILS_Cms_page_model extends NAILS_Model
      */
     public function render($sSlug, $aWidgets = array(), $aAdditionalFields = array())
     {
-        $oTemplate = $this->getTemplate($sSlug, 'RENDER');
+        $oTemplateModel = Factory::model('Template', 'nailsapp/module-cms');
+        $oTemplate      = $oTemplateModel->getBySlug($sSlug, 'RENDER');
 
         if (!$oTemplate) {
 
             $this->_set_error('"' . $sSlug .'" is not a valid template.');
             return false;
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Look for manual config items
-        if (!empty($aAdditionalFields->manual_config->assets_render)) {
-
-            if (!is_array($aAdditionalFields->manual_config->assets_render)) {
-
-                $aAdditionalFields->manual_config->assets_render = (array) $aAdditionalFields->manual_config->assets_render;
-            }
-
-            $this->loadAssets($aAdditionalFields->manual_config->assets_render);
         }
 
         // --------------------------------------------------------------------------
@@ -425,7 +395,7 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Start the transaction
-        $this->db->trans_begin();
+        $this->oDb->trans_begin();
 
         // --------------------------------------------------------------------------
 
@@ -442,28 +412,28 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Update the published_* columns to be the same as the draft columns
-        $this->db->set('published_hash', 'draft_hash', false);
-        $this->db->set('published_parent_id', 'draft_parent_id', false);
-        $this->db->set('published_slug', 'draft_slug', false);
-        $this->db->set('published_slug_end', 'draft_slug_end', false);
-        $this->db->set('published_template', 'draft_template', false);
-        $this->db->set('published_template_data', 'draft_template_data', false);
-        $this->db->set('published_title', 'draft_title', false);
-        $this->db->set('published_breadcrumbs', 'draft_breadcrumbs', false);
-        $this->db->set('published_seo_title', 'draft_seo_title', false);
-        $this->db->set('published_seo_description', 'draft_seo_description', false);
-        $this->db->set('published_seo_keywords', 'draft_seo_keywords', false);
-        $this->db->set('is_published', true);
-        $this->db->set('modified', date('Y-m-d H:i{s'));
+        $this->oDb->set('published_hash', 'draft_hash', false);
+        $this->oDb->set('published_parent_id', 'draft_parent_id', false);
+        $this->oDb->set('published_slug', 'draft_slug', false);
+        $this->oDb->set('published_slug_end', 'draft_slug_end', false);
+        $this->oDb->set('published_template', 'draft_template', false);
+        $this->oDb->set('published_template_data', 'draft_template_data', false);
+        $this->oDb->set('published_title', 'draft_title', false);
+        $this->oDb->set('published_breadcrumbs', 'draft_breadcrumbs', false);
+        $this->oDb->set('published_seo_title', 'draft_seo_title', false);
+        $this->oDb->set('published_seo_description', 'draft_seo_description', false);
+        $this->oDb->set('published_seo_keywords', 'draft_seo_keywords', false);
+        $this->oDb->set('is_published', true);
+        $this->oDb->set('modified', date('Y-m-d H:i{s'));
 
         if ($this->user_model->isLoggedIn()) {
 
-            $this->db->set('modified_by', activeUser('id'));
+            $this->oDb->set('modified_by', activeUser('id'));
         }
 
-        $this->db->where('id', $page->id);
+        $this->oDb->where('id', $page->id);
 
-        if ($this->db->update($this->table)) {
+        if ($this->oDb->update($this->table)) {
 
             //  Fetch the children, returning the data we need for the updates
             $children = $this->getIdsOfChildren($page->id);
@@ -500,17 +470,17 @@ class NAILS_Cms_page_model extends NAILS_Model
                     }
 
                     //  Next we set the appropriate fields
-                    $this->db->set('published_slug', $child->draft->slug);
-                    $this->db->set('published_slug_end', $child->draft->slug_end);
-                    $this->db->set('published_breadcrumbs', json_encode($child->draft->breadcrumbs));
-                    $this->db->set('modified', date('Y-m-d H:i{s'));
+                    $this->oDb->set('published_slug', $child->draft->slug);
+                    $this->oDb->set('published_slug_end', $child->draft->slug_end);
+                    $this->oDb->set('published_breadcrumbs', json_encode($child->draft->breadcrumbs));
+                    $this->oDb->set('modified', date('Y-m-d H:i{s'));
 
-                    $this->db->where('id', $child->id);
+                    $this->oDb->where('id', $child->id);
 
-                    if (!$this->db->update($this->table)) {
+                    if (!$this->oDb->update($this->table)) {
 
                         $this->_set_error('Failed to update a child page\'s data.');
-                        $this->db->trans_rollback();
+                        $this->oDb->trans_rollback();
                         return false;
                     }
                 }
@@ -519,11 +489,11 @@ class NAILS_Cms_page_model extends NAILS_Model
             //  Add any slug_history thingmys
             foreach ($slugHistory as $item) {
 
-                $this->db->set('hash', md5($item['slug'] . $item['page_id']));
-                $this->db->set('slug', $item['slug']);
-                $this->db->set('page_id', $item['page_id']);
-                $this->db->set('created', 'NOW()', false);
-                $this->db->replace(NAILS_DB_PREFIX . 'cms_page_slug_history');
+                $this->oDb->set('hash', md5($item['slug'] . $item['page_id']));
+                $this->oDb->set('slug', $item['slug']);
+                $this->oDb->set('page_id', $item['page_id']);
+                $this->oDb->set('created', 'NOW()', false);
+                $this->oDb->replace(NAILS_DB_PREFIX . 'cms_page_slug_history');
             }
 
             // --------------------------------------------------------------------------
@@ -541,14 +511,14 @@ class NAILS_Cms_page_model extends NAILS_Model
                 $this->sitemap_model->generate();
             }
 
-            $this->db->trans_commit();
+            $this->oDb->trans_commit();
 
             //  @TODO: Kill caches for this page and all children
             return true;
 
         } else {
 
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
             return false;
         }
     }
@@ -599,11 +569,11 @@ class NAILS_Cms_page_model extends NAILS_Model
             $this->tablePrefix . '.modified_by'
         );
 
-        $this->db->select($select);
-        $this->db->select('ue.email, u.first_name, u.last_name, u.profile_img, u.gender');
+        $this->oDb->select($select);
+        $this->oDb->select('ue.email, u.first_name, u.last_name, u.profile_img, u.gender');
 
-        $this->db->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tablePrefix . '.modified_by', 'LEFT');
-        $this->db->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
+        $this->oDb->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tablePrefix . '.modified_by', 'LEFT');
+        $this->oDb->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
 
 
         if (empty($data['sort'])) {
@@ -767,9 +737,9 @@ class NAILS_Cms_page_model extends NAILS_Model
     {
         $aOut = array();
 
-        $this->db->select('id,draft_slug,draft_title,is_published');
-        $this->db->where('draft_parent_id', $iPageId);
-        $aChildren = $this->db->get(NAILS_DB_PREFIX . 'cms_page')->result();
+        $this->oDb->select('id,draft_slug,draft_title,is_published');
+        $this->oDb->where('draft_parent_id', $iPageId);
+        $aChildren = $this->oDb->get(NAILS_DB_PREFIX . 'cms_page')->result();
 
         if ($aChildren) {
 
@@ -832,8 +802,13 @@ class NAILS_Cms_page_model extends NAILS_Model
      * @param string $_caller        Internal flag to pass to _getcount_common(), contains the calling method
      * @return array
      */
-    public function get_all_flat($page = null, $perPage = null, $data = array(), $includeDeleted = false, $_caller = 'GET_ALL_FLAT')
-    {
+    public function get_all_flat(
+        $page = null,
+        $perPage = null,
+        $data = array(),
+        $includeDeleted = false,
+        $_caller = 'GET_ALL_FLAT'
+    ) {
         $out   = array();
         $pages = $this->get_all($page, $perPage, $data, $includeDeleted, $_caller);
 
@@ -1023,364 +998,13 @@ class NAILS_Cms_page_model extends NAILS_Model
     // --------------------------------------------------------------------------
 
     /**
-     * Get all available widgets to the system
-     * @param  string $loadAssets Whether or not to load widget's assets, and
-     *                            if so whether EDITOR or RENDER assets.
-     * @return array
-     */
-    public function getAvailableWidgets($loadAssets = false)
-    {
-        if (!empty($this->loadedWidgets)) {
-
-            return $this->loadedWidgets;
-        }
-
-        $aAvailableWidgets = array();
-
-        foreach ($this->widgetsDirs as $sDir) {
-
-            if (is_dir($sDir)) {
-
-                $aWidgets = directory_map($sDir);
-
-                foreach ($aWidgets as $sWidgetDir => $aWidgetFiles) {
-
-                    if (is_file($sDir . $sWidgetDir . '/widget.php')) {
-
-                        $aAvailableWidgets[$sWidgetDir] = array(
-                            'path' => $sDir,
-                            'name' => $sWidgetDir
-                        );
-                    }
-                }
-            }
-        }
-
-        //  Instantiate widgets
-        $aLoadedWidgets = array();
-        foreach ($aAvailableWidgets as $aWidget) {
-
-            include_once $aWidget['path'] . $aWidget['name'] . '/widget.php';
-
-            $sClassName = '\Nails\Cms\Widget\\' . ucfirst(strtolower($aWidget['name']));
-
-            if (!class_exists($sClassName)) {
-
-                log_message(
-                    'error',
-                    'CMS Widget discovered at "' . $aWidget['path'] . $aWidget['name'] .
-                    '" but does not contain class "' . $sClassName . '"'
-                );
-
-            } elseif (!empty($sClassName::isDisabled())) {
-
-                /**
-                 * This widget is disabled, ignore this template. Don't log
-                 * anything as it's likely a developer override to hide a default
-                 * template.
-                 */
-
-            } else {
-
-                $aLoadedWidgets[$aWidget['name']] = new $sClassName();
-
-                //  Load the template's assets if requested
-                if ($loadAssets) {
-
-                    $aAssets = $aLoadedWidgets[$aWidget['name']]->getAssets($loadAssets);
-                    $this->loadAssets($aAssets);
-                }
-            }
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Sort the widgets into their sub groupings
-        $aOut          = array();
-        $aGeneric      = array();
-        $sGenericLabel = 'Generic';
-
-        foreach ($aLoadedWidgets as $sWidgetSlug => $oWidget) {
-
-            $sWidgetGrouping = $oWidget->getGrouping();
-
-            if (!empty($sWidgetGrouping)) {
-
-                $sKey = md5($sWidgetGrouping);
-
-                if (!isset($aOut[$sKey])) {
-
-                    $aOut[$sKey] = Factory::factory('WidgetGroup', 'nailsapp/module-cms');
-                    $aOut[$sKey]->setLabel($sWidgetGrouping);
-                }
-
-                $aOut[$sKey]->add($oWidget);
-
-            } else {
-
-                $sKey = md5($sGenericLabel);
-
-                if (!isset($aGeneric[$sKey])) {
-
-                    $aGeneric[$sKey] = Factory::factory('WidgetGroup', 'nailsapp/module-cms');
-                    $aGeneric[$sKey]->setLabel($sGenericLabel);
-                }
-
-                $aGeneric[$sKey]->add($oWidget);
-            }
-        }
-
-        //  Glue generic grouping to the beginning of the array
-        $aOut = array_merge($aGeneric, $aOut);
-        $aOut = array_values($aOut);
-
-        $this->loadedWidgets = $aOut;
-
-        return $this->loadedWidgets;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * The sorting function for widgets, called by usort()
-     * @param  stdClass $a The first widget
-     * @param  stdClass $b The second widget
-     * @return int
-     */
-    protected function sortWidgets($a, $b)
-    {
-        //  Equal?
-        if (trim($a->label) == trim($b->label)) {
-
-            return 0;
-        }
-
-        //  Not equal, work out which takes precedence
-        $sort = array($a->label, $b->label);
-        sort($sort);
-
-        return $sort[0] == $a->label ? -1 : 1;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Get an individual widget
-     * @param  string  $sSlug       The widget's slug
-     * @param  boolean $sLoadAssets Whether or not to load the widget's assets
-     * @return mixed               stdClass on success, false on failure
-     */
-    public function getWidget($sSlug, $sLoadAssets = false)
-    {
-        $aWidgetGroups = $this->getAvailableWidgets();
-
-        foreach ($aWidgetGroups as $oWidgetGroup) {
-
-            $aWidgets = $oWidgetGroup->getWidgets();
-
-            foreach ($aWidgets as $oWidget) {
-
-                if ($sSlug == $oWidget->getSlug()) {
-
-                    if ($sLoadAssets) {
-
-                        $aAssets = $oWidget->getAssets($sLoadAssets);
-                        $this->loadAssets($aAssets);
-                    }
-
-                    return $oWidget;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Get all available templates to the system
-     * @param  string $loadAssets Whether or not to load template's assets, and
-     *                            if so whether EDITOR or RENDER assets.
-     * @return array
-     */
-    public function getAvailableTemplates($loadAssets = '')
-    {
-        if (!empty($this->loadedTemplates)) {
-
-            return $this->loadedTemplates;
-        }
-
-        $aAvailableTemplates = array();
-
-        foreach ($this->templatesDirs as $sDir) {
-
-            if (is_dir($sDir)) {
-
-                $aTemplates = directory_map($sDir);
-
-                foreach ($aTemplates as $sTemplateDir => $aTemplateFiles) {
-
-                    if (is_file($sDir . $sTemplateDir . '/template.php')) {
-
-                        $aAvailableTemplates[$sTemplateDir] = array(
-                            'path' => $sDir,
-                            'name' => $sTemplateDir
-                        );
-                    }
-                }
-            }
-        }
-
-        //  Instantiate templates
-        $aLoadedTemplates = array();
-        foreach ($aAvailableTemplates as $aTemplate) {
-
-            include_once $aTemplate['path'] . $aTemplate['name'] . '/template.php';
-
-            $sClassName = '\Nails\Cms\Template\\' . ucfirst(strtolower($aTemplate['name']));
-
-            if (!class_exists($sClassName)) {
-
-                log_message(
-                    'error',
-                    'CMS Template discovered at "' . $aTemplate['path'] . $aTemplate['name'] .
-                    '" but does not contain class "' . $sClassName . '"'
-                );
-
-            } elseif ($sClassName::isDisabled()) {
-
-                /**
-                 * This template is disabled, ignore this template. Don't log
-                 * anything as it's likely a developer override to hide a default
-                 * template.
-                 */
-
-            } else {
-
-                $aLoadedTemplates[$aTemplate['name']] = new $sClassName();
-
-                //  Load the template's assets if requested
-                if ($loadAssets) {
-
-                    $aAssets = $aLoadedTemplates[$aTemplate['name']]->getAssets($loadAssets);
-                    $this->loadAssets($aAssets);
-                }
-            }
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Sort the Templates into their sub groupings
-        $aOut          = array();
-        $aGeneric      = array();
-        $sGenericLabel = 'Generic';
-
-        foreach ($aLoadedTemplates as $sTemplateSlug => $oTemplate) {
-
-            $sTemplateGrouping = $oTemplate->getGrouping();
-
-            if (!empty($sTemplateGrouping)) {
-
-                $sKey = md5($sTemplateGrouping);
-
-                if (!isset($aOut[$sKey])) {
-
-                    $aOut[$sKey] = Factory::factory('TemplateGroup', 'nailsapp/module-cms');
-                    $aOut[$sKey]->setLabel($sTemplateGrouping);
-                }
-
-                $aOut[$sKey]->add($oTemplate);
-
-            } else {
-
-                $sKey = md5($sGenericLabel);
-
-                if (!isset($aGeneric[$sKey])) {
-
-                    $aGeneric[$sKey] = Factory::factory('TemplateGroup', 'nailsapp/module-cms');
-                    $aGeneric[$sKey]->setLabel($sGenericLabel);
-                }
-
-                $aGeneric[$sKey]->add($oTemplate);
-            }
-        }
-
-        //  Glue generic grouping to the beginning of the array
-        $aOut = array_merge($aGeneric, $aOut);
-        $aOut = array_values($aOut);
-
-        $this->loadedTemplates = $aOut;
-
-        //  Sort geoupings into alphabetical order
-        //  @todo
-
-        return $this->loadedTemplates;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Get an individual template
-     * @param  string  $sSlug       The template's slug
-     * @param  boolean $sLoadAssets Whether or not to load the template's assets
-     * @return mixed               stdClass on success, false on failure
-     */
-    public function getTemplate($sSlug, $sLoadAssets = false)
-    {
-        $oTemplateGroups = $this->getAvailableTemplates();
-
-        foreach ($oTemplateGroups as $oTemplateGroup) {
-
-            $aTemplates = $oTemplateGroup->getTemplates();
-
-            foreach ($aTemplates as $oTemplate) {
-
-                if ($sSlug == $oTemplate->getSlug()) {
-
-                    if ($sLoadAssets) {
-
-                        $aAssets = $oTemplate->getAssets($sLoadAssets);
-                        $this->loadAssets($aAssets);
-                    }
-
-                    return $oTemplate;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
      * Load widget/template assets
      * @param  array  $assets An array of assets to load
      * @return void
      */
     protected function loadAssets($assets = array())
     {
-        foreach ($assets as $asset) {
-
-            if (is_array($asset)) {
-
-                if (!empty($asset[1])) {
-
-                    $isNails = $asset[1];
-
-                } else {
-
-                    $isNails = false;
-                }
-
-                $this->asset->load($asset[0], $isNails);
-
-            } elseif (is_string($asset)) {
-
-                $this->asset->load($asset);
-            }
-        }
+        die('moved');
     }
 
     // --------------------------------------------------------------------------
@@ -1402,37 +1026,37 @@ class NAILS_Cms_page_model extends NAILS_Model
 
         // --------------------------------------------------------------------------
 
-        $this->db->trans_begin();
+        $this->oDb->trans_begin();
 
-        $this->db->where('id', $id);
-        $this->db->set('is_deleted', true);
-        $this->db->set('modified', 'NOW()', false);
+        $this->oDb->where('id', $id);
+        $this->oDb->set('is_deleted', true);
+        $this->oDb->set('modified', 'NOW()', false);
 
         if ($this->user_model->isLoggedIn()) {
 
-            $this->db->set('modified_by', activeUser('id'));
+            $this->oDb->set('modified_by', activeUser('id'));
         }
 
-        if ($this->db->update($this->table)) {
+        if ($this->oDb->update($this->table)) {
 
             //  Success, update children
             $children = $this->getIdsOfChildren($id);
 
             if ($children) {
 
-                $this->db->where_in('id', $children);
-                $this->db->set('is_deleted', true);
-                $this->db->set('modified', 'NOW()', false);
+                $this->oDb->where_in('id', $children);
+                $this->oDb->set('is_deleted', true);
+                $this->oDb->set('modified', 'NOW()', false);
 
                 if ($this->user_model->isLoggedIn()) {
 
-                    $this->db->set('modified_by', activeUser('id'));
+                    $this->oDb->set('modified_by', activeUser('id'));
                 }
 
-                if (!$this->db->update($this->table)) {
+                if (!$this->oDb->update($this->table)) {
 
                     $this->_set_error('Unable to delete children pages');
-                    $this->db->trans_rollback();
+                    $this->oDb->trans_rollback();
                     return false;
                 }
             }
@@ -1454,13 +1078,13 @@ class NAILS_Cms_page_model extends NAILS_Model
 
             // --------------------------------------------------------------------------
 
-            $this->db->trans_commit();
+            $this->oDb->trans_commit();
             return true;
 
         } else {
 
             //  Failed
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
             return false;
         }
     }
@@ -1503,9 +1127,9 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Test to see if this preview has already been created
-        $this->db->select('id');
-        $this->db->where('draft_hash', $aInsertData['draft_hash']);
-        $oResult = $this->db->get($this->table_preview)->row();
+        $this->oDb->select('id');
+        $this->oDb->where('draft_hash', $aInsertData['draft_hash']);
+        $oResult = $this->oDb->get($this->table_preview)->row();
 
         if ($oResult) {
 
@@ -1565,19 +1189,19 @@ class NAILS_Cms_page_model extends NAILS_Model
         // --------------------------------------------------------------------------
 
         //  Save to the DB
-        $this->db->trans_begin();
-        $this->db->set($aInsertData);
+        $this->oDb->trans_begin();
+        $this->oDb->set($aInsertData);
 
-        if (!$this->db->insert($this->table_preview)) {
+        if (!$this->oDb->insert($this->table_preview)) {
 
-            $this->db->trans_rollback();
+            $this->oDb->trans_rollback();
             $this->_set_error('Failed to create preview object.');
             return false;
 
         } else {
 
-            $iId = $this->db->insert_id();
-            $this->db->trans_commit();
+            $iId = $this->oDb->insert_id();
+            $this->oDb->trans_commit();
             return $iId;
         }
     }
@@ -1591,8 +1215,8 @@ class NAILS_Cms_page_model extends NAILS_Model
      */
     public function getPreviewById($iPreviewId)
     {
-        $this->db->where('id', $iPreviewId);
-        $oResult = $this->db->get($this->table_preview)->row();
+        $this->oDb->where('id', $iPreviewId);
+        $oResult = $this->oDb->get($this->table_preview)->row();
 
         // --------------------------------------------------------------------------
 
@@ -1627,38 +1251,5 @@ class NAILS_Cms_page_model extends NAILS_Model
 
             return false;
         }
-    }
-}
-
-// --------------------------------------------------------------------------
-
-/**
- * OVERLOADING NAILS' MODELS
- *
- * The following block of code makes it simple to extend one of the core Nails
- * models. Some might argue it's a little hacky but it's a simple 'fix'
- * which negates the need to massively extend the CodeIgniter Loader class
- * even further (in all honesty I just can't face understanding the whole
- * Loader class well enough to change it 'properly').
- *
- * Here's how it works:
- *
- * CodeIgniter instantiate a class with the same name as the file, therefore
- * when we try to extend the parent class we get 'cannot redeclare class X' errors
- * and if we call our overloading class something else it will never get instantiated.
- *
- * We solve this by prefixing the main class with NAILS_ and then conditionally
- * declaring this helper class below; the helper gets instantiated et voila.
- *
- * If/when we want to extend the main class we simply define NAILS_ALLOW_EXTENSION
- * before including this PHP file and extend as normal (i.e in the same way as below);
- * the helper won't be declared so we can declare our own one, app specific.
- *
- **/
-
-if (!defined('NAILS_ALLOW_EXTENSION_CMS_PAGE_MODEL')) {
-
-    class Cms_page_model extends NAILS_Cms_page_model
-    {
     }
 }

@@ -22,6 +22,7 @@ class Image extends WidgetBase
         parent::__construct();
 
         $this->label       = 'Image';
+        $this->icon        = 'fa-picture-o';
         $this->description = 'A single image.';
         $this->keywords    = 'image,images,photo,photos';
     }

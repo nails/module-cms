@@ -4,11 +4,11 @@
         any updates will be reflected across all instances.
         <?php
 
-            if (userHasPermission('admin:cms:pages:create') || userHasPermission('admin:cms:pages:edit')) {
+        if (userHasPermission('admin:cms:pages:create') || userHasPermission('admin:cms:pages:edit')) {
 
-                echo 'Blocks may also be used within page content by using the block\'s slug within the shortcode,';
-                echo 'e.g., <code>[:example-slug:]</code> would render the block whose slug was example-slug.';
-            }
+            echo 'Blocks may also be used within page content by using the block\'s slug within a shortcode, e.g., ';
+            echo '<code>[:block:example-slug:]</code> would render the block whose slug was <code>example-slug</code>.';
+        }
 
         ?>
     </p>

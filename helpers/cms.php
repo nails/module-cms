@@ -14,20 +14,20 @@ if (!function_exists('cmsBlock')) {
 
     /**
      * Returns a block's value
-     * @param  string $idSlug The block's ID or slug
+     * @param  string $sSlug The block's slug
      * @return string
      */
-    function cmsBlock($slug)
+    function cmsBlock($sSlug)
     {
-        get_instance()->load->model('cms/cms_block_model');
-        $block = get_instance()->cms_block_model->get_by_slug($slug);
+        $oBlockModel = \Nails\Factory::model('Block', 'nailsapp/module-cms');
+        $oBlock      = $oBlockModel->get_by_slug($sSlug);
 
-        if (!$block) {
+        if (!$oBlock) {
 
             return '';
         }
 
-        return $block->value;
+        return $oBlock->value;
     }
 }
 
@@ -37,13 +37,13 @@ if (!function_exists('cmsSlider')) {
 
     /**
      * Returns a CMS slider
-     * @param  string $idSlug The slider's ID or slug
-     * @return mixed          stdClass on success, false on failure
+     * @param  string $sIdSlug The slider's ID or slug
+     * @return mixed
      */
-    function cmsSlider($idSlug)
+    function cmsSlider($sIdSlug)
     {
-        get_instance()->load->model('cms/cms_slider_model');
-        return get_instance()->cms_slider_model->get_by_id_or_slug($idSlug);
+        $oSliderModel = \Nails\Factory::model('Slider', 'nailsapp/module-cms');
+        return $oSliderModel->get_by_id_or_slug($sIdSlug);
     }
 }
 
@@ -53,13 +53,13 @@ if (!function_exists('cmsMenu')) {
 
     /**
      * Returns a CMS menu
-     * @param  string $idSlug The menu's ID or slug
-     * @return mixed          stdClass on success, false on failure
+     * @param  string|integer $mIdSlug The menu's ID or slug
+     * @return mixed
      */
-    function cmsMenu($idSlug)
+    function cmsMenu($mIdSlug)
     {
-        get_instance()->load->model('cms/cms_menu_model');
-        return get_instance()->cms_menu_model->get_by_id_or_slug($idSlug);
+        $oMenuModel = \Nails\Factory::model('Menu', 'nailsapp/module-cms');
+        return $oMenuModel->get_by_id_or_slug($mIdSlug);
     }
 }
 
@@ -69,14 +69,14 @@ if (!function_exists('cmsMenuNested')) {
 
     /**
      * Returns a CMS menu
-     * @param  string $idSlug The menu's ID or slug
-     * @return mixed          stdClass on success, false on failure
+     * @param  string|integer $mIdSlug The menu's ID or slug
+     * @return mixed
      */
-    function cmsMenuNested($idSlug)
+    function cmsMenuNested($mIdSlug)
     {
-        get_instance()->load->model('cms/cms_menu_model');
-        $data = array('nestItems' => true);
-        return get_instance()->cms_menu_model->get_by_id_or_slug($idSlug, $data);
+        $oMenuModel = \Nails\Factory::model('Block', 'nailsapp/module-cms');
+        $aData      = array('nestItems' => true);
+        return $oMenuModel->get_by_id_or_slug($mIdSlug, $aData);
     }
 }
 
@@ -86,12 +86,28 @@ if (!function_exists('cmsPage')) {
 
     /**
      * Returns a CMS page
-     * @param  string $idSlug The page's ID or slug
-     * @return mixed          stdClass on success, false on failure
+     * @param  string $mIdSlug The page's ID or slug
+     * @return mixed
      */
-    function cmsPage($idSlug)
+    function cmsPage($mIdSlug)
     {
-        get_instance()->load->model('cms/cms_page_model');
-        return get_instance()->cms_page_model->get_by_id_or_slug($idSlug);
+        $oPageModel = \Nails\Factory::model('Page', 'nailsapp/module-cms');
+        return $oPageModel->get_by_id_or_slug($mIdSlug);
+    }
+}
+
+// --------------------------------------------------------------------------
+
+if (!function_exists('cmsArea')) {
+
+    /**
+     * Returns a rendered CMS area
+     * @param  string $mIdSlug The area's ID or slug
+     * @return string
+     */
+    function cmsArea($mIdSlug)
+    {
+        $oAreaModel = \Nails\Factory::model('Area', 'nailsapp/module-cms');
+        return $oAreaModel->render($mIdSlug);
     }
 }

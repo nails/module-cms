@@ -22,6 +22,7 @@ class Richtext extends WidgetBase
         parent::__construct();
 
         $this->label       = 'Rich Text';
+        $this->icon        = 'fa-paragraph';
         $this->description = 'Build beautiful pages using the rich text editor; embed images, links and more.';
         $this->keywords    = 'rich text,formatted text,formatted,wysiwyg,embed';
 
