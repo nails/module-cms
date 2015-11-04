@@ -1,15 +1,6 @@
 <div class="group-cms areas overview">
     <p>
         CMS Areas are small sections of CMS'able content which can be embedded into other parts of the site.
-        <?php
-
-        if (userHasPermission('admin:cms:area:create') || userHasPermission('admin:cms:area:edit')) {
-
-            echo 'Areas may also be used within page content by using the areas\'s slug within a shortcode, e.g., ';
-            echo '<code>[:area:example-slug:]</code> would render the area whose slug was <code>example-slug</code>.';
-        }
-
-        ?>
     </p>
     <?php
 

@@ -362,7 +362,7 @@ class TemplateBase
             @ob_end_clean();
 
             //  Look for blocks
-            preg_match_all('/\[:block:([a-zA-Z0-9\-]+?):\]/', $buffer, $matches);
+            preg_match_all('/\[:([a-zA-Z0-9\-]+?):\]/', $buffer, $matches);
 
             if ($matches[0]) {
 
@@ -383,43 +383,7 @@ class TemplateBase
                                 break;
                         }
 
-                        $buffer = str_replace('[:block:' . $oBlock->slug . ':]', $oBlock->value, $buffer);
-                    }
-                }
-
-                //  Swap page variables
-                $sPageTitle    = !empty($tplAdditionalFields['cmspage']) ? $tplAdditionalFields['cmspage']->title : '';
-                $pageShortTags = array(
-                    'page-title' => $sPageTitle
-                );
-
-                foreach ($pageShortTags as $shortTag => $value) {
-
-                    $buffer = str_replace('[:block:' . $shortTag . ':]', $value, $buffer);
-                }
-            }
-
-            //  Look for areas
-            preg_match_all('/\[:area:([a-zA-Z0-9\-]+?):\]/', $buffer, $matches);
-
-            if ($matches[0]) {
-
-                //  Get all the areas which were found
-                $oAreaModel = Factory::model('Area', 'nailsapp/module-cms');
-                $aAreas     = $oAreaModel->get_by_slugs($matches[1]);
-
-                //  Render them each, once
-                $aRenderCache = array();
-
-                foreach ($aAreas as $oArea) {
-                    $aRenderCache[$oArea->slug] = $oAreaModel->renderWithData($oArea->widget_data);
-                }
-
-                //  Swap them in
-                if ($aRenderCache) {
-                    foreach ($aRenderCache as $sSlug => $sHtml) {
-
-                        $buffer = str_replace('[:area:' . $sSlug . ':]', $sHtml, $buffer);
+                        $buffer = str_replace('[:' . $oBlock->slug . ':]', $oBlock->value, $buffer);
                     }
                 }
 

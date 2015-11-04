@@ -22,10 +22,6 @@ class WidgetBase
     protected $keywords;
     protected $grouping;
     protected $slug;
-    protected $restricted_to_template;
-    protected $restricted_to_area;
-    protected $restricted_from_template;
-    protected $restricted_from_area;
     protected $assets_editor;
     protected $assets_render;
     protected $path;
@@ -49,25 +45,18 @@ class WidgetBase
      */
     public function __construct()
     {
-        $this->label                    = 'Widget';
-        $this->icon                     = 'fa-cube';
-        $this->description              = '';
-        $this->keywords                 = '';
-        $this->grouping                 = '';
-        $this->slug                     = '';
-        $this->restricted_to_template   = array();
-        $this->restricted_to_area       = array();
-        $this->restricted_from_template = array();
-        $this->restricted_from_area     = array();
-        $this->assets_editor            = array();
-        $this->assets_render            = array();
-        $this->path                     = '';
-        $this->callbacks                = new \stdClass();
-        $this->callbacks->dropped       = '';
-        $this->callbacks->sort_start    = '';
-        $this->callbacks->sort_stop     = '';
-        $this->callbacks->remove_start  = '';
-        $this->callbacks->remove_stop   = '';
+        $this->label              = 'Widget';
+        $this->icon               = 'fa-cube';
+        $this->description        = '';
+        $this->keywords           = '';
+        $this->grouping           = '';
+        $this->slug               = '';
+        $this->assets_editor      = array();
+        $this->assets_render      = array();
+        $this->path               = '';
+        $this->callbacks          = new \stdClass();
+        $this->callbacks->dropped = '';
+        $this->callbacks->removed = '';
 
         //  Autodetect some values
         $oReflect = new \ReflectionClass(get_called_class());
@@ -84,11 +73,11 @@ class WidgetBase
 
             if (is_file($this->path . 'js/' . $sProperty . '.min.js')) {
 
-                $sCallback = 'function() {' . file_get_contents($this->path . 'js/' . $sProperty . '.min.js') . '}';
+                $sCallback = file_get_contents($this->path . 'js/' . $sProperty . '.min.js');
 
             } elseif (is_file($this->path . 'js/' . $sProperty . '.js')) {
 
-                $sCallback = 'function() {' . file_get_contents($this->path . 'js/' . $sProperty . '.js') . '}';
+                $sCallback = file_get_contents($this->path . 'js/' . $sProperty . '.js');
             }
         }
     }
@@ -195,50 +184,6 @@ class WidgetBase
     // --------------------------------------------------------------------------
 
     /**
-     * Returns the areas or templates this widget is restricted to
-     * @return array
-     */
-    public function getRestrictedTo($sType)
-    {
-        if ($sType == 'TEMPLATE') {
-
-            return $this->restricted_to_template;
-
-        } elseif ($sType == 'AREA') {
-
-            return $this->restricted_to_area;
-
-        } else {
-
-            return array();
-        }
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Returns the areas or templates this widget is restrictedfrom
-     * @return array
-     */
-    public function getRestrictedFrom($sType)
-    {
-        if ($sType == 'TEMPLATE') {
-
-            return $this->restricted_from_template;
-
-        } elseif ($sType == 'AREA') {
-
-            return $this->restricted_from_area;
-
-        } else {
-
-            return array();
-        }
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
      * Returns the widget's callbacks
      * @return mixed
      */
@@ -306,21 +251,12 @@ class WidgetBase
         $oWidget->keywords                 = $this->getKeywords();
         $oWidget->grouping                 = $this->getGrouping();
         $oWidget->slug                     = $this->getSlug();
-        $oWidget->restricted_to_template   = $this->getRestrictedTo('TEMPLATE');
-        $oWidget->restricted_to_area       = $this->getRestrictedTo('AREA');
-        $oWidget->restricted_from_template = $this->getRestrictedFrom('TEMPLATE');
-        $oWidget->restricted_from_area     = $this->getRestrictedFrom('AREA');
         $oWidget->assets_editor            = $this->getAssets('EDITOR');
         $oWidget->assets_render            = $this->getAssets('RENDER');
         $oWidget->path                     = $this->getPath();
         $oWidget->callbacks                = $this->getCallbacks();
 
-        $sJson = json_encode($oWidget, $iJsonOptions, $iJsonDepth);
-
-        //  Un-stringify functions
-        $sJson = preg_replace('/"(function\(.*?\) ?\{.*?\})"/im', '$1', $sJson);
-
-        return $sJson;
+        return json_encode($oWidget, $iJsonOptions, $iJsonDepth);
     }
 
     // --------------------------------------------------------------------------
@@ -338,10 +274,6 @@ class WidgetBase
         $aWidget['keywords']                 = $this->getKeywords();
         $aWidget['grouping']                 = $this->getGrouping();
         $aWidget['slug']                     = $this->getSlug();
-        $aWidget['restricted_to_template']   = $this->getRestrictedTo('TEMPLATE');
-        $aWidget['restricted_to_area']       = $this->getRestrictedTo('AREA');
-        $aWidget['restricted_from_template'] = $this->getRestrictedFrom('TEMPLATE');
-        $aWidget['restricted_from_area']     = $this->getRestrictedFrom('AREA');
         $aWidget['assets_editor']            = $this->getAssets('EDITOR');
         $aWidget['assets_render']            = $this->getAssets('RENDER');
         $aWidget['path']                     = $this->getPath();

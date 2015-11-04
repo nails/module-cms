@@ -89,7 +89,7 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $sTablePrefix = $this->oAreaModel->getTablePrefix();
+        $sTablePrefix = $this->oMenuModel->getTablePrefix();
 
         //  Get pagination and search/sort variables
         $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;

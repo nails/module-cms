@@ -16,7 +16,7 @@ use Nails\Factory;
 
 class Template
 {
-    protected $aaLoadedTemplates;
+    protected $aLoadedTemplates;
     protected $aTemplateDirs;
 
     // --------------------------------------------------------------------------
@@ -78,7 +78,7 @@ class Template
         }
 
         //  Instantiate templates
-        $aaLoadedTemplates = array();
+        $aLoadedTemplates = array();
         foreach ($aAvailableTemplates as $aTemplate) {
 
             include_once $aTemplate['path'] . $aTemplate['name'] . '/template.php';
@@ -103,12 +103,12 @@ class Template
 
             } else {
 
-                $aaLoadedTemplates[$aTemplate['name']] = new $sClassName();
+                $aLoadedTemplates[$aTemplate['name']] = new $sClassName();
 
                 //  Load the template's assets if requested
                 if ($loadAssets) {
 
-                    $aAssets = $aaLoadedTemplates[$aTemplate['name']]->getAssets($loadAssets);
+                    $aAssets = $aLoadedTemplates[$aTemplate['name']]->getAssets($loadAssets);
                     $this->loadAssets($aAssets);
                 }
             }
@@ -121,7 +121,7 @@ class Template
         $aGeneric      = array();
         $sGenericLabel = 'Generic';
 
-        foreach ($aaLoadedTemplates as $sTemplateSlug => $oTemplate) {
+        foreach ($aLoadedTemplates as $sTemplateSlug => $oTemplate) {
 
             $sTemplateGrouping = $oTemplate->getGrouping();
 

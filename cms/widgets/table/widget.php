@@ -25,5 +25,8 @@ class Table extends WidgetBase
         $this->icon        = 'fa-table';
         $this->description = 'Easily build a table';
         $this->keywords    = 'table,tabular data,data';
+
+        $this->assets_editor[] = array('handsontable/dist/handsontable.full.min.js', 'NAILS-BOWER');
+        $this->assets_editor[] = array('handsontable/dist/handsontable.min.css', 'NAILS-BOWER');
     }
 }
