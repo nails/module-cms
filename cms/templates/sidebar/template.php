@@ -31,11 +31,11 @@ class Sidebar extends TemplateBase
          * variable to the view
          */
 
-        $this->widget_areas['sidebar'] = Factory::factory('TemplateArea', 'nailsapp/module-cms');
-        $this->widget_areas['sidebar']->setTitle('Sidebar');
-
         $this->widget_areas['mainbody'] = Factory::factory('TemplateArea', 'nailsapp/module-cms');
         $this->widget_areas['mainbody']->setTitle('Main Body');
+
+        $this->widget_areas['sidebar'] = Factory::factory('TemplateArea', 'nailsapp/module-cms');
+        $this->widget_areas['sidebar']->setTitle('Sidebar');
 
         $this->additional_fields[0] = Factory::factory('TemplateOption', 'nailsapp/module-cms');
         $this->additional_fields[0]->setType('dropdown');

@@ -196,10 +196,6 @@ class Area extends BaseAdmin
 
                 $this->data['error'] = lang('fv_there_were_errors');
             }
-
-        } else {
-
-            $aItems = array();
         }
 
         // --------------------------------------------------------------------------

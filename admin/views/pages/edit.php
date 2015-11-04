@@ -1,63 +1,4 @@
-<style type="text/css">
-    div.ui-front {
-        z-index: 1000;
-    }
-</style>
 <div class="group-cms pages edit">
-    <?php
-
-    switch ($this->input->get('message')) {
-
-        case 'saved' :
-
-            ?>
-            <p class="system-alert success">
-                Your page was saved successfully.
-                <?php
-
-                echo anchor(
-                    'cms/render/preview/' . $cmspage->id,
-                    'Preview it here',
-                    'class="main-action" data-action="preview" target="_blank"'
-                ) . '.';
-
-                ?>
-            </p>
-            <?php
-
-            break;
-
-        case 'published' :
-
-            ?>
-            <p class="system-alert success">
-                Your page was published successfully.
-                <?=anchor( $cmspage->published->url, 'View it here', 'target="_blank"')?>.
-            </p>
-            <?php
-
-            break;
-
-        case 'unpublished' :
-
-            ?>
-            <p class="system-alert success">
-                Your page was unpublished successfully.
-            </p>
-            <?php
-
-            break;
-    }
-
-    ?>
-    <div class="system-alert notice" id="save-status">
-        <p>
-            <small>
-                Last Saved: <span class="last-saved">Not Saved</span>
-                <span class="fa fa-refresh fa-spin"></span>
-            </small>
-        </p>
-    </div>
     <fieldset>
         <legend>Page Data</legend>
         <?php
@@ -117,7 +58,197 @@
             echo form_hidden($aField['key'], '');
         }
 
-        // --------------------------------------------------------------------------
+        ?>
+    </fieldset>
+    <fieldset>
+        <legend>Template</legend>
+        <ul class="templates">
+        <?php
+
+        $numTemplateGroups = count($templates);
+        foreach ($templates as $oTemplateGroup) {
+
+            if ($numTemplateGroups > 1) {
+
+                ?>
+                <li class="template-group-label">
+                    <?=$oTemplateGroup->getLabel()?>
+                </li>
+                <?php
+            }
+
+            foreach ($oTemplateGroup->getTemplates() as $oTemplate) {
+
+                //  This template selected?
+                $selected = $defaultTemplate == $oTemplate->getSlug() ? true : false;
+
+                //  Define attributes
+                $attr              = array();
+                $attr['class']     = $selected ? 'template selected' : 'template';
+                $attr['data-slug'] = $oTemplate->getSlug();
+
+                //  Glue together
+                $attrStr = '';
+                foreach ($attr as $key => $value) {
+
+                    $attrStr .= $key . '="' . $value . '" ';
+                }
+
+                ?>
+                <li>
+                    <label <?=trim($attrStr)?> rel="tipsy-top" title="<?=$oTemplate->getDescription()?>">
+                        <?php
+
+                        echo form_radio(
+                            'template',
+                            $oTemplate->getSlug(),
+                            set_radio(
+                                'template',
+                                $oTemplate->getSlug(),
+                                $selected
+                            ),
+                            'data-slug="' . $attr['data-slug'] . '"'
+                        );
+
+                        echo '<span class="icon">';
+                        if (!empty($oTemplate->getIcon())) {
+
+                            echo img($oTemplate->getIcon());
+                        }
+                        echo '</span>';
+
+                        ?>
+                        <span class="name">
+                            <span class="checkmark fa fa-check-circle"></span>
+                            <span>
+                                <?=$oTemplate->getLabel()?>
+                            </span>
+                        </span>
+                    </label>
+                </li>
+                <?php
+
+            }
+        }
+
+        ?>
+        </ul>
+    </fieldset>
+    <fieldset class="template-areas">
+        <legend>Page Content</legend>
+        <p id="template-areas-none" class="alert alert-info">
+            This template has no editable areas
+        </p>
+        <?php
+
+        foreach ($templates as $oTemplateGroup) {
+
+            $aTemplates = $oTemplateGroup->getTemplates();
+            foreach ($aTemplates as $oTemplate) {
+
+                $aWidgetAreas = $oTemplate->getWidgetAreas();
+
+                if (!empty($aWidgetAreas)) {
+
+                    echo '<div class="btn-group template-area" id="template-area-' . $oTemplate->getSlug() . '" role="group">';
+
+                    foreach ($aWidgetAreas as $sWidgetSlug => $oWidgetArea) {
+
+                        $aAttr = array(
+                            'class'     => 'btn btn-default launch-editor',
+                            'data-area' => $sWidgetSlug
+                        );
+
+                        $sAttr = '';
+                        foreach ($aAttr as $sKey => $sValue) {
+
+                            $sAttr .= $sKey . '="' . $sValue . '" ';
+                        }
+
+                        echo '<button ' . trim($sAttr) . '>' . $oWidgetArea->getTitle() . '</button>';
+                    }
+
+                    echo '</div>';
+                }
+            }
+        }
+
+        ?>
+        <input type="hidden" name="template_data" id="template-data" />
+    </fieldset>
+    <fieldset class="template-options">
+        <legend>Template Options</legend>
+        <p id="template-options-none" class="alert alert-info">
+            This template has no additional options
+        </p>
+        <?php
+
+        //  Any additional page data for the templates
+        foreach ($templates as $oTemplateGroup) {
+
+            $aTemplates = $oTemplateGroup->getTemplates();
+            foreach ($aTemplates as $oTemplate) {
+
+                $sTplSlug = $oTemplate->getSlug();
+                $aTplAdditionalFields = $oTemplate->getAdditionalFields();
+                $bIssetCmsPage = isset($cmspage);
+                $bPropertyExists = $bIssetCmsPage && property_exists(
+                    $cmspage->draft->template_data->data->additional_fields,
+                    $sTplSlug
+                );
+
+                if ($bIssetCmsPage && $bPropertyExists) {
+
+                    $additionalFields = $cmspage->draft->template_data->data->additional_fields->{$sTplSlug};
+
+                } else {
+
+                    $additionalFields = null;
+                }
+
+                //  Any other fields, if specified
+                if (!empty($aTplAdditionalFields)) {
+
+                    echo '<div id="additional-fields-' . $sTplSlug . '" class="additional-fields">';
+
+                    foreach ($aTplAdditionalFields as $aField) {
+
+                        //  Set the default key
+                        $sFieldKey     = $aField->getKey();
+                        $sFieldType    = $aField->getType();
+                        $aFieldOptions = $aField->getOptions();
+                        if (!empty($additionalFields) && property_exists($additionalFields, $sFieldKey)) {
+
+                            $aField->setDefault($additionalFields->{$sFieldKey});
+                        }
+
+                        //  Override the field key
+                        $aField->setKey('additional_field[' . $sTplSlug . '][' . $sFieldKey . ']');
+
+                        switch ($sFieldType) {
+
+                            case 'dropdown' :
+
+                                echo form_field_dropdown($aField->toArray(), $aFieldOptions);
+                                break;
+
+                            default :
+
+                                echo form_field($aField->toArray());
+                                break;
+                        }
+                    }
+
+                    echo '</div>';
+                }
+            }
+        }
+
+        ?>
+    </fieldset>
+    <fieldset>
+        <legend>Search Engine Optimisation</legend>
+        <?php
 
         //  SEO Title
         $aField                = array();
@@ -154,210 +285,6 @@
 
         ?>
     </fieldset>
-    <fieldset>
-        <legend>Template</legend>
-        <ul class="templates">
-        <?php
-
-        $numTemplateGroups = count($templates);
-        foreach ($templates as $oTemplateGroup) {
-
-            if ($numTemplateGroups > 1) {
-
-                ?>
-                <li class="template-group-label">
-                    <?=$oTemplateGroup->getLabel()?>
-                </li>
-                <?php
-            }
-
-            foreach ($oTemplateGroup->getTemplates() as $oTemplate) {
-
-                //  This template selected?
-                $selected = $defaultTemplate == $oTemplate->getSlug() ? true : false;
-
-                //  Define attributes
-                $attr                       = array();
-                $attr['class']              = $selected ? 'template selected' : 'template';
-                $attr['data-template-slug'] = $oTemplate->getSlug();
-
-                //  Glue together
-                $attrStr = '';
-                foreach ($attr as $key => $value) {
-
-                    $attrStr .= $key . '="' . $value . '" ';
-                }
-
-                ?>
-                <li>
-                    <label <?=trim($attrStr)?> rel="tipsy-top" title="<?=$oTemplate->getDescription()?>">
-                        <?php
-
-                        echo form_radio(
-                            'template',
-                            $oTemplate->getSlug(),
-                            set_radio(
-                                'template',
-                                $oTemplate->getSlug(),
-                                $selected
-                            )
-                        );
-
-                        ?>
-                        <span class="icon">
-                            <?php
-
-                            if (!empty($oTemplate->getIcon())) {
-
-                                echo img(
-                                    array(
-                                        'src'   => $oTemplate->getIcon(),
-                                        'class' => 'icon'
-                                    )
-                                );
-                            }
-
-                            ?>
-                        </span>
-                        <span class="newrow"></span>
-                        <span class="name">
-                            <span class="checkmark fa fa-check-circle"></span>
-                            <span>
-                                <?=$oTemplate->getLabel()?>
-                            </span>
-                        </span>
-                    </label>
-                </li>
-                <?php
-
-            }
-        }
-
-        ?>
-        </ul>
-    </fieldset>
-    <fieldset>
-        <legend>Template Configurations</legend>
-        <?php
-
-        //  Any additional page data for the templates
-        foreach ($templates as $oTemplateGroup) {
-
-            $aTemplates = $oTemplateGroup->getTemplates();
-            foreach ($aTemplates as $oTemplate) {
-
-                $sTplSlug = $oTemplate->getSlug();
-                $aTplAdditionalFields = $oTemplate->getAdditionalFields();
-                $bIssetCmsPage = isset($cmspage);
-                $bPropertyExists = $bIssetCmsPage && property_exists(
-                    $cmspage->draft->template_data->data->additional_fields,
-                    $sTplSlug
-                );
-
-                if ($bIssetCmsPage && $bPropertyExists) {
-
-                    $additionalFields = $cmspage->draft->template_data->data->additional_fields->{$sTplSlug};
-
-                } else {
-
-                    $additionalFields = null;
-                }
-
-                $bDisplay = $defaultTemplate == $sTplSlug ? 'block' : 'none';
-                echo '<div id="additional-fields-' . $sTplSlug . '" class="additional-fields" style="display:' . $bDisplay . '">';
-
-                //  Common, manual config item
-                $aField               = array();
-                $aField['key']        = 'additional_field[' . $sTplSlug . '][manual_config]';
-                $aField['label']      = 'Manual Config';
-                $aField['sub_label']  = 'Specify any manual config items here. This field should be ';
-                $aField['sub_label'] .= anchor(
-                    'http://en.wikipedia.org/wiki/JSON',
-                    'JSON encoded',
-                    'class="fancybox" data-fancybox-type="iframe" data-width="90%" data-height="90%"'
-                ) . '.';
-                $aField['type']    = 'textarea';
-                $aField['default'] = !empty($additionalFields->manual_config) ? $additionalFields->manual_config : '';
-
-                echo form_field($aField);
-
-                //  Any other fields, if specified
-                if (!empty($aTplAdditionalFields)) {
-
-                    foreach ($aTplAdditionalFields as $aField) {
-
-                        //  Set the default key
-                        $sFieldKey     = $aField->getKey();
-                        $sFieldType    = $aField->getType();
-                        $aFieldOptions = $aField->getOptions();
-                        if (!empty($additionalFields) && property_exists($additionalFields, $sFieldKey)) {
-
-                            $aField->setDefault($additionalFields->{$sFieldKey});
-                        }
-
-                        //  Override the field key
-                        $aField->setKey('additional_field[' . $sTplSlug . '][' . $sFieldKey . ']');
-
-                        switch ($sFieldType) {
-
-                            case 'dropdown' :
-
-                                echo form_field_dropdown($aField->toArray(), $aFieldOptions);
-                                break;
-
-                            default :
-
-                                echo form_field($aField->toArray());
-                                break;
-                        }
-                    }
-                }
-
-                echo '</div>';
-            }
-        }
-
-        ?>
-    </fieldset>
-    <fieldset>
-        <legend>Page Content</legend>
-        <p>
-            Choose which area of the page you'd like to edit.
-        </p>
-        <p>
-        <?php
-
-        foreach ($templates as $oTemplateGroup) {
-
-            $aTemplates = $oTemplateGroup->getTemplates();
-            foreach ($aTemplates as $oTemplate) {
-
-                $bSelected    = $defaultTemplate == $oTemplate->getSlug() ? true : false;
-                $sTplSlug     = $oTemplate->getSlug();
-                $aWidgetAreas = $oTemplate->getWidgetAreas();
-
-                foreach ($aWidgetAreas as $sWidgetSlug => $oWidgetArea) {
-
-                    $aAttr                   = array();
-                    $aAttr['class']          = 'awesome launch-editor template-' . $sTplSlug;
-                    $aAttr['style']          = $bSelected ? 'display:inline-block;' : 'display:none;';
-                    $aAttr['data-template']  = $sTplSlug;
-                    $aAttr['data-area']      = $sWidgetSlug;
-
-                    $attrStr = '';
-                    foreach ($aAttr as $sKey => $sValue) {
-
-                        $attrStr .= $sKey . '="' . $sValue . '" ';
-                    }
-
-                    echo '<a href="#" ' . trim($attrStr) . '>' . $oWidgetArea->getTitle() . '</a>';
-                }
-            }
-        }
-
-        ?>
-        </p>
-    </fieldset>
     <?php
 
     $bIssetCmsPage = isset($cmspage);
@@ -376,83 +303,34 @@
 
     ?>
     <p class="actions">
-        <a href="#" data-action="save" class="main-action awesome orange large" rel="tipsy-top" title="Your changes will be saved so you can come back later, but won't be published on site.">
-            Save Changes
-        </a>
-        <a href="#" data-action="publish" class="main-action awesome green large" rel="tipsy-top" title="Your changes will be published on site and will take hold immediately.">
-            Publish Changes
-        </a>
-        <a href="#" data-action="preview" class="main-action awesome large launch-preview right">
+        <button type="submit" name="save" class="btn btn-primary" rel="tipsy-top" title="Your changes will be saved so you can come back later, but won't be published on site.">
+            <?=lang('action_save_changes')?>
+        </button>
+        <button type="submit" name="publish" id="action-publish" class="btn btn-success" rel="tipsy-top" title="Your changes will be published on site and will take hold immediately.">
+            <?=lang('action_publish_changes')?>
+        </button>
+        <a href="#" id="action-preview" class="btn btn-default right">
             <?=lang('action_preview')?>
         </a>
     </p>
 </div>
-<script type="text/template" id="template-loader">
-    <span class="fa fa-refresh fa-spin"></span>
-</script>
-<script type="text/template" id="template-header">
-    <ul>
-        <li>
-            Currently editing: {{active_area}}
-        </li>
-    </ul>
-    <ul class="rhs">
-        <li>
-            <a href="#" class="main-action" data-action="preview">Preview</a>
-        </li>
-        <li>
-            <a href="#" class="action" data-action="close">Close</a>
-        </li>
-    </ul>
-</script>
-<script type="text/template" id="template-widget-search">
-    <input type="search" placeholder="Search widget library" />
-    <a href="#" class="minimiser">
-        <span class="fa fa-navicon"></span>
-    </a>
-</script>
-<script type="text/template" id="template-widget-grouping">
-    <li class="grouping open" data-group="{{group}}">
-        <span class="icon fa fa-folder"></span>
-        <span class="label">{{name}}</span>
-        <span class="toggle-open right fa fa-sort-desc"></span>
-        <span class="toggle-closed right fa fa-sort-asc"></span>
-    </li>
-</script>
-<script type="text/template" id="template-widget">
-    <li class="widget {{group}} {{slug}}" data-slug="{{slug}}" data-title="{{name}} Widget" data-keywords="{{keywords}}" title="">
-        <span class="icon fa fa-arrows"></span>
-        <span class="label">{{name}}</span>
-        {{#description}}<span class="description">{{description}}</span>{{/description}}
-    </li>
-</script>
-<script type="text/template" id="template-dropzone-empty">
-    <li class="empty">
-        <div class="valigned">
-            <p class="title">
-                No widgets
-            </p>
-            <p class="label">
-                Drag widgets from the left to start building your page.
-            </p>
-        </div>
-        <div class="valigned-helper"></div>
-    </li>
-</script>
-<script type="text/template" id="template-dropzone-widget">
-    <div class="header-bar">
-        <span class="sorter">
-            <span class="fa fa-arrows"></span>
-        </span>
-        <span class="label">{{label}}</span>
-        <span class="closer fa fa-trash-o"></span>
-        {{#description}}<span class="description">{{description}}</span>{{/description}}
+<div id="page-preview" class="group-cms pages cms-page-preview">
+    <div class="spinner">
+        <b class="fa fa-circle-o-notch fa-spin"></b>
     </div>
-    <form class="editor">
-        <p style="text-align:center;">
-            <span class="fa fa-refresh fa-spin"></span>
-            <br />
-            Please wait, loading widget
-        </p>
-    </form>
-</script>
+    <iframe></iframe>
+    <div class="actions">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button class="btn btn-danger btn-sm action-close">
+                    Close Preview
+                </button>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-success btn-sm action-publish">
+                    <?=lang('action_publish_changes')?>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

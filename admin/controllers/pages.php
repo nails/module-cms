@@ -142,15 +142,24 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        //  Get data
-        $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
+        if ($this->input->post()) {
+            dumpanddie($_POST);
+        }
+
+        // --------------------------------------------------------------------------
 
         //  Set method info
-        $this->data['page']->title  = 'Create New Page';
+        $this->data['page']->title  = 'Create Page';
 
-        //  Get available templates & widgets
-        $this->data['templates'] = $this->oTemplateModel->getAvailable('EDITOR');
-        $this->data['widgets']   = $this->oWidgetModel->getAvailable('EDITOR');
+        //  Get data, available templates & widgets
+        $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
+        $this->data['templates']       = $this->oTemplateModel->getAvailable('EDITOR');
+        $this->data['widgets']         = $this->oWidgetModel->getAvailable('EDITOR');
+
+        $aTemplatesJson = array();
+        foreach ($this->data['templates'] as $oTemplateGroup) {
+            $aTemplatesJson[] = substr($oTemplateGroup->getTemplatesAsJson(), 1, -1);
+        }
 
         // --------------------------------------------------------------------------
 
@@ -180,33 +189,11 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $this->asset->library('jqueryui');
-        $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
-        $this->asset->load('nails.admin.cms.pages.createEdit.js', 'NAILS');
-
-        /**
-         * Create a JSON array of all the templates & widgets
-         * Each group will return an array of it's templates or widgets. In order to join them
-         * all into a single group we'll need to substr() the opening and closing []'s then
-         * apply them to the group as a whole.
-         */
-
-        $aTemplatesJson = array();
-        foreach ($this->data['templates'] as $oTemplateGroup) {
-            $aTemplatesJson[] = substr($oTemplateGroup->getTemplatesAsJson(), 1, -1);
-        }
-
-        $aWidgetsJson = array();
-        foreach ($this->data['widgets'] as $oWidgetGroup) {
-            $aWidgetsJson[] = $oWidgetGroup->toJson();
-        }
-
-        $inlineJs  = 'CMS_PAGES = new NAILS_Admin_CMS_pages_Create_Edit(';
-        $inlineJs .= '[' . implode(',', $aTemplatesJson) . '],';
-        $inlineJs .= '[' . implode(',', $aWidgetsJson) . ']';
-        $inlineJs .= ');';
-
-        $this->asset->inline($inlineJs, 'JS');
+        $this->asset->library('CMSWIDGETEDITOR');
+        $this->asset->load('nails.admin.cms.pages.createEdit.min.js', 'NAILS');
+        $this->asset->inline('var widgetEditor = new NAILS_Admin_CMS_WidgetEditor();', 'JS');
+        $this->asset->inline('var templates = [' . implode(',', $aTemplatesJson) . ']', 'JS');
+        $this->asset->inline('var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);', 'JS');
 
         // --------------------------------------------------------------------------
 
