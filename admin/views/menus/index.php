@@ -36,12 +36,20 @@
 
                                 if (userHasPermission('admin:cms:menus:edit')) {
 
-                                    echo anchor('admin/cms/menus/edit/' . $menu->id, lang('action_edit'), 'class="awesome small"');
+                                    echo anchor(
+                                        'admin/cms/menus/edit/' . $menu->id,
+                                        lang('action_edit'),
+                                        'class="awesome small"'
+                                    );
                                 }
 
                                 if (userHasPermission('admin:cms:menus:delete')) {
 
-                                    echo anchor('admin/cms/menus/delete/' . $menu->id, lang('action_delete'), 'data-title="Are you sure?" data-body="This will remove the menu from the site. This action cannot be undone." class="confirm awesome small red"');
+                                    echo anchor(
+                                        'admin/cms/menus/delete/' . $menu->id,
+                                        lang('action_delete'),
+                                        'data-body="This will remove the menu from the site. This action cannot be undone." class="confirm awesome small red"'
+                                    );
                                 }
 
                             echo '</td>';

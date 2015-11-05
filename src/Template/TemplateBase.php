@@ -288,40 +288,26 @@ class TemplateBase
 
     /**
      * Renders the template with the provided data.
-     * @param  array  $aTplWidgets          The widgets to include in the template
-     * @param  array  $aTplAdditionalFields Additional data created by the template
+     * @param  array  $aTplData    The widgets to include in the template
+     * @param  array  $aTplOptions Additional data created by the template
      * @return string
      */
-    public function render($aTplWidgets = array(), $aTplAdditionalFields = array())
+    public function render($aTplData = array(), $aTplOptions = array())
     {
-        /**
-         * If the template wishes to execute any custom pre/post code then this method
-         * should be extended and parent::render($data) called at the appropriate point.
-         * But that's obvious, isn't it...?
-         */
-
-        // --------------------------------------------------------------------------
-
         //  Process each widget area and render the HTML
         $aWidgetAreas   = $this->getWidgetAreas();
         $aRenderedAreas = array();
         $oWidgetModel   = Factory::model('Widget', 'nailsapp/module-cms');
 
-        foreach ($aWidgetAreas as $sAreaSlug => $oAreaData) {
+        foreach ($aWidgetAreas as $sAreaSlug => $oWidgetArea) {
 
-            $aRenderedAreas[$sAreaSlug] = '';
+            $aWidgetData           = !empty($aTplData[$sAreaSlug]) ? $aTplData[$sAreaSlug] : array();
+            $aRendered[$sAreaSlug] = '';
 
-            if (!empty($aTplWidgets[$sAreaSlug])) {
-
-                foreach ($aTplWidgets[$sAreaSlug] as $oWidgetData) {
-
-                    $oWidget = $oWidgetModel->getBySlug($oWidgetData->widget, 'RENDER');
-                    if ($oWidget) {
-
-                        parse_str($oWidgetData->data, $aWidgetData);
-
-                        $aRenderedAreas[$sAreaSlug] .= $oWidget->render($aWidgetData, $aTplAdditionalFields);
-                    }
+            foreach ($aWidgetData as $oWidgetData) {
+                $oWidget = $oWidgetModel->getBySlug($oWidgetData->slug, 'RENDER');
+                if ($oWidget) {
+                    $aRendered[$sAreaSlug] .= $oWidget->render((array) $oWidgetData->data);
                 }
             }
         }
@@ -333,31 +319,26 @@ class TemplateBase
             //  Add a reference to the CI super object, for view loading etc
             $oCi = get_instance();
 
-            //  Get controller data, so that headers etc behave as expected
+            /**
+             * Extract data into variables in the local scope so the view can use them.
+             * Basically copying how CI does it's view loading/rendering
+             */
+
             $NAILS_CONTROLLER_DATA =& getControllerData();
             if ($NAILS_CONTROLLER_DATA) {
-
                 extract($NAILS_CONTROLLER_DATA);
             }
 
-            //  If passed, extract any $aTplAdditionalFields
-            if ($aTplAdditionalFields) {
-
-                extract($aTplAdditionalFields);
+            if ($aTplOptions) {
+                extract($aTplOptions);
             }
 
-            //  Extract the variables, so that the view can use them
-            if ($aRenderedAreas) {
-
-                extract($aRenderedAreas);
+            if ($aRendered) {
+                extract($aRendered);
             }
 
-            //  Start the buffer, basically copying how CI does it's view loading
             ob_start();
-
             include $this->path . 'view.php';
-
-            //  Flush buffer
             $buffer = ob_get_contents();
             @ob_end_clean();
 

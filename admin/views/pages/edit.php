@@ -1,9 +1,27 @@
 <div class="group-cms pages edit">
+    <?php
+
+    echo form_open(null, 'id="main-form"');
+
+    $bIssetCmsPage = isset($cmspage);
+    $bHashMatch    = $bIssetCmsPage && $cmspage->published->hash !== $cmspage->draft->hash;
+
+    if ($bIssetCmsPage && $cmspage->is_published && $bHashMatch) {
+
+        ?>
+        <p class="alert alert-warning">
+            <strong>You have unpublished changes.</strong>
+            <br />This version of the page is more recent than the version currently published on site. When
+            you're done make sure you click "Publish Changes" below.
+        </p>
+        <?php
+    }
+
+    ?>
     <fieldset>
         <legend>Page Data</legend>
         <?php
 
-        //  Title
         $aField                = array();
         $aField['key']         = 'title';
         $aField['label']       = 'Title';
@@ -14,7 +32,16 @@
 
         // --------------------------------------------------------------------------
 
-        //  Parent ID
+        $aField                = array();
+        $aField['key']         = 'slug';
+        $aField['label']       = 'Slug';
+        $aField['default']     = isset($cmspage->draft->slug_end) ? $cmspage->draft->slug_end : '';
+        $aField['placeholder'] = 'The page\'s slug, leave blank to auto-generate';
+
+        echo form_field($aField);
+
+        // --------------------------------------------------------------------------
+
         $aField                     = array();
         $aField['key']              = 'parent_id';
         $aField['label']            = 'Parent Page';
@@ -42,15 +69,6 @@
         if (count($pagesNestedFlat) && count($aField['disabled_options']) < count($pagesNestedFlat)) {
 
             $pagesNestedFlat = array('' => 'No Parent Page') + $pagesNestedFlat;
-
-            // --------------------------------------------------------------------------
-
-            if (count($aField['disabled_options'])) {
-
-                $aField['info']  = '<strong>Some options have been disabled.</strong> ';
-                $aField['info'] .= 'You cannot set the parent page to this page or any existing child of this page.';
-            }
-
             echo form_field_dropdown($aField, $pagesNestedFlat);
 
         } else {
@@ -62,6 +80,7 @@
     </fieldset>
     <fieldset>
         <legend>Template</legend>
+        <?=form_error('template', '<div class="alert alert-danger">', '</div>')?>
         <ul class="templates">
         <?php
 
@@ -173,8 +192,24 @@
             }
         }
 
+        if ($this->input->post('template_data')) {
+
+            $sTemplateData = $this->input->post('template_data');
+
+        } elseif (!empty($cmspage->draft->template_data)) {
+
+            $sTemplateData = $cmspage->draft->template_data;
+
+        } else {
+
+            $sTemplateData = null;
+        }
+
+        $sTemplateData = json_encode($sTemplateData);
+        $sTemplateData = htmlentities($sTemplateData);
+
         ?>
-        <input type="hidden" name="template_data" id="template-data" />
+        <input type="hidden" name="template_data" id="template-data" value="<?=$sTemplateData?>" />
     </fieldset>
     <fieldset class="template-options">
         <legend>Template Options</legend>
@@ -189,22 +224,8 @@
             $aTemplates = $oTemplateGroup->getTemplates();
             foreach ($aTemplates as $oTemplate) {
 
-                $sTplSlug = $oTemplate->getSlug();
+                $sTplSlug             = $oTemplate->getSlug();
                 $aTplAdditionalFields = $oTemplate->getAdditionalFields();
-                $bIssetCmsPage = isset($cmspage);
-                $bPropertyExists = $bIssetCmsPage && property_exists(
-                    $cmspage->draft->template_data->data->additional_fields,
-                    $sTplSlug
-                );
-
-                if ($bIssetCmsPage && $bPropertyExists) {
-
-                    $additionalFields = $cmspage->draft->template_data->data->additional_fields->{$sTplSlug};
-
-                } else {
-
-                    $additionalFields = null;
-                }
 
                 //  Any other fields, if specified
                 if (!empty($aTplAdditionalFields)) {
@@ -217,13 +238,13 @@
                         $sFieldKey     = $aField->getKey();
                         $sFieldType    = $aField->getType();
                         $aFieldOptions = $aField->getOptions();
-                        if (!empty($additionalFields) && property_exists($additionalFields, $sFieldKey)) {
+                        if (!empty($cmspage->draft->template_options->{$sFieldKey})) {
 
-                            $aField->setDefault($additionalFields->{$sFieldKey});
+                            $aField->setDefault($cmspage->draft->template_options->{$sFieldKey});
                         }
 
                         //  Override the field key
-                        $aField->setKey('additional_field[' . $sTplSlug . '][' . $sFieldKey . ']');
+                        $aField->setKey('template_options[' . $sTplSlug . '][' . $sFieldKey . ']');
 
                         switch ($sFieldType) {
 
@@ -251,86 +272,86 @@
         <?php
 
         //  SEO Title
-        $aField                = array();
-        $aField['key']         = 'seo_title';
-        $aField['label']       = 'SEO Title';
-        $aField['default']     = isset($cmspage->draft->seo_title) ? html_entity_decode($cmspage->draft->seo_title, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
-        $aField['placeholder'] = 'The page\'s SEO title, keep this short and concise. If not set, this will fallback to the page title.';
+        $aField                 = array();
+        $aField['key']          = 'seo_title';
+        $aField['label']        = 'SEO Title';
+        $aField['default']      = isset($cmspage->draft->seo_title) ? html_entity_decode($cmspage->draft->seo_title, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
+        $aField['placeholder']  = 'The page\'s SEO title, keep this short and concise. If not set, this will ';
+        $aField['placeholder'] .= 'fallback to the page title.';
 
         echo form_field($aField);
 
         // --------------------------------------------------------------------------
 
         //  SEO Description
-        $aField                = array();
-        $aField['key']         = 'seo_description';
-        $aField['label']       = 'SEO Description';
-        $aField['default']     = isset($cmspage->draft->seo_description) ? html_entity_decode($cmspage->draft->seo_description, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
-        $aField['placeholder'] = 'The page\'s SEO description, keep this short and concise. Recommended to keep below 160 characters.';
-        $aField['tip']         = 'This should be kept short (< 160 characters) and concise. It\'ll be shown in search result listings and search engines will use it to help determine the page\'s content.';
+        $aField                 = array();
+        $aField['key']          = 'seo_description';
+        $aField['label']        = 'SEO Description';
+        $aField['default']      = isset($cmspage->draft->seo_description) ? html_entity_decode($cmspage->draft->seo_description, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
+        $aField['placeholder']  = 'The page\'s SEO description, keep this short and concise. Recommended to keep below ';
+        $aField['placeholder'] .= '150 characters.';
+        $aField['tip']          = 'This should be kept short (< 300 characters) and concise. It\'ll be shown in ';
+        $aField['tip']         .= 'search result listings and search engines will use it to help determine the ';
+        $aField['tip']         .= 'page\'s content.';
 
         echo form_field($aField);
 
         // --------------------------------------------------------------------------
 
         //  SEO Keywords
-        $aField                = array();
-        $aField['key']         = 'seo_keywords';
-        $aField['label']       = 'SEO Keywords';
-        $aField['default']     = isset($cmspage->draft->seo_keywords) ? html_entity_decode($cmspage->draft->seo_keywords, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
-        $aField['placeholder'] = 'Comma separated keywords relating to the content of the page. A maximum of 10 keywords is recommended.';
-        $aField['tip']         = 'SEO good practice recommend keeping the number of keyword phrases below 10 and less than 160 characters in total.';
+        $aField                 = array();
+        $aField['key']          = 'seo_keywords';
+        $aField['label']        = 'SEO Keywords';
+        $aField['default']      = isset($cmspage->draft->seo_keywords) ? html_entity_decode($cmspage->draft->seo_keywords, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
+        $aField['placeholder']  = 'Comma separated keywords relating to the content of the page. A maximum of 10 ';
+        $aField['placeholder'] .= 'keywords is recommended.';
+        $aField['tip']          = 'SEO good practice recommend keeping the number of keyword phrases below 10 and ';
+        $aField['tip']         .= 'less than 150 characters in total.';
 
         echo form_field($aField);
 
         ?>
     </fieldset>
-    <?php
-
-    $bIssetCmsPage = isset($cmspage);
-    $bHashMatch    = $bIssetCmsPage && $cmspage->published->hash !== $cmspage->draft->hash;
-
-    if ($bIssetCmsPage && $cmspage->is_published && $bHashMatch) {
-
-        ?>
-        <p class="system-alert message">
-            <strong>You have unpublished changes.</strong><br />This version of the page is more
-            recent  than the version currently published on site. When you\'re done make sure you
-            click  "Publish Changes" below.
-        </p>
-        <?php
-    }
-
-    ?>
     <p class="actions">
-        <button type="submit" name="save" class="btn btn-primary" rel="tipsy-top" title="Your changes will be saved so you can come back later, but won't be published on site.">
+        <input type="hidden" name="action" value="" id="input-action" />
+        <button id="action-save" class="btn btn-primary" rel="tipsy-top" title="Your changes will be saved so you can come back later, but won't be published on site.">
             <?=lang('action_save_changes')?>
         </button>
-        <button type="submit" name="publish" id="action-publish" class="btn btn-success" rel="tipsy-top" title="Your changes will be published on site and will take hold immediately.">
+        <button id="action-publish" class="btn btn-success" rel="tipsy-top" title="Your changes will be published on site and will take hold immediately.">
             <?=lang('action_publish_changes')?>
         </button>
         <a href="#" id="action-preview" class="btn btn-default right">
             <?=lang('action_preview')?>
         </a>
     </p>
+    <?=form_close()?>
 </div>
 <div id="page-preview" class="group-cms pages cms-page-preview">
     <div class="spinner">
         <b class="fa fa-circle-o-notch fa-spin"></b>
     </div>
-    <iframe></iframe>
-    <div class="actions">
-        <div class="btn-group btn-group-justified">
-            <div class="btn-group">
-                <button class="btn btn-danger btn-sm action-close">
-                    Close Preview
-                </button>
-            </div>
-            <div class="btn-group">
-                <button class="btn btn-success btn-sm action-publish">
-                    <?=lang('action_publish_changes')?>
-                </button>
-            </div>
+    <div class="row actions">
+        <div class="col-xs-2">
+            <button class="btn btn-primary btn-block btn-sm action-save">
+                <?=lang('action_save_changes')?>
+            </button>
+        </div>
+        <div class="col-xs-2">
+            <button class="btn btn-success btn-block btn-sm action-publish">
+                <?=lang('action_publish_changes')?>
+            </button>
+        </div>
+        <div class="col-xs-6">
+        </div>
+        <div class="col-xs-2">
+            <button class="btn btn-danger btn-block btn-sm action-close">
+                Close Preview
+            </button>
+        </div>
+    </div>
+    <div class="row iframe">
+        <div class="col-xs-12">
+            <iframe></iframe>
         </div>
     </div>
 </div>

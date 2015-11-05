@@ -169,6 +169,7 @@ class Area extends BaseAdmin
 
             $this->form_validation->set_message('required', lang('fv_required'));
             $this->form_validation->set_message('alpha_dash', lang('fv_alpha_dash'));
+            $this->form_validation->set_message('is_unique', lang('fv_is_unique'));
 
             if ($this->form_validation->run()) {
 
@@ -261,6 +262,7 @@ class Area extends BaseAdmin
 
             $this->form_validation->set_message('required', lang('fv_required'));
             $this->form_validation->set_message('alpha_dash', lang('fv_alpha_dash'));
+            $this->form_validation->set_message('is_unique', lang('fv_is_unique'));
 
             if ($this->form_validation->run()) {
 

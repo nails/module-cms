@@ -41,7 +41,7 @@
                                     echo anchor(
                                         'admin/cms/area/edit/' . $area->id,
                                         lang('action_edit'),
-                                        'class="awesome small"'
+                                        'class="btn btn-xs btn-primary"'
                                     );
                                 }
 
@@ -50,7 +50,7 @@
                                     echo anchor(
                                         'admin/cms/area/delete/' . $area->id,
                                         lang('action_delete'),
-                                        'data-title="Are you sure?" data-body="This will remove the area from the site. This action can be undone." class="confirm awesome small red"'
+                                        'data-body="This will remove the area from the site. This action can be undone." class="confirm btn btn-xs btn-danger"'
                                     );
                                 }
 
@@ -71,4 +71,9 @@
             </tbody>
         </table>
     </div>
+    <?php
+
+        echo \Nails\Admin\Helper::loadPagination($pagination);
+
+    ?>
 </div>

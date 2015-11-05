@@ -18,8 +18,6 @@ use Nails\Common\Model\Base;
 class Page extends Base
 {
     protected $oDb;
-    protected $nailsPrefix;
-    protected $appPrefix;
 
     // --------------------------------------------------------------------------
 
@@ -30,23 +28,12 @@ class Page extends Base
     {
         parent::__construct();
 
-        // --------------------------------------------------------------------------
-
         Factory::helper('directory');
 
-        // --------------------------------------------------------------------------
-
-        $this->oDb = Factory::service('Database');
-
-        // --------------------------------------------------------------------------
-
-        $this->nailsPrefix = 'NAILS_CMS_';
-        $this->appPrefix   = 'CMS_';
-
-        $this->table         = NAILS_DB_PREFIX . 'cms_page';
-        $this->table_preview =  $this->table . '_preview';
-        $this->tablePrefix   = 'p';
-
+        $this->oDb               = Factory::service('Database');
+        $this->table             = NAILS_DB_PREFIX . 'cms_page';
+        $this->tablePreview      = $this->table . '_preview';
+        $this->tablePrefix       = 'p';
         $this->destructiveDelete = false;
     }
 
@@ -59,14 +46,6 @@ class Page extends Base
      */
     public function create($aData)
     {
-        if (empty($aData['data']->template)) {
-
-            $this->_set_error('"data.template" is a required field.');
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
         $this->oDb->trans_begin();
 
         //  Create a new blank row to work with
@@ -102,15 +81,6 @@ class Page extends Base
      */
     public function update($iPageId, $aData)
     {
-        //  Check the data
-        if (empty($aData['data']->template)) {
-
-            $this->_set_error('"data.template" is a required field.');
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
         //  Fetch the current version of this page, for reference.
         $oCurrent = $this->get_by_id($iPageId);
 
@@ -128,16 +98,16 @@ class Page extends Base
         // --------------------------------------------------------------------------
 
         //  Start prepping the data which doesn't require much thinking
-        $aInsertData = array();
-
-        $aInsertData['draft_parent_id']       = !empty($aData['data']->parent_id)       ? (int) $aData['data']->parent_id       : null;
-        $aInsertData['draft_title']           = !empty($aData['data']->title)           ? trim($aData['data']->title)           : 'Untitled';
-        $aInsertData['draft_seo_title']       = !empty($aData['data']->seo_title)       ? trim($aData['data']->seo_title)       : '';
-        $aInsertData['draft_seo_description'] = !empty($aData['data']->seo_description) ? trim($aData['data']->seo_description) : '';
-        $aInsertData['draft_seo_keywords']    = !empty($aData['data']->seo_keywords)    ? trim($aData['data']->seo_keywords)    : '';
-        $aInsertData['draft_template']        = $aData['data']->template;
-        $aInsertData['draft_template_data']   = json_encode($aData, JSON_UNESCAPED_SLASHES);
-        $aInsertData['draft_hash']            = md5($aInsertData['draft_template_data']);
+        $aUpdateData = array(
+            'draft_parent_id' => !empty($aData['parent_id']) ? (int) $aData['parent_id'] : null,
+            'draft_title' => !empty($aData['title']) ? trim($aData['title']) : 'Untitled',
+            'draft_seo_title' => !empty($aData['seo_title']) ? trim($aData['seo_title']) : '',
+            'draft_seo_description' => !empty($aData['seo_description']) ? trim($aData['seo_description']) : '',
+            'draft_seo_keywords' => !empty($aData['seo_keywords']) ? trim($aData['seo_keywords']) : '',
+            'draft_template' => !empty($aData['template']) ? trim($aData['template']) : null,
+            'draft_template_data' => !empty($aData['template_data']) ? trim($aData['template_data']) : null,
+            'draft_template_options' => !empty($aData['template_options']) ? trim($aData['template_options']) : null
+        );
 
         // --------------------------------------------------------------------------
 
@@ -146,22 +116,22 @@ class Page extends Base
          * in the title, so that it doesn't break our explode
          */
 
-        $aInsertData['draft_title']           = htmlentities(str_replace('|', '&#124;', $aInsertData['draft_title']), ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
-        $aInsertData['draft_seo_title']       = htmlentities($aInsertData['draft_seo_title'], ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
-        $aInsertData['draft_seo_description'] = htmlentities($aInsertData['draft_seo_description'], ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
-        $aInsertData['draft_seo_keywords']    = htmlentities($aInsertData['draft_seo_keywords'], ENT_COMPAT | ENT_HTML401, 'UTF-8', false);
+        $iFlag = ENT_COMPAT | ENT_HTML401;
+        $aUpdateData['draft_title'] = htmlentities(str_replace('|', '&#124;', $aUpdateData['draft_title']), $iFlag, 'UTF-8', false);
+        $aUpdateData['draft_seo_title'] = htmlentities($aUpdateData['draft_seo_title'], $iFlag, 'UTF-8', false);
+        $aUpdateData['draft_seo_description'] = htmlentities($aUpdateData['draft_seo_description'], $iFlag, 'UTF-8', false);
+        $aUpdateData['draft_seo_keywords'] = htmlentities($aUpdateData['draft_seo_keywords'], $iFlag, 'UTF-8', false);
 
         // --------------------------------------------------------------------------
 
         //  Prep data which requires a little more intensive processing
 
-        // --------------------------------------------------------------------------
+        //  There is a parent, get some basics about it for use below
+        if ($aUpdateData['draft_parent_id']) {
 
-        //  Work out the slug
-        if ($aInsertData['draft_parent_id']) {
-
-            //  There is a parent, so set it's slug as the prefix
-            $oParent = $this->get_by_id($aInsertData['draft_parent_id']);
+            $this->oDb->select('draft_slug, draft_breadcrumbs');
+            $this->oDb->where('id', $aUpdateData['draft_parent_id']);
+            $oParent = $this->db->get($this->table)->row();
 
             if (!$oParent) {
 
@@ -169,129 +139,130 @@ class Page extends Base
                 $this->oDb->trans_rollback();
                 return false;
             }
+        }
 
-            $sPrefix = $oParent->draft->slug . '/';
+        $sSlugPrefix = !empty($oParent) ? $oParent->draft_slug . '/' : '';
+
+        //  Work out the slug
+        if (empty($aData['slug'])) {
+
+            $aUpdateData['draft_slug'] = $this->_generate_slug(
+                $aUpdateData['draft_title'],
+                $sSlugPrefix,
+                '',
+                null,
+                'draft_slug',
+                $oCurrent->id
+            );
 
         } else {
 
-            //  No parent, no need for a prefix
-            $sPrefix = '';
+            //  Test slug is valid
+            $aUpdateData['draft_slug'] = $sSlugPrefix . $aData['slug'];
+            $this->db->where('draft_slug', $aUpdateData['draft_slug']);
+            $this->db->where('id !=', $oCurrent->id);
+            if ($this->db->count_all_results($this->table)) {
+
+                $this->_set_error('Slug is already in use.');
+                $this->oDb->trans_rollback();
+                return false;
+            }
         }
 
-        $aInsertData['draft_slug'] = $this->_generate_slug(
-            $aInsertData['draft_title'],
-            $sPrefix,
-            '',
-            null,
-            'draft_slug',
-            $oCurrent->id
-        );
-
-        $aInsertData['draft_slug_end'] = end(
+        $aUpdateData['draft_slug_end'] = end(
             explode(
                 '/',
-                $aInsertData['draft_slug']
+                $aUpdateData['draft_slug']
             )
         );
 
         // --------------------------------------------------------------------------
 
         //  Generate the breadcrumbs
-        $aInsertData['draft_breadcrumbs'] = array();
+        $aUpdateData['draft_breadcrumbs'] = array();
 
-        if ($aInsertData['draft_parent_id']) {
+        if (!empty($oParent->draft_breadcrumbs)) {
 
-            /**
-             * There is a parent, use it's breadcrumbs array as the starting point.
-             * No need to fetch the parent again.
-             */
-
-            $aInsertData['draft_breadcrumbs'] = $oParent->draft->breadcrumbs;
+            $aUpdateData['draft_breadcrumbs'] = json_decode($oParent->draft_breadcrumbs);
         }
 
         $oTemp        = new \stdClass();
         $oTemp->id    = $oCurrent->id;
-        $oTemp->title = $aInsertData['draft_title'];
-        $oTemp->slug  = $aInsertData['draft_slug'];
+        $oTemp->title = $aUpdateData['draft_title'];
+        $oTemp->slug  = $aUpdateData['draft_slug'];
 
-        $aInsertData['draft_breadcrumbs'][] = $oTemp;
+        $aUpdateData['draft_breadcrumbs'][] = $oTemp;
         unset($oTemp);
 
-        //  Encode the breadcrumbs for the database
-        $aInsertData['draft_breadcrumbs'] = json_encode($this->generateBreadcrumbs($oCurrent->id));
+        $aUpdateData['draft_breadcrumbs'] = json_encode($aUpdateData['draft_breadcrumbs']);
 
         // --------------------------------------------------------------------------
 
-        if (parent::update($oCurrent->id, $aInsertData)) {
+        //  Set a hash for the draft
+        $aUpdateData['draft_hash'] = md5(json_encode($aUpdateData));
 
-            //  Update was successful, set the breadcrumbs
-            $aBreadcrumbs = $this->generateBreadcrumbs($oCurrent->id);
+        // --------------------------------------------------------------------------
 
-            $this->oDb->set('draft_breadcrumbs', json_encode($aBreadcrumbs));
-            $this->oDb->where('id', $oCurrent->id);
-            if (!$this->oDb->update($this->table)) {
-
-                $this->_set_error('Failed to generate breadcrumbs.');
-                $this->oDb->trans_rollback();
-                return false;
-            }
+        if (parent::update($oCurrent->id, $aUpdateData)) {
 
             //  For each child regenerate the breadcrumbs and slugs (only if the title or slug has changed)
-            if ($oCurrent->draft->title != $aInsertData['draft_title'] || $oCurrent->draft->slug != $aInsertData['draft_slug']) {
+            $bTitleChange = $oCurrent->draft->title != $aUpdateData['draft_title'];
+            $bSlugChange  = $oCurrent->draft->slug != $aUpdateData['draft_slug'];
+            if ($bTitleChange || $bSlugChange) {
 
-                $aChildren = $this->getIdsOfChildren($oCurrent->id);
+                //  Refresh the current
+                $oCurrent     = $this->get_by_id($oCurrent->id);
+                $aChildren    = $this->getIdsOfChildren($oCurrent->id);
+                $aUpdateData  = array();
+                $aParentCache = array(
+                    $oCurrent->id => array(
+                        'slug'  => $oCurrent->draft->slug,
+                        'crumb' => $oCurrent->draft->breadcrumbs
+                    )
+                );
 
                 if ($aChildren) {
 
-                    //  Loop each child and update it's details
+                    /**
+                     * For each child we need to update it's slug and it's breadcrumbs. We'll do this by appending
+                     * it's details onto the parent's slug/breadcrumbs. If we don't know the parent's details
+                     * (shouldn't happen as kids will be in a hierarchial order) then we need to look it up.
+                     */
                     foreach ($aChildren as $iChildId) {
 
-                        /**
-                         * We can assume that the children are in a sensible order, loop
-                         * them and process. For nested children, their parent will have
-                         * been processed by the time we process it.
-                         */
-
                         $oChild = $this->get_by_id($iChildId);
-
                         if (!$oChild) {
-
                             continue;
                         }
 
-                        $aUpdateData = array();
+                        $aParentCache[$oChild->id] = array('slug' => '', 'crumb' => '');
 
-                        //  Generate the breadcrumbs
-                        $aUpdateData['draft_breadcrumbs'] = json_encode($this->generateBreadcrumbs($oChild->id));
+                        $oChildSlug = $aParentCache[$oChild->draft->parent_id]['slug'] . '/' . $oChild->draft->slug_end;
+                        $aParentCache[$oChild->id]['slug'] = $oChildSlug;
 
-                        //  Generate the slug
-                        if ($oChild->draft->parent_id) {
+                        $oChildCrumb        = new \stdClass();
+                        $oChildCrumb->id    = $oChild->id;
+                        $oChildCrumb->title = $oChild->draft->title;
+                        $oChildCrumb->slug  = $oChildSlug;
 
-                            //  Child has a parent, fetch it and use it's slug as the prefix
-                            $parent = $this->get_by_id($oChild->draft->parent_id);
+                        $aChildCrumbs = $aParentCache[$oChild->draft->parent_id]['crumb'];
+                        array_push($aChildCrumbs, $oChildCrumb);
 
-                            if ($parent) {
+                        $aParentCache[$oChild->id]['crumb'] = $aChildCrumbs;
+                        $aUpdateData[$oChild->id] = $aParentCache[$oChild->id];
+                    }
 
-                                $aUpdateData['draft_slug'] = $parent->draft->slug . '/' . $oChild->draft->slug_end;
+                    //  Update each child
+                    foreach ($aUpdateData as $iPageId => $aCache) {
 
-                            } else {
+                        $aData = array(
+                            'draft_slug' => $aCache['slug'],
+                            'draft_breadcrumbs' => json_encode($aCache['crumb'])
+                        );
 
-                                //  Parent is bad, make this a parent page. Poor wee orphan.
-                                $aUpdateData['draft_parent_id'] = null;
-                                $aUpdateData['draft_slug']      = $oChild->draft->slug_end;
-                            }
+                        if (!parent::update($iPageId, $aData)) {
 
-                        } else {
-
-                            //  Would be weird if this happened, but ho hum handle it anyway
-                            $aUpdateData['draft_parent_id'] = null;
-                            $aUpdateData['draft_slug']      = $oChild->draft->slug_end;
-                        }
-
-                        //  Update the child and move on
-                        if (!parent::update($oChild->id, $aUpdateData)) {
-
-                            $this->_set_error('Failed to update breadcrumbs and/or slug of child page.');
+                            $this->_set_error('Failed to update child page\'s slug and breadcrumbs');
                             $this->oDb->trans_rollback();
                             return false;
                         }
@@ -316,77 +287,56 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Generate breadcrumbs for the page
-     * @param  integer $iId The page to generate breadcrumbs for
-     * @return mixed   Array of breadcrumbs, or false on failure
+     * Create a page as normal but do so in the preview table.
+     * @param  array $aData The data to create the preview with
+     * @return object
      */
-    protected function generateBreadcrumbs($iId)
+    public function createPreview($aData)
     {
-        $oPage = $this->get_by_id($iId);
+        $sTableName  = $this->table;
+        $this->table = $this->tablePreview;
+        $oResult     = $this->create($aData);
+        $this->table = $sTableName;
 
-        if (!$oPage) {
-
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
-        $aBreadcrumbs = array();
-
-        if ($oPage->draft->parent_id) {
-
-            $aBreadcrumbs = array_merge($aBreadcrumbs, $this->generateBreadcrumbs($oPage->draft->parent_id));
-        }
-
-        $oTemp        = new \stdClass();
-        $oTemp->id    = $oPage->id;
-        $oTemp->title = $oPage->draft->title;
-
-        $aBreadcrumbs[] = $oTemp;
-        unset($oTemp);
-
-        return $aBreadcrumbs;
+        return $oResult;
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Render a template with the provided widgets and additional data
-     * @param  string $sSlug             The template to render
-     * @param  array  $aWidgets          The widgets to render
-     * @param  array  $aAdditionalFields Any additional fields to pass to the template
-     * @return mixed                     String (the rendered template) on success, false on failure
+     * @param  string $sTemplate        The template to render
+     * @param  array  $oTemplateData    The template data (i.e. areas and widgets)
+     * @param  array  $oTemplateOptions The template options
+     * @return mixed                    String (the rendered template) on success, false on failure
      */
-    public function render($sSlug, $aWidgets = array(), $aAdditionalFields = array())
+    public function render($sTemplate, $oTemplateData = array(), $oTemplateOptions = array())
     {
         $oTemplateModel = Factory::model('Template', 'nailsapp/module-cms');
-        $oTemplate      = $oTemplateModel->getBySlug($sSlug, 'RENDER');
+        $oTemplate      = $oTemplateModel->getBySlug($sTemplate, 'RENDER');
 
         if (!$oTemplate) {
-
-            $this->_set_error('"' . $sSlug .'" is not a valid template.');
+            $this->_set_error('"' . $sTemplate .'" is not a valid template.');
             return false;
         }
 
-        // --------------------------------------------------------------------------
-
-        //  Attempt to instantiate and render the template
-        return $oTemplate->render((array) $aWidgets, (array) $aAdditionalFields);
+        return $oTemplate->render((array) $oTemplateData, (array) $oTemplateOptions);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Publish a page
-     * @param  int     $id The page to publish
+     * @param  int     $iId The ID of the page to publish
      * @return boolean
      */
-    public function publish($id)
+    public function publish($iId)
     {
         //  Check the page is valid
-        $page = $this->get_by_id($id);
+        $oPage = $this->get_by_id($iId);
+        $oDate = Factory::factory('DateTime');
 
-        if (!$page) {
+        if (!$oPage) {
 
             $this->_set_message('Invalid Page ID');
             return false;
@@ -400,12 +350,11 @@ class Page extends Base
         // --------------------------------------------------------------------------
 
         //  If the slug has changed add an entry to the slug history page
-        $slugHistory = array();
-        if ($page->published->slug && $page->published->slug != $page->draft->slug) {
-
-            $slugHistory[] = array(
-                'slug'    => $page->published->slug,
-                'page_id' => $id
+        $aSlugHistory = array();
+        if ($oPage->published->slug && $oPage->published->slug != $oPage->draft->slug) {
+            $aSlugHistory[] = array(
+                'slug'    => $oPage->published->slug,
+                'page_id' => $oPage->id
             );
         }
 
@@ -418,64 +367,61 @@ class Page extends Base
         $this->oDb->set('published_slug_end', 'draft_slug_end', false);
         $this->oDb->set('published_template', 'draft_template', false);
         $this->oDb->set('published_template_data', 'draft_template_data', false);
+        $this->oDb->set('published_template_options', 'draft_template_options', false);
         $this->oDb->set('published_title', 'draft_title', false);
         $this->oDb->set('published_breadcrumbs', 'draft_breadcrumbs', false);
         $this->oDb->set('published_seo_title', 'draft_seo_title', false);
         $this->oDb->set('published_seo_description', 'draft_seo_description', false);
         $this->oDb->set('published_seo_keywords', 'draft_seo_keywords', false);
         $this->oDb->set('is_published', true);
-        $this->oDb->set('modified', date('Y-m-d H:i{s'));
+        $this->oDb->set('modified', $oDate->format('Y-m-d H:i:s'));
 
         if ($this->user_model->isLoggedIn()) {
-
             $this->oDb->set('modified_by', activeUser('id'));
         }
 
-        $this->oDb->where('id', $page->id);
+        $this->oDb->where('id', $oPage->id);
 
         if ($this->oDb->update($this->table)) {
 
             //  Fetch the children, returning the data we need for the updates
-            $children = $this->getIdsOfChildren($page->id);
+            $aChildren = $this->getIdsOfChildren($oPage->id);
 
-            if ($children) {
+            if ($aChildren) {
 
                 /**
                  * Loop each child and update it's published details, but only
                  * if they've changed.
                  */
 
-                foreach ($children as $child_id) {
+                foreach ($aChildren as $iChildId) {
 
-                    $child = $this->get_by_id($child_id);
-
-                    if (!$child) {
-
+                    $oChild = $this->get_by_id($iChildId);
+                    if (!$oChild) {
                         continue;
                     }
 
-                    if ($child->published->title == $child->draft->title && $child->published->slug == $child->draft->slug) {
-
+                    $bTitleChanged = $oChild->published->title == $oChild->draft->title;
+                    $bSlugChanged  = $oChild->published->slug == $oChild->draft->slug;
+                    if (!$bTitleChanged && !$bSlugChanged) {
                         continue;
                     }
 
                     //  First make a note of the old slug
-                    if ($child->is_published) {
-
-                        $slugHistory[] = array(
-                            'slug'    => $child->draft->slug,
-                            'page_id' => $child->id
+                    if ($oChild->is_published) {
+                        $aSlugHistory[] = array(
+                            'slug'    => $oChild->draft->slug,
+                            'page_id' => $oChild->id
                         );
-
                     }
 
                     //  Next we set the appropriate fields
-                    $this->oDb->set('published_slug', $child->draft->slug);
-                    $this->oDb->set('published_slug_end', $child->draft->slug_end);
-                    $this->oDb->set('published_breadcrumbs', json_encode($child->draft->breadcrumbs));
-                    $this->oDb->set('modified', date('Y-m-d H:i{s'));
+                    $this->oDb->set('published_slug', $oChild->draft->slug);
+                    $this->oDb->set('published_slug_end', $oChild->draft->slug_end);
+                    $this->oDb->set('published_breadcrumbs', json_encode($oChild->draft->breadcrumbs));
+                    $this->oDb->set('modified', $oDate->format('Y-m-d H:i:s'));
 
-                    $this->oDb->where('id', $child->id);
+                    $this->oDb->where('id', $oChild->id);
 
                     if (!$this->oDb->update($this->table)) {
 
@@ -487,7 +433,7 @@ class Page extends Base
             }
 
             //  Add any slug_history thingmys
-            foreach ($slugHistory as $item) {
+            foreach ($aSlugHistory as $item) {
 
                 $this->oDb->set('hash', md5($item['slug'] . $item['page_id']));
                 $this->oDb->set('slug', $item['slug']);
@@ -544,6 +490,7 @@ class Page extends Base
             $this->tablePrefix . '.published_parent_id',
             $this->tablePrefix . '.published_template',
             $this->tablePrefix . '.published_template_data',
+            $this->tablePrefix . '.published_template_options',
             $this->tablePrefix . '.published_title',
             $this->tablePrefix . '.published_breadcrumbs',
             $this->tablePrefix . '.published_seo_title',
@@ -555,6 +502,7 @@ class Page extends Base
             $this->tablePrefix . '.draft_parent_id',
             $this->tablePrefix . '.draft_template',
             $this->tablePrefix . '.draft_template_data',
+            $this->tablePrefix . '.draft_template_options',
             $this->tablePrefix . '.draft_title',
             $this->tablePrefix . '.draft_breadcrumbs',
             $this->tablePrefix . '.draft_seo_title',
@@ -575,10 +523,26 @@ class Page extends Base
         $this->oDb->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tablePrefix . '.modified_by', 'LEFT');
         $this->oDb->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
 
-
         if (empty($data['sort'])) {
 
             $data['sort'] = array($this->tablePrefix . '.draft_slug', 'asc');
+        }
+
+        if (!empty($data['keywords'])) {
+
+            if (empty($data['or_like'])) {
+
+                $data['or_like'] = array();
+            }
+
+            $data['or_like'][] = array(
+                'column' => $this->tablePrefix . '.draft_title',
+                'value'  => $data['keywords']
+            );
+            $data['or_like'][] = array(
+                'column' => $this->tablePrefix . '.draft_template_data',
+                'value'  => $data['keywords']
+            );
         }
 
         parent::_getcount_common($data, $_caller);
@@ -959,10 +923,12 @@ class Page extends Base
         $page->draft->url       = site_url($page->draft->slug);
 
         //  Decode JSON
-        $page->published->template_data = json_decode($page->published->template_data);
-        $page->draft->template_data     = json_decode($page->draft->template_data);
-        $page->published->breadcrumbs   = json_decode($page->published->breadcrumbs);
-        $page->draft->breadcrumbs       = json_decode($page->draft->breadcrumbs);
+        $page->published->template_data      = json_decode($page->published->template_data);
+        $page->draft->template_data          = json_decode($page->draft->template_data);
+        $page->published->template_options = json_decode($page->published->template_options);
+        $page->draft->template_options     = json_decode($page->draft->template_options);
+        $page->published->breadcrumbs      = json_decode($page->published->breadcrumbs);
+        $page->draft->breadcrumbs          = json_decode($page->draft->breadcrumbs);
 
         //  Unpublished changes?
         $page->has_unpublished_changes = $page->is_published && $page->draft->hash != $page->published->hash;
@@ -985,6 +951,7 @@ class Page extends Base
         unset($page->profile_img);
         unset($page->gender);
         unset($page->template_data);
+        unset($page->template_options);
 
         // --------------------------------------------------------------------------
 
@@ -993,18 +960,6 @@ class Page extends Base
 
             $page->seo_title = $page->title;
         }
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Load widget/template assets
-     * @param  array  $assets An array of assets to load
-     * @return void
-     */
-    protected function loadAssets($assets = array())
-    {
-        die('moved');
     }
 
     // --------------------------------------------------------------------------
@@ -1106,109 +1061,6 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Generate a page preview
-     * @param  array $aData The Page data
-     * @return mixed       int on success, false on failure
-     */
-    public function createPreview($aData)
-    {
-        if (empty($aData['data']->template)) {
-
-            $this->_set_error('"data.template" is a required field.');
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
-        $aInsertData                   = array();
-        $aInsertData['draft_hash']     = isset($aData['hash']) ? $aData['hash'] : '';
-        $aInsertData['draft_template'] = isset($aData['data']->template) ? $aData['data']->template : '';
-
-        // --------------------------------------------------------------------------
-
-        //  Test to see if this preview has already been created
-        $this->oDb->select('id');
-        $this->oDb->where('draft_hash', $aInsertData['draft_hash']);
-        $oResult = $this->oDb->get($this->table_preview)->row();
-
-        if ($oResult) {
-
-            return (int) $oResult->id;
-        }
-
-        // --------------------------------------------------------------------------
-
-        $aInsertData['draft_parent_id']       = !empty($aData['data']->parent_id) ? $aData['data']->parent_id : null;
-        $aInsertData['draft_template_data']   = json_encode($aData, JSON_UNESCAPED_SLASHES);
-        $aInsertData['draft_title']           = isset($aData['data']->title) ? $aData['data']->title : '';
-        $aInsertData['draft_seo_title']       = isset($aData['data']->seo_title) ? $aData['data']->seo_title : '';
-        $aInsertData['draft_seo_description'] = isset($aData['data']->seo_description) ? $aData['data']->seo_description : '';
-        $aInsertData['draft_seo_keywords']    = isset($aData['data']->seo_keywords) ? $aData['data']->seo_keywords : '';
-
-        //  Generate the breadcrumbs
-        $aInsertData['draft_breadcrumbs'] = array();
-
-        if ($aInsertData['draft_parent_id']) {
-
-            /**
-             * There is a parent, use it's breadcrumbs array as the starting point. No
-             * need to fetch the parent again.
-             */
-
-            $oParent = $this->get_by_id($aInsertData['draft_parent_id']);
-
-            if ($oParent) {
-
-                $aInsertData['draft_breadcrumbs'] = $oParent->published->breadcrumbs;
-            }
-        }
-
-        $oTemp        = new \stdClass();
-        $oTemp->id    = null;
-        $oTemp->title = $aInsertData['draft_title'];
-        $oTemp->slug  = '';
-
-        $aInsertData['draft_breadcrumbs'][] = $oTemp;
-        unset($oTemp);
-
-        //  Encode the breadcrumbs for the database
-        $aInsertData['draft_breadcrumbs'] = json_encode($aInsertData['draft_breadcrumbs']);
-
-        // --------------------------------------------------------------------------
-
-        //  Meta data
-        $aInsertData['created']  = date('Y-m-d H:i:s');
-        $aInsertData['modified'] = date('Y-m-d H:i:s');
-
-        if ($this->user_model->isLoggedIn()) {
-
-            $aInsertData['created_by']  = activeUser('id');
-            $aInsertData['modified_by'] = activeUser('id');
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Save to the DB
-        $this->oDb->trans_begin();
-        $this->oDb->set($aInsertData);
-
-        if (!$this->oDb->insert($this->table_preview)) {
-
-            $this->oDb->trans_rollback();
-            $this->_set_error('Failed to create preview object.');
-            return false;
-
-        } else {
-
-            $iId = $this->oDb->insert_id();
-            $this->oDb->trans_commit();
-            return $iId;
-        }
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
      * Get's a preview page by it's ID
      * @param  integer   $iPreviewId The Id of the preview to get
      * @return mixed                 stdClass on success, false on failure
@@ -1216,7 +1068,7 @@ class Page extends Base
     public function getPreviewById($iPreviewId)
     {
         $this->oDb->where('id', $iPreviewId);
-        $oResult = $this->oDb->get($this->table_preview)->row();
+        $oResult = $this->oDb->get($this->tablePreview)->row();
 
         // --------------------------------------------------------------------------
 

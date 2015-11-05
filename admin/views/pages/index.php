@@ -2,125 +2,151 @@
     <p>
         Browse editable pages.
     </p>
-    <hr />
-    <div class="search noOptions">
-        <div class="search-text">
-            <input type="text" name="search" value="" autocomplete="off" placeholder="Search page titles by typing in here...">
-        </div>
-    </div>
-    <hr />
-    <table>
-        <thead>
-            <tr>
-                <th class="title">Page</th>
-                <th class="user">Modified By</th>
-                <th class="datetime">Modified</th>
-                <th class="actions">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php
+    <?php
+
+        echo \Nails\Admin\Helper::loadSearch($search);
+        echo \Nails\Admin\Helper::loadPagination($pagination);
+
+    ?>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th class="title">Page</th>
+                    <th class="user">Modified By</th>
+                    <th class="datetime">Modified</th>
+                    <th class="actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php
 
             if ($pages) {
 
-                foreach ($pages as $page) {
+                foreach ($pages as $oPage) {
 
-                    $_data = $page->draft;
+                    ?>
+                    <tr class="page">
+                        <td class="title indentosaurus <?=$oPage->draft->depth ? 'indented' : ''?>">
+                            <?=str_repeat('<div class="indentor"></div>', $oPage->draft->depth)?>
+                            <div class="indentor-content">
+                            <?php
 
-                    // --------------------------------------------------------------------------
+                            /**
+                             * A little feedback on the status of the page:
+                             * - If it's in draft state then simply show it's in draft
+                             * - If it's published and there are unpublished changes then indicate that
+                             */
 
-                    echo '<tr class="page" data-title="' . htmlentities($page->draft->title) . '">';
-                        echo '<td class="title indentosaurus indent-' . $page->draft->depth . '">';
+                            if ($oPage->is_published) {
 
-                            echo str_repeat('<div class="indentor"></div>', $page->draft->depth);
+                                $sPublishedHash = !empty($oPage->published->hash) ? $oPage->published->hash : 'NOHASH';
+                                $sDraftHash     = !empty($oPage->draft->hash) ? $oPage->draft->hash : 'NOHASH' ;
 
-                            echo '<div class="indentor-content">';
+                                if ($sPublishedHash !== $sDraftHash) {
 
-                                echo anchor('admin/cms/pages/edit/' . $page->id, $page->draft->title);
-
-                                /**
-                                 * A little feedback on the status of the page:
-                                 * - If it's in draft state then simply show it's in draft
-                                 * - If it's published and there are unpublished changes then indicate that
-                                 */
-
-                                if ($page->is_published) {
-
-                                    $_published_hash = ! empty($page->published->hash) ? $page->published->hash    : 'NOHASH' ;
-                                    $_draft_hash     = ! empty($page->draft->hash)     ? $page->draft->hash        : 'NOHASH' ;
-
-                                    if ($_published_hash !== $_draft_hash) {
-
-                                        echo anchor('admin/cms/pages/edit/' . $page->id, ' <strong rel="tipsy" title="This page is visible on site but changes have been made which have not been published.">(Unpublished Changes)</strong>');
-                                    }
-
-                                } else {
-
-                                    echo anchor('admin/cms/pages/edit/' . $page->id, ' <strong rel="tipsy" title="This page has not been published. It is not available to your site\'s visitors.">(Unpublished)</strong>');
+                                    echo '<strong class="label label-unpublished-changes" rel="tipsy" title="This page is visible on site but changes have been made which have not been published.">Unpublished Changes</strong>';
                                 }
 
-                                $_breadcrumbs = $page->draft->breadcrumbs;
-                                array_pop($_breadcrumbs);
+                            } else {
 
-                                echo '<small>';
-                                if ($_breadcrumbs) {
+                                echo '<strong class="label label-draft" rel="tipsy" title="This page has not been published. It is not available to your site\'s visitors.">Draft</strong>';
+                            }
 
-                                    $_out = array();
+                            echo anchor('admin/cms/pages/edit/' . $oPage->id, $oPage->draft->title);
 
-                                    foreach ($_breadcrumbs as $crumb) {
+                            $aBreadcrumbs = $oPage->draft->breadcrumbs;
+                            array_pop($aBreadcrumbs);
 
-                                        $_out[] = $crumb->title;
-                                    }
+                            echo '<small class="text-muted">';
+                            if ($aBreadcrumbs) {
 
-                                    echo implode(' // ', $_out);
+                                $aOut = array();
 
-                                } else {
+                                foreach ($aBreadcrumbs as $oCrumb) {
 
-                                    echo 'Top Level Page';
+                                    $aOut[] = $oCrumb->title;
                                 }
 
-                                echo '</small>';
-                            echo '</div>';
-                        echo '</td>';
+                                echo implode(' // ', $aOut);
 
-                        echo \Nails\Admin\Helper::loadUserCell($page->modified_by);
-                        echo \Nails\Admin\Helper::loadDatetimeCell($page->modified);
+                            } else {
 
-                        echo '<td class="actions">';
+                                echo 'Top Level Page';
+                            }
 
-                            echo anchor($page->published->url, lang('action_view'), 'class="awesome small" target="cms-page-' . $page->id . '"');
+                            echo '</small>';
+
+                            ?>
+                            </div>
+                        </td>
+                        <?=\Nails\Admin\Helper::loadUserCell($oPage->modified_by)?>
+                        <?=\Nails\Admin\Helper::loadDatetimeCell($oPage->modified)?>
+                        <td class="actions">
+                            <?php
+
+                            if ($oPage->is_published) {
+
+                                echo anchor(
+                                    $oPage->published->url,
+                                    lang('action_view'),
+                                    'class="btn btn-xs btn-default" target="cms-page-' . $oPage->id . '"'
+                                );
+                            }
 
                             if (userHasPermission('admin:cms:pages:edit')) {
 
-                                echo anchor('admin/cms/pages/edit/' . $page->id, lang('action_edit'), 'class="awesome small"');
+                                echo anchor(
+                                    'admin/cms/pages/edit/' . $oPage->id,
+                                    lang('action_edit'),
+                                    'class="btn btn-xs btn-primary"'
+                                );
 
-                                if (! $page->is_published || $_published_hash !== $_draft_hash) {
+                                if (!$oPage->is_published || $sPublishedHash !== $sDraftHash) {
 
-                                    echo anchor('admin/cms/pages/publish/' . $page->id, lang('action_publish'), 'data-title="Are you sure?" data-body="Publish this page immediately?" class="confirm awesome green small"');
+                                    echo anchor(
+                                        'admin/cms/pages/publish/' . $oPage->id,
+                                        lang('action_publish'),
+                                        'data-body="Publish this page immediately?" class="confirm btn btn-xs btn-success"'
+                                    );
                                 }
                             }
 
-                            //echo anchor($page->url . '?is_preview=1', lang('action_preview'), 'target="_blank" class="fancybox awesome small green" data-fancybox-type="iframe" data-width="100%" data-height="100%"');
-
                             if (userHasPermission('admin:cms:pages:delete')) {
 
-                                echo anchor('admin/cms/pages/delete/' . $page->id, lang('action_delete'), 'data-title="Are you sure?" data-body="This will remove the page, and any of it\'s children, from the site." class="confirm awesome small red"');
+                                echo anchor(
+                                    'admin/cms/pages/delete/' . $oPage->id,
+                                    lang('action_delete'),
+                                    'data-body="This will remove the page, and any of it\'s children, from the site." class="confirm btn btn-xs btn-danger"'
+                                );
                             }
 
-                        echo '</td>';
-                    echo '</tr>';
+                            ?>
+                        </td>
+                    </tr>
+                    <?php
+
                 }
 
             } else {
 
-                echo '<tr>';
-                    echo '<td colspan="4" class="no-data">';
-                        echo 'No editable pages found';
-                    echo '</td>';
-                echo '</tr>';
+                ?>
+                <tr>
+                    <td colspan="4" class="no-data">
+                        No editable pages found
+                    </td>
+                </tr>
+                <?php
+
             }
 
-        ?>
-        </tbody>
-    </table>
+            ?>
+            </tbody>
+        </table>
+    </div>
+    <?php
+
+        echo \Nails\Admin\Helper::loadPagination($pagination);
+
+    ?>
 </div>

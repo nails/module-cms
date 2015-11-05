@@ -72,36 +72,35 @@ class Redirect extends TemplateBase
 
     /**
      * Executes the redirect
-     * @param  array  $tplWidgets          The widgets to include in the template
-     * @param  array  $tplAdditionalFields Additional data created by the template
+     * @param  array  $aTplData    The widgets to include in the template
+     * @param  array  $aTplOptions Additional data created by the template
      * @return void
      */
-    public function render($tplWidgets = array(), $tplAdditionalFields = array())
+    public function render($aTplData = array(), $aTplOptions = array())
     {
-        die('todo');
-        $url = '';
+        $sUrl = '';
 
-        if (!empty($tplAdditionalFields['redirect_url'])) {
+        if (!empty($aTplOptions['redirect_url'])) {
 
-            $url = $tplAdditionalFields['redirect_url'];
+            $sUrl = $aTplOptions['redirect_url'];
 
-        } elseif (!empty($tplAdditionalFields['redirect_page_id'])) {
+        } elseif (!empty($aTplOptions['redirect_page_id'])) {
 
-            $page = $this->oPageModel->get_by_id($tplAdditionalFields['redirect_page_id']);
+            $oPage = $this->oPageModel->get_by_id($aTplOptions['redirect_page_id']);
 
-            if ($page && ! $page->is_deleted && $page->is_published) {
+            if ($oPage && ! $oPage->is_deleted && $oPage->is_published) {
 
-                $url = $page->published->url;
+                $sUrl = $oPage->published->url;
             }
         }
 
         // --------------------------------------------------------------------------
 
-        $code = ! empty($tplAdditionalFields['redirect_code']) ? $tplAdditionalFields['redirect_code'] : '';
+        $iCode = ! empty($aTplOptions['redirect_code']) ? $aTplOptions['redirect_code'] : null;
 
-        if ($url) {
+        if ($sUrl) {
 
-            redirect($url, 'location', $code);
+            redirect($sUrl, 'location', $iCode);
 
         } else {
 

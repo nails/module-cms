@@ -49,7 +49,7 @@ class Columns extends TemplateBase
         $this->additional_fields[0] = Factory::factory('TemplateOption', 'nailsapp/module-cms');
         $this->additional_fields[0]->setType('dropdown');
         $this->additional_fields[0]->setKey('numColumns');
-        $this->additional_fields[0]->setLabel('Number of columns');
+        $this->additional_fields[0]->setLabel('No. of columns');
         $this->additional_fields[0]->setClass('select2');
         $this->additional_fields[0]->setDefault('2');
         $this->additional_fields[0]->setOptions(

@@ -95,7 +95,7 @@
                                     echo anchor(
                                         'admin/cms/blocks/delete/' . $block->id,
                                         'Delete',
-                                        'class="awesome small red confirm" data-title="Are you sure?" data-body="This action cannot be undone."'
+                                        'class="awesome small red confirm" data-body="This action cannot be undone."'
                                     );
                                 }
                             echo '</td>';
