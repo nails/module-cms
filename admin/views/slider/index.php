@@ -50,7 +50,7 @@
                                     echo anchor(
                                         'admin/cms/slider/delete/' . $slider->id,
                                         lang('action_delete'),
-                                        'data-title="Are you sure?" data-body="This will remove the slider from the site. This action can be undone." class="confirm awesome small red"'
+                                        'data-body="This will remove the slider from the site. This action can be undone." class="confirm awesome small red"'
                                     );
                                 }
 

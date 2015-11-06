@@ -1,8 +1,5 @@
 <?php
 
-//  Include _cdn.php; executes common functionality
-require_once '_cms.php';
-
 /**
  * This class renders CMS pages
  *
@@ -15,7 +12,7 @@ require_once '_cms.php';
 
 use Nails\Factory;
 
-class NAILS_Render extends NAILS_CMS_Controller
+class Render extends NAILS_Controller
 {
     protected $pageId;
     protected $isPreview;
@@ -33,6 +30,7 @@ class NAILS_Render extends NAILS_CMS_Controller
         // --------------------------------------------------------------------------
 
         $this->oPageModel = Factory::model('Page', 'nailsapp/module-cms');
+        $this->lang->load('cms');
 
         // --------------------------------------------------------------------------
 
@@ -111,27 +109,6 @@ class NAILS_Render extends NAILS_CMS_Controller
         $this->meta->add('description', $data->seo_description);
         $this->meta->add('keywords', $data->seo_keywords);
 
-        //  Prepare data
-        $render                   = new stdClass();
-        $render->widgets          = new stdClass();
-        $render->additionalFields = new stdClass();
-
-        if (isset($data->template_data->widget_areas->{$data->template})) {
-
-            $render->widgets = $data->template_data->widget_areas->{$data->template};
-        }
-
-        if (isset($data->template_data->data->additional_fields->{$data->template})) {
-
-            $render->additionalFields = $data->template_data->data->additional_fields->{$data->template};
-        }
-
-        //  Decode manual config
-        if (isset($render->additionalFields->manual_config)) {
-
-            $render->additionalFields->manual_config = json_decode($render->additionalFields->manual_config);
-        }
-
         // --------------------------------------------------------------------------
 
         /**
@@ -156,18 +133,16 @@ class NAILS_Render extends NAILS_CMS_Controller
 
         // --------------------------------------------------------------------------
 
-        /**
-         * Add the page data as a reference to the additionalFields, so widgets can
-         * have some context about the page they're being rendered on.
-         */
-
-        $render->additionalFields->cmspage =& $data;
-
-        // --------------------------------------------------------------------------
-
         //  Actually render
-        $html = $this->oPageModel->render($data->template, $render->widgets, $render->additionalFields);
-        $this->output->set_output($html);
+        $html = $this->oPageModel->render($data->template, $data->template_data, $data->template_options);
+        if ($html !== false) {
+
+            $this->output->set_output($html);
+
+        } else {
+
+            throw new Exception('Failed to render CMS Page: ' . $this->oPageModel->last_error(), 1);
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -236,38 +211,5 @@ class NAILS_Render extends NAILS_CMS_Controller
 
         //  We don't know what to do, *falls over*
         show_404();
-    }
-}
-
-// --------------------------------------------------------------------------
-
-/**
- * OVERLOADING NAILS' CMS MODULE
- *
- * The following block of code makes it simple to extend one of the core auth
- * controllers. Some might argue it's a little hacky but it's a simple 'fix'
- * which negates the need to massively extend the CodeIgniter Loader class
- * even further (in all honesty I just can't face understanding the whole
- * Loader class well enough to change it 'properly').
- *
- * Here's how it works:
- *
- * CodeIgniter instantiate a class with the same name as the file, therefore
- * when we try to extend the parent class we get 'cannot redeclare class X' errors
- * and if we call our overloading class something else it will never get instantiated.
- *
- * We solve this by prefixing the main class with NAILS_ and then conditionally
- * declaring this helper class below; the helper gets instantiated et voila.
- *
- * If/when we want to extend the main class we simply define NAILS_ALLOW_EXTENSION
- * before including this PHP file and extend as normal (i.e in the same way as below);
- * the helper won't be declared so we can declare our own one, app specific.
- *
- **/
-
-if (!defined('NAILS_ALLOW_EXTENSION_CMS_RENDER')) {
-
-    class Render extends NAILS_Render
-    {
     }
 }

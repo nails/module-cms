@@ -286,52 +286,34 @@ class WidgetBase
 
     /**
      * Renders the widget with the provided data.
-     * @param  array  $aWidgetData             The widgets to include in the template
-     * @param  array  $aTemplateAdditionalData Additional data created by the template
+     * @param  array  $aWidgetData The widgets to include in the template
      * @return string
      */
-    public function render($aWidgetData = array(), $aTemplateAdditionalData = array())
+    public function render($aWidgetData = array())
     {
-        /**
-         * If the template wishes to execute any custom pre/post code then this method
-         * should be extended and parent::render($data) called at the appropriate point.
-         * But that's obvious, isn't it...?
-         */
-
         if (is_file($this->path . 'views/render.php')) {
 
             //  Add a reference to the CI super object, for view loading etc
             $oCi = get_instance();
 
-            //  If passed, extract any controller data
+            /**
+             * Extract data into variables in the local scope so the view can use them.
+             * Basically copying how CI does it's view loading/rendering
+             */
             $NAILS_CONTROLLER_DATA =& getControllerData();
-
             if ($NAILS_CONTROLLER_DATA) {
-
                 extract($NAILS_CONTROLLER_DATA);
             }
 
-            //  Extract the variables, so that the view can use them
             if ($aWidgetData) {
-
                 extract($aWidgetData);
             }
 
-            if ($aTemplateAdditionalData) {
-
-                extract($aTemplateAdditionalData);
-            }
-
-            //  Start the buffer, basically copying how CI does it's view loading
             ob_start();
-
             include $this->path . 'views/render.php';
-
-            //  Flush buffer
             $sBuffer = ob_get_contents();
             @ob_end_clean();
 
-            //  Return the HTML
             return $sBuffer;
         }
 
