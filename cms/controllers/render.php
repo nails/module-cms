@@ -135,7 +135,14 @@ class Render extends NAILS_Controller
 
         //  Actually render
         $html = $this->oPageModel->render($data->template, $data->template_data, $data->template_options);
-        $this->output->set_output($html);
+        if ($html !== false) {
+
+            $this->output->set_output($html);
+
+        } else {
+
+            throw new Exception('Failed to render CMS Page: ' . $this->oPageModel->last_error(), 1);
+        }
     }
 
     // --------------------------------------------------------------------------
