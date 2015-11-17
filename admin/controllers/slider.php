@@ -170,12 +170,12 @@ class Slider extends BaseAdmin
             // --------------------------------------------------------------------------
 
             //  Validate form
-            $this->load->library('form_validation');
-            $this->form_validation->set_rules('label', '', 'xss_clean|trim|required');
-            $this->form_validation->set_rules('description', '', 'trim');
-            $this->form_validation->set_message('required', lang('fv_required'));
+            $oFormValidation = Factory::service('FormValidation');
+            $oFormValidation->set_rules('label', '', 'xss_clean|trim|required');
+            $oFormValidation->set_rules('description', '', 'trim');
+            $oFormValidation->set_message('required', lang('fv_required'));
 
-            if ($this->form_validation->run()) {
+            if ($oFormValidation->run()) {
 
                 //  Prepare the create data
                 $aSliderData                = array();
@@ -289,12 +289,12 @@ class Slider extends BaseAdmin
             // --------------------------------------------------------------------------
 
             //  Validate form
-            $this->load->library('form_validation');
-            $this->form_validation->set_rules('label', '', 'xss_clean|trim|required');
-            $this->form_validation->set_rules('description', '', 'trim');
-            $this->form_validation->set_message('required', lang('fv_required'));
+            $oFormValidation = Factory::service('FormValidation');
+            $oFormValidation->set_rules('label', '', 'xss_clean|trim|required');
+            $oFormValidation->set_rules('description', '', 'trim');
+            $oFormValidation->set_message('required', lang('fv_required'));
 
-            if ($this->form_validation->run()) {
+            if ($oFormValidation->run()) {
 
                 //  Prepare the create data
                 $aSliderData                = array();

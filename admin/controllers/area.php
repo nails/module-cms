@@ -152,26 +152,26 @@ class Area extends BaseAdmin
         if ($this->input->post()) {
 
             //  Validate form
-            $this->load->library('form_validation');
-            $this->form_validation->set_rules('label', '', 'xss_clean|trim|required');
-            $this->form_validation->set_rules('description', '', 'xss_clean|trim|max_length[255]');
-            $this->form_validation->set_rules('widget-data', '', 'trim');
+            $oFormValidation = Factory::service('FormValidation');
+            $oFormValidation->set_rules('label', '', 'xss_clean|trim|required');
+            $oFormValidation->set_rules('description', '', 'xss_clean|trim|max_length[255]');
+            $oFormValidation->set_rules('widget-data', '', 'trim');
 
             if ($this->input->post('slug')) {
 
                 $sTable = $this->oAreaModel->getTableName();
-                $this->form_validation->set_rules(
+                $oFormValidation->set_rules(
                     'slug',
                     '',
                     'xss_clean|trim|alpha_dash|is_unique[' . $sTable . '.slug]'
                 );
             }
 
-            $this->form_validation->set_message('required', lang('fv_required'));
-            $this->form_validation->set_message('alpha_dash', lang('fv_alpha_dash'));
-            $this->form_validation->set_message('is_unique', lang('fv_is_unique'));
+            $oFormValidation->set_message('required', lang('fv_required'));
+            $oFormValidation->set_message('alpha_dash', lang('fv_alpha_dash'));
+            $oFormValidation->set_message('is_unique', lang('fv_is_unique'));
 
-            if ($this->form_validation->run()) {
+            if ($oFormValidation->run()) {
 
                 $aItemData                = array();
                 $aItemData['label']       = $this->input->post('label');
@@ -245,26 +245,26 @@ class Area extends BaseAdmin
         if ($this->input->post()) {
 
             //  Validate form
-            $this->load->library('form_validation');
-            $this->form_validation->set_rules('label', '', 'xss_clean|trim|required');
-            $this->form_validation->set_rules('description', '', 'xss_clean|trim|max_length[255]');
-            $this->form_validation->set_rules('widget-data', '', 'trim');
+            $oFormValidation = Factory::service('FormValidation');
+            $oFormValidation->set_rules('label', '', 'xss_clean|trim|required');
+            $oFormValidation->set_rules('description', '', 'xss_clean|trim|max_length[255]');
+            $oFormValidation->set_rules('widget-data', '', 'trim');
 
             if ($this->input->post('slug')) {
 
                 $sTable = $this->oAreaModel->getTableName();
-                $this->form_validation->set_rules(
+                $oFormValidation->set_rules(
                     'slug',
                     '',
                     'xss_clean|trim|alpha_dash|unique_if_diff[' . $sTable . '.slug.' . $this->data['area']->slug . ']'
                 );
             }
 
-            $this->form_validation->set_message('required', lang('fv_required'));
-            $this->form_validation->set_message('alpha_dash', lang('fv_alpha_dash'));
-            $this->form_validation->set_message('is_unique', lang('fv_is_unique'));
+            $oFormValidation->set_message('required', lang('fv_required'));
+            $oFormValidation->set_message('alpha_dash', lang('fv_alpha_dash'));
+            $oFormValidation->set_message('is_unique', lang('fv_is_unique'));
 
-            if ($this->form_validation->run()) {
+            if ($oFormValidation->run()) {
 
                 $aItemData                = array();
                 $aItemData['label']       = $this->input->post('label');

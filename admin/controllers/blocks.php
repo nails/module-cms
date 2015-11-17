@@ -196,31 +196,31 @@ class Blocks extends BaseAdmin
         if ($this->input->post()) {
 
             //  Form Validation
-            $this->load->library('form_validation');
+            $oFormValidation = Factory::service('FormValidation');
 
             switch ($this->data['block']->type) {
                 case 'email':
-                    $this->form_validation->set_rules('value', '', 'valid_email|xss_clean');
+                    $oFormValidation->set_rules('value', '', 'valid_email|xss_clean');
                     break;
 
                 case 'url':
-                    $this->form_validation->set_rules('value', '', 'valid_url|xss_clean');
+                    $oFormValidation->set_rules('value', '', 'valid_url|xss_clean');
                     break;
 
                 case 'file':
                 case 'image':
                 case 'number':
-                    $this->form_validation->set_rules('value', '', 'numeric|xss_clean');
+                    $oFormValidation->set_rules('value', '', 'numeric|xss_clean');
                     break;
 
                 default:
-                    $this->form_validation->set_rules('value', '', 'xss_clean');
+                    $oFormValidation->set_rules('value', '', 'xss_clean');
                     break;
             }
 
-            $this->form_validation->set_message('required', lang('fv_required'));
+            $oFormValidation->set_message('required', lang('fv_required'));
 
-            if ($this->form_validation->run($this)) {
+            if ($oFormValidation->run($this)) {
 
                 $aBlockData          = array();
                 $aBlockData['value'] = $this->input->post('value');
@@ -275,37 +275,37 @@ class Blocks extends BaseAdmin
         if ($this->input->post()) {
 
             //  Form Validation
-            $this->load->library('form_validation');
+            $oFormValidation = Factory::service('FormValidation');
 
-            $this->form_validation->set_rules('slug', '', 'xss_clean|required|callback__callback_block_slug');
-            $this->form_validation->set_rules('label', '', 'xss_clean|required');
-            $this->form_validation->set_rules('description', '', 'xss_clean');
-            $this->form_validation->set_rules('located', '', 'xss_clean');
-            $this->form_validation->set_rules('type', '', 'xss_clean|required|callback__callback_block_type');
+            $oFormValidation->set_rules('slug', '', 'xss_clean|required|callback__callback_block_slug');
+            $oFormValidation->set_rules('label', '', 'xss_clean|required');
+            $oFormValidation->set_rules('description', '', 'xss_clean');
+            $oFormValidation->set_rules('located', '', 'xss_clean');
+            $oFormValidation->set_rules('type', '', 'xss_clean|required|callback__callback_block_type');
 
             switch ($this->input->post('type')) {
                 case 'email':
-                    $this->form_validation->set_rules('value', '', 'valid_email|xss_clean');
+                    $oFormValidation->set_rules('value', '', 'valid_email|xss_clean');
                     break;
 
                 case 'url':
-                    $this->form_validation->set_rules('value', '', 'valid_url|xss_clean');
+                    $oFormValidation->set_rules('value', '', 'valid_url|xss_clean');
                     break;
 
                 case 'file':
                 case 'image':
                 case 'number':
-                    $this->form_validation->set_rules('value', '', 'numeric|xss_clean');
+                    $oFormValidation->set_rules('value', '', 'numeric|xss_clean');
                     break;
 
                 default:
-                    $this->form_validation->set_rules('value', '', 'xss_clean');
+                    $oFormValidation->set_rules('value', '', 'xss_clean');
                     break;
             }
 
-            $this->form_validation->set_message('required', lang('fv_required'));
+            $oFormValidation->set_message('required', lang('fv_required'));
 
-            if ($this->form_validation->run($this)) {
+            if ($oFormValidation->run($this)) {
 
                 $aBlockData                = array();
                 $aBlockData['type']        = $this->input->post('type');
@@ -394,6 +394,8 @@ class Blocks extends BaseAdmin
         $sSlug = trim($sSlug);
         $sSlug = strtolower($sSlug);
 
+        $oFormValidation = Factory::service('FormValidation');
+
         //  Check slug's characters are ok
         if (!preg_match('/[^a-z0-9\-\_]/', $sSlug)) {
 
@@ -406,7 +408,7 @@ class Blocks extends BaseAdmin
 
             } else {
 
-                $this->form_validation->set_message(
+                $oFormValidation->set_message(
                     '_callback_block_slug',
                     'Must be unique'
                 );
@@ -415,7 +417,7 @@ class Blocks extends BaseAdmin
 
         } else {
 
-            $this->form_validation->set_message(
+            $oFormValidation->set_message(
                 '_callback_block_slug',
                 'Invalid characters: a-z, 0-9, - and _ only, no spaces.'
             );
@@ -435,6 +437,8 @@ class Blocks extends BaseAdmin
     {
         $type = trim($type);
 
+        $oFormValidation = Factory::service('FormValidation');
+
         if ($type) {
 
             if (isset($this->data['blockTypes'][$type])) {
@@ -443,13 +447,13 @@ class Blocks extends BaseAdmin
 
             } else {
 
-                $this->form_validation->set_message('_callback_block_type', 'Block type not supported.');
+                $oFormValidation->set_message('_callback_block_type', 'Block type not supported.');
                 return false;
             }
 
         } else {
 
-            $this->form_validation->set_message('_callback_block_type', lang('fv_required'));
+            $oFormValidation->set_message('_callback_block_type', lang('fv_required'));
             return false;
         }
     }
