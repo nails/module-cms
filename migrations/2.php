@@ -16,8 +16,8 @@ namespace Nails\Database\Migration\Nailsapp\ModuleCms;
 
 use Nails\Common\Console\Migrate\Base;
 
-class Migration_2 extends Base {
-
+class Migration2 extends Base
+{
     /**
      * Execute the migration
      * @return Void
