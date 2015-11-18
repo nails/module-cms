@@ -4,8 +4,8 @@
     </p>
     <?php
 
-        echo \Nails\Admin\Helper::loadSearch($search);
-        echo \Nails\Admin\Helper::loadPagination($pagination);
+        echo adminHelper('loadSearch', $search);
+        echo adminHelper('loadPagination', $pagination);
 
     ?>
     <div class="table-responsive">
@@ -31,8 +31,8 @@
                                 echo $area->description ? '<small>' . $area->description . '</small>' : '';
                             echo '</td>';
 
-                            echo \Nails\Admin\Helper::loadUserCell($area->modified_by);
-                            echo \Nails\Admin\Helper::loadDatetimeCell($area->modified);
+                            echo adminHelper('loadUserCell', $area->modified_by);
+                            echo adminHelper('loadDatetimeCell', $area->modified);
 
                             echo '<td class="actions">';
 
@@ -73,7 +73,7 @@
     </div>
     <?php
 
-        echo \Nails\Admin\Helper::loadPagination($pagination);
+        echo adminHelper('loadPagination', $pagination);
 
     ?>
 </div>

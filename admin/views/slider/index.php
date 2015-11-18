@@ -4,8 +4,8 @@
     </p>
     <?php
 
-        echo \Nails\Admin\Helper::loadSearch($search);
-        echo \Nails\Admin\Helper::loadPagination($pagination);
+        echo adminHelper('loadSearch', $search);
+        echo adminHelper('loadPagination', $pagination);
 
     ?>
     <div class="table-responsive">
@@ -31,8 +31,8 @@
                                 echo $slider->description ? '<small>' . $slider->description . '</small>' : '';
                             echo '</td>';
 
-                            echo \Nails\Admin\Helper::loadUserCell($slider->modified_by);
-                            echo \Nails\Admin\Helper::loadDatetimeCell($slider->modified);
+                            echo adminHelper('loadUserCell', $slider->modified_by);
+                            echo adminHelper('loadDatetimeCell', $slider->modified);
 
                             echo '<td class="actions">';
 

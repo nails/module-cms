@@ -14,8 +14,8 @@
     </p>
     <?php
 
-        echo \Nails\Admin\Helper::loadSearch($search);
-        echo \Nails\Admin\Helper::loadPagination($pagination);
+        echo adminHelper('loadSearch', $search);
+        echo adminHelper('loadPagination', $pagination);
 
     ?>
     <div class="table-responsive">
@@ -78,7 +78,7 @@
                                 }
 
                             echo '</td>';
-                            echo \Nails\Admin\Helper::loadDatetimeCell($block->modified);
+                            echo adminHelper('loadDatetimeCell', $block->modified);
                             echo '<td class="actions">';
 
                                 if (userHasPermission('admin:cms:blocks:edit')) {
@@ -118,7 +118,7 @@
     </div>
     <?php
 
-        echo \Nails\Admin\Helper::loadPagination($pagination);
+        echo adminHelper('loadPagination', $pagination);
 
     ?>
 </div>

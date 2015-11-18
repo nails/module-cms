@@ -4,8 +4,8 @@
     </p>
     <?php
 
-        echo \Nails\Admin\Helper::loadSearch($search);
-        echo \Nails\Admin\Helper::loadPagination($pagination);
+        echo adminHelper('loadSearch', $search);
+        echo adminHelper('loadPagination', $pagination);
 
     ?>
     <div class="table-responsive">
@@ -80,8 +80,8 @@
                             ?>
                             </div>
                         </td>
-                        <?=\Nails\Admin\Helper::loadUserCell($oPage->modified_by)?>
-                        <?=\Nails\Admin\Helper::loadDatetimeCell($oPage->modified)?>
+                        <?=adminHelper('loadUserCell', $oPage->modified_by)?>
+                        <?=adminHelper('loadDatetimeCell', $oPage->modified)?>
                         <td class="actions">
                             <?php
 
@@ -146,7 +146,7 @@
     </div>
     <?php
 
-        echo \Nails\Admin\Helper::loadPagination($pagination);
+        echo adminHelper('loadPagination', $pagination);
 
     ?>
 </div>

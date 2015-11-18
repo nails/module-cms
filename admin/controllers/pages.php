@@ -31,17 +31,23 @@ class Pages extends BaseAdmin
         if (userHasPermission('admin:cms:pages:manage')) {
 
             //  Alerts
-            $alerts = array();
-            $ci     =& get_instance();
+            $oCi =& get_instance();
 
             //  Draft pages
-            $ci->db->where('is_published', false);
-            $ci->db->where('is_deleted', false);
-            $numDrafts = $ci->db->count_all_results(NAILS_DB_PREFIX . 'cms_page');
-            $alerts[]  = \Nails\Admin\Nav::alertObject($numDrafts, 'alert', 'Draft Pages');
+            $oCi->db->where('is_published', false);
+            $oCi->db->where('is_deleted', false);
+            $iNumDrafts = $oCi->db->count_all_results(NAILS_DB_PREFIX . 'cms_page');
 
-            $navGroup = new \Nails\Admin\Nav('CMS', 'fa-file-text');
-            $navGroup->addAction('Manage Pages', 'index', $alerts);
+            $oAlert = Factory::factory('NavAlert', 'nailsapp/module-admin');
+            $oAlert->setValue($iNumDrafts);
+            $oAlert->setSeverity('danger');
+            $oAlert->setLabel('Draft Pages');
+
+            $navGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $navGroup->setLabel('CMS');
+            $navGroup->setIcon('fa-file-text');
+            $navGroup->addAction('Manage Pages', 'index', array($oAlert));
+
             return $navGroup;
         }
     }

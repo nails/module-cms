@@ -1,5 +1,7 @@
 <?php
 
+use Nails\Factory;
+
 /**
  * This helper brings some convinient functions for interacting with CMS elements
  *
@@ -19,7 +21,7 @@ if (!function_exists('cmsBlock')) {
      */
     function cmsBlock($sSlug)
     {
-        $oBlockModel = \Nails\Factory::model('Block', 'nailsapp/module-cms');
+        $oBlockModel = Factory::model('Block', 'nailsapp/module-cms');
         $oBlock      = $oBlockModel->get_by_slug($sSlug);
 
         if (!$oBlock) {
@@ -42,7 +44,7 @@ if (!function_exists('cmsSlider')) {
      */
     function cmsSlider($sIdSlug)
     {
-        $oSliderModel = \Nails\Factory::model('Slider', 'nailsapp/module-cms');
+        $oSliderModel = Factory::model('Slider', 'nailsapp/module-cms');
         return $oSliderModel->get_by_id_or_slug($sIdSlug);
     }
 }
@@ -58,7 +60,7 @@ if (!function_exists('cmsMenu')) {
      */
     function cmsMenu($mIdSlug)
     {
-        $oMenuModel = \Nails\Factory::model('Menu', 'nailsapp/module-cms');
+        $oMenuModel = Factory::model('Menu', 'nailsapp/module-cms');
         return $oMenuModel->get_by_id_or_slug($mIdSlug);
     }
 }
@@ -74,7 +76,7 @@ if (!function_exists('cmsMenuNested')) {
      */
     function cmsMenuNested($mIdSlug)
     {
-        $oMenuModel = \Nails\Factory::model('Block', 'nailsapp/module-cms');
+        $oMenuModel = Factory::model('Block', 'nailsapp/module-cms');
         $aData      = array('nestItems' => true);
         return $oMenuModel->get_by_id_or_slug($mIdSlug, $aData);
     }
@@ -91,7 +93,7 @@ if (!function_exists('cmsPage')) {
      */
     function cmsPage($mIdSlug)
     {
-        $oPageModel = \Nails\Factory::model('Page', 'nailsapp/module-cms');
+        $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
         return $oPageModel->get_by_id_or_slug($mIdSlug);
     }
 }
@@ -107,7 +109,7 @@ if (!function_exists('cmsArea')) {
      */
     function cmsArea($mIdSlug)
     {
-        $oAreaModel = \Nails\Factory::model('Area', 'nailsapp/module-cms');
+        $oAreaModel = Factory::model('Area', 'nailsapp/module-cms');
         return $oAreaModel->render($mIdSlug);
     }
 }

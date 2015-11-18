@@ -30,7 +30,9 @@ class Blocks extends BaseAdmin
     {
         if (userHasPermission('admin:cms:blocks:manage')) {
 
-            $navGroup = new \Nails\Admin\Nav('CMS', 'fa-file-text');
+            $navGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $navGroup->setLabel('CMS');
+            $navGroup->setIcon('fa-file-text');
             $navGroup->addAction('Manage Blocks');
             return $navGroup;
         }

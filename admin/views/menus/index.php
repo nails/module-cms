@@ -4,8 +4,8 @@
     </p>
     <?php
 
-        echo \Nails\Admin\Helper::loadSearch($search);
-        echo \Nails\Admin\Helper::loadPagination($pagination);
+        echo adminHelper('loadSearch', $search);
+        echo adminHelper('loadPagination', $pagination);
 
     ?>
     <div class="table-responsive">
@@ -30,8 +30,8 @@
                                 echo $menu->label;
                                 echo $menu->description ? '<small>' . $menu->description . '</small>' : '';
                             echo '</td>';
-                            echo \Nails\Admin\Helper::loadUserCell($menu->modified_by);
-                            echo \Nails\Admin\Helper::loadDatetimeCell($menu->modified);
+                            echo adminHelper('loadUserCell', $menu->modified_by);
+                            echo adminHelper('loadDatetimeCell', $menu->modified);
                             echo '<td class="actions">';
 
                                 if (userHasPermission('admin:cms:menus:edit')) {

@@ -10,11 +10,13 @@
  * @link
  */
 
+use Nails\Factory;
+
 $iSliderId = !empty($sliderId) ? (int) $sliderId: null;
 
 if (!empty($iSliderId)) {
 
-    $oSliderModel = \Nails\Factory::model('Slider', 'nailsapp/module-cms');
+    $oSliderModel = Factory::model('Slider', 'nailsapp/module-cms');
     $oSlider      = $oSliderModel->get_by_id($iSliderId);
 
     ?>
