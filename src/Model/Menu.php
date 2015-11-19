@@ -96,7 +96,7 @@ class Menu extends Base
     {
         parent::_format_object($object, $data);
 
-        $temp              = new stdClass();
+        $temp              = new \stdClass();
         $temp->id          = (int) $object->modified_by;
         $temp->email       = $object->email;
         $temp->first_name  = $object->first_name;
