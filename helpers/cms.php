@@ -131,7 +131,7 @@ if (!function_exists('cmsWidget')) {
 
         if ($oWidget) {
 
-            return $oWidgetModel->render($aData);
+            return $oWidget->render($aData);
 
         } else {
 
