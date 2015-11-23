@@ -113,3 +113,29 @@ if (!function_exists('cmsArea')) {
         return $oAreaModel->render($mIdSlug);
     }
 }
+
+// --------------------------------------------------------------------------
+
+if (!function_exists('cmsWidget')) {
+
+    /**
+     * Returns a rendered CMS widget
+     * @param  string $sSlug The widget's slug
+     * @param  array  $aData Data to pass to the widget's render function
+     * @return string
+     */
+    function cmsWidget($sSlug, $aData = array())
+    {
+        $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
+        $oWidget      = $oWidgetModel->getBySlug($sSlug);
+
+        if ($oWidget) {
+
+            return $oWidgetModel->render($aData);
+
+        } else {
+
+            return '';
+        }
+    }
+}
