@@ -477,10 +477,9 @@ class Page extends Base
      * This method applies the conditionals which are common across the get_*()
      * methods and the count() method.
      * @param string $data Data passed from the calling method
-     * @param string $_caller The name of the calling method
      * @return void
      **/
-    public function _getcount_common($data = array(), $_caller = null)
+    public function _getcount_common($data = array())
     {
         $select = array(
             $this->tablePrefix . '.id',
@@ -545,7 +544,7 @@ class Page extends Base
             );
         }
 
-        parent::_getcount_common($data, $_caller);
+        parent::_getcount_common($data);
     }
 
     // --------------------------------------------------------------------------
@@ -763,18 +762,12 @@ class Page extends Base
      * @param int    $perPage        How many items per page of paginated results
      * @param mixed  $data           Any data to pass to _getcount_common()
      * @param bool   $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
-     * @param string $_caller        Internal flag to pass to _getcount_common(), contains the calling method
      * @return array
      */
-    public function get_all_flat(
-        $page = null,
-        $perPage = null,
-        $data = array(),
-        $includeDeleted = false,
-        $_caller = 'GET_ALL_FLAT'
-    ) {
+    public function get_all_flat( $page = null, $perPage = null, $data = array(), $includeDeleted = false)
+    {
         $out   = array();
-        $pages = $this->get_all($page, $perPage, $data, $includeDeleted, $_caller);
+        $pages = $this->get_all($page, $perPage, $data, $includeDeleted);
 
         foreach ($pages as $page) {
 
@@ -799,10 +792,9 @@ class Page extends Base
      * @param int    $perPage        How many items per page of paginated results
      * @param mixed  $data           Any data to pass to _getcount_common()
      * @param bool   $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
-     * @param string $_caller        Internal flag to pass to _getcount_common(), contains the calling method
      * @return array
      */
-    public function getTopLevel($page = null, $perPage = null, $data = array(), $includeDeleted = false, $_caller = 'GET_TOP_LEVEL')
+    public function getTopLevel($page = null, $perPage = null, $data = array(), $includeDeleted = false)
     {
         if (empty($data['where'])) {
 
@@ -818,7 +810,7 @@ class Page extends Base
             $data['where'][] = array('published_parent_id', null);
         }
 
-        return $this->get_all($page, $perPage, $data, $includeDeleted, $_caller);
+        return $this->get_all($page, $perPage, $data, $includeDeleted);
     }
 
     // --------------------------------------------------------------------------

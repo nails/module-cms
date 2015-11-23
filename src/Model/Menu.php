@@ -45,11 +45,10 @@ class Menu extends Base
     /**
      * This method applies the conditionals which are common across the get_*()
      * methods and the count() method.
-     * @param array  $data    Data passed from the calling method
-     * @param string $_caller The name of the calling method
+     * @param array  $data Data passed from the calling method
      * @return void
      **/
-    protected function _getcount_common($data = array(), $_caller = null)
+    protected function _getcount_common($data = array())
     {
         $this->oDb->select($this->tablePrefix . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
         $this->oDb->join(
@@ -82,7 +81,7 @@ class Menu extends Base
             );
         }
 
-        parent::_getcount_common($data, $_caller);
+        parent::_getcount_common($data);
     }
 
     // --------------------------------------------------------------------------
