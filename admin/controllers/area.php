@@ -192,7 +192,7 @@ class Area extends BaseAdmin
                 } else {
 
                     $this->data['error']  = 'Failed to create area. ';
-                    $this->data['error'] .= $this->oAreaModel->last_error();
+                    $this->data['error'] .= $this->oAreaModel->lastError();
                 }
 
             } else {
@@ -285,7 +285,7 @@ class Area extends BaseAdmin
                 } else {
 
                     $this->data['error']  = 'Failed to update area. ';
-                    $this->data['error'] .= $this->oAreaModel->last_error();
+                    $this->data['error'] .= $this->oAreaModel->lastError();
                 }
 
             } else {
@@ -345,7 +345,7 @@ class Area extends BaseAdmin
 
             $sStatus = 'error';
             $msg    = 'Failed to delete area. ';
-            $msg   .= $this->oAreaModel->last_error();
+            $msg   .= $this->oAreaModel->lastError();
         }
 
         $this->session->set_flashdata($sStatus, $msg);

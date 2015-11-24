@@ -196,7 +196,7 @@ class Slider extends BaseAdmin
                 } else {
 
                     $this->data['error']  = 'Failed to create slider. ';
-                    $this->data['error'] .= $this->oSliderModel->last_error();
+                    $this->data['error'] .= $this->oSliderModel->lastError();
                 }
 
             } else {
@@ -315,7 +315,7 @@ class Slider extends BaseAdmin
                 } else {
 
                     $this->data['error']  = 'Failed to update slider. ';
-                    $this->data['error'] .= $this->oSliderModel->last_error();
+                    $this->data['error'] .= $this->oSliderModel->lastError();
                 }
 
             } else {
@@ -400,7 +400,7 @@ class Slider extends BaseAdmin
 
             $status   = 'error';
             $message  = 'I failed to delete that slider. ';
-            $message .= $this->oSliderModel->last_error();
+            $message .= $this->oSliderModel->lastError();
         }
 
         $this->session->set_flashdata($status, $message);

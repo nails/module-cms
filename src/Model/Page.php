@@ -53,7 +53,7 @@ class Page extends Base
 
         if (!$iId) {
 
-            $this->_set_error('Unable to create base page object. ' . $this->last_error());
+            $this->setError('Unable to create base page object. ' . $this->lastError());
             $this->oDb->trans_rollback();
             return false;
         }
@@ -86,7 +86,7 @@ class Page extends Base
 
         if (!$oCurrent) {
 
-            $this->_set_error('Invalid Page ID');
+            $this->setError('Invalid Page ID');
             return false;
         }
 
@@ -135,7 +135,7 @@ class Page extends Base
 
             if (!$oParent) {
 
-                $this->_set_error('Invalid Parent ID.');
+                $this->setError('Invalid Parent ID.');
                 $this->oDb->trans_rollback();
                 return false;
             }
@@ -163,7 +163,7 @@ class Page extends Base
             $this->db->where('id !=', $oCurrent->id);
             if ($this->db->count_all_results($this->table)) {
 
-                $this->_set_error('Slug is already in use.');
+                $this->setError('Slug is already in use.');
                 $this->oDb->trans_rollback();
                 return false;
             }
@@ -262,7 +262,7 @@ class Page extends Base
 
                         if (!parent::update($iPageId, $aData)) {
 
-                            $this->_set_error('Failed to update child page\'s slug and breadcrumbs');
+                            $this->setError('Failed to update child page\'s slug and breadcrumbs');
                             $this->oDb->trans_rollback();
                             return false;
                         }
@@ -278,7 +278,7 @@ class Page extends Base
 
         } else {
 
-            $this->_set_error('Failed to update page object.');
+            $this->setError('Failed to update page object.');
             $this->oDb->trans_rollback();
             return false;
         }
@@ -316,7 +316,7 @@ class Page extends Base
         $oTemplate      = $oTemplateModel->getBySlug($sTemplate, 'RENDER');
 
         if (!$oTemplate) {
-            $this->_set_error('"' . $sTemplate .'" is not a valid template.');
+            $this->setError('"' . $sTemplate .'" is not a valid template.');
             return false;
         }
 
@@ -425,7 +425,7 @@ class Page extends Base
 
                     if (!$this->oDb->update($this->table)) {
 
-                        $this->_set_error('Failed to update a child page\'s data.');
+                        $this->setError('Failed to update a child page\'s data.');
                         $this->oDb->trans_rollback();
                         return false;
                     }
@@ -967,7 +967,7 @@ class Page extends Base
 
         if (!$page) {
 
-            $this->_set_error('Invalid page ID');
+            $this->setError('Invalid page ID');
             return false;
         }
 
@@ -1002,7 +1002,7 @@ class Page extends Base
 
                 if (!$this->oDb->update($this->table)) {
 
-                    $this->_set_error('Unable to delete children pages');
+                    $this->setError('Unable to delete children pages');
                     $this->oDb->trans_rollback();
                     return false;
                 }
@@ -1046,7 +1046,7 @@ class Page extends Base
     public function destroy($id)
     {
         //  @TODO: implement this?
-        $this->_set_error('It is not possible to destroy pages using this system.');
+        $this->setError('It is not possible to destroy pages using this system.');
         return false;
     }
 

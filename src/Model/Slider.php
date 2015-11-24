@@ -212,7 +212,7 @@ class Slider extends Base
 
                 if (!$result) {
 
-                    $this->_set_error('Failed to create slide #' . ($i+1));
+                    $this->setError('Failed to create slide #' . ($i+1));
                     $this->oDb->trans_rollback();
                     return false;
 
@@ -290,7 +290,7 @@ class Slider extends Base
 
                     if (!$result) {
 
-                        $this->_set_error('Failed to update slide #' . ($i+1));
+                        $this->setError('Failed to update slide #' . ($i+1));
                         $this->oDb->trans_rollback();
                         return false;
 
@@ -306,7 +306,7 @@ class Slider extends Base
 
                     if (!$result) {
 
-                        $this->_set_error('Failed to create slide #' . ($i+1));
+                        $this->setError('Failed to create slide #' . ($i+1));
                         $this->oDb->trans_rollback();
                         return false;
 

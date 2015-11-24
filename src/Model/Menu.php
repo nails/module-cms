@@ -237,7 +237,7 @@ class Menu extends Base
 
                 if (!empty($data['page_id']) && !empty($data['url'])) {
 
-                    $this->_set_error('Can only set a URL or a CMS Page for item #' . ($counter+1) . ', not both.');
+                    $this->setError('Can only set a URL or a CMS Page for item #' . ($counter+1) . ', not both.');
                     $this->oDb->trans_rollback();
                     return false;
                 }
@@ -260,7 +260,7 @@ class Menu extends Base
 
                     if (empty($data['parent_id'])) {
 
-                        $this->_set_error('Failed to determine the parent item of item #' . ($counter+1));
+                        $this->setError('Failed to determine the parent item of item #' . ($counter+1));
                         $this->oDb->trans_rollback();
                         return false;
                     }
@@ -270,7 +270,7 @@ class Menu extends Base
 
                 if (!$result) {
 
-                    $this->_set_error('Failed to create item #' . ($counter+1));
+                    $this->setError('Failed to create item #' . ($counter+1));
                     $this->oDb->trans_rollback();
                     return false;
 
@@ -355,7 +355,7 @@ class Menu extends Base
 
                 if (!empty($data['page_id']) && !empty($data['url'])) {
 
-                    $this->_set_error('Can only set a URL or a CMS Page for item #' . ($counter+1) . ', not both.');
+                    $this->setError('Can only set a URL or a CMS Page for item #' . ($counter+1) . ', not both.');
                     $this->oDb->trans_rollback();
                     return false;
                 }
@@ -378,7 +378,7 @@ class Menu extends Base
 
                     if (empty($data['parent_id'])) {
 
-                        $this->_set_error('Failed to determine the parent item of item #' . ($counter+1));
+                        $this->setError('Failed to determine the parent item of item #' . ($counter+1));
                         $this->oDb->trans_rollback();
                         return false;
                     }
@@ -401,7 +401,7 @@ class Menu extends Base
 
                     if (!$result) {
 
-                        $this->_set_error('Failed to update item #' . ($counter+1));
+                        $this->setError('Failed to update item #' . ($counter+1));
                         $this->oDb->trans_rollback();
                         return false;
 
@@ -417,7 +417,7 @@ class Menu extends Base
 
                     if (!$result) {
 
-                        $this->_set_error('Failed to create item #' . ($counter+1));
+                        $this->setError('Failed to create item #' . ($counter+1));
                         $this->oDb->trans_rollback();
                         return false;
 

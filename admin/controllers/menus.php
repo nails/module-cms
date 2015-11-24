@@ -193,7 +193,7 @@ class Menus extends BaseAdmin
                 } else {
 
                     $this->data['error']  = 'Failed to create menu. ';
-                    $this->data['error'] .= $this->oMenuModel->last_error();
+                    $this->data['error'] .= $this->oMenuModel->lastError();
                 }
 
             } else {
@@ -322,7 +322,7 @@ class Menus extends BaseAdmin
                 } else {
 
                     $this->data['error']  = 'Failed to update menu. ';
-                    $this->data['error'] .= $this->oMenuModel->last_error();
+                    $this->data['error'] .= $this->oMenuModel->lastError();
                 }
 
             } else {
@@ -416,7 +416,7 @@ class Menus extends BaseAdmin
 
             $sStatus = 'error';
             $msg    = 'Failed to delete menu. ';
-            $msg   .= $this->oMenuModel->last_error();
+            $msg   .= $this->oMenuModel->lastError();
         }
 
         $this->session->set_flashdata($sStatus, $msg);

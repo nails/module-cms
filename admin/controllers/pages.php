@@ -235,7 +235,7 @@ class Pages extends BaseAdmin
 
                 } else {
 
-                    $this->data['error'] = 'Failed to create page. ' . $this->oPageModel->last_error();
+                    $this->data['error'] = 'Failed to create page. ' . $this->oPageModel->lastError();
                 }
 
             } else {
@@ -378,7 +378,7 @@ class Pages extends BaseAdmin
 
                 } else {
 
-                    $this->data['error'] = 'Failed to update page. ' . $this->oPageModel->last_error();
+                    $this->data['error'] = 'Failed to update page. ' . $this->oPageModel->lastError();
                 }
 
             } else {
@@ -483,7 +483,7 @@ class Pages extends BaseAdmin
 
         } else {
 
-            $this->session->set_flashdata('error', 'Could not publish page. ' . $this->oPageModel->last_error());
+            $this->session->set_flashdata('error', 'Could not publish page. ' . $this->oPageModel->lastError());
         }
     }
 
@@ -513,7 +513,7 @@ class Pages extends BaseAdmin
 
             } else {
 
-                $this->session->set_flashdata('error', 'Could not delete page. ' . $this->oPageModel->last_error());
+                $this->session->set_flashdata('error', 'Could not delete page. ' . $this->oPageModel->lastError());
             }
 
         } else {
@@ -550,7 +550,7 @@ class Pages extends BaseAdmin
 
             } else {
 
-                $this->session->set_flashdata('error', 'Could not restore page. ' . $this->oPageModel->last_error());
+                $this->session->set_flashdata('error', 'Could not restore page. ' . $this->oPageModel->lastError());
             }
 
         } else {

@@ -325,7 +325,7 @@ class Blocks extends BaseAdmin
                 } else {
 
                     $this->data['error']  = 'There was a problem creating the new block. ';
-                    $this->data['error'] .= $this->oBlockModel->last_error();
+                    $this->data['error'] .= $this->oBlockModel->lastError();
                 }
 
             } else {
@@ -377,7 +377,7 @@ class Blocks extends BaseAdmin
 
             $status = 'error';
             $msg    = 'Failed to delete block. ';
-            $msg   .= $this->oBlockModel->last_error();
+            $msg   .= $this->oBlockModel->lastError();
         }
 
         $this->session->set_flashdata($status, $msg);

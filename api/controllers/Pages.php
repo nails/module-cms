@@ -96,7 +96,7 @@ class Pages extends \Nails\Api\Controller\Base
 
         } else {
 
-            return array('status' => 500, 'error' => $oPageModel->last_error());
+            return array('status' => 500, 'error' => $oPageModel->lastError());
         }
     }
 }

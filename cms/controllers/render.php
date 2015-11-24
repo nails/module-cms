@@ -141,7 +141,7 @@ class Render extends NAILS_Controller
 
         } else {
 
-            throw new Exception('Failed to render CMS Page: ' . $this->oPageModel->last_error(), 1);
+            throw new Exception('Failed to render CMS Page: ' . $this->oPageModel->lastError(), 1);
         }
     }
 
