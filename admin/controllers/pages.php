@@ -139,8 +139,8 @@ class Pages extends BaseAdmin
         );
 
         //  Get the items for the page
-        $totalRows           = $this->oPageModel->count_all($data);
-        $this->data['pages'] = $this->oPageModel->get_all($page, $perPage, $data);
+        $totalRows           = $this->oPageModel->countAll($data);
+        $this->data['pages'] = $this->oPageModel->getAll($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
         $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
@@ -308,7 +308,7 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oPage = $this->oPageModel->get_by_id($this->uri->segment(5));
+        $oPage = $this->oPageModel->getById($this->uri->segment(5));
 
         if (!$oPage) {
 
@@ -461,7 +461,7 @@ class Pages extends BaseAdmin
 
         if ($this->oPageModel->publish($iId)) {
 
-            $oPage = $this->oPageModel->get_by_id($iId);
+            $oPage = $this->oPageModel->getById($iId);
             $this->session->set_flashdata(
                 'success',
                 'Page was published successfully - ' .
@@ -503,7 +503,7 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $id   = $this->uri->segment(5);
-        $page = $this->oPageModel->get_by_id($id);
+        $page = $this->oPageModel->getById($id);
 
         if ($page && !$page->is_deleted) {
 
@@ -540,7 +540,7 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $id   = $this->uri->segment(5);
-        $page = $this->oPageModel->get_by_id($id);
+        $page = $this->oPageModel->getById($id);
 
         if ($page && $page->is_deleted) {
 

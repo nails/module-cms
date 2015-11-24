@@ -48,7 +48,7 @@ class Menu extends Base
      * @param array  $data Data passed from the calling method
      * @return void
      **/
-    protected function _getcount_common($data = array())
+    protected function getCountCommon($data = array())
     {
         $this->oDb->select($this->tablePrefix . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
         $this->oDb->join(
@@ -81,7 +81,7 @@ class Menu extends Base
             );
         }
 
-        parent::_getcount_common($data);
+        parent::getCountCommon($data);
     }
 
     // --------------------------------------------------------------------------
@@ -91,9 +91,9 @@ class Menu extends Base
      * @param  stdClass &$object The menu object to format
      * @return void
      */
-    protected function _format_object(&$object, $data = array())
+    protected function formatObject(&$object, $data = array())
     {
-        parent::_format_object($object, $data);
+        parent::formatObject($object, $data);
 
         $temp              = new \stdClass();
         $temp->id          = (int) $object->modified_by;
@@ -133,7 +133,7 @@ class Menu extends Base
 
         foreach ($items as $i) {
 
-            $this->_format_object_item($i);
+            $this->formatObjectItem($i);
         }
 
         if ($nested) {
@@ -151,9 +151,9 @@ class Menu extends Base
      * @param  stdClass &$obj The menu item to format
      * @return voud
      */
-    protected function _format_object_item(&$obj)
+    protected function formatObjectItem(&$obj)
     {
-        parent::_format_object($obj);
+        parent::formatObject($obj);
 
         // --------------------------------------------------------------------------
 
@@ -193,7 +193,7 @@ class Menu extends Base
             unset($data['items']);
         }
 
-        $data['slug'] = $this->_generate_slug($data['label']);
+        $data['slug'] = $this->generateSlug($data['label']);
 
         $result = parent::create($data, $returnObject);
 
@@ -320,7 +320,7 @@ class Menu extends Base
             unset($data['items']);
         }
 
-        $data['slug'] = $this->_generate_slug($data['label'], '', '', null, null, $id);
+        $data['slug'] = $this->generateSlug($data['label'], '', '', null, null, $id);
 
         $result = parent::update($id, $data);
 

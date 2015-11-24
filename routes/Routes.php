@@ -26,7 +26,7 @@ class Routes
         $oDb        = Factory::service('Database');
 
         $aRoutes = array();
-        $aPages = $oPageModel->get_all();
+        $aPages = $oPageModel->getAll();
 
         foreach ($aPages as $oPage) {
 

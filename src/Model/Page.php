@@ -82,7 +82,7 @@ class Page extends Base
     public function update($iPageId, $aData)
     {
         //  Fetch the current version of this page, for reference.
-        $oCurrent = $this->get_by_id($iPageId);
+        $oCurrent = $this->getById($iPageId);
 
         if (!$oCurrent) {
 
@@ -146,7 +146,7 @@ class Page extends Base
         //  Work out the slug
         if (empty($aData['slug'])) {
 
-            $aUpdateData['draft_slug'] = $this->_generate_slug(
+            $aUpdateData['draft_slug'] = $this->generateSlug(
                 $aUpdateData['draft_title'],
                 $sSlugPrefix,
                 '',
@@ -211,7 +211,7 @@ class Page extends Base
             if ($bTitleChange || $bSlugChange) {
 
                 //  Refresh the current
-                $oCurrent     = $this->get_by_id($oCurrent->id);
+                $oCurrent     = $this->getById($oCurrent->id);
                 $aChildren    = $this->getIdsOfChildren($oCurrent->id);
                 $aUpdateData  = array();
                 $aParentCache = array(
@@ -230,7 +230,7 @@ class Page extends Base
                      */
                     foreach ($aChildren as $iChildId) {
 
-                        $oChild = $this->get_by_id($iChildId);
+                        $oChild = $this->getById($iChildId);
                         if (!$oChild) {
                             continue;
                         }
@@ -333,7 +333,7 @@ class Page extends Base
     public function publish($iId)
     {
         //  Check the page is valid
-        $oPage = $this->get_by_id($iId);
+        $oPage = $this->getById($iId);
         $oDate = Factory::factory('DateTime');
 
         if (!$oPage) {
@@ -396,7 +396,7 @@ class Page extends Base
 
                 foreach ($aChildren as $iChildId) {
 
-                    $oChild = $this->get_by_id($iChildId);
+                    $oChild = $this->getById($iChildId);
                     if (!$oChild) {
                         continue;
                     }
@@ -479,7 +479,7 @@ class Page extends Base
      * @param string $data Data passed from the calling method
      * @return void
      **/
-    public function _getcount_common($data = array())
+    public function getCountCommon($data = array())
     {
         $select = array(
             $this->tablePrefix . '.id',
@@ -544,7 +544,7 @@ class Page extends Base
             );
         }
 
-        parent::_getcount_common($data);
+        parent::getCountCommon($data);
     }
 
     // --------------------------------------------------------------------------
@@ -556,7 +556,7 @@ class Page extends Base
      */
     public function getAllNested($useDraft = true)
     {
-        return $this->nestPages($this->get_all(), null, $useDraft);
+        return $this->nestPages($this->getAll(), null, $useDraft);
     }
 
     // --------------------------------------------------------------------------
@@ -570,7 +570,7 @@ class Page extends Base
     public function getAllNestedFlat($separator = ' &rsaquo; ', $murderParentsOfChildren = true)
     {
         $out   = array();
-        $pages = $this->get_all();
+        $pages = $this->getAll();
 
         foreach ($pages as $page) {
 
@@ -760,14 +760,14 @@ class Page extends Base
      * Fetches all objects as a flat array, optionally paginated.
      * @param int    $page           The page number of the results, if null then no pagination
      * @param int    $perPage        How many items per page of paginated results
-     * @param mixed  $data           Any data to pass to _getcount_common()
+     * @param mixed  $data           Any data to pass to getCountCommon()
      * @param bool   $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
      * @return array
      */
-    public function get_all_flat( $page = null, $perPage = null, $data = array(), $includeDeleted = false)
+    public function getAllFlat($page = null, $perPage = null, $data = array(), $includeDeleted = false)
     {
         $out   = array();
-        $pages = $this->get_all($page, $perPage, $data, $includeDeleted);
+        $pages = $this->getAll($page, $perPage, $data, $includeDeleted);
 
         foreach ($pages as $page) {
 
@@ -790,7 +790,7 @@ class Page extends Base
      * Get the top level pages, i.e., those without a parent
      * @param int    $page           The page number of the results, if null then no pagination
      * @param int    $perPage        How many items per page of paginated results
-     * @param mixed  $data           Any data to pass to _getcount_common()
+     * @param mixed  $data           Any data to pass to getCountCommon()
      * @param bool   $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
      * @return array
      */
@@ -810,7 +810,7 @@ class Page extends Base
             $data['where'][] = array('published_parent_id', null);
         }
 
-        return $this->get_all($page, $perPage, $data, $includeDeleted);
+        return $this->getAll($page, $perPage, $data, $includeDeleted);
     }
 
     // --------------------------------------------------------------------------
@@ -823,7 +823,7 @@ class Page extends Base
      */
     public function getSiblings($id, $useDraft = true)
     {
-        $page = $this->get_by_id($id);
+        $page = $this->getById($id);
 
         if (!$page) {
 
@@ -844,7 +844,7 @@ class Page extends Base
             $data['where'][] = array('published_parent_id', $page->published->parent_id);
         }
 
-        return $this->get_all(null, null, $data);
+        return $this->getAll(null, null, $data);
     }
 
     // --------------------------------------------------------------------------
@@ -861,7 +861,7 @@ class Page extends Base
             )
         );
 
-        $page = $this->get_all(null, null, $data);
+        $page = $this->getAll(null, null, $data);
 
         if (!$page) {
 
@@ -878,7 +878,7 @@ class Page extends Base
      * @param  stdClass &$page The page to format
      * @return void
      */
-    protected function _format_object(&$page, $data = array())
+    protected function formatObject(&$page, $data = array())
     {
         $integers = array();
 
@@ -886,7 +886,7 @@ class Page extends Base
             'is_homepage'
         );
 
-        parent::_format_object($page, $data, $integers, $booleans);
+        parent::formatObject($page, $data, $integers, $booleans);
 
         //  Loop properties and sort into published data and draft data
         $page->published = new \stdClass();
@@ -963,7 +963,7 @@ class Page extends Base
      */
     public function delete($id)
     {
-        $page = $this->get_by_id($id);
+        $page = $this->getById($id);
 
         if (!$page) {
 
@@ -1071,7 +1071,7 @@ class Page extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->_format_object($oResult);
+        $this->formatObject($oResult);
         return $oResult;
     }
 
@@ -1085,7 +1085,7 @@ class Page extends Base
      */
     public function getUrl($iPageId, $usePublished = true)
     {
-        $page = $this->get_by_id($iPageId);
+        $page = $this->getById($iPageId);
 
         if ($page) {
 

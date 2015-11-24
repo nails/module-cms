@@ -349,7 +349,7 @@ class TemplateBase
 
                 //  Get all the blocks which were found
                 $oBlockModel = Factory::model('Block', 'nailsapp/module-cms');
-                $aBlocks     = $oBlockModel->get_by_slugs($matches[1]);
+                $aBlocks     = $oBlockModel->getBySlugs($matches[1]);
 
                 //  Swap them in
                 if ($aBlocks) {

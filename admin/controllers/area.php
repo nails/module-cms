@@ -118,8 +118,8 @@ class Area extends BaseAdmin
         );
 
         //  Get the items for the page
-        $totalRows           = $this->oAreaModel->count_all($data);
-        $this->data['areas'] = $this->oAreaModel->get_all($page, $perPage, $data);
+        $totalRows           = $this->oAreaModel->countAll($data);
+        $this->data['areas'] = $this->oAreaModel->getAll($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
         $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
@@ -233,7 +233,7 @@ class Area extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $area = $this->oAreaModel->get_by_id($this->uri->segment(5));
+        $area = $this->oAreaModel->getById($this->uri->segment(5));
         $this->data['area'] = $area;
 
         if (!$area) {
@@ -326,7 +326,7 @@ class Area extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $area = $this->oAreaModel->get_by_id($this->uri->segment(5));
+        $area = $this->oAreaModel->getById($this->uri->segment(5));
 
         if (!$area) {
 

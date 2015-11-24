@@ -17,7 +17,7 @@ $iSliderId = !empty($sliderId) ? (int) $sliderId: null;
 if (!empty($iSliderId)) {
 
     $oSliderModel = Factory::model('Slider', 'nailsapp/module-cms');
-    $oSlider      = $oSliderModel->get_by_id($iSliderId);
+    $oSlider      = $oSliderModel->getById($iSliderId);
 
     ?>
     <div class="cms-widget cms-widget-slider">

@@ -118,8 +118,8 @@ class Slider extends BaseAdmin
         );
 
         //  Get the items for the page
-        $totalRows             = $this->oSliderModel->count_all($data);
-        $this->data['sliders'] = $this->oSliderModel->get_all($page, $perPage, $data);
+        $totalRows             = $this->oSliderModel->countAll($data);
+        $this->data['sliders'] = $this->oSliderModel->getAll($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
         $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
@@ -259,7 +259,7 @@ class Slider extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $slider = $this->oSliderModel->get_by_id($this->uri->segment(5));
+        $slider = $this->oSliderModel->getById($this->uri->segment(5));
         $this->data['slider'] = $slider;
 
         if (!$slider) {
@@ -381,7 +381,7 @@ class Slider extends BaseAdmin
 
         //  Fetch and check post
         $sliderId = $this->uri->segment(5);
-        $slider   = $this->oSliderModel->get_by_id($sliderId);
+        $slider   = $this->oSliderModel->getById($sliderId);
 
         if (!$slider) {
 

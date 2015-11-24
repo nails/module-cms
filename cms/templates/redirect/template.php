@@ -86,7 +86,7 @@ class Redirect extends TemplateBase
 
         } elseif (!empty($aTplOptions['redirect_page_id'])) {
 
-            $oPage = $this->oPageModel->get_by_id($aTplOptions['redirect_page_id']);
+            $oPage = $this->oPageModel->getById($aTplOptions['redirect_page_id']);
 
             if ($oPage && ! $oPage->is_deleted && $oPage->is_published) {
 

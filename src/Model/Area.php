@@ -36,7 +36,7 @@ class Area extends Base
      * @param  array $data Data passed from the calling method
      * @return void
      **/
-    protected function _getcount_common($data = array())
+    protected function getCountCommon($data = array())
     {
         if (!empty($data['keywords'])) {
 
@@ -59,7 +59,7 @@ class Area extends Base
             );
         }
 
-        parent::_getcount_common($data);
+        parent::getCountCommon($data);
     }
 
     // --------------------------------------------------------------------------
@@ -67,7 +67,7 @@ class Area extends Base
     /**
      * Formats a single object
      *
-     * The get_all() method iterates over each returned item with this method so as to
+     * The getAll() method iterates over each returned item with this method so as to
      * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
      *
      * @param  object $obj      A reference to the object being formatted.
@@ -77,14 +77,14 @@ class Area extends Base
      * @param  array  $floats   Fields which should be cast as floats if not null
      * @return void
      */
-    protected function _format_object(
+    protected function formatObject(
         &$obj,
         $data = array(),
         $integers = array(),
         $bools = array(),
         $floats = array()
     ) {
-        parent::_format_object($obj, $data, $integers, $bools, $floats);
+        parent::formatObject($obj, $data, $integers, $bools, $floats);
         $obj->widget_data = json_decode($obj->widget_data);
     }
 
@@ -98,7 +98,7 @@ class Area extends Base
     public function render($mAreaIdSlug)
     {
         $sOut  = '';
-        $oArea = $this->get_by_id_or_slug($mAreaIdSlug);
+        $oArea = $this->getByIdOrSlug($mAreaIdSlug);
 
         if ($oArea) {
 

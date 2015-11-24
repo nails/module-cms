@@ -52,7 +52,7 @@ class Render extends NAILS_Controller
 
         } else {
 
-            $page = $this->oPageModel->get_by_id($this->pageId);
+            $page = $this->oPageModel->getById($this->pageId);
         }
 
         if (!$page || $page->is_deleted) {
@@ -199,7 +199,7 @@ class Render extends NAILS_Controller
 
         if ($id) {
 
-            $page = $this->oPageModel->get_by_id($id);
+            $page = $this->oPageModel->getById($id);
 
             if ($page && $page->is_published) {
 

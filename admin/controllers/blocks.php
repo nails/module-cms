@@ -153,8 +153,8 @@ class Blocks extends BaseAdmin
         );
 
         //  Get the items for the page
-        $totalRows            = $this->oBlockModel->count_all($data);
-        $this->data['blocks'] = $this->oBlockModel->get_all($page, $perPage, $data);
+        $totalRows            = $this->oBlockModel->countAll($data);
+        $this->data['blocks'] = $this->oBlockModel->getAll($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
         $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords, $cbFilters);
@@ -186,7 +186,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $this->data['block'] = $this->oBlockModel->get_by_id($this->uri->segment(5));
+        $this->data['block'] = $this->oBlockModel->getById($this->uri->segment(5));
 
         if (!$this->data['block']) {
 
@@ -358,7 +358,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $block = $this->oBlockModel->get_by_id($this->uri->segment(5));
+        $block = $this->oBlockModel->getById($this->uri->segment(5));
 
         if (!$block) {
 
@@ -401,7 +401,7 @@ class Blocks extends BaseAdmin
         //  Check slug's characters are ok
         if (!preg_match('/[^a-z0-9\-\_]/', $sSlug)) {
 
-            $oBlock = $this->oBlockModel->get_by_slug($sSlug);
+            $oBlock = $this->oBlockModel->getBySlug($sSlug);
 
             if (!$oBlock) {
 

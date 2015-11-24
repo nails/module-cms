@@ -119,8 +119,8 @@ class Menus extends BaseAdmin
         );
 
         //  Get the items for the page
-        $totalRows           = $this->oMenuModel->count_all($data);
-        $this->data['menus'] = $this->oMenuModel->get_all($page, $perPage, $data);
+        $totalRows           = $this->oMenuModel->countAll($data);
+        $this->data['menus'] = $this->oMenuModel->getAll($page, $perPage, $data);
 
         //  Set Search and Pagination objects for the view
         $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
@@ -269,7 +269,7 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $menu = $this->oMenuModel->get_by_id($this->uri->segment(5));
+        $menu = $this->oMenuModel->getById($this->uri->segment(5));
         $this->data['menu'] = $menu;
 
         if (!$menu) {
@@ -397,7 +397,7 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $menu = $this->oMenuModel->get_by_id($this->uri->segment(5));
+        $menu = $this->oMenuModel->getById($this->uri->segment(5));
 
         if (!$menu) {
 

@@ -48,7 +48,7 @@ class Slider extends Base
      * @param array  $data Data passed from the calling method
      * @return void
      **/
-    protected function _getcount_common($data = array())
+    protected function getCountCommon($data = array())
     {
         $this->oDb->select($this->tablePrefix . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
         $this->oDb->join(
@@ -81,7 +81,7 @@ class Slider extends Base
             );
         }
 
-        parent::_getcount_common($data);
+        parent::getCountCommon($data);
     }
 
     // --------------------------------------------------------------------------
@@ -91,9 +91,9 @@ class Slider extends Base
      * @param  stdClass &$object The slider object to format
      * @return void
      */
-    protected function _format_object(&$object)
+    protected function formatObject(&$object)
     {
-        parent::_format_object($object);
+        parent::formatObject($object);
 
         $temp              = new \stdClass();
         $temp->id          = (int) $object->modified_by;
@@ -131,7 +131,7 @@ class Slider extends Base
 
         foreach ($items as $i) {
 
-            $this->_format_object_item($i);
+            $this->formatObjectItem($i);
         }
 
         return $items;
@@ -144,9 +144,9 @@ class Slider extends Base
      * @param  stdClass &$obj The slider item to format
      * @return voud
      */
-    protected function _format_object_item(&$obj)
+    protected function formatObjectItem(&$obj)
     {
-        parent::_format_object($obj);
+        parent::formatObject($obj);
 
         // --------------------------------------------------------------------------
 
@@ -174,7 +174,7 @@ class Slider extends Base
             unset($data['slides']);
         }
 
-        $data['slug'] = $this->_generate_slug($data['label']);
+        $data['slug'] = $this->generateSlug($data['label']);
 
         $result = parent::create($data, $returnObject);
 
@@ -257,7 +257,7 @@ class Slider extends Base
             unset($data['slides']);
         }
 
-        $data['slug'] = $this->_generate_slug($data['label'], '', '', null, null, $id);
+        $data['slug'] = $this->generateSlug($data['label'], '', '', null, null, $id);
 
         $result = parent::update($id, $data);
 
