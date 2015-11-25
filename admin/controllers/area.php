@@ -30,11 +30,11 @@ class Area extends BaseAdmin
     {
         if (userHasPermission('admin:cms:area:manage')) {
 
-            $navGroup = Factory::factory('Nav', 'nailsapp/module-admin');
-            $navGroup->setLabel('CMS');
-            $navGroup->setIcon('fa-file-text');
-            $navGroup->addAction('Manage Areas');
-            return $navGroup;
+            $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $oNavGroup->setLabel('CMS');
+            $oNavGroup->setIcon('fa-file-text');
+            $oNavGroup->addAction('Manage Areas');
+            return $oNavGroup;
         }
     }
 

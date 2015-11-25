@@ -30,11 +30,11 @@ class Slider extends BaseAdmin
     {
         if (userHasPermission('admin:cms:slider:manage')) {
 
-            $navGroup = Factory::factory('Nav', 'nailsapp/module-admin');
-            $navGroup->setLabel('CMS');
-            $navGroup->setIcon('fa-file-text');
-            $navGroup->addAction('Manage Sliders');
-            return $navGroup;
+            $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $oNavGroup->setLabel('CMS');
+            $oNavGroup->setIcon('fa-file-text');
+            $oNavGroup->addAction('Manage Sliders');
+            return $oNavGroup;
         }
     }
 

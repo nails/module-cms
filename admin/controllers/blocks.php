@@ -30,11 +30,11 @@ class Blocks extends BaseAdmin
     {
         if (userHasPermission('admin:cms:blocks:manage')) {
 
-            $navGroup = Factory::factory('Nav', 'nailsapp/module-admin');
-            $navGroup->setLabel('CMS');
-            $navGroup->setIcon('fa-file-text');
-            $navGroup->addAction('Manage Blocks');
-            return $navGroup;
+            $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $oNavGroup->setLabel('CMS');
+            $oNavGroup->setIcon('fa-file-text');
+            $oNavGroup->addAction('Manage Blocks');
+            return $oNavGroup;
         }
     }
 
@@ -279,11 +279,11 @@ class Blocks extends BaseAdmin
             //  Form Validation
             $oFormValidation = Factory::service('FormValidation');
 
-            $oFormValidation->set_rules('slug', '', 'xss_clean|required|callback__callback_block_slug');
+            $oFormValidation->set_rules('slug', '', 'xss_clean|required|callback_callbackBlockSlug');
             $oFormValidation->set_rules('label', '', 'xss_clean|required');
             $oFormValidation->set_rules('description', '', 'xss_clean');
             $oFormValidation->set_rules('located', '', 'xss_clean');
-            $oFormValidation->set_rules('type', '', 'xss_clean|required|callback__callback_block_type');
+            $oFormValidation->set_rules('type', '', 'xss_clean|required|callback_callbackBlockType');
 
             switch ($this->input->post('type')) {
                 case 'email':
@@ -391,7 +391,7 @@ class Blocks extends BaseAdmin
      * @param  string &$sSlug The slug to validate/sanitise
      * @return boolean
      */
-    public function _callback_block_slug(&$sSlug)
+    public function callbackBlockSlug(&$sSlug)
     {
         $sSlug = trim($sSlug);
         $sSlug = strtolower($sSlug);
@@ -411,7 +411,7 @@ class Blocks extends BaseAdmin
             } else {
 
                 $oFormValidation->set_message(
-                    '_callback_block_slug',
+                    'callbackBlockSlug',
                     'Must be unique'
                 );
                 $bResult = false;
@@ -420,7 +420,7 @@ class Blocks extends BaseAdmin
         } else {
 
             $oFormValidation->set_message(
-                '_callback_block_slug',
+                'callbackBlockSlug',
                 'Invalid characters: a-z, 0-9, - and _ only, no spaces.'
             );
             $bResult = false;
@@ -435,7 +435,7 @@ class Blocks extends BaseAdmin
      * @param  string $type The type to validate
      * @return boolean
      */
-    public function _callback_block_type($type)
+    public function callbackBlockType($type)
     {
         $type = trim($type);
 
@@ -449,13 +449,13 @@ class Blocks extends BaseAdmin
 
             } else {
 
-                $oFormValidation->set_message('_callback_block_type', 'Block type not supported.');
+                $oFormValidation->set_message('callbackBlockType', 'Block type not supported.');
                 return false;
             }
 
         } else {
 
-            $oFormValidation->set_message('_callback_block_type', lang('fv_required'));
+            $oFormValidation->set_message('callbackBlockType', lang('fv_required'));
             return false;
         }
     }

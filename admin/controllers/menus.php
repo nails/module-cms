@@ -30,11 +30,11 @@ class Menus extends BaseAdmin
     {
         if (userHasPermission('admin:cms:menus:manage')) {
 
-            $navGroup = Factory::factory('Nav', 'nailsapp/module-admin');
-            $navGroup->setLabel('CMS');
-            $navGroup->setIcon('fa-file-text');
-            $navGroup->addAction('Manage Menus');
-            return $navGroup;
+            $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $oNavGroup->setLabel('CMS');
+            $oNavGroup->setIcon('fa-file-text');
+            $oNavGroup->addAction('Manage Menus');
+            return $oNavGroup;
         }
     }
 
