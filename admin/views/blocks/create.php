@@ -151,7 +151,7 @@
         ?>
     </fieldset>
     <p>
-        <?=form_submit('submit', lang('action_create'), 'class="awesome"')?>
+        <?=form_submit('submit', lang('action_create'), 'class="btn btn-primary"')?>
     </p>
     <?=form_close()?>
 </div>

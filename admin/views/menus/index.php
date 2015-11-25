@@ -39,7 +39,7 @@
                                     echo anchor(
                                         'admin/cms/menus/edit/' . $menu->id,
                                         lang('action_edit'),
-                                        'class="awesome small"'
+                                        'class="btn btn-xs btn-primary"'
                                     );
                                 }
 
@@ -48,7 +48,7 @@
                                     echo anchor(
                                         'admin/cms/menus/delete/' . $menu->id,
                                         lang('action_delete'),
-                                        'data-body="This will remove the menu from the site. This action cannot be undone." class="confirm awesome small red"'
+                                        'data-body="This will remove the menu from the site. This action cannot be undone." class="confirm btn btn-xs btn-danger"'
                                     );
                                 }
 

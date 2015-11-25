@@ -41,7 +41,7 @@
                                     echo anchor(
                                         'admin/cms/slider/edit/' . $slider->id,
                                         lang('action_edit'),
-                                        'class="awesome small"'
+                                        'class="btn btn-xs btn-primary"'
                                     );
                                 }
 
@@ -50,7 +50,7 @@
                                     echo anchor(
                                         'admin/cms/slider/delete/' . $slider->id,
                                         lang('action_delete'),
-                                        'data-body="This will remove the slider from the site. This action can be undone." class="confirm awesome small red"'
+                                        'data-body="This will remove the slider from the site. This action can be undone." class="confirm btn btn-xs btn-danger"'
                                     );
                                 }
 

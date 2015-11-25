@@ -42,13 +42,13 @@
             </tbody>
         </table>
         <p>
-            <a href="#" class="awesome small orange" id="addSlide">
+            <a href="#" class="btn btn-xs btn-warning" id="addSlide">
                 + Add Slide
             </a>
         </p>
     </fieldset>
     <p>
-        <?=form_submit('submit', lang('action_save_changes'), 'class="awesome"');?>
+        <?=form_submit('submit', lang('action_save_changes'), 'class="btn btn-primary"');?>
     </p>
     <?=form_close();?>
 </div>
@@ -64,10 +64,10 @@
                 <img src="{{imgThumbUrl}}" />
             </a>
         {{/object_id}}
-        <a href="#" class="btnSetImg awesome small green">
+        <a href="#" class="btnSetImg btn btn-xs btn-success">
             Set Image
         </a>
-        <a href="#" class="btnRemoveImg awesome small red {{^object_id}}hidden{{/object_id}}">
+        <a href="#" class="btnRemoveImg btn btn-xs btn-danger {{^object_id}}hidden{{/object_id}}">
             Remove Image
         </a>
         <input type="hidden" name="objectId[]" value="{{object_id}}" />

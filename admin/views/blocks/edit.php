@@ -79,7 +79,7 @@
         ?>
     </fieldset>
     <p>
-        <?=form_submit('submit', lang('action_save_changes'), 'class="awesome"')?>
+        <?=form_submit('submit', lang('action_save_changes'), 'class="btn btn-primary"')?>
     </p>
     <?=form_close()?>
 </div>
@@ -88,7 +88,7 @@
         <?=form_dropdown('new_translation[{{new_count}}][language]', $languages)?>
         <a href="#" class="remove-translation">Remove Translation</a>
     </legend>
-    <div class="system-alert error">
+    <div class="alert alert-danger">
         <strong>Oops!</strong> Please ensure a language and value is set.
     </div>
     <textarea name="new_translation[{{new_count}}][value]" id="translation_{{new_count}}"></textarea>

@@ -64,7 +64,7 @@
 
                                         case 'file':
 
-                                            echo anchor(cdnServe($block->value, true), 'Download', 'class="awesome small"');
+                                            echo anchor(cdnServe($block->value, true), 'Download', 'class="btn btn-xs btn-default"');
                                             break;
 
                                         default:
@@ -86,7 +86,7 @@
                                     echo anchor(
                                         'admin/cms/blocks/edit/' . $block->id,
                                         'Edit',
-                                        'class="awesome small"'
+                                        'class="btn btn-xs btn-primary"'
                                     );
                                 }
 
@@ -95,7 +95,7 @@
                                     echo anchor(
                                         'admin/cms/blocks/delete/' . $block->id,
                                         'Delete',
-                                        'class="awesome small red confirm" data-body="This action cannot be undone."'
+                                        'class="btn btn-xs btn-danger confirm" data-body="This action cannot be undone."'
                                     );
                                 }
                             echo '</td>';

@@ -30,13 +30,13 @@
         <div class="nested-sortable">
             <ol class="nested-sortable"></ol>
             <p>
-                <a href="#" class="add-item awesome small green">Add Menu Item</a>
+                <a href="#" class="add-item btn btn-xs btn-success">Add Menu Item</a>
             </p>
         </div>
     </fieldset>
     <?php
 
-        echo form_submit('submit', lang('action_save_changes'), 'class="awesome"');
+        echo form_submit('submit', lang('action_save_changes'), 'class="btn btn-primary"');
         echo form_close();
 
     ?>
@@ -76,7 +76,7 @@
             ?>
             </div>
             <div class="actions">
-                <a href="#" class="awesome small red item-remove">Remove</a
+                <a href="#" class="btn btn-xs btn-danger item-remove">Remove</a
             </div>
         </div>
         <ol class="nested-sortable-sub"></ol>
