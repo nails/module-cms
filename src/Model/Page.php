@@ -144,7 +144,7 @@ class Page extends Base
         $sSlugPrefix = !empty($oParent) ? $oParent->draft_slug . '/' : '';
 
         //  Work out the slug
-        if (empty($aData['slug'])) {
+        if (empty($aData['slug']) || $this->table === $this->tablePreview) {
 
             $aUpdateData['draft_slug'] = $this->generateSlug(
                 $aUpdateData['draft_title'],

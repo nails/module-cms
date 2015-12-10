@@ -315,10 +315,10 @@
     <p class="actions">
         <input type="hidden" name="action" value="" id="input-action" />
         <button id="action-save" class="btn btn-primary" rel="tipsy-top" title="Your changes will be saved so you can come back later, but won't be published on site.">
-            <?=lang('action_save_changes')?>
+            Save <span class="hidden-xs">Changes</span>
         </button>
         <button id="action-publish" class="btn btn-success" rel="tipsy-top" title="Your changes will be published on site and will take hold immediately.">
-            <?=lang('action_publish_changes')?>
+            Publish <span class="hidden-xs">Changes</span>
         </button>
         <a href="#" id="action-preview" class="btn btn-default right">
             <?=lang('action_preview')?>
@@ -331,21 +331,21 @@
         <b class="fa fa-circle-o-notch fa-spin"></b>
     </div>
     <div class="row actions">
-        <div class="col-xs-2">
+        <div class="col-xs-4 col-md-2">
             <button class="btn btn-primary btn-block btn-sm action-save">
-                <?=lang('action_save_changes')?>
+                Save <span class="hidden-xs">Changes</span>
             </button>
         </div>
-        <div class="col-xs-2">
+        <div class="col-xs-4 col-md-2">
             <button class="btn btn-success btn-block btn-sm action-publish">
-                <?=lang('action_publish_changes')?>
+                Publish <span class="hidden-xs">Changes</span>
             </button>
         </div>
-        <div class="col-xs-6">
+        <div class="hidden-xs col-md-6">
         </div>
-        <div class="col-xs-2">
+        <div class="col-xs-4 col-md-2">
             <button class="btn btn-danger btn-block btn-sm action-close">
-                Close Preview
+                Close <span class="hidden-xs">Preview</span>
             </button>
         </div>
     </div>
