@@ -231,7 +231,7 @@ class Slider extends BaseAdmin
 
         //  Assets
         $this->asset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
-        $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
+        $this->asset->library('MUSTACHE');
         $this->asset->load('nails.admin.cms.sliders.createEdit.min.js', true);
         $this->asset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
         $this->asset->inline('sliderEdit.setScheme("serve", "' . $this->cdn->urlServeScheme() . '");', 'JS');
@@ -350,7 +350,7 @@ class Slider extends BaseAdmin
 
         //  Assets
         $this->asset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
-        $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
+        $this->asset->library('MUSTACHE');
         $this->asset->load('nails.admin.cms.sliders.createEdit.min.js', true);
         $this->asset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
         $this->asset->inline('sliderEdit.setScheme("serve", "' . $this->cdn->urlServeScheme() . '");', 'JS');

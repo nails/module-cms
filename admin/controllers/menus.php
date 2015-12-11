@@ -245,7 +245,7 @@ class Menus extends BaseAdmin
 
         //  Assets
         $this->asset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
-        $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
+        $this->asset->library('MUSTACHE');
         $this->asset->load('nails.admin.cms.menus.createEdit.min.js', 'NAILS');
         $this->asset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
 
@@ -373,7 +373,7 @@ class Menus extends BaseAdmin
 
         //  Assets
         $this->asset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
-        $this->asset->load('mustache.js/mustache.js', 'NAILS-BOWER');
+        $this->asset->library('MUSTACHE');
         $this->asset->load('nails.admin.cms.menus.createEdit.min.js', 'NAILS');
         $this->asset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
 
