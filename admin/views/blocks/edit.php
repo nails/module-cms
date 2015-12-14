@@ -47,7 +47,7 @@
                 $field['bucket']  = 'cms-block-' . $block->slug;
                 $field['default'] = $block->value;
 
-                echo form_field_mm_image($field);
+                echo form_field_cdn_object_picker($field);
                 break;
 
             case 'file':
@@ -57,7 +57,7 @@
                 $field['bucket']  = 'cms-block-' . $block->slug;
                 $field['default'] = $block->value;
 
-                echo form_field_mm($field);
+                echo form_field_cdn_object_picker($field);
                 break;
 
             case 'email':

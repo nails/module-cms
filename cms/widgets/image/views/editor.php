@@ -20,7 +20,7 @@
     $field['default'] = isset(${$field['key']}) ? ${$field['key']} : '';
     $field['bucket']  = 'cms-widget-image';
 
-    echo form_field_mm_image($field);
+    echo form_field_cdn_object_picker($field);
 
     // --------------------------------------------------------------------------
 

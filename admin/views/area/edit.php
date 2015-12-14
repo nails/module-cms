@@ -33,32 +33,16 @@
 
             echo form_field($field);
 
+            // --------------------------------------------------------------------------
+
+            $field                = array();
+            $field['key']         = 'widget_data';
+            $field['label']       = 'Widgets';
+            $field['default']     = isset($area->widget_data) ? json_encode($area->widget_data) : '';
+
+            echo form_field_cms_widgets($field);
+
         ?>
-    </fieldset>
-    <fieldset>
-        <legend>Widgets</legend>
-        <p>
-            <a href="#" id="open-widget-editor" class="btn btn-warning btn-block btn-sm">
-                Manage Widgets
-            </a>
-            <?php
-
-            if ($this->input->post('widget_data')) {
-
-                $sDefault = $this->input->post('widget_data');
-
-            } elseif (isset($area->widget_data)) {
-
-                $sDefault = json_encode($area->widget_data);
-
-            } else {
-
-                $sDefault = '';
-            }
-
-            ?>
-            <input type="hidden" name="widget_data" id="widget-data" value="<?=htmlentities($sDefault)?>" />
-        </p>
     </fieldset>
     <hr />
     <?=form_submit('submit', lang('action_save_changes'), 'class="btn btn-primary"')?>
