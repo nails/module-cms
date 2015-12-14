@@ -476,7 +476,7 @@ class Page extends Base
      *
      * This method applies the conditionals which are common across the get_*()
      * methods and the count() method.
-     * @param string $data Data passed from the calling method
+     * @param array $data Data passed from the calling method
      * @return void
      **/
     public function getCountCommon($data = array())
