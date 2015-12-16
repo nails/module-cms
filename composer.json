@@ -43,15 +43,19 @@
                 "helpers": ["cms"]
             },
             "data": {
-                "adminAutoLoad": {
-                    "js": [
-                        ["mustache.js/mustache.js", "NAILS-BOWER"],
-                        ["jquery-serialize-object/dist/jquery.serialize-object.min.js", "NAILS-BOWER"],
-                        ["nails.admin.cms.widgeteditor.min.js", "NAILS"]
-                    ],
-                    "css": [
-                        ["nails.admin.module.cms.widgeteditor.css", "NAILS"]
-                    ]
+                "nailsapp/module-admin": {
+                    "autoload": {
+                        "assets": {
+                            "js": [
+                                ["mustache.js/mustache.js", "NAILS-BOWER"],
+                                ["jquery-serialize-object/dist/jquery.serialize-object.min.js", "NAILS-BOWER"],
+                                ["nails.admin.cms.widgeteditor.min.js", "NAILS"]
+                            ],
+                            "css": [
+                                ["nails.admin.module.cms.widgeteditor.css", "NAILS"]
+                            ]
+                        }
+                    }
                 }
             }
         }
