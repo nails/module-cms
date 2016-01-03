@@ -117,13 +117,17 @@ class Area extends Base
      */
     public function renderWithData($aWidgetData)
     {
-        $sOut         = '';
-        $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
+        $sOut = '';
 
-        foreach ($aWidgetData as $oWidgetData) {
+        if (!empty($aWidgetData)) {
 
-            $oWidget = $oWidgetModel->getBySlug($oWidgetData->slug);
-            $sOut   .= $oWidget->render((array) $oWidgetData->data);
+            $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
+
+            foreach ($aWidgetData as $oWidgetData) {
+
+                $oWidget = $oWidgetModel->getBySlug($oWidgetData->slug);
+                $sOut   .= $oWidget->render((array) $oWidgetData->data);
+            }
         }
 
         return $sOut;
