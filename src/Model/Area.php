@@ -121,6 +121,14 @@ class Area extends Base
 
         if (!empty($aWidgetData)) {
 
+            //  If a string is passed, asusme it's a JSON encoded array
+            if (is_string($aWidgetData)) {
+                $aWidgetData = json_decode($aWidgetData);
+                if (empty($aWidgetData)) {
+                    return $sOut;
+                }
+            }
+
             $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
 
             foreach ($aWidgetData as $oWidgetData) {
