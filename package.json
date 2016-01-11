@@ -1,5 +1,5 @@
 {
-  "name": "nailsapp-module-cdn",
+  "name": "nailsapp-module-cms",
   "description": "This is the \"CMS\" module for Nails.",
   "author": "Nails Dev Team <hello@nailsapp.co.uk>",
   "analyze": true,
