@@ -35,6 +35,7 @@ class Page extends Base
         $this->tablePreview      = $this->table . '_preview';
         $this->tablePrefix       = 'p';
         $this->destructiveDelete = false;
+        $this->defaultSortColumn = null;
     }
 
     // --------------------------------------------------------------------------
