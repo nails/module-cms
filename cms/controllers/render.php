@@ -104,6 +104,7 @@ class Render extends NAILS_Controller
         $this->data['page']->seo->description = $data->seo_description;
         $this->data['page']->seo->keywords    = $data->seo_keywords;
         $this->data['page']->is_preview       = $this->isPreview;
+        $this->data['page']->breadcrumbs      = $data->breadcrumbs;
 
         //  Set some meta tags for the header
         $this->meta->add('description', $data->seo_description);
