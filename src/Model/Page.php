@@ -482,43 +482,52 @@ class Page extends Base
      **/
     public function getCountCommon($data = array())
     {
-        $select = array(
-            $this->tablePrefix . '.id',
-            $this->tablePrefix . '.published_hash',
-            $this->tablePrefix . '.published_slug',
-            $this->tablePrefix . '.published_slug_end',
-            $this->tablePrefix . '.published_parent_id',
-            $this->tablePrefix . '.published_template',
-            $this->tablePrefix . '.published_template_data',
-            $this->tablePrefix . '.published_template_options',
-            $this->tablePrefix . '.published_title',
-            $this->tablePrefix . '.published_breadcrumbs',
-            $this->tablePrefix . '.published_seo_title',
-            $this->tablePrefix . '.published_seo_description',
-            $this->tablePrefix . '.published_seo_keywords',
-            $this->tablePrefix . '.draft_hash',
-            $this->tablePrefix . '.draft_slug',
-            $this->tablePrefix . '.draft_slug_end',
-            $this->tablePrefix . '.draft_parent_id',
-            $this->tablePrefix . '.draft_template',
-            $this->tablePrefix . '.draft_template_data',
-            $this->tablePrefix . '.draft_template_options',
-            $this->tablePrefix . '.draft_title',
-            $this->tablePrefix . '.draft_breadcrumbs',
-            $this->tablePrefix . '.draft_seo_title',
-            $this->tablePrefix . '.draft_seo_description',
-            $this->tablePrefix . '.draft_seo_keywords',
-            $this->tablePrefix . '.is_published',
-            $this->tablePrefix . '.is_deleted',
-            $this->tablePrefix . '.is_homepage',
-            $this->tablePrefix . '.created',
-            $this->tablePrefix . '.created_by',
-            $this->tablePrefix . '.modified',
-            $this->tablePrefix . '.modified_by'
-        );
+        if (empty($data['select'])) {
 
-        $this->oDb->select($select);
-        $this->oDb->select('ue.email, u.first_name, u.last_name, u.profile_img, u.gender');
+            $data['select'] = array(
+
+                //  Main Table
+                $this->tablePrefix . '.id',
+                $this->tablePrefix . '.published_hash',
+                $this->tablePrefix . '.published_slug',
+                $this->tablePrefix . '.published_slug_end',
+                $this->tablePrefix . '.published_parent_id',
+                $this->tablePrefix . '.published_template',
+                $this->tablePrefix . '.published_template_data',
+                $this->tablePrefix . '.published_template_options',
+                $this->tablePrefix . '.published_title',
+                $this->tablePrefix . '.published_breadcrumbs',
+                $this->tablePrefix . '.published_seo_title',
+                $this->tablePrefix . '.published_seo_description',
+                $this->tablePrefix . '.published_seo_keywords',
+                $this->tablePrefix . '.draft_hash',
+                $this->tablePrefix . '.draft_slug',
+                $this->tablePrefix . '.draft_slug_end',
+                $this->tablePrefix . '.draft_parent_id',
+                $this->tablePrefix . '.draft_template',
+                $this->tablePrefix . '.draft_template_data',
+                $this->tablePrefix . '.draft_template_options',
+                $this->tablePrefix . '.draft_title',
+                $this->tablePrefix . '.draft_breadcrumbs',
+                $this->tablePrefix . '.draft_seo_title',
+                $this->tablePrefix . '.draft_seo_description',
+                $this->tablePrefix . '.draft_seo_keywords',
+                $this->tablePrefix . '.is_published',
+                $this->tablePrefix . '.is_deleted',
+                $this->tablePrefix . '.is_homepage',
+                $this->tablePrefix . '.created',
+                $this->tablePrefix . '.created_by',
+                $this->tablePrefix . '.modified',
+                $this->tablePrefix . '.modified_by',
+
+                //  Join table
+                'ue.email',
+                'u.first_name',
+                'u.last_name',
+                'u.profile_img',
+                'u.gender'
+            );
+        }
 
         $this->oDb->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tablePrefix . '.modified_by', 'LEFT');
         $this->oDb->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
