@@ -11,6 +11,7 @@
  */
 
 use Nails\Factory;
+use Nails\Cdn\Exception\RenderException;
 
 class Render extends NAILS_Controller
 {
@@ -142,7 +143,7 @@ class Render extends NAILS_Controller
 
         } else {
 
-            throw new Exception('Failed to render CMS Page: ' . $this->oPageModel->lastError(), 1);
+            throw new RenderException('Failed to render CMS Page: ' . $this->oPageModel->lastError(), 1);
         }
     }
 
