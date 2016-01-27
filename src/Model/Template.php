@@ -31,7 +31,10 @@ class Template
 
         foreach ($aModules as $oModule) {
 
-            $this->aTemplateDirs[]   = $oModule->path . 'cms/templates/';
+            $this->aTemplateDirs[] = array(
+                'type' => 'vendor',
+                'path' => $oModule->path . 'cms/templates/'
+            );
         }
 
         /**
@@ -39,7 +42,10 @@ class Template
          * supplied ones.
          */
 
-        $this->aTemplateDirs[]   = FCPATH . APPPATH . 'modules/cms/templates/';
+        $this->aTemplateDirs[] = array(
+            'type' => 'app',
+            'path' => FCPATH . APPPATH . 'modules/cms/templates/'
+        );
     }
 
     // --------------------------------------------------------------------------
@@ -58,18 +64,19 @@ class Template
 
         $aAvailableTemplates = array();
 
-        foreach ($this->aTemplateDirs as $sDir) {
+        foreach ($this->aTemplateDirs as $aDir) {
 
-            if (is_dir($sDir)) {
+            if (is_dir($aDir['path'])) {
 
-                $aTemplates = directory_map($sDir);
+                $aTemplates = directory_map($aDir['path']);
 
                 foreach ($aTemplates as $sTemplateDir => $aTemplateFiles) {
 
-                    if (is_file($sDir . $sTemplateDir . '/template.php')) {
+                    if (is_file($aDir['path'] . $sTemplateDir . '/template.php')) {
 
-                        $aAvailableTemplates[$sTemplateDir] = array(
-                            'path' => $sDir,
+                        $aAvailableTemplates[] = array(
+                            'type' => $aDir['type'],
+                            'path' => $aDir['path'],
                             'name' => $sTemplateDir
                         );
                     }
@@ -77,13 +84,21 @@ class Template
             }
         }
 
-        //  Instantiate templates
-        $aLoadedTemplates = array();
+        //  Load templates
+        $aTemplatesToInstanciate = array();
         foreach ($aAvailableTemplates as $aTemplate) {
-
             include_once $aTemplate['path'] . $aTemplate['name'] . '/template.php';
 
-            $sClassName = '\Nails\Cms\Template\\' . ucfirst(strtolower($aTemplate['name']));
+            //  Specify which templates to instanciates, app ones will override nails ones
+            $aTemplatesToInstanciate[$aTemplate['name']] = $aTemplate;
+        }
+
+        //  Instantiate templates
+        $aLoadedTemplates = array();
+        foreach ($aTemplatesToInstanciate as $aTemplate) {
+
+            $sPrefix    = $aTemplate['type'] == 'vendor' ? 'Nails' : 'App';
+            $sClassName = '\\' . $sPrefix . '\Cms\Template\\' . ucfirst(strtolower($aTemplate['name']));
 
             if (!class_exists($sClassName)) {
 
