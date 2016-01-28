@@ -87,34 +87,48 @@ class Menu extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Formats a menu object
-     * @param  stdClass &$object The menu object to format
+     * Formats a single object
+     *
+     * The getAll() method iterates over each returned item with this method so as to
+     * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
+     *
+     * @param  object $oObj      A reference to the object being formatted.
+     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
+     * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
+     * @param  array  $aBools    Fields which should be cast as booleans if not null
+     * @param  array  $aFloats   Fields which should be cast as floats if not null
      * @return void
      */
-    protected function formatObject(&$object, $data = array())
-    {
-        parent::formatObject($object, $data);
+    protected function formatObject(
+        &$oObj,
+        $aData = array(),
+        $aIntegers = array(),
+        $aBools = array(),
+        $aFloats = array()
+    ) {
 
-        $temp              = new \stdClass();
-        $temp->id          = (int) $object->modified_by;
-        $temp->email       = $object->email;
-        $temp->first_name  = $object->first_name;
-        $temp->last_name   = $object->last_name;
-        $temp->gender      = $object->gender;
-        $temp->profile_img = $object->profile_img ? (int) $object->profile_img : null;
+        parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
 
-        $object->modified_by = $temp;
+        $oTemp              = new \stdClass();
+        $oTemp->id          = (int) $oObj->modified_by;
+        $oTemp->email       = $oObj->email;
+        $oTemp->first_name  = $oObj->first_name;
+        $oTemp->last_name   = $oObj->last_name;
+        $oTemp->gender      = $oObj->gender;
+        $oTemp->profile_img = $oObj->profile_img ? (int) $oObj->profile_img : null;
 
-        unset($object->email);
-        unset($object->first_name);
-        unset($object->last_name);
-        unset($object->gender);
-        unset($object->profile_img);
+        $oObj->modified_by = $oTemp;
+
+        unset($oObj->email);
+        unset($oObj->first_name);
+        unset($oObj->last_name);
+        unset($oObj->gender);
+        unset($oObj->profile_img);
 
         // --------------------------------------------------------------------------
 
-        $nestMenuItems = !empty($data['nestItems']) ? true : false;
-        $object->items = $this->getMenuItems($object->id, $nestMenuItems);
+        $bNestMenuItems = !empty($aData['nestItems']) ? true : false;
+        $oObj->items    = $this->getMenuItems($oObj->id, $bNestMenuItems);
     }
 
     // --------------------------------------------------------------------------

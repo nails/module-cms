@@ -70,22 +70,24 @@ class Area extends Base
      * The getAll() method iterates over each returned item with this method so as to
      * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
      *
-     * @param  object $obj      A reference to the object being formatted.
-     * @param  array  $data     The same data array which is passed to _getcount_common, for reference if needed
-     * @param  array  $integers Fields which should be cast as integers if numerical and not null
-     * @param  array  $bools    Fields which should be cast as booleans if not null
-     * @param  array  $floats   Fields which should be cast as floats if not null
+     * @param  object $oObj      A reference to the object being formatted.
+     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
+     * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
+     * @param  array  $aBools    Fields which should be cast as booleans if not null
+     * @param  array  $aFloats   Fields which should be cast as floats if not null
      * @return void
      */
     protected function formatObject(
-        &$obj,
-        $data = array(),
-        $integers = array(),
-        $bools = array(),
-        $floats = array()
+        &$oObj,
+        $aData = array(),
+        $aIntegers = array(),
+        $aBools = array(),
+        $aFloats = array()
     ) {
-        parent::formatObject($obj, $data, $integers, $bools, $floats);
-        $obj->widget_data = json_decode($obj->widget_data);
+
+        parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
+
+        $oObj->widget_data = json_decode($oObj->widget_data);
     }
 
     // --------------------------------------------------------------------------

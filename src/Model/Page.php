@@ -721,12 +721,10 @@ class Page extends Base
                 switch ($sFormat) {
 
                     case 'ID':
-
                         $aOut[] = $oChild->id;
                         break;
 
                     case 'ID_SLUG':
-
                         $aOut[] = array(
                             'id'   => $oChild->id,
                             'slug' => $oChild->draft_slug
@@ -734,7 +732,6 @@ class Page extends Base
                         break;
 
                     case 'ID_SLUG_TITLE':
-
                         $aOut[] = array(
                             'id'    => $oChild->id,
                             'slug'  => $oChild->draft_slug,
@@ -743,7 +740,6 @@ class Page extends Base
                         break;
 
                     case 'ID_SLUG_TITLE_PUBLISHED':
-
                         $aOut[] = array(
                             'id'           => $oChild->id,
                             'slug'         => $oChild->draft_slug,
@@ -884,83 +880,92 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Format a page object
-     * @param  stdClass &$page The page to format
+     * Formats a single object
+     *
+     * The getAll() method iterates over each returned item with this method so as to
+     * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
+     *
+     * @param  object $oObj      A reference to the object being formatted.
+     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
+     * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
+     * @param  array  $aBools    Fields which should be cast as booleans if not null
+     * @param  array  $aFloats   Fields which should be cast as floats if not null
      * @return void
      */
-    protected function formatObject(&$page, $data = array())
-    {
-        $integers = array();
+    protected function formatObject(
+        &$oObj,
+        $aData = array(),
+        $aIntegers = array(),
+        $aBools = array(),
+        $aFloats = array()
+    ) {
 
-        $booleans = array(
-            'is_homepage'
-        );
+        $aBools[] = 'is_homepage';
 
-        parent::formatObject($page, $data, $integers, $booleans);
+        parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
 
         //  Loop properties and sort into published data and draft data
-        $page->published = new \stdClass();
-        $page->draft     = new \stdClass();
+        $oObj->published = new \stdClass();
+        $oObj->draft     = new \stdClass();
 
-        foreach ($page as $property => $value) {
+        foreach ($oObj as $property => $value) {
 
             preg_match('/^(published|draft)_(.*)$/', $property, $match);
 
             if (!empty($match[1]) && !empty($match[2]) && $match[1] == 'published') {
 
-                $page->published->{$match[2]} = $value;
-                unset($page->{$property});
+                $oObj->published->{$match[2]} = $value;
+                unset($oObj->{$property});
 
             } elseif (!empty($match[1]) && !empty($match[2]) && $match[1] == 'draft') {
 
-                $page->draft->{$match[2]} = $value;
-                unset($page->{$property});
+                $oObj->draft->{$match[2]} = $value;
+                unset($oObj->{$property});
             }
         }
 
         //  Other data
-        $page->published->depth = count(explode('/', $page->published->slug)) - 1;
-        $page->published->url   = site_url($page->published->slug);
-        $page->draft->depth     = count(explode('/', $page->draft->slug)) - 1;
-        $page->draft->url       = site_url($page->draft->slug);
+        $oObj->published->depth = count(explode('/', $oObj->published->slug)) - 1;
+        $oObj->published->url   = site_url($oObj->published->slug);
+        $oObj->draft->depth     = count(explode('/', $oObj->draft->slug)) - 1;
+        $oObj->draft->url       = site_url($oObj->draft->slug);
 
         //  Decode JSON
-        $page->published->template_data      = json_decode($page->published->template_data);
-        $page->draft->template_data          = json_decode($page->draft->template_data);
-        $page->published->template_options = json_decode($page->published->template_options);
-        $page->draft->template_options     = json_decode($page->draft->template_options);
-        $page->published->breadcrumbs      = json_decode($page->published->breadcrumbs);
-        $page->draft->breadcrumbs          = json_decode($page->draft->breadcrumbs);
+        $oObj->published->template_data      = json_decode($oObj->published->template_data);
+        $oObj->draft->template_data          = json_decode($oObj->draft->template_data);
+        $oObj->published->template_options = json_decode($oObj->published->template_options);
+        $oObj->draft->template_options     = json_decode($oObj->draft->template_options);
+        $oObj->published->breadcrumbs      = json_decode($oObj->published->breadcrumbs);
+        $oObj->draft->breadcrumbs          = json_decode($oObj->draft->breadcrumbs);
 
         //  Unpublished changes?
-        $page->has_unpublished_changes = $page->is_published && $page->draft->hash != $page->published->hash;
+        $oObj->has_unpublished_changes = $oObj->is_published && $oObj->draft->hash != $oObj->published->hash;
 
         // --------------------------------------------------------------------------
 
         //  Owner
-        $modifiedBy                     = (int) $page->modified_by;
-        $page->modified_by              = new \stdClass();
-        $page->modified_by->id          = $modifiedBy;
-        $page->modified_by->first_name  = isset($page->first_name) ? $page->first_name : '';
-        $page->modified_by->last_name   = isset($page->last_name) ? $page->last_name : '';
-        $page->modified_by->email       = isset($page->email) ? $page->email : '';
-        $page->modified_by->profile_img = isset($page->profile_img) ? $page->profile_img : '';
-        $page->modified_by->gender      = isset($page->gender) ? $page->gender : '';
+        $modifiedBy                     = (int) $oObj->modified_by;
+        $oObj->modified_by              = new \stdClass();
+        $oObj->modified_by->id          = $modifiedBy;
+        $oObj->modified_by->first_name  = isset($oObj->first_name) ? $oObj->first_name : '';
+        $oObj->modified_by->last_name   = isset($oObj->last_name) ? $oObj->last_name : '';
+        $oObj->modified_by->email       = isset($oObj->email) ? $oObj->email : '';
+        $oObj->modified_by->profile_img = isset($oObj->profile_img) ? $oObj->profile_img : '';
+        $oObj->modified_by->gender      = isset($oObj->gender) ? $oObj->gender : '';
 
-        unset($page->first_name);
-        unset($page->last_name);
-        unset($page->email);
-        unset($page->profile_img);
-        unset($page->gender);
-        unset($page->template_data);
-        unset($page->template_options);
+        unset($oObj->first_name);
+        unset($oObj->last_name);
+        unset($oObj->email);
+        unset($oObj->profile_img);
+        unset($oObj->gender);
+        unset($oObj->template_data);
+        unset($oObj->template_options);
 
         // --------------------------------------------------------------------------
 
         //  SEO Title; If not set then fallback to the page title
-        if (empty($page->seo_title) && !empty($page->title)) {
-
-            $page->seo_title = $page->title;
+        if (empty($oObj->seo_title) && !empty($oObj->title)) {
+            $oObj->seo_title = $page->title;
         }
     }
 
