@@ -11,7 +11,7 @@
  */
 
 use Nails\Factory;
-use Nails\Cdn\Exception\RenderException;
+use Nails\Cms\Exception\RenderException;
 
 class Render extends NAILS_Controller
 {
