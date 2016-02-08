@@ -34,5 +34,7 @@ class Migration5 extends Base
             $this->query("INSERT INTO `{{NAILS_DB_PREFIX}}app_setting` (`grouping`, `key`, `value`, `is_encrypted`) VALUES ('nailsapp/module-cms', 'homepage', " . $oRow->id . ", 0);");
             break;
         }
+
+        $this->query("ALTER TABLE `{{NAILS_DB_PREFIX}}cms_page` DROP `is_homepage`;");
     }
 }
