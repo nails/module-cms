@@ -1,0 +1,72 @@
+ol.nails-cms-widget-editor-tabs {
+    border-bottom: 1px solid #EFEFEF;
+    li {
+        display: inline-block;
+        border: 1px solid #CCCCCC;
+        margin: 5px;
+        margin-right: 0;
+        border-radius: 3px;
+        &.selected {
+            border: 1px solid #03A9F4;
+            color: #000;
+            background: rgba(3, 169, 244, 0.25);
+            .remove-tab {
+                border-left: 1px solid #03A9F4;
+            }
+        }
+        &.tab,
+        &.sortable-placeholder {
+            width: 75px;
+            position: relative;
+        }
+        &.sortable-placeholder:before {
+            content: '.';
+            color: transparent;
+            display: block;
+            padding: 0.25em 0.75em;
+        }
+        .add-tab,
+        .switch-tab,
+        .remove-tab {
+            padding: 0.25em 0.75em;
+            text-decoration: none;
+            display: block;
+            &:active {
+                box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.25);
+            }
+        }
+        .switch-tab {
+            display: inline-block;
+            border-top-left-radius: 2px;
+            border-bottom-left-radius: 2px;
+            width: 100%;
+            &:hover {
+                background: #CCCCCC;
+            }
+        }
+        .remove-tab {
+            display: inline-block;
+            position: absolute;
+            top: 0;
+            right: 0;
+            background:  #EFEFEF;
+            border-left: 1px solid #CCCCCC;
+            border-top-right-radius: 2px;
+            border-bottom-right-radius: 2px;
+            &:hover {
+                background: #FFCFCF;
+            }
+        }
+    }
+}
+section.nails-cms-widget-editor-tabs {
+    background: #F5F5F5;
+    &:empty {
+        &:before {
+            display: block;
+            content: 'Add a tab to get started';
+            margin: 0;
+            padding: 1em;
+        }
+    }
+}
