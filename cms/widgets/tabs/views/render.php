@@ -14,12 +14,11 @@ if (!empty($tabs)) {
     $aBody  = !empty($body) ? $body : array();
     $aTabs  = array();
 
-
     for ($i = 0; $i < count($aTitle); $i++) {
 
         $aTabs[] = array(
-            'title'     => getFromArray($i, $aTitle),
-            'body'      => getFromArray($i, $aBody)
+            'title' => getFromArray($i, $aTitle),
+            'body'  => getFromArray($i, $aBody)
         );
     }
 }
