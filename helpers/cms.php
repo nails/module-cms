@@ -116,6 +116,22 @@ if (!function_exists('cmsArea')) {
 
 // --------------------------------------------------------------------------
 
+if (!function_exists('cmsAreaWithData')) {
+
+    /**
+     * Returns a rendered CMS area using the supplied data
+     * @param  array $aData The widget data to use
+     * @return string
+     */
+    function cmsAreaWithData($aData)
+    {
+        $oAreaModel = Factory::model('Area', 'nailsapp/module-cms');
+        return $oAreaModel->renderWithData($aData);
+    }
+}
+
+// --------------------------------------------------------------------------
+
 if (!function_exists('cmsWidget')) {
 
     /**
