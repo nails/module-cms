@@ -53,6 +53,10 @@
                                 echo '<strong class="label label-draft" rel="tipsy" title="This page has not been published. It is not available to your site\'s visitors.">Draft</strong>';
                             }
 
+                            if ($oPage->id == $iHomepageId) {
+                                echo '<strong class="label label-homepage">Homepage</strong>';
+                            }
+
                             echo anchor('admin/cms/pages/edit/' . $oPage->id, $oPage->draft->title);
 
                             $aBreadcrumbs = $oPage->draft->breadcrumbs;

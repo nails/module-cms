@@ -19,6 +19,9 @@ use Nails\Cms\Controller\BaseAdmin;
 class Pages extends BaseAdmin
 {
     protected $oPageModel;
+    protected $oWidgetModel;
+    protected $oTemplateModel;
+    protected $iHomepageId;
 
     // --------------------------------------------------------------------------
 
@@ -88,6 +91,10 @@ class Pages extends BaseAdmin
         $this->oPageModel     = Factory::model('Page', 'nailsapp/module-cms');
         $this->oWidgetModel   = Factory::model('Widget', 'nailsapp/module-cms');
         $this->oTemplateModel = Factory::model('Template', 'nailsapp/module-cms');
+
+        //  Note the ID of the homepage
+        $this->iHomepageId = appSetting('homepage', 'nailsapp/module-cms');
+        $this->data['iHomepageId'] = $this->iHomepageId;
     }
 
     // --------------------------------------------------------------------------

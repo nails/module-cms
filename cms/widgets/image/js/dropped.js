@@ -1,3 +1,4 @@
+/* globals domElement */
 /**
  * Shortcuts
  */
@@ -19,6 +20,13 @@ fieldHeight.hide();
 fieldUrl.hide();
 fieldTarget.hide();
 fieldAttr.hide();
+
+// --------------------------------------------------------------------------
+
+/*
+ * Refresh the picker
+ */
+$('.cdn-object-picker', domElement).trigger('refresh');
 
 // --------------------------------------------------------------------------
 

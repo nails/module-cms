@@ -514,7 +514,6 @@ class Page extends Base
                 $this->tablePrefix . '.draft_seo_keywords',
                 $this->tablePrefix . '.is_published',
                 $this->tablePrefix . '.is_deleted',
-                $this->tablePrefix . '.is_homepage',
                 $this->tablePrefix . '.created',
                 $this->tablePrefix . '.created_by',
                 $this->tablePrefix . '.modified',
@@ -856,25 +855,36 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
+     * Get the ID of the configured homepage
+     * @return integer
+     */
+    public function getHomepageId()
+    {
+        return appSetting('homepage', 'nailsapp/module-cms');
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Get the page marked as the homepage
      * @return mixed stdClass on success, false on failure
      */
     public function getHomepage()
     {
-        $data = array(
-            'where' => array(
-                array($this->tablePrefix . '.is_homepage', true)
-            )
-        );
+        $iHomepageId = $this->getHomepageId();
 
-        $page = $this->getAll(null, null, $data);
+        if (empty($iHomepageId)) {
+            return false;
+        }
 
-        if (!$page) {
+        $oPage = $this->getById($iHomepageId);
+
+        if (!$oPage) {
 
             return false;
         }
 
-        return $page[0];
+        return $oPage;
     }
 
     // --------------------------------------------------------------------------
@@ -899,8 +909,6 @@ class Page extends Base
         $aBools = array(),
         $aFloats = array()
     ) {
-
-        $aBools[] = 'is_homepage';
 
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
 

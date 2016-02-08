@@ -18,6 +18,7 @@ class Render extends NAILS_Controller
     protected $pageId;
     protected $isPreview;
     protected $oPageModel;
+    protected $iHomepageId;
 
     // --------------------------------------------------------------------------
 
@@ -35,8 +36,9 @@ class Render extends NAILS_Controller
 
         // --------------------------------------------------------------------------
 
-        $this->pageId    = $this->uri->rsegment(3);
-        $this->isPreview = false;
+        $this->pageId      = $this->uri->rsegment(3);
+        $this->isPreview   = false;
+        $this->iHomepageId = $this->oPageModel->getHomepageId();
     }
 
     // --------------------------------------------------------------------------
@@ -90,7 +92,10 @@ class Render extends NAILS_Controller
          * the non slug'd version
          */
 
-        if ($page->is_homepage && uri_string() == $data->slug) {
+        if ($page->id === $this->iHomepageId && uri_string() == $data->slug) {
+
+            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession->keep_flashdata();
 
             redirect('', 'location', 301);
         }
