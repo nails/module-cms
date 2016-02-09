@@ -214,7 +214,7 @@ NAILS_Admin_CMS_WidgetEditor = function()
             }
 
             groupIndex = $(this).data('group');
-            $('.widget-group-' + groupIndex).toggleClass('hidden');
+            $('.widget-group-' + groupIndex, base.sections.widgets).toggleClass('hidden');
 
             //  Save the state to localstorage
             _nails_admin.localStorage
