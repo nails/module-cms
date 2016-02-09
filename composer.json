@@ -49,10 +49,11 @@
                             "js": [
                                 ["mustache.js/mustache.js", "NAILS-BOWER"],
                                 ["jquery-serialize-object/dist/jquery.serialize-object.min.js", "NAILS-BOWER"],
-                                ["nails.admin.cms.widgeteditor.min.js", "NAILS"]
+                                ["admin.widgeteditor.min.js", "nailsapp/module-cms"]
                             ],
                             "css": [
-                                ["nails.admin.module.cms.widgeteditor.css", "NAILS"]
+                                ["admin.css", "nailsapp/module-cms"],
+                                ["admin.widgeteditor.css", "nailsapp/module-cms"]
                             ]
                         }
                     }

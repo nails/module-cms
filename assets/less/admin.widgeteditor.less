@@ -1,0 +1,287 @@
+/**
+ * Widget Editor
+ */
+.group-cms {
+    //  Generic variables
+    @widgeteditor-zindex: 999;
+
+    //  Header variables
+    @widgeteditor-header-height: 42px;
+
+    //  Search Variables
+    @widgeteditor-search-height: 40px;
+
+    //  Widget variables
+    @widgeteditor-widgets-width: 200px;
+
+    //  Body variables
+    @widgeteditor-body-padding: 1em;
+
+    &.widgeteditor {
+        position: fixed;
+        display: none;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        z-index: @widgeteditor-zindex;
+        background: rgba(0, 0, 0, 0.8);
+        &.active {
+            display: block;
+        }
+        > .widgeteditor- {
+            &header,
+            &actions,
+            &search,
+            &widgets,
+            &body {
+                margin: 0;
+                padding: 0;
+                position: absolute;
+                box-sizing: border-box;
+                user-select: none;
+            }
+            &header {
+                top: 0;
+                left: 0;
+                right: 0;
+                height: @widgeteditor-header-height;
+                background: rgba(255, 255, 255, 1);
+                line-height: @widgeteditor-header-height;
+                border-bottom: 1px solid #121618;
+                font-weight: bold;
+                padding: 0 1em;
+                box-shadow: 0 0 4px rgba(0,0,0,0.5);
+                z-index: 1;
+            }
+            &actions {
+                top: 0;
+                right: 0;
+                height: @widgeteditor-header-height - 1;
+                text-align: right;
+                padding: 5px;
+                z-index: 2;
+                a {
+                    margin-left: 5px;
+                }
+            }
+            &search {
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: @widgeteditor-search-height;
+                background: rgba(255, 255, 255, 1);
+                line-height: @widgeteditor-search-height;
+                z-index: 1;
+                &:before {
+                    display: block;
+                    font-family: FontAwesome;
+                    content: '\f002';
+                    position: absolute;
+                    left: 1em;
+                    top: 2px;
+                    color: #CCCCCC;
+                }
+                input {
+                    padding: 0.75em 1em 0.75em 2.5em;
+                    border: 0;
+                    width: 100%;
+                    box-sizing: border-box;
+                    &:focus {
+                        outline: none;
+                    }
+                }
+            }
+            &widgets {
+                top: @widgeteditor-header-height;
+                left: 0;
+                bottom: 0;
+                width: @widgeteditor-widgets-width;
+                background: #121618;
+                overflow-y: auto;
+                border-right: 1px solid #121618;
+                .widget-group {
+                    padding: 1em 0.6em;
+                    padding-right: 2em;
+                    font-weight: bold;
+                    color: #FFFFFF;
+                    cursor: pointer;
+                    position: relative;
+                    &.closed {
+                        .icon {
+                            transform: rotate(180deg);
+                        }
+                    }
+                    .icon {
+                        position: absolute;
+                        right: 1em;
+                        top: 1em;
+                        line-height: 1.5em;
+                        color: #03A9F4;
+                        transition: transform 0.2s;
+                        transform: rotate(0deg);
+                    }
+                    + .widget {
+                        border-top: 0;
+                    }
+                }
+                .widget {
+                    &.hidden {
+                        display: none;
+                    }
+                    &:hover {
+                        background: #EFEFEF;
+                    }
+                    &:active {
+                        background: #DEDEDE;
+                        cursor: move;
+                        cursor: grabbing;
+                        cursor: -moz-grabbing;
+                        cursor: -webkit-grabbing;
+                    }
+                }
+                .widget-group,
+                .widget {
+                    &.search-show {
+                        display: block;
+                    }
+                    &.search-hide {
+                        display: none;
+                    }
+                }
+            }
+            &body {
+                top: @widgeteditor-header-height;
+                left: @widgeteditor-widgets-width;
+                right: 0;
+                bottom: 0;
+                padding: @widgeteditor-body-padding;
+                background: rgba(255,255,255,0.75);
+                overflow: auto;
+                > ul {
+                    z-index: 1;
+                    margin: 0.5em;
+                    padding-bottom: 200px;
+                    &:empty + .no-widgets {
+                        display: block;
+                    }
+                    > .widget {
+                        margin: 1em 0;
+                        width: 100%;
+                        box-sizing: border-box;
+                        cursor: default;
+                        &:first-child {
+                            margin-top: 0;
+                        }
+                        .icon {
+                            cursor: move;
+                            cursor: grab;
+                            cursor: -moz-grab;
+                            cursor: -webkit-grab;
+                            &:active {
+                                cursor: move;
+                                cursor: grabbing;
+                                cursor: -moz-grabbing;
+                                cursor: -webkit-grabbing;
+                            }
+                        }
+                    }
+                    .sortable-placeholder {
+                        background: #FFFFFF;
+                        box-sizing: border-box;
+                        border: 1px dashed #CCCCCC;
+                    }
+                }
+                > .no-widgets {
+                    position: absolute;
+                    top: 0.5em;
+                    left: 0.5em;
+                    right: 0.5em;
+                    bottom: 0.5em;
+                    display: none;
+                    font-size: 2em;
+                    color: #999999;
+                    border: 1px dashed #999999;
+                    padding: 1em;
+                    padding-top: 3em;
+                    text-align: center;
+                    background: rgba(255, 255, 255, 0.5);
+                }
+            }
+        }
+        /**
+         * Not nested within widgeteditor-widgets so that styles can be maintained whilst dragging
+         */
+        .widget {
+            padding: 0.6em;
+            border-top: 1px solid #CCCCCC;
+            border-left: 4px solid #03A9F4;
+            background: #FFFFFF;
+            cursor: move;
+            cursor: grab;
+            cursor: -moz-grab;
+            cursor: -webkit-grab;
+            width: @widgeteditor-widgets-width - 1; // Account for the right border
+            position: relative;
+            &.ui-draggable-dragging,
+            &.ui-sortable-helper {
+                color: #FFFFFF;
+                background: #03A9F4;
+                border: 1px solid darken(#03A9F4, 10%);
+                height: 40px;
+            }
+            &.closed {
+                display: none;
+            }
+            &.editor-loading {
+                .action-refresh-editor {
+                    animation: fa-spin 2s infinite linear;
+                }
+                .editor-target {
+                    border-color: transparent;
+                }
+            }
+            .icon {
+                margin-right: 0.5em;
+                width: 15px;
+                text-align: center;
+            }
+            .action {
+                position: absolute;
+                top: 1em;
+                &:hover,
+                &:active,
+                &:focus {
+                    text-decoration: none;
+                    outline: none;
+                }
+                &.action-remove {
+                    right: 1em;
+                }
+                &.action-refresh-editor {
+                    right: 2.5em;
+                }
+            }
+            .description {
+                font-size: 0.8em;
+            }
+            .editor-target {
+                margin: 0;
+                margin-top: 1em;
+                border: 1px solid #EFEFEF;
+                &:empty {
+                    display: none;
+                }
+                > *:last-child {
+                    margin-bottom: 0;
+                }
+                textarea {
+                    width: 100%;
+                    min-height: 200px;
+                }
+            }
+        }
+    }
+    &.widgeteditor-alert {
+        z-index: @widgeteditor-zindex + 1;
+    }
+}

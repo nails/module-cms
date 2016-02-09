@@ -342,7 +342,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $this->asset->load('nails.admin.cms.blocks.create.min.js', true);
+        $this->asset->load('admin.blocks.create.min.js', 'nailsapp/module-cms');
 
         // --------------------------------------------------------------------------
 

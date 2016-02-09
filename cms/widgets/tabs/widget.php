@@ -17,6 +17,6 @@ class Tabs extends WidgetBase
         $this->description = 'Show tabbed content.';
         $this->keywords    = 'tabs, tabbed';
 
-        $this->assets_editor[] = array('admin.cms.widgets.tabs.css', 'nailsapp/module-cms');
+        $this->assets_editor[] = array('admin.widget.tabs.css', 'nailsapp/module-cms');
     }
 }

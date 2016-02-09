@@ -1,0 +1,493 @@
+/* --------------------------------------------------------------
+   Nails CMS Module Admin Styles
+-------------------------------------------------------------- */
+
+.group-cms {
+    /**
+     * Menus
+     */
+    &.menus {
+        &.overview {
+            table {
+                th,
+                td {
+                    &.label {
+                        min-width: 200px;
+                    }
+                    &.actions {
+                        min-width: 145px;
+                    }
+                }
+            }
+        }
+        &.edit {
+            ol.nested-sortable {
+                margin: 0;
+                margin-bottom: 1em;
+                padding: 0;
+                list-style: none;
+                font-size: 100%;
+                @background: #CCCCCC;
+                @handle_width: 30px;
+                @actions_width: 70px;
+                @content_padding: 5px;
+                li {
+                    border: 1px solid rgba(159,159,159,1);
+                    margin: 0;
+                    margin-bottom: 0.5em;
+                    list-style: none;
+                    position: relative;
+                    background: rgba(179,179,179,0.35);
+                    font-size: 1em;
+                    &:last-child {
+                        margin-bottom: 0;
+                    }
+                    &.ui-sortable-placeholder {
+                        border: 1px dashed rgba(159,159,159,1);
+                        visibility: visible !important;
+                    }
+                    li {
+                        margin-bottom: 0;
+                    }
+                    div.handle,
+                    div.actions {
+                        line-height: 37px;
+                        position: absolute;
+                        top: 0;
+                        text-align: center;
+                        bottom: 0;
+                        background: rgba(179,179,179,1);
+                    }
+                    div.handle {
+                        left: 0;
+                        bottom: 0;
+                        width: @handle_width;
+                        cursor: url(../img/admin/cursors/openhand.cur), none !important;
+                    }
+                    div.content {
+                        padding: 0;
+                        margin: 0;
+                        margin-left: @handle_width;
+                        margin-right: @actions_width;
+                        .containerLabel,
+                        .containerUrl {
+                            display: inline-block;
+                            width: 50%;
+                            padding: 0;
+                            margin: 0;
+                            padding: @content_padding;
+                            input {
+                                margin: 0;
+                            }
+                        }
+                        .containerLabel {
+                            padding-right: @content_padding/2;
+                            input {
+                                width: 100%;
+                            }
+                        }
+                        .containerUrl {
+                            padding-left: @content_padding/2;
+                            input,
+                            select {
+                                width: 45%;
+                                display: inline-block;
+                            }
+                            div.or {
+                                display: inline-block;
+                                width: 10%;
+                                text-align: center;
+                                font-size: 0.8em;
+                            }
+                        }
+                    }
+                    div.actions {
+                        right: 0;
+                        width: @actions_width;
+                        a {
+                            margin: 0;
+                        }
+                    }
+                    ol {
+                        font-size: 100%;
+                        margin: 0;
+                        margin-left: @handle_width;
+                        padding: 0;
+                        li {
+                            border-right: 0;
+                            &:last-child {
+                                border-bottom: 0;
+                            }
+                        }
+                    }
+                }
+            }
+            div.nested-sortable {
+                p {
+                    margin: 1em;
+                }
+            }
+        }
+    }
+    /**
+     * Pages
+     */
+    &.pages {
+        &.overview {
+            table {
+                th,
+                td {
+                    &.actions {
+                        width: 215px;
+                    }
+                }
+                td {
+                    &.title {
+                        .label {
+                            margin-right: 0.5em;
+                            display: inline;
+                            padding: .2em .6em .3em;
+                            font-size: 75%;
+                            font-weight: bold;
+                            line-height: 1;
+                            text-align: center;
+                            white-space: nowrap;
+                            vertical-align: baseline;
+                            border-radius: .25em;
+                            color: #FFFFFF;
+                            position: relative;
+                            top: -1px;
+                            &.label-draft {
+                                background: #4DB3D6;
+                            }
+                            &.label-homepage {
+                                background: #26C53D;
+                            }
+                            &.label-unpublished-changes {
+                                background: #EB9E3E;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        &.edit {
+            .templates {
+                margin: 1em;
+                margin-bottom: 0;
+                li {
+                    display: inline-block;
+                    padding-right: 10px;
+                    padding-bottom: 10px;
+                    margin: 0;
+                    box-sizing: border-box;
+                    &.template-group-label {
+                        display: block;
+                        font-weight: bold;
+                        border-bottom: 1px dotted #E2E2E2;
+                        margin: 0;
+                        padding: 0.5em 0;
+                        margin-bottom: 1em;
+                    }
+                }
+                .template {
+                    box-sizing: border-box;
+                    display: table;
+                    border: 1px solid #CCCCCC;
+                    background: #FFFFFF;
+                    border-radius: 3px;
+                    width: 150px;
+                    height: 150px;
+                    padding: 5px;
+                    text-align: center;
+                    vertical-align: middle;
+                    cursor: pointer;
+                    opacity: 0.75;
+                    transition: opacit 0.2s ease-out;
+                    input {
+                        display: none;
+                    }
+                    .icon {
+                        background: #F5F5F5 url(../img/admin/modules/cms/template-no-preview.png) center no-repeat;
+                        display: block;
+                        width: 100%;
+                        height: 111px;
+                        border: 1px solid #EAE9EB;
+                    }
+                    .name {
+                        background: transparent;
+                        height: 28px;
+                        margin-top: 0.5em;
+                        width: 152px;
+                        display: block;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        transition: opacity 0.2s ease-out;
+                        .checkmark {
+                            color: #669933;
+                            padding-right: 0.25em;
+                            display: none;
+                            font-size: 1.5em;
+                            position: relative;
+                            top: 3px;
+                        }
+                    }
+                    &:hover {
+                        border-color: #AAAAAA;
+                        opacity: 1;
+                        transition: opacity 0.2s ease-out;
+                    }
+                    &.selected {
+                        border-color: #999999;
+                        box-shadow: 0 0 7px rgba(0, 0, 0, 0.3);
+                        opacity: 1;
+                        .name {
+                            .checkmark {
+                                display: inline;
+                            }
+                        }
+                    }
+                }
+            }
+            .template-areas,
+            .template-options {
+                .alert {
+                    padding: 5px 10px;
+                }
+            }
+            .template-areas {
+                .btn-group {
+                    margin: 1em;
+                }
+            }
+            .actions {
+                border: 1px solid #CCCCCC;
+                padding: 15px;
+                background: #EEEEEE;
+                box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+                border-top: 1px solid #AAAAAA;
+                border-bottom: 1px solid #AAAAAA;
+                &.loading {
+                    @colour1: rgba(213, 212, 214, 1);
+                    background-image: linear-gradient(
+                    -45deg,
+                    @colour1 25%,
+                    transparent 25%,
+                    transparent 50%,
+                    @colour1 50%,
+                    @colour1 75%,
+                    transparent 75%,
+                    transparent
+                    );
+                    background-size: 50px 50px;
+                    animation: move 2s linear infinite;
+                    overflow: hidden;
+                    box-shadow: inset 0 10px 0 rgba(255,255,255,0.2);
+                    /*
+                    Animate the stripes
+                    */
+                    @keyframes move {
+                        0% {
+                            background-position: 0 0;
+                        }
+                        100% {
+                            background-position: 50px 50px;
+                        }
+                    }
+                }
+            }
+        }
+        &.cms-page-preview {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1.5em;
+            box-sizing: border-box;
+            display: none;
+            .spinner {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                color: #FFFFFF;
+                font-size: 2em;
+                transform: translate(-50%, -50%);
+            }
+            iframe {
+                width: 100%;
+                height: 100%;
+                padding-top: 1.5em;
+                background: transparent;
+            }
+            .actions {
+
+            }
+        }
+    }
+    /**
+     * Blocks
+     */
+    &.blocks {
+        code {
+            border: 1px solid #EFEFEF;
+            background: #F8F8F8;
+            padding: 5px;
+        }
+        &.overview {
+            table {
+                th,
+                td {
+                    &.label,
+                    &.location {
+                        min-width: 250px;
+                    }
+                    &.type {
+                        min-width: 100px;
+                    }
+                    &.value {
+                        min-width: 200px;
+                    }
+                    &.default {
+                        max-width: 225px;
+                    }
+                    &.actions {
+                        min-width: 110px;
+                    }
+                }
+                td {
+                    &.default {
+                        img {
+                            border: 1px solid #CCCCCC;
+                            padding: 2px;
+                            border-radius: 3px;
+                            width: 50px;
+                            height: 50px;
+                        }
+                    }
+                }
+            }
+        }
+        &.edit {
+            textarea,
+            input[type=text],
+            input[type=url],
+            input[type=email],
+            input[type=number] {
+                width: 100%;
+                margin-bottom: 0;
+                padding: 10px;
+            }
+        }
+    }
+    /**
+     * Sliders
+     */
+    &.sliders {
+        &.overview {
+            table {
+                th,
+                td {
+                    &.title {
+                        min-width: 200px;
+                    }
+                    &.actions {
+                        min-width: 110px;
+                    }
+                }
+            }
+        }
+        &.edit {
+            table {
+                margin-bottom: 1em;
+                tr {
+                    .ui-sortable-placeholder {
+                        visibility: visible !important;
+                        td {
+                            border-style: dashed;
+                        }
+                    }
+                }
+                th,
+                td {
+                    &.order {
+                        width: 60px;
+                        text-align: center;
+                    }
+                    &.image {
+                        width: 150px;
+                        text-align: center;
+                    }
+                    &.link {
+                        width: 300px;
+                    }
+                    &.remove {
+                        width: 35px;
+                        text-align: center;
+                    }
+                }
+                td {
+                    &.sortHandle {
+                        cursor: url(../img/admin/cursors/openhand.cur), move !important;
+                        &:active {
+                            cursor: url(../img/admin/cursors/closedhand.cur), move !important;
+                        }
+                    }
+                    &.image {
+                        img {
+                            border: 1px solid #CCCCCC;
+                            padding: 3px;
+                            background: #FFFFFF;
+                            max-height: 130px;
+                            max-width: 130px;
+                        }
+                        a.awesome {
+                            &.btnSetImg,
+                            &.btnRemoveImg {
+                                width: 100%;
+                                margin: 0;
+                            }
+                            &.btnRemoveImg {
+                                margin-top: 5px;
+                                &.hidden {
+                                    display: none;
+                                }
+                            }
+                        }
+                    }
+                    &.caption {
+                        textarea {
+                            margin: 0;
+                            width: 100%;
+                            height: 100%;
+                            min-height: 100px;
+                            padding: 7px;
+                        }
+                    }
+                    &.link {
+                        input[type=text] {
+                            width: 100%;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * Areas
+     */
+    &.areas {
+        &.overview {
+            table {
+                th,
+                td {
+                    &.actions {
+                        width: 110px;
+                    }
+                }
+            }
+        }
+    }
+}
