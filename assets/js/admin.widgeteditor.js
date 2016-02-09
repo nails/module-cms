@@ -263,6 +263,7 @@ NAILS_Admin_CMS_WidgetEditor = function()
             widget
                 .addClass('editor-loading')
                 .find('.editor-target')
+                .removeClass('alert alert-danger')
                 .empty()
                 .text('Widget Loading...');
 
@@ -526,6 +527,8 @@ NAILS_Admin_CMS_WidgetEditor = function()
         if (base.widgetData[area] && base.widgetData[area].length) {
 
             base.log('Adding previous widgets');
+            var requestDom  = [];
+            var requestData = [];
 
             for (var key in base.widgetData[area]) {
 
@@ -535,14 +538,84 @@ NAILS_Admin_CMS_WidgetEditor = function()
                     var widgetDom = $('<div>').addClass('widget');
                     base.sections.body.find('> ul').append(widgetDom);
 
-                    base.log(base.widgetData[area][key]);
                     base.addWidget(
                         base.widgetData[area][key].slug,
                         base.widgetData[area][key].data,
-                        widgetDom
+                        widgetDom,
+                        true
                     );
+
+                    // --------------------------------------------------------------------------
+
+                    requestDom.push(widgetDom);
+                    requestData.push(base.widgetData[area][key]);
                 }
             }
+
+            base.log('Setting up all widgets');
+
+            //  Send request off for all widget editors
+            _nails_api.call({
+                'controller': 'cms/widgets',
+                'method': 'editors',
+                'action': 'POST',
+                'data': {
+                    'data': requestData
+                },
+                'success': function(data) {
+
+                    var i, widget;
+
+                    base.log('Succesfully fetched widget editors from the server.');
+                    for (i = 0; i < data.data.length; i++) {
+
+                        if (!data.data[i].error) {
+
+                            base.setupWidgetEditorOk(
+                                requestDom[i],
+                                data.data[i].editor
+                            );
+
+                        } else {
+
+                            base.setupWidgetEditorFail(
+                                requestDom[i],
+                                data.data[i].editor
+                            );
+                        }
+                    }
+
+                    //  Now instanciate everything
+                    base.initWidgetEditorElements();
+
+                    //  Finally, call the "dropped" callback on each widget
+                    for (i = 0; i < data.data.length; i++) {
+
+                        widget = base.getWidget(data.data[i].slug);
+                        widget.callbacks.dropped.call(base, requestDom[i]);
+                    }
+
+                },
+                'error': function(data) {
+
+                    var _data;
+
+                    try {
+
+                        _data = JSON.parse(data.responseText);
+
+                    } catch (e) {
+
+                        _data = {
+                            'status': 500,
+                            'error': 'An unknown error occurred.'
+                        };
+                    }
+                    base.warn('Failed to load widget editors from the server with error: ', _data.error);
+                    //  @todo show an alert/dialog
+                }
+            });
+
         }
 
         //  Make things draggable and sortable
@@ -684,7 +757,7 @@ NAILS_Admin_CMS_WidgetEditor = function()
      * @param  {DomElement}    widgetDom The widget's DOM element
      * @return {Object}
      */
-    base.addWidget = function(widget, data, widgetDom) {
+    base.addWidget = function(widget, data, widgetDom, skipSetup) {
 
         if (typeof widget === 'string') {
 
@@ -703,7 +776,9 @@ NAILS_Admin_CMS_WidgetEditor = function()
                 .html(Mustache.render(base.sections.widget.html(), widget));
 
             //  Setup the widget's editor
-            base.setupWidgetEditor(widget.slug, data, widgetDom);
+            if (!skipSetup) {
+                base.setupWidgetEditor(widget.slug, data, widgetDom);
+            }
 
         } else {
 
@@ -721,27 +796,10 @@ NAILS_Admin_CMS_WidgetEditor = function()
         .done(function(data) {
 
             base.log('Editor Received');
-            widgetDom
-                .removeClass('editor-loading')
-                .find('.editor-target')
-                .html(data);
+            base.setupWidgetEditorOk(widgetDom, data);
 
             //  Now the markup is in place we need to ensure that things look the part
-            //  Table stripes
-            _nails.addStripes();
-
-            //  WYSIWYG editors
-            _nails_admin.buildWysiwyg('basic', widgetDom);
-            _nails_admin.buildWysiwyg('default', widgetDom);
-
-            //  Select2 Dropdowns
-            _nails_admin.initSelect2();
-
-            //  Toggles
-            _nails_admin.initToggles();
-
-            //  Tipsys
-            _nails.initTipsy();
+            base.initWidgetEditorElements(widgetDom);
 
             //  Finally, call the "dropped" callback
             var widget = base.getWidget(slug);
@@ -749,12 +807,50 @@ NAILS_Admin_CMS_WidgetEditor = function()
         })
         .fail(function(data) {
 
-            widgetDom
-                .removeClass('editor-loading')
-                .find('.editor-target')
-                .addClass('alert alert-danger')
-                .html('<strong>Error:</strong> ' + data.error);
+            base.setupWidgetEditorFail(widgetDom, data.error);
         });
+    };
+
+    // --------------------------------------------------------------------------
+
+    base.setupWidgetEditorOk = function(widgetDom, editorData) {
+
+        widgetDom
+            .removeClass('editor-loading')
+            .find('.editor-target')
+            .html(editorData);
+    };
+
+    // --------------------------------------------------------------------------
+
+    base.setupWidgetEditorFail = function(widgetDom, error) {
+
+        widgetDom
+            .removeClass('editor-loading')
+            .find('.editor-target')
+            .addClass('alert alert-danger')
+            .html('<strong>Error:</strong> ' + error);
+    };
+
+    // --------------------------------------------------------------------------
+
+    base.initWidgetEditorElements = function(widgetDom) {
+
+        //  Table stripes
+        _nails.addStripes(widgetDom);
+
+        //  WYSIWYG editors
+        _nails_admin.buildWysiwyg('basic', widgetDom);
+        _nails_admin.buildWysiwyg('default', widgetDom);
+
+        //  Select2 Dropdowns
+        _nails_admin.initSelect2(widgetDom);
+
+        //  Toggles
+        _nails_admin.initToggles(widgetDom);
+
+        //  Tipsys
+        _nails.initTipsy(widgetDom);
     };
 
     // --------------------------------------------------------------------------

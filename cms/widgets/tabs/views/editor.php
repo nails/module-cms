@@ -23,7 +23,7 @@ $sTabs = htmlentities(json_encode($aTabs), ENT_QUOTES);
     </li>
 </ol>
 <section class="nails-cms-widget-editor-tabs"></section>
- <script type="text/x-template" class="tpl-tab">
+<script type="text/x-template" class="tpl-tab">
     <li class="tab">
         <a href="#" class="switch-tab js-action-switch-tab" data-index="{{index}}">
             Tab

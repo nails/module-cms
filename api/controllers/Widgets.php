@@ -105,4 +105,59 @@ class Widgets extends \Nails\Api\Controller\Base
             );
         }
     }
+
+    // --------------------------------------------------------------------------
+
+    public function postEditors()
+    {
+        if (userHasPermission('admin:cms:pages:*') || userHasPermission('admin:cms:area:*')) {
+
+            $aWidgetData  = $this->input->post('data') ?: array();
+            $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
+            $aOut         = array('data' => array());
+
+            foreach ($aWidgetData as $aData) {
+
+                $sRenderSlug = !empty($aData['slug']) ? $aData['slug'] : null;
+                if (!empty($sRenderSlug)) {
+
+                    $oWidget = $oWidgetModel->getBySlug($aData['slug']);
+
+                    if ($oWidget) {
+
+                        $aRenderData = !empty($aData['data']) ? $aData['data'] : array();
+                        $aOut['data'][] = array(
+                            'slug'   => $aData['slug'],
+                            'editor' => $oWidget->getEditor($aRenderData)
+                        );
+
+                    } else {
+
+                        $aOut['data'][] = array(
+                            'slug'   => $aData['slug'],
+                            'editor' => '"' . $aData['slug'] . '" is not a valid widget.',
+                            'error'  => true
+                        );
+                    }
+
+                } else {
+
+                    $aOut['data'][] = array(
+                        'slug'   => $aData['slug'],
+                        'editor' => 'No widget supplied.',
+                        'error'  => true
+                    );
+                }
+            }
+
+            return $aOut;
+
+        } else {
+
+            return array(
+                'status' => 401,
+                'error'  => 'You do not have permission to view widgets.'
+            );
+        }
+    }
 }
