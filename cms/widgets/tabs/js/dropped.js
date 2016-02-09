@@ -1,9 +1,61 @@
-/* global domElement */
+/* global domElement, Mustache, _nails, _nails_admin */
 var tplTab       = $('.tpl-tab', domElement).first().html();
 var tplField     = $('.tpl-fieldset', domElement).first().html();
 var targetTabs   = $('ol.nails-cms-widget-editor-tabs li', domElement).last();
 var targetFields = $('section.nails-cms-widget-editor-tabs', domElement);
 var tabIndex     = 0;
+
+// --------------------------------------------------------------------------
+
+function addTab(title, sub_title, body) {
+
+    var html, index;
+
+    index = tabIndex;
+    tabIndex++;
+
+    //  Add DOM elements
+    html = Mustache.render(tplTab, {index: index});
+    targetTabs.before(html);
+
+    html = $(Mustache.render(tplField, {index: index, title: title, sub_title: sub_title, body:body}));
+    targetFields.append(html);
+
+    return index;
+}
+
+function switchToTab(index) {
+
+    //  Destroy WYSIWYG
+    _nails_admin.destroyWysiwyg('default', domElement);
+
+    //  Swap tabs
+    $('ol.nails-cms-widget-editor-tabs li.selected', domElement).removeClass('selected');
+    $('ol.nails-cms-widget-editor-tabs li a[data-index=' + index + ']', domElement).parent().addClass('selected');
+
+    //  Swap content
+    $('section.nails-cms-widget-editor-tabs > .fieldset', domElement).addClass('hidden');
+    var newFields = $('section.nails-cms-widget-editor-tabs > .fieldset[data-index=' + index + ']', domElement).removeClass('hidden');
+
+    //  Build WYSIWYG
+    _nails_admin.buildWysiwyg('default', newFields);
+
+    _nails.addStripes();
+}
+
+function removeTab(index) {
+
+    var isSelected = $('ol.nails-cms-widget-editor-tabs li a[data-index=' + index + ']', domElement)
+        .parent().hasClass('selected');
+
+    //  Remove DOM elements
+    $('ol.nails-cms-widget-editor-tabs li a[data-index=' + index + ']', domElement).parent().remove();
+    $('section.nails-cms-widget-editor-tabs > .fieldset[data-index=' + index + ']', domElement).remove();
+
+    if (isSelected && !targetFields.is(':empty')) {
+        switchToTab($('ol.nails-cms-widget-editor-tabs li a', domElement).first().data('index'));
+    }
+}
 
 // --------------------------------------------------------------------------
 
@@ -48,16 +100,10 @@ $('ol.nails-cms-widget-editor-tabs', domElement)
     placeholder: 'sortable-placeholder',
     forcePlaceholderSize: true,
     distance: 3,
-    start: function(e, ui) {
-        // creates a temporary attribute on the element with the old index
-        $(this).attr('data-previndex', ui.item.index());
-    },
     stop: function(e, ui) {
         //  Move the appropriate fields into the appropriate position
         var index    = ui.item.find('a').data('index');
         var newIndex = ui.item.index();
-        var oldIndex = $(this).attr('data-previndex');
-        $(this).removeAttr('data-previndex');
         var fields = $('section.nails-cms-widget-editor-tabs > .fieldset[data-index=' + index + ']', domElement);
 
         //  Move to beginning
@@ -71,52 +117,3 @@ $('ol.nails-cms-widget-editor-tabs', domElement)
         }
     }
 });
-
-// --------------------------------------------------------------------------
-
-function addTab(title, sub_title, body) {
-
-    var html, index;
-
-    index = tabIndex;
-    tabIndex++;
-
-    //  Add DOM elements
-    html = Mustache.render(tplTab, {index: index});
-    targetTabs.before(html);
-
-    html = Mustache.render(tplField, {index: index, title: title, sub_title: sub_title, body:body});
-    targetFields.append(html);
-
-    //  WYSIWYG the textarea
-    //  @todo
-
-    return index;
-}
-
-function removeTab(index) {
-
-    var isSelected = $('ol.nails-cms-widget-editor-tabs li a[data-index=' + index + ']', domElement)
-        .parent().hasClass('selected');
-
-    //  Remove DOM elements
-    $('ol.nails-cms-widget-editor-tabs li a[data-index=' + index + ']', domElement).parent().remove();
-    $('section.nails-cms-widget-editor-tabs > .fieldset[data-index=' + index + ']', domElement).remove();
-
-    if (isSelected && !targetFields.is(':empty')) {
-        switchToTab($('ol.nails-cms-widget-editor-tabs li a', domElement).first().data('index'));
-    }
-}
-
-function switchToTab(index) {
-
-    //  Swap tabs
-    $('ol.nails-cms-widget-editor-tabs li.selected', domElement).removeClass('selected');
-    $('ol.nails-cms-widget-editor-tabs li a[data-index=' + index + ']', domElement).parent().addClass('selected');
-
-    //  Swap content
-    $('section.nails-cms-widget-editor-tabs > .fieldset', domElement).addClass('hidden');
-    $('section.nails-cms-widget-editor-tabs > .fieldset[data-index=' + index + ']', domElement).removeClass('hidden');
-
-    _nails.addStripes();
-}

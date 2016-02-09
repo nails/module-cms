@@ -14,6 +14,7 @@ class Tabs extends WidgetBase
         parent::__construct();
 
         $this->label       = 'Tabs';
+        $this->icon        = 'fa-folder-o';
         $this->description = 'Show tabbed content.';
         $this->keywords    = 'tabs, tabbed';
 
