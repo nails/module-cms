@@ -305,6 +305,10 @@ class WidgetBase
                 extract($NAILS_CONTROLLER_DATA);
             }
 
+            if (!is_array($aWidgetData)) {
+                $aWidgetData = (array) $aWidgetData;
+            }
+
             if ($aWidgetData) {
                 extract($aWidgetData);
             }
