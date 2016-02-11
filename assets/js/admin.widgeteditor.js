@@ -207,10 +207,15 @@ NAILS_Admin_CMS_WidgetEditor = function()
         base.sections.widgets.on('click', '.widget-group', function() {
 
             base.log('Toggling visibility of group\'s widgets.');
+
+            var isOpen;
+
             if ($(this).hasClass('closed')) {
                 $(this).removeClass('closed');
+                isOpen = true;
             } else {
                 $(this).addClass('closed');
+                isOpen = false;
             }
 
             groupIndex = $(this).data('group');
@@ -220,7 +225,7 @@ NAILS_Admin_CMS_WidgetEditor = function()
             _nails_admin.localStorage
             .set(
                 'widgeteditor-group-' + groupIndex + '-hidden',
-                $('.widget-group-' + groupIndex).hasClass('hidden')
+                !isOpen
             );
         });
 
@@ -704,6 +709,10 @@ NAILS_Admin_CMS_WidgetEditor = function()
             axis: 'y',
             start: function(e, ui)
             {
+                //  If the element's group is hidden, but revealed by search then
+                //  the helper will not be visible, remove the classes which hide things
+                ui.helper.removeClass('hidden search-show search-hide');
+
                 ui.placeholder.height(ui.helper.outerHeight());
                 _nails_admin.destroyWysiwyg('basic', ui.helper);
                 _nails_admin.destroyWysiwyg('default', ui.helper);
@@ -715,6 +724,10 @@ NAILS_Admin_CMS_WidgetEditor = function()
                 sourceWidget = ui.item;
                 targetWidget = ui.helper;
                 widgetSlug   = sourceWidget.data('slug');
+
+                //  Remove the hidden class  - if a group is hidden (but revealed
+                //  by search) then it'll not show when dropped.
+                targetWidget.removeClass('hidden search-show search-hide');
 
                 base.addWidget(widgetSlug, null, targetWidget);
 
