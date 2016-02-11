@@ -14,7 +14,7 @@ namespace Nails\Admin\Cms;
 
 use Nails\Factory;
 use Nails\Admin\Helper;
-use Nails\Invoice\Controller\BaseAdmin;
+use Nails\Cms\Controller\BaseAdmin;
 
 class Settings extends BaseAdmin
 {
