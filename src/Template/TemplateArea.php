@@ -26,6 +26,7 @@ class TemplateArea
     public function setTitle($sTitle)
     {
         $this->title = $sTitle;
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -48,6 +49,7 @@ class TemplateArea
     public function setDescription($sDescription)
     {
         $this->description = $sDescription;
+        return $this;
     }
 
     // --------------------------------------------------------------------------

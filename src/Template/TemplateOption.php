@@ -30,6 +30,7 @@ class TemplateOption
     public function setType($sType)
     {
         $this->type = $sType;
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -44,6 +45,7 @@ class TemplateOption
     public function setKey($sKey)
     {
         $this->key = $sKey;
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -58,6 +60,7 @@ class TemplateOption
     public function setLabel($sLabel)
     {
         $this->label = $sLabel;
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -72,6 +75,7 @@ class TemplateOption
     public function setSubLabel($sSubLabel)
     {
         $this->subLabel = $sSubLabel;
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -86,6 +90,7 @@ class TemplateOption
     public function setInfo($sInfo)
     {
         $this->info = $sInfo;
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -100,6 +105,7 @@ class TemplateOption
     public function setDefault($sDefault)
     {
         $this->default = $sDefault;
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -114,6 +120,7 @@ class TemplateOption
     public function setClass($sClass)
     {
         $this->class = $sClass;
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -128,6 +135,7 @@ class TemplateOption
     public function setPlaceholder($sPlaceholder)
     {
         $this->placeholder = $sPlaceholder;
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -142,6 +150,7 @@ class TemplateOption
     public function setTip($sTip)
     {
         $this->tip = $sTip;
+        return $this;
     }
 
     // --------------------------------------------------------------------------
@@ -156,6 +165,7 @@ class TemplateOption
     public function setOptions($sOptions)
     {
         $this->options = $sOptions;
+        return $this;
     }
 
     // --------------------------------------------------------------------------
