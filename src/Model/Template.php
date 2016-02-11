@@ -221,6 +221,7 @@ class Template
      */
     protected function loadAssets($aAssets = array())
     {
+        $oAsset = Factory::service('Asset');
         foreach ($aAssets as $aAsset) {
 
             if (is_array($aAsset)) {
@@ -234,11 +235,11 @@ class Template
                     $bIsNails = false;
                 }
 
-                $this->asset->load($aAsset[0], $bIsNails);
+                $oAsset->load($aAsset[0], $bIsNails);
 
             } elseif (is_string($aAsset)) {
 
-                $this->asset->load($aAsset);
+                $oAsset->load($aAsset);
             }
         }
     }
