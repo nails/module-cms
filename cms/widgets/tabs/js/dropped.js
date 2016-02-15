@@ -7,7 +7,7 @@ var tabIndex     = 0;
 
 // --------------------------------------------------------------------------
 
-function addTab(title, sub_title, body) {
+function addTab(title, body) {
 
     var html, index;
 
@@ -18,7 +18,7 @@ function addTab(title, sub_title, body) {
     html = Mustache.render(tplTab, {index: index});
     targetTabs.before(html);
 
-    html = $(Mustache.render(tplField, {index: index, title: title, sub_title: sub_title, body:body}));
+    html = $(Mustache.render(tplField, {index: index, title: title, body:body}));
     targetFields.append(html);
 
     return index;
@@ -62,7 +62,7 @@ function removeTab(index) {
 //  Prefill
 var prefill = $('ol.nails-cms-widget-editor-tabs', domElement).data('prefill');
 for (var i = 0; i < prefill.length; i++) {
-    addTab(prefill[i].title, prefill[i].sub_title, prefill[i].body);
+    addTab(prefill[i].title, prefill[i].body);
 }
 
 //  Switch to the first tab
