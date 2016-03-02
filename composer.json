@@ -39,6 +39,7 @@
         {
             "moduleName": "cms",
             "type": "module",
+            "namespace": "Nails\\Cms\\",
             "autoload": {
                 "helpers": ["cms"]
             },
