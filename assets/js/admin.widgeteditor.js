@@ -359,7 +359,7 @@ NAILS_Admin_CMS_WidgetEditor = function()
 
             //  Widget Group
             label     = $('<span>').text(base.widgets[i].label);
-            toggle    = $('<i>').addClass('icon fa fa-chevron-down');
+            toggle    = $('<i>').addClass('icon fa fa-chevron-up');
             container = $('<div>').addClass('widget-group').data('group', i).append(label).append(toggle);
 
             //  Hidden by default?
