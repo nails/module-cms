@@ -126,11 +126,6 @@ class Settings extends BaseAdmin
             )
         );
 
-        //  Payment drivers
-        $oDriverModel                          = Factory::model('PaymentDriver', 'nailsapp/module-invoice');
-        $this->data['payment_drivers']         = $oDriverModel->getAll();
-        $this->data['payment_drivers_enabled'] = $oDriverModel->getEnabledSlug();
-
         Helper::loadView('index');
     }
 }
