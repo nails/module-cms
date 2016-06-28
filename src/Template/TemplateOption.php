@@ -14,165 +14,287 @@ namespace Nails\Cms\Template;
 
 class TemplateOption
 {
-    protected $type        = '';
-    protected $key         = '';
-    protected $label       = '';
-    protected $subLabel    = '';
-    protected $info        = '';
-    protected $default     = '';
-    protected $class       = '';
-    protected $placeholder = '';
-    protected $tip         = '';
-    protected $options     = array();
+    /**
+     * @var array The data used to create the field (passed to form_field())
+     */
+    protected $aFieldData;
 
     // --------------------------------------------------------------------------
 
-    public function setType($sType)
+    /**
+     * TemplateOption constructor.
+     */
+    public function __construct()
     {
-        $this->type = $sType;
+        //  Set up the default property values
+        $this->aFieldData = array(
+            'type'        => '',
+            'key'         => '',
+            'label'       => '',
+            'subLabel'    => '',
+            'info'        => '',
+            'default'     => '',
+            'class'       => '',
+            'placeholder' => '',
+            'tip'         => '',
+            'options'     => array()
+        );
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Sets a field property
+     * @param  $sProperty string The name of the property to set
+     * @param  $mValue    mixed  The value of the property
+     * @return $this
+     */
+    public function setProperty($sProperty, $mValue)
+    {
+        $this->aFieldData[$sProperty] = $mValue;
         return $this;
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Retrieve a property value
+     * @param  $sProperty string The property to retrieve
+     * @return mixed|null
+     */
+    public function getProperty($sProperty)
+    {
+        return isset($this->aFieldData[$sProperty]) ? $this->aFieldData[$sProperty] : null;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Set the value of the "type" property
+     * @param $sValue string The value to set
+     * @return TemplateOption
+     */
+    public function setType($sValue)
+    {
+        return $this->setProperty('type', $sValue);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Retrieve the value of the "type" property
+     * @return mixed|null
+     */
     public function getType()
     {
-        return $this->type;
+        return $this->getProperty('type');
     }
 
     // --------------------------------------------------------------------------
 
-    public function setKey($sKey)
+    /**
+     * Set the value of the "key" property
+     * @param $sValue string The value to set
+     * @return TemplateOption
+     */
+    public function setKey($sValue)
     {
-        $this->key = $sKey;
-        return $this;
+        return $this->setProperty('key', $sValue);
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Retrieve the value of the "key" property
+     * @return mixed|null
+     */
     public function getKey()
     {
-        return $this->key;
+        return $this->getProperty('key');
     }
 
     // --------------------------------------------------------------------------
 
-    public function setLabel($sLabel)
+    /**
+     * Set the value of the "label" property
+     * @param $sValue string The value to set
+     * @return TemplateOption
+     */
+    public function setLabel($sValue)
     {
-        $this->label = $sLabel;
-        return $this;
+        return $this->setProperty('label', $sValue);
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Retrieve the value of the "label" property
+     * @return mixed|null
+     */
     public function getLabel()
     {
-        return $this->label;
+        return $this->getProperty('label');
     }
 
     // --------------------------------------------------------------------------
 
-    public function setSubLabel($sSubLabel)
+    /**
+     * Set the value of the "subLabel" property
+     * @param $sValue string The value to set
+     * @return TemplateOption
+     */
+    public function setSubLabel($sValue)
     {
-        $this->subLabel = $sSubLabel;
-        return $this;
+        return $this->setProperty('subLabel', $sValue);
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Retrieve the value of the "subLabel" property
+     * @return mixed|null
+     */
     public function getSubLabel()
     {
-        return $this->subLabel;
+        return $this->getProperty('subLabel');
     }
 
     // --------------------------------------------------------------------------
 
-    public function setInfo($sInfo)
+    /**
+     * Set the value of the "info" property
+     * @param $sValue string The value to set
+     * @return TemplateOption
+     */
+    public function setInfo($sValue)
     {
-        $this->info = $sInfo;
-        return $this;
+        return $this->setProperty('info', $sValue);
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Retrieve the value of the "info" property
+     * @return mixed|null
+     */
     public function getInfo()
     {
-        return $this->info;
+        return $this->getProperty('info');
     }
 
     // --------------------------------------------------------------------------
 
-    public function setDefault($sDefault)
+    /**
+     * Set the value of the "default" property
+     * @param $sValue string The value to set
+     * @return TemplateOption
+     */
+    public function setDefault($sValue)
     {
-        $this->default = $sDefault;
-        return $this;
+        return $this->setProperty('default', $sValue);
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Retrieve the value of the "default" property
+     * @return mixed|null
+     */
     public function getDefault()
     {
-        return $this->default;
+        return $this->getProperty('default');
     }
 
     // --------------------------------------------------------------------------
 
-    public function setClass($sClass)
+    /**
+     * Set the value of the "class" property
+     * @param $sValue string The value to set
+     * @return TemplateOption
+     */
+    public function setClass($sValue)
     {
-        $this->class = $sClass;
-        return $this;
+        return $this->setProperty('class', $sValue);
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Retrieve the value of the "class" property
+     * @return mixed|null
+     */
     public function getClass()
     {
-        return $this->class;
+        return $this->getProperty('class');
     }
 
     // --------------------------------------------------------------------------
 
-    public function setPlaceholder($sPlaceholder)
+    /**
+     * Set the value of the "placeholder" property
+     * @param $sValue string The value to set
+     * @return TemplateOption
+     */
+    public function setPlaceholder($sValue)
     {
-        $this->placeholder = $sPlaceholder;
-        return $this;
+        return $this->setProperty('placeholder', $sValue);
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Retrieve the value of the "placeholder" property
+     * @return mixed|null
+     */
     public function getPlaceholder()
     {
-        return $this->placeholder;
+        return $this->getProperty('placeholder');
     }
 
     // --------------------------------------------------------------------------
 
-    public function setTip($sTip)
+    /**
+     * Set the value of the "tip" property
+     * @param $sValue string The value to set
+     * @return TemplateOption
+     */
+    public function setTip($sValue)
     {
-        $this->tip = $sTip;
-        return $this;
+        return $this->setProperty('tip', $sValue);
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Retrieve the value of the "tip" property
+     * @return mixed|null
+     */
     public function getTip()
     {
-        return $this->tip;
+        return $this->getProperty('tip');
     }
 
     // --------------------------------------------------------------------------
 
-    public function setOptions($sOptions)
+    /**
+     * Set the value of the "options" property
+     * @param $aValue array The options to set
+     * @return TemplateOption
+     */
+    public function setOptions($aValue)
     {
-        $this->options = $sOptions;
-        return $this;
+        return $this->setProperty('options', $aValue);
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Retrieve the value of the "options" property
+     * @return array|null
+     */
     public function getOptions()
     {
-        return $this->options;
+        return $this->getProperty('options');
     }
 
     // --------------------------------------------------------------------------
@@ -183,17 +305,6 @@ class TemplateOption
      */
     public function toArray()
     {
-        return array(
-            'type'        => $this->type,
-            'key'         => $this->key,
-            'label'       => $this->label,
-            'subLabel'    => $this->subLabel,
-            'info'        => $this->info,
-            'default'     => $this->default,
-            'class'       => $this->class,
-            'placeholder' => $this->placeholder,
-            'tip'         => $this->tip,
-            'options'     => $this->options
-        );
+        return $this->aFieldData;
     }
 }
