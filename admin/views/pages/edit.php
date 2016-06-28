@@ -82,75 +82,75 @@
         <legend>Template</legend>
         <?=form_error('template', '<div class="alert alert-danger">', '</div>')?>
         <ul class="templates">
-        <?php
+            <?php
 
-        $numTemplateGroups = count($templates);
-        foreach ($templates as $oTemplateGroup) {
+            $numTemplateGroups = count($templates);
+            foreach ($templates as $oTemplateGroup) {
 
-            if ($numTemplateGroups > 1) {
+                if ($numTemplateGroups > 1) {
 
-                ?>
-                <li class="template-group-label">
-                    <?=$oTemplateGroup->getLabel()?>
-                </li>
-                <?php
-            }
-
-            foreach ($oTemplateGroup->getTemplates() as $oTemplate) {
-
-                //  This template selected?
-                $selected = $defaultTemplate == $oTemplate->getSlug() ? true : false;
-
-                //  Define attributes
-                $attr              = array();
-                $attr['class']     = $selected ? 'template selected' : 'template';
-                $attr['data-slug'] = $oTemplate->getSlug();
-
-                //  Glue together
-                $attrStr = '';
-                foreach ($attr as $key => $value) {
-
-                    $attrStr .= $key . '="' . $value . '" ';
+                    ?>
+                    <li class="template-group-label">
+                        <?=$oTemplateGroup->getLabel()?>
+                    </li>
+                    <?php
                 }
 
-                ?>
-                <li>
-                    <label <?=trim($attrStr)?> rel="tipsy-top" title="<?=$oTemplate->getDescription()?>">
-                        <?php
+                foreach ($oTemplateGroup->getTemplates() as $oTemplate) {
 
-                        echo form_radio(
-                            'template',
-                            $oTemplate->getSlug(),
-                            set_radio(
+                    //  This template selected?
+                    $selected = $defaultTemplate == $oTemplate->getSlug() ? true : false;
+
+                    //  Define attributes
+                    $attr              = array();
+                    $attr['class']     = $selected ? 'template selected' : 'template';
+                    $attr['data-slug'] = $oTemplate->getSlug();
+
+                    //  Glue together
+                    $attrStr = '';
+                    foreach ($attr as $key => $value) {
+
+                        $attrStr .= $key . '="' . $value . '" ';
+                    }
+
+                    ?>
+                    <li>
+                        <label <?=trim($attrStr)?> rel="tipsy-top" title="<?=$oTemplate->getDescription()?>">
+                            <?php
+
+                            echo form_radio(
                                 'template',
                                 $oTemplate->getSlug(),
-                                $selected
-                            ),
-                            'data-slug="' . $attr['data-slug'] . '"'
-                        );
+                                set_radio(
+                                    'template',
+                                    $oTemplate->getSlug(),
+                                    $selected
+                                ),
+                                'data-slug="' . $attr['data-slug'] . '"'
+                            );
 
-                        echo '<span class="icon">';
-                        if (!empty($oTemplate->getIcon())) {
+                            echo '<span class="icon">';
+                            if (!empty($oTemplate->getIcon())) {
 
-                            echo img($oTemplate->getIcon());
-                        }
-                        echo '</span>';
+                                echo img($oTemplate->getIcon());
+                            }
+                            echo '</span>';
 
-                        ?>
-                        <span class="name">
+                            ?>
+                            <span class="name">
                             <span class="checkmark fa fa-check-circle"></span>
                             <span>
                                 <?=$oTemplate->getLabel()?>
                             </span>
                         </span>
-                    </label>
-                </li>
-                <?php
+                        </label>
+                    </li>
+                    <?php
 
+                }
             }
-        }
 
-        ?>
+            ?>
         </ul>
     </fieldset>
     <fieldset class="template-areas">
@@ -246,17 +246,12 @@
                         //  Override the field key
                         $aField->setKey('template_options[' . $sTplSlug . '][' . $sFieldKey . ']');
 
-                        switch ($sFieldType) {
-
-                            case 'dropdown' :
-
-                                echo form_field_dropdown($aField->toArray(), $aFieldOptions);
-                                break;
-
-                            default :
-
-                                echo form_field($aField->toArray());
-                                break;
+                        //  Render the appropriate field
+                        $sType = 'form_field_' . $aField->getProperty('type');
+                        if (function_exists($sType)) {
+                            echo $sType($aField->toArray());
+                        } else {
+                            echo form_field($aField->toArray());
                         }
                     }
 
