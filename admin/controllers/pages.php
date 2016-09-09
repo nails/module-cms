@@ -117,7 +117,7 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $sTablePrefix = $this->oPageModel->getTablePrefix();
+        $sTablePrefix = $this->oPageModel->getTableAlias();
 
         //  Get pagination and search/sort variables
         $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;

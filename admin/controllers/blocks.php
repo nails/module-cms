@@ -104,7 +104,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $tablePrefix = $this->oBlockModel->getTablePrefix();
+        $tablePrefix = $this->oBlockModel->getTableAlias();
 
         // --------------------------------------------------------------------------
 
