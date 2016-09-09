@@ -91,12 +91,12 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $sTablePrefix = $this->oMenuModel->getTableAlias();
+        $sTableAlias = $this->oMenuModel->getTableAlias();
 
         //  Get pagination and search/sort variables
         $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
         $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
-        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $sTablePrefix . '.label';
+        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $sTableAlias . '.label';
         $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'asc';
         $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
 
@@ -104,8 +104,8 @@ class Menus extends BaseAdmin
 
         //  Define the sortable columns
         $sortColumns = array(
-            $sTablePrefix . '.label'    => 'Label',
-            $sTablePrefix . '.modified' => 'Modified'
+            $sTableAlias . '.label'    => 'Label',
+            $sTableAlias . '.modified' => 'Modified'
         );
 
         // --------------------------------------------------------------------------

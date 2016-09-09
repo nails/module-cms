@@ -24,7 +24,7 @@ class Area extends Base
     {
         parent::__construct();
         $this->table = NAILS_DB_PREFIX . 'cms_area';
-        $this->tablePrefix = 'a';
+        $this->tableAlias = 'a';
         $this->tableAutoSetSlugs = true;
     }
 
@@ -46,15 +46,15 @@ class Area extends Base
             }
 
             $data['or_like'][] = array(
-                'column' => $this->tablePrefix . '.label',
+                'column' => $this->tableAlias . '.label',
                 'value'  => $data['keywords']
             );
             $data['or_like'][] = array(
-                'column' => $this->tablePrefix . '.slug',
+                'column' => $this->tableAlias . '.slug',
                 'value'  => $data['keywords']
             );
             $data['or_like'][] = array(
-                'column' => $this->tablePrefix . '.description',
+                'column' => $this->tableAlias . '.description',
                 'value'  => $data['keywords']
             );
         }

@@ -35,7 +35,7 @@ class Menu extends Base
         // --------------------------------------------------------------------------
 
         $this->table             = NAILS_DB_PREFIX . 'cms_menu';
-        $this->tablePrefix       = 'm';
+        $this->tableAlias       = 'm';
         $this->table_item        = NAILS_DB_PREFIX . 'cms_menu_item';
         $this->table_item_prefix = 'mi';
     }
@@ -50,15 +50,15 @@ class Menu extends Base
      **/
     protected function getCountCommon($data = array())
     {
-        $this->oDb->select($this->tablePrefix . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
+        $this->oDb->select($this->tableAlias . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
         $this->oDb->join(
             NAILS_DB_PREFIX . 'user u',
-            $this->tablePrefix . '.modified_by = u.id',
+            $this->tableAlias . '.modified_by = u.id',
             'LEFT'
         );
         $this->oDb->join(
             NAILS_DB_PREFIX . 'user_email ue',
-            $this->tablePrefix . '.modified_by = ue.user_id AND ue.is_primary = 1',
+            $this->tableAlias . '.modified_by = ue.user_id AND ue.is_primary = 1',
             'LEFT'
         );
 
@@ -72,11 +72,11 @@ class Menu extends Base
             }
 
             $data['or_like'][] = array(
-                'column' => $this->tablePrefix . '.label',
+                'column' => $this->tableAlias . '.label',
                 'value'  => $data['keywords']
             );
             $data['or_like'][] = array(
-                'column' => $this->tablePrefix . '.description',
+                'column' => $this->tableAlias . '.description',
                 'value'  => $data['keywords']
             );
         }
@@ -228,10 +228,10 @@ class Menu extends Base
              */
 
             $table       = $this->table;
-            $tablePrefix = $this->tablePrefix;
+            $tableAlias = $this->tableAlias;
 
             $this->table        = $this->table_item;
-            $this->tablePrefix = $this->table_item_prefix;
+            $this->tableAlias = $this->table_item_prefix;
 
             $newIds  = array();
             $counter = 0;
@@ -298,7 +298,7 @@ class Menu extends Base
 
             //  Reset the table and table prefix
             $this->table       = $table;
-            $this->tablePrefix = $tablePrefix;
+            $this->tableAlias = $tableAlias;
 
             //  Commit the transaction
             $this->oDb->trans_commit();
@@ -346,10 +346,10 @@ class Menu extends Base
              */
 
             $table       = $this->table;
-            $tablePrefix = $this->tablePrefix;
+            $tableAlias = $this->tableAlias;
 
             $this->table       = $this->table_item;
-            $this->tablePrefix = $this->table_item_prefix;
+            $this->tableAlias = $this->table_item_prefix;
 
             $idsUpdated = array();
             $newIds     = array();
@@ -458,7 +458,7 @@ class Menu extends Base
 
             //  Reset the table and table prefix
             $this->table       = $table;
-            $this->tablePrefix = $tablePrefix;
+            $this->tableAlias = $tableAlias;
 
             //  Commit the transaction
             $this->oDb->trans_commit();

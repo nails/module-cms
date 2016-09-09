@@ -33,7 +33,7 @@ class Page extends Base
         $this->oDb               = Factory::service('Database');
         $this->table             = NAILS_DB_PREFIX . 'cms_page';
         $this->tablePreview      = $this->table . '_preview';
-        $this->tablePrefix       = 'p';
+        $this->tableAlias       = 'p';
         $this->destructiveDelete = false;
         $this->defaultSortColumn = null;
     }
@@ -487,37 +487,37 @@ class Page extends Base
             $data['select'] = array(
 
                 //  Main Table
-                $this->tablePrefix . '.id',
-                $this->tablePrefix . '.published_hash',
-                $this->tablePrefix . '.published_slug',
-                $this->tablePrefix . '.published_slug_end',
-                $this->tablePrefix . '.published_parent_id',
-                $this->tablePrefix . '.published_template',
-                $this->tablePrefix . '.published_template_data',
-                $this->tablePrefix . '.published_template_options',
-                $this->tablePrefix . '.published_title',
-                $this->tablePrefix . '.published_breadcrumbs',
-                $this->tablePrefix . '.published_seo_title',
-                $this->tablePrefix . '.published_seo_description',
-                $this->tablePrefix . '.published_seo_keywords',
-                $this->tablePrefix . '.draft_hash',
-                $this->tablePrefix . '.draft_slug',
-                $this->tablePrefix . '.draft_slug_end',
-                $this->tablePrefix . '.draft_parent_id',
-                $this->tablePrefix . '.draft_template',
-                $this->tablePrefix . '.draft_template_data',
-                $this->tablePrefix . '.draft_template_options',
-                $this->tablePrefix . '.draft_title',
-                $this->tablePrefix . '.draft_breadcrumbs',
-                $this->tablePrefix . '.draft_seo_title',
-                $this->tablePrefix . '.draft_seo_description',
-                $this->tablePrefix . '.draft_seo_keywords',
-                $this->tablePrefix . '.is_published',
-                $this->tablePrefix . '.is_deleted',
-                $this->tablePrefix . '.created',
-                $this->tablePrefix . '.created_by',
-                $this->tablePrefix . '.modified',
-                $this->tablePrefix . '.modified_by',
+                $this->tableAlias . '.id',
+                $this->tableAlias . '.published_hash',
+                $this->tableAlias . '.published_slug',
+                $this->tableAlias . '.published_slug_end',
+                $this->tableAlias . '.published_parent_id',
+                $this->tableAlias . '.published_template',
+                $this->tableAlias . '.published_template_data',
+                $this->tableAlias . '.published_template_options',
+                $this->tableAlias . '.published_title',
+                $this->tableAlias . '.published_breadcrumbs',
+                $this->tableAlias . '.published_seo_title',
+                $this->tableAlias . '.published_seo_description',
+                $this->tableAlias . '.published_seo_keywords',
+                $this->tableAlias . '.draft_hash',
+                $this->tableAlias . '.draft_slug',
+                $this->tableAlias . '.draft_slug_end',
+                $this->tableAlias . '.draft_parent_id',
+                $this->tableAlias . '.draft_template',
+                $this->tableAlias . '.draft_template_data',
+                $this->tableAlias . '.draft_template_options',
+                $this->tableAlias . '.draft_title',
+                $this->tableAlias . '.draft_breadcrumbs',
+                $this->tableAlias . '.draft_seo_title',
+                $this->tableAlias . '.draft_seo_description',
+                $this->tableAlias . '.draft_seo_keywords',
+                $this->tableAlias . '.is_published',
+                $this->tableAlias . '.is_deleted',
+                $this->tableAlias . '.created',
+                $this->tableAlias . '.created_by',
+                $this->tableAlias . '.modified',
+                $this->tableAlias . '.modified_by',
 
                 //  Join table
                 'ue.email',
@@ -528,12 +528,12 @@ class Page extends Base
             );
         }
 
-        $this->oDb->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tablePrefix . '.modified_by', 'LEFT');
+        $this->oDb->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tableAlias . '.modified_by', 'LEFT');
         $this->oDb->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
 
         if (empty($data['sort'])) {
 
-            $data['sort'] = array($this->tablePrefix . '.draft_slug', 'asc');
+            $data['sort'] = array($this->tableAlias . '.draft_slug', 'asc');
         }
 
         if (!empty($data['keywords'])) {
@@ -544,11 +544,11 @@ class Page extends Base
             }
 
             $data['or_like'][] = array(
-                'column' => $this->tablePrefix . '.draft_title',
+                'column' => $this->tableAlias . '.draft_title',
                 'value'  => $data['keywords']
             );
             $data['or_like'][] = array(
-                'column' => $this->tablePrefix . '.draft_template_data',
+                'column' => $this->tableAlias . '.draft_template_data',
                 'value'  => $data['keywords']
             );
         }

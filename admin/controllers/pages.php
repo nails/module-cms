@@ -117,12 +117,12 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $sTablePrefix = $this->oPageModel->getTableAlias();
+        $sTableAlias = $this->oPageModel->getTableAlias();
 
         //  Get pagination and search/sort variables
         $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
         $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
-        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $sTablePrefix . '.draft_slug';
+        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $sTableAlias . '.draft_slug';
         $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'asc';
         $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
 
@@ -130,9 +130,9 @@ class Pages extends BaseAdmin
 
         //  Define the sortable columns
         $sortColumns = array(
-            $sTablePrefix . '.draft_slug' => 'Hierarchy',
-            $sTablePrefix . '.draft_title' => 'Label',
-            $sTablePrefix . '.modified' => 'Modified'
+            $sTableAlias . '.draft_slug' => 'Hierarchy',
+            $sTableAlias . '.draft_title' => 'Label',
+            $sTableAlias . '.modified' => 'Modified'
         );
 
         // --------------------------------------------------------------------------

@@ -23,7 +23,7 @@ class Block extends Base
     {
         parent::__construct();
         $this->table = NAILS_DB_PREFIX . 'cms_block';
-        $this->tablePrefix = 'b';
+        $this->tableAlias = 'b';
     }
 
     // --------------------------------------------------------------------------
@@ -44,19 +44,19 @@ class Block extends Base
             }
 
             $data['or_like'][] = array(
-                'column' => $this->tablePrefix . '.label',
+                'column' => $this->tableAlias . '.label',
                 'value'  => $data['keywords']
             );
             $data['or_like'][] = array(
-                'column' => $this->tablePrefix . '.value',
+                'column' => $this->tableAlias . '.value',
                 'value'  => $data['keywords']
             );
             $data['or_like'][] = array(
-                'column' => $this->tablePrefix . '.located',
+                'column' => $this->tableAlias . '.located',
                 'value'  => $data['keywords']
             );
             $data['or_like'][] = array(
-                'column' => $this->tablePrefix . '.description',
+                'column' => $this->tableAlias . '.description',
                 'value'  => $data['keywords']
             );
         }

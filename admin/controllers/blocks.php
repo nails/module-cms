@@ -104,14 +104,14 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $tablePrefix = $this->oBlockModel->getTableAlias();
+        $tableAlias = $this->oBlockModel->getTableAlias();
 
         // --------------------------------------------------------------------------
 
         //  Get pagination and search/sort variables
         $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
         $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
-        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $tablePrefix . '.label';
+        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $tableAlias . '.label';
         $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'desc';
         $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
 
@@ -119,11 +119,11 @@ class Blocks extends BaseAdmin
 
         //  Define the sortable columns
         $sortColumns = array(
-            $tablePrefix . '.label'    => 'Label',
-            $tablePrefix . '.located'  => 'Location',
-            $tablePrefix . '.type'     => 'Type',
-            $tablePrefix . '.created'  => 'Created',
-            $tablePrefix . '.modified' => 'Modified'
+            $tableAlias . '.label'    => 'Label',
+            $tableAlias . '.located'  => 'Location',
+            $tableAlias . '.type'     => 'Type',
+            $tableAlias . '.created'  => 'Created',
+            $tableAlias . '.modified' => 'Modified'
         );
 
         // --------------------------------------------------------------------------
@@ -131,7 +131,7 @@ class Blocks extends BaseAdmin
         //  Checkbox filters
         $cbFilters   = array();
         $cbFilters[] = Helper::searchFilterObject(
-            $tablePrefix . '.type',
+            $tableAlias . '.type',
             'Type',
             array()
         );
