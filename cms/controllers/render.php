@@ -11,9 +11,10 @@
  */
 
 use Nails\Factory;
+use App\Controller\Base;
 use Nails\Cms\Exception\RenderException;
 
-class Render extends NAILS_Controller
+class Render extends Base
 {
     protected $pageId;
     protected $isPreview;
