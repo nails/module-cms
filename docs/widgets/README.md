@@ -1,8 +1,8 @@
 # Widgets
 
-Widgets are the underlying work horse of the CMS and range from being incredibly simple to extremeley complex. There is no real limit to what widgets can and cannot do.
+Widgets are the underlying work horse of the CMS and range from being incredibly simple to extremely complex. There is no real limit to what widgets can and cannot do.
 
-The following sections assume you are building templates from with the app (and not a Nails compatible module, if this is what you're doing, see the botto of this page).
+The following sections assume you are building templates from with the app (and not a Nails compatible module, if this is what you're doing, see the bottom of this page).
 
 
 
@@ -37,7 +37,7 @@ There are a number of commonly used widgets which are [bundled with the module](
 
 ## Creating your own widgets
 
-> The Nails Command Line tool makes this easy! Use `nails cms:widget MyWidget` to automatically create the files and classes you need.
+> The Nails Command Line tool makes this easy! Use `nails cms:widget` to automatically create the files and classes you need.
 
     @todo - explain how to create your own widgets
 

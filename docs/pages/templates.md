@@ -2,7 +2,7 @@
 
 Templates are what CMS Pages use to lay the page out; they define "widget areas" which can be populated by the user with widgets, as well as offering a variety of additional configuration options which can be used by the page to alter the layout, or indeed any aspect of the rendered page.
 
-The following sections assume you are building templates from with the app (and not a Nails compatible module, if this is what you're doing, see the botto of this page).
+The following sections assume you are building templates from with the app (and not a Nails compatible module, if this is what you're doing, see the bottom of this page).
 
 
 ## Anatomy of a template
@@ -33,7 +33,7 @@ There are a number of commonly used templates which are [bundled with the module
 
 ## Creating your own templates
 
-> The Nails Command Line tool makes this easy! Use `nails cms:template MyTemplate` to automatically create the files and classes you need.
+> The Nails Command Line tool makes this easy! Use `nails cms:template` to automatically create the files and classes you need.
 
 In order for a template to be recognised it must be defined in `template.php`. A basic set up will look like this:
 
