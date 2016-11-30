@@ -1,11 +1,13 @@
 # Pages
 
-@todo - explain what pages are
+CMS Pages alow admin users to generate complete, nestable pages of content on the site via a friendly, drag and drop GUI.
+
+Pages are essentially normal views, but which are passed some additional data in the form of rendered CMS Areas and, optionally, custom options made available by the template.
+
+
 
 ## Templates
 
-@todo - briefly explain how to use templates, link to main template page
+Every page must make use of a template in order to render. CMS Templates are pwoerful and can make use of any function, class or constant which is available in Nails. Templates can be provided by the application, or any module which is installed, in addition all module-supplied templates can be overridden by the app allowing for a very high level of customisation if needed.
 
-## Widgets
-
-@todo - briefly explain how to use widgets, link to main widget page
+[Read more about CMS Templates](/docs/pages/templates.md)

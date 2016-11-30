@@ -12,12 +12,13 @@
 
 namespace Nails\Cms\Model;
 
-use Nails\Factory;
 use Nails\Common\Model\Base;
+use Nails\Factory;
 
 class Page extends Base
 {
     protected $oDb;
+    protected $tablePreview;
 
     // --------------------------------------------------------------------------
 
@@ -33,16 +34,18 @@ class Page extends Base
         $this->oDb               = Factory::service('Database');
         $this->table             = NAILS_DB_PREFIX . 'cms_page';
         $this->tablePreview      = $this->table . '_preview';
-        $this->tableAlias       = 'p';
+        $this->tableAlias        = 'p';
         $this->destructiveDelete = false;
         $this->defaultSortColumn = null;
+        $this->searchableFields  = ['draft_title', 'draft_template_data'];
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Create a new CMS page
-     * @param  array  $aData The data to create the page with
+     *
+     * @param  array $aData The data to create the page with
      * @return mixed         The ID of the page on success, false on failure
      */
     public function create($aData)
@@ -56,6 +59,7 @@ class Page extends Base
 
             $this->setError('Unable to create base page object. ' . $this->lastError());
             $this->oDb->trans_rollback();
+
             return false;
         }
 
@@ -63,11 +67,13 @@ class Page extends Base
         if ($this->update($iId, $aData)) {
 
             $this->oDb->trans_commit();
+
             return $iId;
 
         } else {
 
             $this->oDb->trans_rollback();
+
             return false;
         }
     }
@@ -75,10 +81,11 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Update a CMS page
-     * @param  int     $iPageId The ID of the page to update
-     * @param  array   $data   The data to update with
-     * @return boolean
+     * Update a CMS Page
+     *
+     * @param array|int $iPageId
+     * @param array     $aData
+     * @return bool
      */
     public function update($iPageId, $aData)
     {
@@ -88,6 +95,7 @@ class Page extends Base
         if (!$oCurrent) {
 
             $this->setError('Invalid Page ID');
+
             return false;
         }
 
@@ -100,13 +108,13 @@ class Page extends Base
 
         //  Start prepping the data which doesn't require much thinking
         $aUpdateData = array(
-            'draft_parent_id' => !empty($aData['parent_id']) ? (int) $aData['parent_id'] : null,
-            'draft_title' => !empty($aData['title']) ? trim($aData['title']) : 'Untitled',
-            'draft_seo_title' => !empty($aData['seo_title']) ? trim($aData['seo_title']) : '',
-            'draft_seo_description' => !empty($aData['seo_description']) ? trim($aData['seo_description']) : '',
-            'draft_seo_keywords' => !empty($aData['seo_keywords']) ? trim($aData['seo_keywords']) : '',
-            'draft_template' => !empty($aData['template']) ? trim($aData['template']) : null,
-            'draft_template_data' => !empty($aData['template_data']) ? trim($aData['template_data']) : null,
+            'draft_parent_id'        => !empty($aData['parent_id']) ? (int) $aData['parent_id'] : null,
+            'draft_title'            => !empty($aData['title']) ? trim($aData['title']) : 'Untitled',
+            'draft_seo_title'        => !empty($aData['seo_title']) ? trim($aData['seo_title']) : '',
+            'draft_seo_description'  => !empty($aData['seo_description']) ? trim($aData['seo_description']) : '',
+            'draft_seo_keywords'     => !empty($aData['seo_keywords']) ? trim($aData['seo_keywords']) : '',
+            'draft_template'         => !empty($aData['template']) ? trim($aData['template']) : null,
+            'draft_template_data'    => !empty($aData['template_data']) ? trim($aData['template_data']) : null,
             'draft_template_options' => !empty($aData['template_options']) ? trim($aData['template_options']) : null
         );
 
@@ -117,11 +125,11 @@ class Page extends Base
          * in the title, so that it doesn't break our explode
          */
 
-        $iFlag = ENT_COMPAT | ENT_HTML401;
-        $aUpdateData['draft_title'] = htmlentities(str_replace('|', '&#124;', $aUpdateData['draft_title']), $iFlag, 'UTF-8', false);
-        $aUpdateData['draft_seo_title'] = htmlentities($aUpdateData['draft_seo_title'], $iFlag, 'UTF-8', false);
+        $iFlag                                = ENT_COMPAT | ENT_HTML401;
+        $aUpdateData['draft_title']           = htmlentities(str_replace('|', '&#124;', $aUpdateData['draft_title']), $iFlag, 'UTF-8', false);
+        $aUpdateData['draft_seo_title']       = htmlentities($aUpdateData['draft_seo_title'], $iFlag, 'UTF-8', false);
         $aUpdateData['draft_seo_description'] = htmlentities($aUpdateData['draft_seo_description'], $iFlag, 'UTF-8', false);
-        $aUpdateData['draft_seo_keywords'] = htmlentities($aUpdateData['draft_seo_keywords'], $iFlag, 'UTF-8', false);
+        $aUpdateData['draft_seo_keywords']    = htmlentities($aUpdateData['draft_seo_keywords'], $iFlag, 'UTF-8', false);
 
         // --------------------------------------------------------------------------
 
@@ -132,12 +140,13 @@ class Page extends Base
 
             $this->oDb->select('draft_slug, draft_breadcrumbs');
             $this->oDb->where('id', $aUpdateData['draft_parent_id']);
-            $oParent = $this->db->get($this->table)->row();
+            $oParent = $this->oDb->get($this->table)->row();
 
             if (!$oParent) {
 
                 $this->setError('Invalid Parent ID.');
                 $this->oDb->trans_rollback();
+
                 return false;
             }
         }
@@ -160,12 +169,13 @@ class Page extends Base
 
             //  Test slug is valid
             $aUpdateData['draft_slug'] = $sSlugPrefix . $aData['slug'];
-            $this->db->where('draft_slug', $aUpdateData['draft_slug']);
-            $this->db->where('id !=', $oCurrent->id);
-            if ($this->db->count_all_results($this->table)) {
+            $this->oDb->where('draft_slug', $aUpdateData['draft_slug']);
+            $this->oDb->where('id !=', $oCurrent->id);
+            if ($this->oDb->count_all_results($this->table)) {
 
                 $this->setError('Slug is already in use.');
                 $this->oDb->trans_rollback();
+
                 return false;
             }
         }
@@ -238,7 +248,7 @@ class Page extends Base
 
                         $aParentCache[$oChild->id] = array('slug' => '', 'crumb' => '');
 
-                        $oChildSlug = $aParentCache[$oChild->draft->parent_id]['slug'] . '/' . $oChild->draft->slug_end;
+                        $oChildSlug                        = $aParentCache[$oChild->draft->parent_id]['slug'] . '/' . $oChild->draft->slug_end;
                         $aParentCache[$oChild->id]['slug'] = $oChildSlug;
 
                         $oChildCrumb        = new \stdClass();
@@ -250,14 +260,14 @@ class Page extends Base
                         array_push($aChildCrumbs, $oChildCrumb);
 
                         $aParentCache[$oChild->id]['crumb'] = $aChildCrumbs;
-                        $aUpdateData[$oChild->id] = $aParentCache[$oChild->id];
+                        $aUpdateData[$oChild->id]           = $aParentCache[$oChild->id];
                     }
 
                     //  Update each child
                     foreach ($aUpdateData as $iPageId => $aCache) {
 
                         $aData = array(
-                            'draft_slug' => $aCache['slug'],
+                            'draft_slug'        => $aCache['slug'],
                             'draft_breadcrumbs' => json_encode($aCache['crumb'])
                         );
 
@@ -265,6 +275,7 @@ class Page extends Base
 
                             $this->setError('Failed to update child page\'s slug and breadcrumbs');
                             $this->oDb->trans_rollback();
+
                             return false;
                         }
                     }
@@ -275,12 +286,14 @@ class Page extends Base
 
             //  Finish up.
             $this->oDb->trans_commit();
+
             return true;
 
         } else {
 
             $this->setError('Failed to update page object.');
             $this->oDb->trans_rollback();
+
             return false;
         }
     }
@@ -289,6 +302,7 @@ class Page extends Base
 
     /**
      * Create a page as normal but do so in the preview table.
+     *
      * @param  array $aData The data to create the preview with
      * @return object
      */
@@ -306,6 +320,7 @@ class Page extends Base
 
     /**
      * Render a template with the provided widgets and additional data
+     *
      * @param  string $sTemplate        The template to render
      * @param  array  $oTemplateData    The template data (i.e. areas and widgets)
      * @param  array  $oTemplateOptions The template options
@@ -317,7 +332,8 @@ class Page extends Base
         $oTemplate      = $oTemplateModel->getBySlug($sTemplate, 'RENDER');
 
         if (!$oTemplate) {
-            $this->setError('"' . $sTemplate .'" is not a valid template.');
+            $this->setError('"' . $sTemplate . '" is not a valid template.');
+
             return false;
         }
 
@@ -328,7 +344,8 @@ class Page extends Base
 
     /**
      * Publish a page
-     * @param  int     $iId The ID of the page to publish
+     *
+     * @param  int $iId The ID of the page to publish
      * @return boolean
      */
     public function publish($iId)
@@ -339,7 +356,8 @@ class Page extends Base
 
         if (!$oPage) {
 
-            $this->_set_message('Invalid Page ID');
+            $this->setError('Invalid Page ID');
+
             return false;
         }
 
@@ -428,6 +446,7 @@ class Page extends Base
 
                         $this->setError('Failed to update a child page\'s data.');
                         $this->oDb->trans_rollback();
+
                         return false;
                     }
                 }
@@ -466,6 +485,7 @@ class Page extends Base
         } else {
 
             $this->oDb->trans_rollback();
+
             return false;
         }
     }
@@ -477,6 +497,7 @@ class Page extends Base
      *
      * This method applies the conditionals which are common across the get_*()
      * methods and the count() method.
+     *
      * @param array $data Data passed from the calling method
      * @return void
      **/
@@ -560,6 +581,7 @@ class Page extends Base
 
     /**
      * Gets all pages, nested
+     *
      * @param  boolean $useDraft Whther to use the published or draft version of pages
      * @return array
      */
@@ -572,7 +594,8 @@ class Page extends Base
 
     /**
      * Get all pages nested, but as a flat array
-     * @param  string  $separator               The seperator to use between pages
+     *
+     * @param  string  $separator               The separator to use between pages
      * @param  boolean $murderParentsOfChildren Whether to include parents in the result
      * @return array
      */
@@ -623,6 +646,7 @@ class Page extends Base
     /**
      * Nests pages
      * Hat tip to Timur; http://stackoverflow.com/a/9224696/789224
+     *
      * @param  array   &$list    The pages to nest
      * @param  int     $parentId The parent ID of the page
      * @param  boolean $useDraft Whether to use published data or draft data
@@ -650,9 +674,10 @@ class Page extends Base
 
     /**
      * Find the parents of a page
-     * @param  int      $parentId  The page to find parents for
-     * @param  stdClass &$source   The source page
-     * @param  string   $separator The seperator to use
+     *
+     * @param  int       $parentId  The page to find parents for
+     * @param  \stdClass &$source   The source page
+     * @param  string    $separator The separator to use
      * @return string
      */
     protected function findParents($parentId, &$source, $separator)
@@ -701,6 +726,7 @@ class Page extends Base
 
     /**
      * Get the IDs of a page's children
+     *
      * @param  int    $iPageId The ID of the page to look at
      * @param  string $sFormat How to return the data, one of ID, ID_SLUG, ID_SLUG_TITLE or ID_SLUG_TITLE_PUBLISHED
      * @return array
@@ -763,10 +789,12 @@ class Page extends Base
 
     /**
      * Fetches all objects as a flat array, optionally paginated.
-     * @param int    $page           The page number of the results, if null then no pagination
-     * @param int    $perPage        How many items per page of paginated results
-     * @param mixed  $data           Any data to pass to getCountCommon()
-     * @param bool   $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
+     *
+     * @param int   $page           The page number of the results, if null then no pagination
+     * @param int   $perPage        How many items per page of paginated results
+     * @param mixed $data           Any data to pass to getCountCommon()
+     * @param bool  $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted
+     *                              items
      * @return array
      */
     public function getAllFlat($page = null, $perPage = null, $data = array(), $includeDeleted = false)
@@ -793,10 +821,12 @@ class Page extends Base
 
     /**
      * Get the top level pages, i.e., those without a parent
-     * @param int    $page           The page number of the results, if null then no pagination
-     * @param int    $perPage        How many items per page of paginated results
-     * @param mixed  $data           Any data to pass to getCountCommon()
-     * @param bool   $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
+     *
+     * @param int   $page           The page number of the results, if null then no pagination
+     * @param int   $perPage        How many items per page of paginated results
+     * @param mixed $data           Any data to pass to getCountCommon()
+     * @param bool  $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted
+     *                              items
      * @return array
      */
     public function getTopLevel($page = null, $perPage = null, $data = array(), $includeDeleted = false)
@@ -821,8 +851,9 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Get the siblings of a page, i.e those with the smame parent
-     * @param  int     $id       The page whose sibilings to fetch
+     * Get the siblings of a page, i.e those with the same parent
+     *
+     * @param  int     $id       The page whose siblings to fetch
      * @param  boolean $useDraft Whether to use published data, or draft data
      * @return array
      */
@@ -831,16 +862,14 @@ class Page extends Base
         $page = $this->getById($id);
 
         if (!$page) {
-
             return array();
         }
 
         if (empty($data['where'])) {
-
             $data['were'] = array();
         }
 
-        if (!empty($data['useDraft'])) {
+        if ($useDraft) {
 
             $data['where'][] = array('draft_parent_id', $page->draft->parent_id);
 
@@ -856,6 +885,7 @@ class Page extends Base
 
     /**
      * Get the ID of the configured homepage
+     *
      * @return integer
      */
     public function getHomepageId()
@@ -867,6 +897,7 @@ class Page extends Base
 
     /**
      * Get the page marked as the homepage
+     *
      * @return mixed stdClass on success, false on failure
      */
     public function getHomepage()
@@ -908,7 +939,8 @@ class Page extends Base
         $aIntegers = array(),
         $aBools = array(),
         $aFloats = array()
-    ) {
+    )
+    {
 
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
 
@@ -939,8 +971,8 @@ class Page extends Base
         $oObj->draft->url       = site_url($oObj->draft->slug);
 
         //  Decode JSON
-        $oObj->published->template_data      = json_decode($oObj->published->template_data);
-        $oObj->draft->template_data          = json_decode($oObj->draft->template_data);
+        $oObj->published->template_data    = json_decode($oObj->published->template_data);
+        $oObj->draft->template_data        = json_decode($oObj->draft->template_data);
         $oObj->published->template_options = json_decode($oObj->published->template_options);
         $oObj->draft->template_options     = json_decode($oObj->draft->template_options);
         $oObj->published->breadcrumbs      = json_decode($oObj->published->breadcrumbs);
@@ -973,7 +1005,7 @@ class Page extends Base
 
         //  SEO Title; If not set then fallback to the page title
         if (empty($oObj->seo_title) && !empty($oObj->title)) {
-            $oObj->seo_title = $page->title;
+            $oObj->seo_title = $oObj->title;
         }
     }
 
@@ -981,7 +1013,8 @@ class Page extends Base
 
     /**
      * Delete a page and it's children
-     * @param  int     $id The ID of the page to delete
+     *
+     * @param  int $id The ID of the page to delete
      * @return boolean
      */
     public function delete($id)
@@ -991,6 +1024,7 @@ class Page extends Base
         if (!$page) {
 
             $this->setError('Invalid page ID');
+
             return false;
         }
 
@@ -1027,6 +1061,7 @@ class Page extends Base
 
                     $this->setError('Unable to delete children pages');
                     $this->oDb->trans_rollback();
+
                     return false;
                 }
             }
@@ -1049,12 +1084,14 @@ class Page extends Base
             // --------------------------------------------------------------------------
 
             $this->oDb->trans_commit();
+
             return true;
 
         } else {
 
             //  Failed
             $this->oDb->trans_rollback();
+
             return false;
         }
     }
@@ -1063,13 +1100,15 @@ class Page extends Base
 
     /**
      * Permenantly delete a page and it's children
-     * @param  int     $id The ID of the page to destroy
+     *
+     * @param  int $id The ID of the page to destroy
      * @return boolean
      */
     public function destroy($id)
     {
         //  @TODO: implement this?
         $this->setError('It is not possible to destroy pages using this system.');
+
         return false;
     }
 
@@ -1077,7 +1116,8 @@ class Page extends Base
 
     /**
      * Get's a preview page by it's ID
-     * @param  integer   $iPreviewId The Id of the preview to get
+     *
+     * @param  integer $iPreviewId The Id of the preview to get
      * @return mixed                 stdClass on success, false on failure
      */
     public function getPreviewById($iPreviewId)
@@ -1095,6 +1135,7 @@ class Page extends Base
         // --------------------------------------------------------------------------
 
         $this->formatObject($oResult);
+
         return $oResult;
     }
 
@@ -1102,7 +1143,8 @@ class Page extends Base
 
     /**
      * Returns the URL of a page
-     * @param  integer $iPageId       The ID of the page to look up
+     *
+     * @param  integer $iPageId      The ID of the page to look up
      * @param  boolean $usePublished Whether to use the `published` data, or the `draft` data
      * @return mixed                 String on success, false on failure
      */
