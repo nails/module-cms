@@ -11,3 +11,7 @@ The CMS is broken down into the following five concepts:
 - [Blocks](/docs/blocks/README.md) - Single, small blocks of content
 - [Menus](/docs/menus/README.md) - Fully configurable, nestable menus
 - [Pages](/docs/pages/README.md) - Entire pages made up of multiple widget areas
+
+Additional information:
+
+- [Helpers](/docs/helpers.md) - The helper function made available by this module

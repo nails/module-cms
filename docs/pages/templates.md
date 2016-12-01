@@ -17,8 +17,7 @@ Templates are simply a single class which extends the base template and provides
 |--------- template.php
 |--------- view.php
 |--------- icon.png
-|--------- icon@2x.png
-                
+|--------- icon@2x.png             
 ```
 
 `template.php` is your template definition, and `view.php` is the HTML which will be rendered. Optionally you can include `icon.png` and `icon@2x.png` which will be rendered in admin and can be a nice UI touch.
@@ -35,7 +34,7 @@ There are a number of commonly used templates which are [bundled with the module
 
 > The Nails Command Line tool makes this easy! Use `nails cms:template` to automatically create the files and classes you need.
 
-In order for a template to be recognised it must be defined in `template.php`. A basic set up will look like this:
+In order for a template to be recognised it must be defined in `template.php`. A basic set up will look like this, notice that the class name matches the directory name:
 
 ```php
 <?php
@@ -64,6 +63,7 @@ The contents of `view.php` is entirely up to you, but bare in mind that no addit
 ### Widget areas
 
 Templates can define "widget areas"; this should be self-explanatory, but these are areas which in which the user can palce widgets. CMS Pages admin will detect these areas an offer the user an interface for doing this.
+
 
 #### Defining the widget area
 
@@ -111,7 +111,44 @@ Rendered widget areas (i.e translated into a string of HTML) will be available t
 
 ## Template Options
 
-    @todo - explain the various options available to templates (both configurable ones and method driven ones)
+Aside from widget areas it's also possible to define some global template options. These can be used to configure the template on the fly, e.g. show or hide sidebars, define the number of columns, etc.
+
+Options are easily added via adding items to the `additional_fields` property of the template class. this is an array of `TemplateOption` instances. The value of each field is made available to the view by a variable with the same name as the item's key in the array.
+
+```php
+<?php
+
+namespace App\Cms\Template;
+
+use Nails\Factory;
+use Nails\Cms\Template\TemplateBase;
+
+class Fullwidth extends TemplateBase
+{
+    public function __construct()
+    {
+        parent::__construct();
+        
+        $this->label       = 'My Template';
+        $this->description = 'A short description about the template';
+        
+        $this->additional_fields = [
+
+            //  The main body of the page
+            'mainbody' => Factory::factory('TemplateOption', 'nailsapp/module-cms')
+                ->setType('dropdown'),
+                ->setKey('number_of_columns'),
+                ->setLabel('No. of columns'),
+                ->setDefault(2),
+                ->setOptions([
+                    '2' => '2 Columns',
+                    '3' => '3 Columns',
+                    '4' => '4 Columns',
+                ]),
+        ];
+    }
+}
+```
 
 
 
@@ -138,9 +175,12 @@ class Fullwidth extends \Nails\Cms\Template\Fullwidth
         $this->description = 'I have overridden the default Full Width template.';
     }
 }
-
 ```
 
 ## Bundling templates with your module
 
-    @todo - explain the differences when bundling templates in a module
+The only difference to the above when building a template which is to be supplied by a module is the template's namespace and the fact that it cannot override another module supplied template.
+
+The namespace to use is will incorporate a camel-cased version of your module's name, e.g. for a module in the vendor folder my-vendor/my-module, the namespace would be `Nails\MyModule\Template`.
+
+> @todo - verify this is correct
