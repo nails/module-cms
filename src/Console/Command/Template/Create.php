@@ -10,8 +10,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class Create extends Base
 {
-    const EXIT_CODE_SUCCESS = 0;
-    const EXIT_CODE_FAILURE = 1;
     const TPL_PATH = FCPATH . APPPATH . 'modules/cms/templates/';
     const TPL_PATH_PERMISSION = 0755;
 
@@ -51,9 +49,13 @@ class Create extends Base
 
         //  Check environment
         if (Environment::not('DEVELOPMENT')) {
-            $oOutput->writeln('');
-            $oOutput->writeln('<error>This tool is only available on DEVELOPMENT environments</error>');
-            return $this->abort($oOutput, self::EXIT_CODE_FAILURE);
+            return $this->abort(
+                $oOutput,
+                self::EXIT_CODE_FAILURE,
+                [
+                    'This tool is only available on DEVELOPMENT environments',
+                ]
+            );
         }
 
         // --------------------------------------------------------------------------
@@ -61,16 +63,24 @@ class Create extends Base
         //  Check we can write where we need to write
         if (!is_dir(self::TPL_PATH)) {
             if (!mkdir(self::TPL_PATH, self::TPL_PATH_PERMISSION, true)) {
-                $oOutput->writeln('');
-                $oOutput->writeln('<error>Template directory does not exist and could not be created</error>');
-                $oOutput->writeln('<error>' . self::TPL_PATH . '</error>');
-                return $this->abort($oOutput, self::EXIT_CODE_FAILURE);
+                return $this->abort(
+                    $oOutput,
+                    self::EXIT_CODE_FAILURE,
+                    [
+                        'Template directory does not exist and could not be created',
+                        self::TPL_PATH,
+                    ]
+                );
             }
         } elseif (!is_writable(self::TPL_PATH)) {
-            $oOutput->writeln('');
-            $oOutput->writeln('<error>Template directory exists but is not writeable</error>');
-            $oOutput->writeln('<error>' . self::TPL_PATH . '</error>');
-            return $this->abort($oOutput, self::EXIT_CODE_FAILURE);
+            return $this->abort(
+                $oOutput,
+                self::EXIT_CODE_FAILURE,
+                [
+                    'Template directory exists but is not writeable',
+                    self::TPL_PATH,
+                ]
+            );
         }
 
         // --------------------------------------------------------------------------
@@ -99,10 +109,14 @@ class Create extends Base
         try {
             $this->createTemplate($aFields, $oOutput);
         } catch (\Exception $e) {
-            $oOutput->writeln('<error>FAILED!</error>');
-            $oOutput->writeln('<error>Error creating template</error>');
-            $oOutput->writeln('<error>' . $e->getMessage() . '</error>');
-            return $this->abort($oOutput, self::EXIT_CODE_FAILURE);
+            return $this->abort(
+                $oOutput,
+                self::EXIT_CODE_FAILURE,
+                [
+                    'Error creating template',
+                    $e->getMessage(),
+                ]
+            );
         }
         $oOutput->writeln('<comment>done!</comment>');
 
@@ -219,27 +233,5 @@ class Create extends Base
         $aSlug = array_map('ucfirst', $aSlug);
 
         return implode($aSlug, '');
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Performs the abort functionality and returns the exit code
-     *
-     * @param  OutputInterface $oOutput The Output Interface provided by Symfony
-     * @param  integer $exitCode The exit code
-     * @return int
-     */
-    private function abort($oOutput, $exitCode = self::EXIT_CODE_FAILURE)
-    {
-        $oOutput->writeln('');
-
-        $colorOpen = $exitCode === self::EXIT_CODE_FAILURE ? '<error>' : '';
-        $colorClose = $exitCode === self::EXIT_CODE_FAILURE ? '</error>' : '';
-
-        $oOutput->writeln($colorOpen . 'Aborting template creation' . $colorClose);
-        $oOutput->writeln('');
-
-        return $exitCode;
     }
 }
