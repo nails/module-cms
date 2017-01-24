@@ -3,7 +3,6 @@
 namespace Nails\Cms\Console\Command\Widget;
 
 use Nails\Console\Command\Base;
-use Nails\Environment;
 use Nails\Factory;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -35,28 +34,7 @@ class Create extends Base
      */
     protected function execute(InputInterface $oInput, OutputInterface $oOutput)
     {
-        $oOutput->writeln('');
-        $oOutput->writeln('<info>---------------------</info>');
-        $oOutput->writeln('<info>Nails CMS Widget Tool</info>');
-        $oOutput->writeln('<info>---------------------</info>');
-
-        // --------------------------------------------------------------------------
-
-        //  Setup Factory - config files are required prior to set up
-        Factory::setup();
-
-        // --------------------------------------------------------------------------
-
-        //  Check environment
-        if (Environment::not('DEVELOPMENT')) {
-            return $this->abort(
-                $oOutput,
-                self::EXIT_CODE_FAILURE,
-                [
-                    'This tool is only available on DEVELOPMENT environments',
-                ]
-            );
-        }
+        parent::execute($oInput, $oOutput);
 
         // --------------------------------------------------------------------------
 
@@ -64,7 +42,6 @@ class Create extends Base
         if (!is_dir(self::TPL_PATH)) {
             if (!mkdir(self::TPL_PATH, self::TPL_PATH_PERMISSION, true)) {
                 return $this->abort(
-                    $oOutput,
                     self::EXIT_CODE_FAILURE,
                     [
                         'Widget directory does not exist and could not be created',
@@ -74,7 +51,6 @@ class Create extends Base
             }
         } elseif (!is_writable(self::TPL_PATH)) {
             return $this->abort(
-                $oOutput,
                 self::EXIT_CODE_FAILURE,
                 [
                     'Widget directory exists but is not writeable',
@@ -97,7 +73,7 @@ class Create extends Base
                 $sField = ucwords(strtolower(str_replace('_', ' ', $sField)));
                 $sError = '';
                 do {
-                    $sValue = $this->ask($sError . $sField . ':', '', $oInput, $oOutput);
+                    $sValue = $this->ask($sError . $sField . ':', '');
                     $sError = '<error>Please specify</error> ';
                 } while (empty($sValue));
             }
@@ -109,10 +85,9 @@ class Create extends Base
         $oOutput->writeln('');
         $oOutput->write('Creating widget files... ');
         try {
-            $this->createWidget($aFields, $oOutput);
+            $this->createWidget($aFields);
         } catch (\Exception $e) {
             return $this->abort(
-                $oOutput,
                 self::EXIT_CODE_FAILURE,
                 [
                     'Error creating widget',
@@ -143,11 +118,10 @@ class Create extends Base
      * Create the widget
      *
      * @param array $aFields The details to create the widget with
-     * @param OutputInterface $oOutput The Output Interface provided by Symfony
      * @throws \Exception
      * @return int
      */
-    private function createWidget($aFields, $oOutput)
+    private function createWidget($aFields)
     {
         //  Test if widget already exists
         $aFields['slug'] = $this->generateSlug($aFields['name']);
@@ -243,7 +217,7 @@ class Create extends Base
      * @param array $aFields The widget fields
      * @return string
      */
-    private function getResource($sFile, $aFields)
+    protected function getResource($sFile, $aFields)
     {
         $sResource = require NAILS_PATH . 'module-cms/resources/console/widget/' . $sFile;
 

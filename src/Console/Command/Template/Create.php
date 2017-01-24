@@ -2,13 +2,12 @@
 
 namespace Nails\Cms\Console\Command\Template;
 
-use Nails\Console\Command\Base;
-use Nails\Environment;
+use Nails\Console\Command\BaseMaker;
 use Nails\Factory;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Create extends Base
+class Create extends BaseMaker
 {
     const TPL_PATH = FCPATH . APPPATH . 'modules/cms/templates/';
     const TPL_PATH_PERMISSION = 0755;
@@ -35,28 +34,7 @@ class Create extends Base
      */
     protected function execute(InputInterface $oInput, OutputInterface $oOutput)
     {
-        $oOutput->writeln('');
-        $oOutput->writeln('<info>-----------------------</info>');
-        $oOutput->writeln('<info>Nails CMS Template Tool</info>');
-        $oOutput->writeln('<info>-----------------------</info>');
-
-        // --------------------------------------------------------------------------
-
-        //  Setup Factory - config files are required prior to set up
-        Factory::setup();
-
-        // --------------------------------------------------------------------------
-
-        //  Check environment
-        if (Environment::not('DEVELOPMENT')) {
-            return $this->abort(
-                $oOutput,
-                self::EXIT_CODE_FAILURE,
-                [
-                    'This tool is only available on DEVELOPMENT environments',
-                ]
-            );
-        }
+        parent::execute($oInput, $oOutput);
 
         // --------------------------------------------------------------------------
 
@@ -64,7 +42,6 @@ class Create extends Base
         if (!is_dir(self::TPL_PATH)) {
             if (!mkdir(self::TPL_PATH, self::TPL_PATH_PERMISSION, true)) {
                 return $this->abort(
-                    $oOutput,
                     self::EXIT_CODE_FAILURE,
                     [
                         'Template directory does not exist and could not be created',
@@ -74,7 +51,6 @@ class Create extends Base
             }
         } elseif (!is_writable(self::TPL_PATH)) {
             return $this->abort(
-                $oOutput,
                 self::EXIT_CODE_FAILURE,
                 [
                     'Template directory exists but is not writeable',
@@ -95,7 +71,7 @@ class Create extends Base
                 $sField = ucwords(strtolower(str_replace('_', ' ', $sField)));
                 $sError = '';
                 do {
-                    $sValue = $this->ask($sError . $sField . ':', '', $oInput, $oOutput);
+                    $sValue = $this->ask($sError . $sField . ':', '');
                     $sError = '<error>Please specify</error> ';
                 } while (empty($sValue));
             }
@@ -107,10 +83,9 @@ class Create extends Base
         $oOutput->writeln('');
         $oOutput->write('Creating template files... ');
         try {
-            $this->createTemplate($aFields, $oOutput);
+            $this->createTemplate($aFields);
         } catch (\Exception $e) {
             return $this->abort(
-                $oOutput,
                 self::EXIT_CODE_FAILURE,
                 [
                     'Error creating template',
@@ -141,11 +116,10 @@ class Create extends Base
      * Create the template
      *
      * @param array $aFields The details to create the template with
-     * @param OutputInterface $oOutput The Output Interface provided by Symfony
      * @throws \Exception
      * @return int
      */
-    private function createTemplate($aFields, $oOutput)
+    private function createTemplate($aFields)
     {
         //  Test if template already exists
         $aFields['slug'] = $this->generateSlug($aFields['name']);
@@ -205,7 +179,7 @@ class Create extends Base
      * @param array $aFields The template fields
      * @return string
      */
-    private function getResource($sFile, $aFields)
+    protected function getResource($sFile, $aFields)
     {
         $sResource = require NAILS_PATH . 'module-cms/resources/console/template/' . $sFile;
 
