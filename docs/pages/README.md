@@ -1,4 +1,6 @@
 # Pages
+> Documentation is a WIP.
+
 
 CMS Pages alow admin users to generate complete, nestable pages of content on the site via a friendly, drag and drop GUI.
 

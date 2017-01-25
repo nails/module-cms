@@ -1,4 +1,6 @@
 # Helpers
+> Documentation is a WIP.
+
 
 The following helpers are amde available by the CMS module:
 

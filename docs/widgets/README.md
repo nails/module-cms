@@ -1,4 +1,6 @@
 # Widgets
+> Documentation is a WIP.
+
 
 Widgets are the underlying work horse of the CMS and range from being incredibly simple to extremely complex. There is no real limit to what widgets can and cannot do.
 
@@ -51,7 +53,7 @@ The helper `cmsWidget($sSlug, $aData)` is available for rendering widgets on the
 
 ## Creating your own widgets
 
-> The Nails Command Line tool makes this easy! Use `nails cms:widget` to automatically create the files and classes you need.
+> Easily generate CMS Widgets using the [Console Command](/docs/console/README.md)
 
 In order for a widet to be recognised it must be defined in `widget.php`. A basic set up looks like this, notice that the class name matches the directory name:
 
