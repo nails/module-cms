@@ -2,15 +2,17 @@
 
 namespace Nails\Cms\Console\Command\Template;
 
+use Nails\Cms\Exception\Console\TemplateExistsException;
 use Nails\Console\Command\BaseMaker;
 use Nails\Factory;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class Create extends BaseMaker
 {
-    const TPL_PATH = FCPATH . APPPATH . 'modules/cms/templates/';
-    const TPL_PATH_PERMISSION = 0755;
+    const RESOURCE_PATH = NAILS_PATH . 'module-cms/resources/console/template/';
+    const TEMPLATE_PATH = FCPATH . APPPATH . 'modules/cms/templates/';
 
     // --------------------------------------------------------------------------
 
@@ -19,8 +21,18 @@ class Create extends BaseMaker
      */
     protected function configure()
     {
-        $this->setName('cms:template');
+        $this->setName('make:cms:template');
         $this->setDescription('Creates a new CMS template');
+        $this->addArgument(
+            'templateName',
+            InputArgument::OPTIONAL,
+            'Define the name of the template to create'
+        );
+        $this->addArgument(
+            'templateDescription',
+            InputArgument::OPTIONAL,
+            'The template\'s description'
+        );
     }
 
     // --------------------------------------------------------------------------
@@ -38,62 +50,17 @@ class Create extends BaseMaker
 
         // --------------------------------------------------------------------------
 
-        //  Check we can write where we need to write
-        if (!is_dir(self::TPL_PATH)) {
-            if (!mkdir(self::TPL_PATH, self::TPL_PATH_PERMISSION, true)) {
-                return $this->abort(
-                    self::EXIT_CODE_FAILURE,
-                    [
-                        'Template directory does not exist and could not be created',
-                        self::TPL_PATH,
-                    ]
-                );
-            }
-        } elseif (!is_writable(self::TPL_PATH)) {
-            return $this->abort(
-                self::EXIT_CODE_FAILURE,
-                [
-                    'Template directory exists but is not writeable',
-                    self::TPL_PATH,
-                ]
-            );
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Get field names
-        $aFields = [
-            'name' => '',
-            'description' => '',
-        ];
-        foreach ($aFields as $sField => &$sValue) {
-            if (empty($sValue)) {
-                $sField = ucwords(strtolower(str_replace('_', ' ', $sField)));
-                $sError = '';
-                do {
-                    $sValue = $this->ask($sError . $sField . ':', '');
-                    $sError = '<error>Please specify</error> ';
-                } while (empty($sValue));
-            }
-        }
-        unset($sValue);
-
-        // --------------------------------------------------------------------------
-
-        $oOutput->writeln('');
-        $oOutput->write('Creating template files... ');
         try {
-            $this->createTemplate($aFields);
+            //  Ensure the paths exist
+            $this->createPath(self::TEMPLATE_PATH);
+            //  Create the controller
+            $this->createTemplate();
         } catch (\Exception $e) {
             return $this->abort(
                 self::EXIT_CODE_FAILURE,
-                [
-                    'Error creating template',
-                    $e->getMessage(),
-                ]
+                $e->getMessage()
             );
         }
-        $oOutput->writeln('<comment>done!</comment>');
 
         // --------------------------------------------------------------------------
 
@@ -115,26 +82,21 @@ class Create extends BaseMaker
     /**
      * Create the template
      *
-     * @param array $aFields The details to create the template with
      * @throws \Exception
-     * @return int
      */
-    private function createTemplate($aFields)
+    private function createTemplate()
     {
-        //  Test if template already exists
-        $aFields['slug'] = $this->generateSlug($aFields['name']);
-        $sPath = self::TPL_PATH . $aFields['slug'] . '/';
+        $aFields         = $this->getArguments();
+        $aFields['SLUG'] = $this->generateSlug($aFields['TEMPLATE_NAME']);
+        $sPath           = self::TEMPLATE_PATH . $aFields['SLUG'] . '/';
 
         try {
 
             if (is_dir($sPath)) {
-                throw new \Exception('Template "' . $aFields['slug'] . '" exists already');
+                throw new TemplateExistsException('Template "' . $aFields['SLUG'] . '" exists already');
             }
 
-            //  Make the directory
-            if (!mkdir($sPath, self::TPL_PATH_PERMISSION)) {
-                throw new \Exception('Failed to create template directory');
-            }
+            $this->createPath($sPath);
 
             //  Create the files
             $aFiles = [
@@ -143,21 +105,13 @@ class Create extends BaseMaker
             ];
 
             foreach ($aFiles as $sFile) {
-                $hHandle = fopen($sPath . $sFile, 'w');
-
-                if (!$hHandle) {
-                    throw new \Exception('Failed to open ' . $sFile . ' for writing');
-                }
-
-                if (fwrite($hHandle, $this->getResource($sFile, $aFields)) === false) {
-                    throw new \Exception('Failed to write to ' . $sFile);
-                }
-
-                fclose($hHandle);
+                $this->createFile($sPath . $sFile, $this->getResource($sFile, $aFields));
             }
 
+        } catch (TemplateExistsException $e) {
+            //  Do not clean up (delete existing template)!
+            throw new \Exception($e->getMessage(), $e->getCode());
         } catch (\Exception $e) {
-
             //  Clean up
             if (!empty($aFiles)) {
                 foreach ($aFiles as $sFile) {
@@ -166,29 +120,11 @@ class Create extends BaseMaker
             }
             rmdir($sPath);
 
-            throw new \Exception($e->getMessage(), $e->getCode());
+            throw new \Exception(
+                $e->getMessage(),
+                $e->getCode()
+            );
         }
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Get a resource and substitute fields into it
-     *
-     * @param string $sFile The file to fetch
-     * @param array $aFields The template fields
-     * @return string
-     */
-    protected function getResource($sFile, $aFields)
-    {
-        $sResource = require NAILS_PATH . 'module-cms/resources/console/template/' . $sFile;
-
-        foreach ($aFields as $sField => $sValue) {
-            $sKey = '{{' . strtoupper($sField) . '}}';
-            $sResource = str_replace($sKey, $sValue, $sResource);
-        }
-
-        return $sResource;
     }
 
     // --------------------------------------------------------------------------

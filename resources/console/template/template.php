@@ -27,8 +27,8 @@ class {{SLUG}} extends TemplateBase
         parent::__construct();
 
         //  Basic template configuration
-        $this->label       = '{{NAME}}';
-        $this->description = '{{DESCRIPTION}}';
+        $this->label       = '{{TEMPLATE_NAME}}';
+        $this->description = '{{TEMPLATE_DESCRIPTION}}';
 
         //  Define template widget areas
         // $this->widget_areas = [

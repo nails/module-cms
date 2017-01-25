@@ -25,10 +25,10 @@ class {{SLUG}} extends WidgetBase
     {
         parent::__construct();
 
-        $this->label       = '{{NAME}}';
-        $this->description = '{{DESCRIPTION}}';
-        $this->grouping    = '{{GROUPING}}';
-        $this->keywords    = '{{KEYWORDS}}';
+        $this->label       = '{{WIDGET_NAME}}';
+        $this->description = '{{WIDGET_DESCRIPTION}}';
+        $this->grouping    = '{{WIDGET_GROUPING}}';
+        $this->keywords    = '{{WIDGET_KEYWORDS}}';
     }
 }
 
