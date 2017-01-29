@@ -12,9 +12,10 @@
 
 namespace Nails\Routes\Cms;
 
+use Nails\Common\Model\BaseRoutes;
 use Nails\Factory;
 
-class Routes
+class Routes extends BaseRoutes
 {
     /**
      * Returns an array of routes for this module
@@ -25,13 +26,11 @@ class Routes
         $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
         $oDb        = Factory::service('Database');
 
-        $aRoutes = array();
-        $aPages = $oPageModel->getAll();
+        $aRoutes = [];
+        $aPages  = $oPageModel->getAll();
 
         foreach ($aPages as $oPage) {
-
             if ($oPage->is_published) {
-
                 $aRoutes[$oPage->published->slug] = 'cms/render/page/' . $oPage->id;
             }
         }
@@ -54,9 +53,7 @@ class Routes
         $aSlugs = $oDb->get(NAILS_DB_PREFIX . 'cms_page_slug_history sh')->result();
 
         foreach ($aSlugs as $oRoute) {
-
             if (!isset($aRoutes[$oRoute->slug])) {
-
                 $aRoutes[$oRoute->slug] = 'cms/render/legacy_slug/' . $oRoute->page_id;
             }
         }
