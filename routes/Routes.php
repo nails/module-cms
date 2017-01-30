@@ -14,6 +14,7 @@ namespace Nails\Routes\Cms;
 
 use Nails\Common\Model\BaseRoutes;
 use Nails\Factory;
+use PDO;
 
 class Routes extends BaseRoutes
 {
@@ -23,16 +24,16 @@ class Routes extends BaseRoutes
      */
     public function getRoutes()
     {
+        $oDb        = Factory::service('ConsoleDatabase', 'nailsapp/module-console');
         $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
-        $oDb        = Factory::service('Database');
+        $aRoutes    = [];
 
-        $aRoutes = [];
-        $aPages  = $oPageModel->getAll();
+        $oPages = $oDb->query(
+            'SELECT id, published_slug FROM ' . $oPageModel->getTableName() . ' WHERE is_published = 1;'
+        );
 
-        foreach ($aPages as $oPage) {
-            if ($oPage->is_published) {
-                $aRoutes[$oPage->published->slug] = 'cms/render/page/' . $oPage->id;
-            }
+        while ($oRow = $oPages->fetch(PDO::FETCH_OBJ)) {
+            $aRoutes[$oRow->published_slug] = 'cms/render/page/' . $oRow->id;
         }
 
         // --------------------------------------------------------------------------
@@ -46,15 +47,18 @@ class Routes extends BaseRoutes
          *  often) then the router can work a little harder.
          **/
 
-        $oDb->select('sh.slug,sh.page_id');
-        $oDb->join(NAILS_DB_PREFIX . 'cms_page p', 'p.id = sh.page_id');
-        $oDb->where('p.is_deleted', false);
-        $oDb->where('p.is_published', true);
-        $aSlugs = $oDb->get(NAILS_DB_PREFIX . 'cms_page_slug_history sh')->result();
+        $oSlugs = $oDb->query('
+            SELECT sh.slug, sh.page_id
+            FROM ' . NAILS_DB_PREFIX . 'cms_page_slug_history sh
+            JOIN ' . NAILS_DB_PREFIX . 'cms_page p ON p.id = sh.page_id
+            WHERE
+            p.is_deleted = 0
+            AND p.is_published = 1
+        ');
 
-        foreach ($aSlugs as $oRoute) {
-            if (!isset($aRoutes[$oRoute->slug])) {
-                $aRoutes[$oRoute->slug] = 'cms/render/legacy_slug/' . $oRoute->page_id;
+        while ($oRow = $oSlugs->fetch(PDO::FETCH_OBJ)) {
+            if (!isset($aRoutes[$oRow->slug])) {
+                $aRoutes[$oRow->slug] = 'cms/render/legacy_slug/' . $oRow->page_id;
             }
         }
 

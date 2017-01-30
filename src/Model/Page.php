@@ -23,7 +23,7 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Constuct the model
+     * Construct the model
      */
     public function __construct()
     {
@@ -31,7 +31,6 @@ class Page extends Base
 
         Factory::helper('directory');
 
-        $this->oDb               = Factory::service('Database');
         $this->table             = NAILS_DB_PREFIX . 'cms_page';
         $this->tablePreview      = $this->table . '_preview';
         $this->tableAlias        = 'p';
@@ -50,7 +49,8 @@ class Page extends Base
      */
     public function create($aData)
     {
-        $this->oDb->trans_begin();
+        $oDb = Factory::service('Database');
+        $oDb->trans_begin();
 
         //  Create a new blank row to work with
         $iId = parent::create();
@@ -58,7 +58,7 @@ class Page extends Base
         if (!$iId) {
 
             $this->setError('Unable to create base page object. ' . $this->lastError());
-            $this->oDb->trans_rollback();
+            $oDb->trans_rollback();
 
             return false;
         }
@@ -66,13 +66,13 @@ class Page extends Base
         //  Try and update it depending on how the update went, commit & update or rollback
         if ($this->update($iId, $aData)) {
 
-            $this->oDb->trans_commit();
+            $oDb->trans_commit();
 
             return $iId;
 
         } else {
 
-            $this->oDb->trans_rollback();
+            $oDb->trans_rollback();
 
             return false;
         }
@@ -84,7 +84,7 @@ class Page extends Base
      * Update a CMS Page
      *
      * @param array|int $iPageId
-     * @param array     $aData
+     * @param array $aData
      * @return bool
      */
     public function update($iPageId, $aData)
@@ -102,12 +102,13 @@ class Page extends Base
         // --------------------------------------------------------------------------
 
         //  Start the transaction
-        $this->oDb->trans_begin();
+        $oDb = Factory::service('Database');
+        $oDb->trans_begin();
 
         // --------------------------------------------------------------------------
 
         //  Start prepping the data which doesn't require much thinking
-        $aUpdateData = array(
+        $aUpdateData = [
             'draft_parent_id'        => !empty($aData['parent_id']) ? (int) $aData['parent_id'] : null,
             'draft_title'            => !empty($aData['title']) ? trim($aData['title']) : 'Untitled',
             'draft_seo_title'        => !empty($aData['seo_title']) ? trim($aData['seo_title']) : '',
@@ -115,8 +116,8 @@ class Page extends Base
             'draft_seo_keywords'     => !empty($aData['seo_keywords']) ? trim($aData['seo_keywords']) : '',
             'draft_template'         => !empty($aData['template']) ? trim($aData['template']) : null,
             'draft_template_data'    => !empty($aData['template_data']) ? trim($aData['template_data']) : null,
-            'draft_template_options' => !empty($aData['template_options']) ? trim($aData['template_options']) : null
-        );
+            'draft_template_options' => !empty($aData['template_options']) ? trim($aData['template_options']) : null,
+        ];
 
         // --------------------------------------------------------------------------
 
@@ -138,14 +139,14 @@ class Page extends Base
         //  There is a parent, get some basics about it for use below
         if ($aUpdateData['draft_parent_id']) {
 
-            $this->oDb->select('draft_slug, draft_breadcrumbs');
-            $this->oDb->where('id', $aUpdateData['draft_parent_id']);
-            $oParent = $this->oDb->get($this->table)->row();
+            $oDb->select('draft_slug, draft_breadcrumbs');
+            $oDb->where('id', $aUpdateData['draft_parent_id']);
+            $oParent = $oDb->get($this->table)->row();
 
             if (!$oParent) {
 
                 $this->setError('Invalid Parent ID.');
-                $this->oDb->trans_rollback();
+                $oDb->trans_rollback();
 
                 return false;
             }
@@ -169,12 +170,12 @@ class Page extends Base
 
             //  Test slug is valid
             $aUpdateData['draft_slug'] = $sSlugPrefix . $aData['slug'];
-            $this->oDb->where('draft_slug', $aUpdateData['draft_slug']);
-            $this->oDb->where('id !=', $oCurrent->id);
-            if ($this->oDb->count_all_results($this->table)) {
+            $oDb->where('draft_slug', $aUpdateData['draft_slug']);
+            $oDb->where('id !=', $oCurrent->id);
+            if ($oDb->count_all_results($this->table)) {
 
                 $this->setError('Slug is already in use.');
-                $this->oDb->trans_rollback();
+                $oDb->trans_rollback();
 
                 return false;
             }
@@ -190,7 +191,7 @@ class Page extends Base
         // --------------------------------------------------------------------------
 
         //  Generate the breadcrumbs
-        $aUpdateData['draft_breadcrumbs'] = array();
+        $aUpdateData['draft_breadcrumbs'] = [];
 
         if (!empty($oParent->draft_breadcrumbs)) {
 
@@ -224,20 +225,20 @@ class Page extends Base
                 //  Refresh the current
                 $oCurrent     = $this->getById($oCurrent->id);
                 $aChildren    = $this->getIdsOfChildren($oCurrent->id);
-                $aUpdateData  = array();
-                $aParentCache = array(
-                    $oCurrent->id => array(
+                $aUpdateData  = [];
+                $aParentCache = [
+                    $oCurrent->id => [
                         'slug'  => $oCurrent->draft->slug,
-                        'crumb' => $oCurrent->draft->breadcrumbs
-                    )
-                );
+                        'crumb' => $oCurrent->draft->breadcrumbs,
+                    ],
+                ];
 
                 if ($aChildren) {
 
                     /**
                      * For each child we need to update it's slug and it's breadcrumbs. We'll do this by appending
                      * it's details onto the parent's slug/breadcrumbs. If we don't know the parent's details
-                     * (shouldn't happen as kids will be in a hierarchial order) then we need to look it up.
+                     * (should not happen as kids will be in a hierarchical order) then we need to look it up.
                      */
                     foreach ($aChildren as $iChildId) {
 
@@ -246,7 +247,7 @@ class Page extends Base
                             continue;
                         }
 
-                        $aParentCache[$oChild->id] = array('slug' => '', 'crumb' => '');
+                        $aParentCache[$oChild->id] = ['slug' => '', 'crumb' => ''];
 
                         $oChildSlug                        = $aParentCache[$oChild->draft->parent_id]['slug'] . '/' . $oChild->draft->slug_end;
                         $aParentCache[$oChild->id]['slug'] = $oChildSlug;
@@ -266,15 +267,15 @@ class Page extends Base
                     //  Update each child
                     foreach ($aUpdateData as $iPageId => $aCache) {
 
-                        $aData = array(
+                        $aData = [
                             'draft_slug'        => $aCache['slug'],
-                            'draft_breadcrumbs' => json_encode($aCache['crumb'])
-                        );
+                            'draft_breadcrumbs' => json_encode($aCache['crumb']),
+                        ];
 
                         if (!parent::update($iPageId, $aData)) {
 
                             $this->setError('Failed to update child page\'s slug and breadcrumbs');
-                            $this->oDb->trans_rollback();
+                            $oDb->trans_rollback();
 
                             return false;
                         }
@@ -285,14 +286,14 @@ class Page extends Base
             // --------------------------------------------------------------------------
 
             //  Finish up.
-            $this->oDb->trans_commit();
+            $oDb->trans_commit();
 
             return true;
 
         } else {
 
             $this->setError('Failed to update page object.');
-            $this->oDb->trans_rollback();
+            $oDb->trans_rollback();
 
             return false;
         }
@@ -321,12 +322,12 @@ class Page extends Base
     /**
      * Render a template with the provided widgets and additional data
      *
-     * @param  string $sTemplate        The template to render
-     * @param  array  $oTemplateData    The template data (i.e. areas and widgets)
-     * @param  array  $oTemplateOptions The template options
+     * @param  string $sTemplate The template to render
+     * @param  array $oTemplateData The template data (i.e. areas and widgets)
+     * @param  array $oTemplateOptions The template options
      * @return mixed                    String (the rendered template) on success, false on failure
      */
-    public function render($sTemplate, $oTemplateData = array(), $oTemplateOptions = array())
+    public function render($sTemplate, $oTemplateData = [], $oTemplateOptions = [])
     {
         $oTemplateModel = Factory::model('Template', 'nailsapp/module-cms');
         $oTemplate      = $oTemplateModel->getBySlug($sTemplate, 'RENDER');
@@ -364,44 +365,45 @@ class Page extends Base
         // --------------------------------------------------------------------------
 
         //  Start the transaction
-        $this->oDb->trans_begin();
+        $oDb = Factory::service('Database');
+        $oDb->trans_begin();
 
         // --------------------------------------------------------------------------
 
         //  If the slug has changed add an entry to the slug history page
-        $aSlugHistory = array();
+        $aSlugHistory = [];
         if ($oPage->published->slug && $oPage->published->slug != $oPage->draft->slug) {
-            $aSlugHistory[] = array(
+            $aSlugHistory[] = [
                 'slug'    => $oPage->published->slug,
-                'page_id' => $oPage->id
-            );
+                'page_id' => $oPage->id,
+            ];
         }
 
         // --------------------------------------------------------------------------
 
         //  Update the published_* columns to be the same as the draft columns
-        $this->oDb->set('published_hash', 'draft_hash', false);
-        $this->oDb->set('published_parent_id', 'draft_parent_id', false);
-        $this->oDb->set('published_slug', 'draft_slug', false);
-        $this->oDb->set('published_slug_end', 'draft_slug_end', false);
-        $this->oDb->set('published_template', 'draft_template', false);
-        $this->oDb->set('published_template_data', 'draft_template_data', false);
-        $this->oDb->set('published_template_options', 'draft_template_options', false);
-        $this->oDb->set('published_title', 'draft_title', false);
-        $this->oDb->set('published_breadcrumbs', 'draft_breadcrumbs', false);
-        $this->oDb->set('published_seo_title', 'draft_seo_title', false);
-        $this->oDb->set('published_seo_description', 'draft_seo_description', false);
-        $this->oDb->set('published_seo_keywords', 'draft_seo_keywords', false);
-        $this->oDb->set('is_published', true);
-        $this->oDb->set('modified', $oDate->format('Y-m-d H:i:s'));
+        $oDb->set('published_hash', 'draft_hash', false);
+        $oDb->set('published_parent_id', 'draft_parent_id', false);
+        $oDb->set('published_slug', 'draft_slug', false);
+        $oDb->set('published_slug_end', 'draft_slug_end', false);
+        $oDb->set('published_template', 'draft_template', false);
+        $oDb->set('published_template_data', 'draft_template_data', false);
+        $oDb->set('published_template_options', 'draft_template_options', false);
+        $oDb->set('published_title', 'draft_title', false);
+        $oDb->set('published_breadcrumbs', 'draft_breadcrumbs', false);
+        $oDb->set('published_seo_title', 'draft_seo_title', false);
+        $oDb->set('published_seo_description', 'draft_seo_description', false);
+        $oDb->set('published_seo_keywords', 'draft_seo_keywords', false);
+        $oDb->set('is_published', true);
+        $oDb->set('modified', $oDate->format('Y-m-d H:i:s'));
 
         if ($this->user_model->isLoggedIn()) {
-            $this->oDb->set('modified_by', activeUser('id'));
+            $oDb->set('modified_by', activeUser('id'));
         }
 
-        $this->oDb->where('id', $oPage->id);
+        $oDb->where('id', $oPage->id);
 
-        if ($this->oDb->update($this->table)) {
+        if ($oDb->update($this->table)) {
 
             //  Fetch the children, returning the data we need for the updates
             $aChildren = $this->getIdsOfChildren($oPage->id);
@@ -428,38 +430,38 @@ class Page extends Base
 
                     //  First make a note of the old slug
                     if ($oChild->is_published) {
-                        $aSlugHistory[] = array(
+                        $aSlugHistory[] = [
                             'slug'    => $oChild->draft->slug,
-                            'page_id' => $oChild->id
-                        );
+                            'page_id' => $oChild->id,
+                        ];
                     }
 
                     //  Next we set the appropriate fields
-                    $this->oDb->set('published_slug', $oChild->draft->slug);
-                    $this->oDb->set('published_slug_end', $oChild->draft->slug_end);
-                    $this->oDb->set('published_breadcrumbs', json_encode($oChild->draft->breadcrumbs));
-                    $this->oDb->set('modified', $oDate->format('Y-m-d H:i:s'));
+                    $oDb->set('published_slug', $oChild->draft->slug);
+                    $oDb->set('published_slug_end', $oChild->draft->slug_end);
+                    $oDb->set('published_breadcrumbs', json_encode($oChild->draft->breadcrumbs));
+                    $oDb->set('modified', $oDate->format('Y-m-d H:i:s'));
 
-                    $this->oDb->where('id', $oChild->id);
+                    $oDb->where('id', $oChild->id);
 
-                    if (!$this->oDb->update($this->table)) {
+                    if (!$oDb->update($this->table)) {
 
                         $this->setError('Failed to update a child page\'s data.');
-                        $this->oDb->trans_rollback();
+                        $oDb->trans_rollback();
 
                         return false;
                     }
                 }
             }
 
-            //  Add any slug_history thingmys
+            //  Add any slug_history items
             foreach ($aSlugHistory as $item) {
 
-                $this->oDb->set('hash', md5($item['slug'] . $item['page_id']));
-                $this->oDb->set('slug', $item['slug']);
-                $this->oDb->set('page_id', $item['page_id']);
-                $this->oDb->set('created', 'NOW()', false);
-                $this->oDb->replace(NAILS_DB_PREFIX . 'cms_page_slug_history');
+                $oDb->set('hash', md5($item['slug'] . $item['page_id']));
+                $oDb->set('slug', $item['slug']);
+                $oDb->set('page_id', $item['page_id']);
+                $oDb->set('created', 'NOW()', false);
+                $oDb->replace(NAILS_DB_PREFIX . 'cms_page_slug_history');
             }
 
             // --------------------------------------------------------------------------
@@ -477,14 +479,14 @@ class Page extends Base
                 $this->sitemap_model->generate();
             }
 
-            $this->oDb->trans_commit();
+            $oDb->trans_commit();
 
             //  @TODO: Kill caches for this page and all children
             return true;
 
         } else {
 
-            $this->oDb->trans_rollback();
+            $oDb->trans_rollback();
 
             return false;
         }
@@ -501,11 +503,11 @@ class Page extends Base
      * @param array $data Data passed from the calling method
      * @return void
      **/
-    public function getCountCommon($data = array())
+    public function getCountCommon($data = [])
     {
         if (empty($data['select'])) {
 
-            $data['select'] = array(
+            $data['select'] = [
 
                 //  Main Table
                 $this->tableAlias . '.id',
@@ -545,33 +547,34 @@ class Page extends Base
                 'u.first_name',
                 'u.last_name',
                 'u.profile_img',
-                'u.gender'
-            );
+                'u.gender',
+            ];
         }
 
-        $this->oDb->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tableAlias . '.modified_by', 'LEFT');
-        $this->oDb->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
+        $oDb = Factory::service('Database');
+        $oDb->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tableAlias . '.modified_by', 'LEFT');
+        $oDb->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
 
         if (empty($data['sort'])) {
 
-            $data['sort'] = array($this->tableAlias . '.draft_slug', 'asc');
+            $data['sort'] = [$this->tableAlias . '.draft_slug', 'asc'];
         }
 
         if (!empty($data['keywords'])) {
 
             if (empty($data['or_like'])) {
 
-                $data['or_like'] = array();
+                $data['or_like'] = [];
             }
 
-            $data['or_like'][] = array(
+            $data['or_like'][] = [
                 'column' => $this->tableAlias . '.draft_title',
-                'value'  => $data['keywords']
-            );
-            $data['or_like'][] = array(
+                'value'  => $data['keywords'],
+            ];
+            $data['or_like'][] = [
                 'column' => $this->tableAlias . '.draft_template_data',
-                'value'  => $data['keywords']
-            );
+                'value'  => $data['keywords'],
+            ];
         }
 
         parent::getCountCommon($data);
@@ -582,7 +585,7 @@ class Page extends Base
     /**
      * Gets all pages, nested
      *
-     * @param  boolean $useDraft Whther to use the published or draft version of pages
+     * @param  boolean $useDraft Whether to use the published or draft version of pages
      * @return array
      */
     public function getAllNested($useDraft = true)
@@ -595,13 +598,13 @@ class Page extends Base
     /**
      * Get all pages nested, but as a flat array
      *
-     * @param  string  $separator               The separator to use between pages
+     * @param  string $separator The separator to use between pages
      * @param  boolean $murderParentsOfChildren Whether to include parents in the result
      * @return array
      */
     public function getAllNestedFlat($separator = ' &rsaquo; ', $murderParentsOfChildren = true)
     {
-        $out   = array();
+        $out   = [];
         $pages = $this->getAll();
 
         foreach ($pages as $page) {
@@ -647,14 +650,14 @@ class Page extends Base
      * Nests pages
      * Hat tip to Timur; http://stackoverflow.com/a/9224696/789224
      *
-     * @param  array   &$list    The pages to nest
-     * @param  int     $parentId The parent ID of the page
+     * @param  array &$list The pages to nest
+     * @param  int $parentId The parent ID of the page
      * @param  boolean $useDraft Whether to use published data or draft data
      * @return array
      */
     protected function nestPages(&$list, $parentId = null, $useDraft = true)
     {
-        $result = array();
+        $result = [];
 
         for ($i = 0, $c = count($list); $i < $c; $i++) {
 
@@ -675,9 +678,9 @@ class Page extends Base
     /**
      * Find the parents of a page
      *
-     * @param  int       $parentId  The page to find parents for
-     * @param  \stdClass &$source   The source page
-     * @param  string    $separator The separator to use
+     * @param  int $parentId The page to find parents for
+     * @param  \stdClass &$source The source page
+     * @param  string $separator The separator to use
      * @return string
      */
     protected function findParents($parentId, &$source, $separator)
@@ -727,17 +730,18 @@ class Page extends Base
     /**
      * Get the IDs of a page's children
      *
-     * @param  int    $iPageId The ID of the page to look at
+     * @param  int $iPageId The ID of the page to look at
      * @param  string $sFormat How to return the data, one of ID, ID_SLUG, ID_SLUG_TITLE or ID_SLUG_TITLE_PUBLISHED
      * @return array
      */
     public function getIdsOfChildren($iPageId, $sFormat = 'ID')
     {
-        $aOut = array();
+        $aOut = [];
+        $oDb  = Factory::service('Database');
 
-        $this->oDb->select('id,draft_slug,draft_title,is_published');
-        $this->oDb->where('draft_parent_id', $iPageId);
-        $aChildren = $this->oDb->get(NAILS_DB_PREFIX . 'cms_page')->result();
+        $oDb->select('id,draft_slug,draft_title,is_published');
+        $oDb->where('draft_parent_id', $iPageId);
+        $aChildren = $oDb->get(NAILS_DB_PREFIX . 'cms_page')->result();
 
         if ($aChildren) {
 
@@ -750,27 +754,27 @@ class Page extends Base
                         break;
 
                     case 'ID_SLUG':
-                        $aOut[] = array(
+                        $aOut[] = [
                             'id'   => $oChild->id,
-                            'slug' => $oChild->draft_slug
-                        );
+                            'slug' => $oChild->draft_slug,
+                        ];
                         break;
 
                     case 'ID_SLUG_TITLE':
-                        $aOut[] = array(
+                        $aOut[] = [
                             'id'    => $oChild->id,
                             'slug'  => $oChild->draft_slug,
-                            'title' => $oChild->draft_title
-                        );
+                            'title' => $oChild->draft_title,
+                        ];
                         break;
 
                     case 'ID_SLUG_TITLE_PUBLISHED':
-                        $aOut[] = array(
+                        $aOut[] = [
                             'id'           => $oChild->id,
                             'slug'         => $oChild->draft_slug,
                             'title'        => $oChild->draft_title,
-                            'is_published' => (bool) $oChild->is_published
-                        );
+                            'is_published' => (bool) $oChild->is_published,
+                        ];
                         break;
                 }
 
@@ -790,16 +794,16 @@ class Page extends Base
     /**
      * Fetches all objects as a flat array, optionally paginated.
      *
-     * @param int   $page           The page number of the results, if null then no pagination
-     * @param int   $perPage        How many items per page of paginated results
-     * @param mixed $data           Any data to pass to getCountCommon()
-     * @param bool  $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted
+     * @param int $page The page number of the results, if null then no pagination
+     * @param int $perPage How many items per page of paginated results
+     * @param mixed $data Any data to pass to getCountCommon()
+     * @param bool $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted
      *                              items
      * @return array
      */
-    public function getAllFlat($page = null, $perPage = null, $data = array(), $includeDeleted = false)
+    public function getAllFlat($page = null, $perPage = null, $data = [], $includeDeleted = false)
     {
-        $out   = array();
+        $out   = [];
         $pages = $this->getAll($page, $perPage, $data, $includeDeleted);
 
         foreach ($pages as $page) {
@@ -822,27 +826,27 @@ class Page extends Base
     /**
      * Get the top level pages, i.e., those without a parent
      *
-     * @param int   $page           The page number of the results, if null then no pagination
-     * @param int   $perPage        How many items per page of paginated results
-     * @param mixed $data           Any data to pass to getCountCommon()
-     * @param bool  $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted
+     * @param int $page The page number of the results, if null then no pagination
+     * @param int $perPage How many items per page of paginated results
+     * @param mixed $data Any data to pass to getCountCommon()
+     * @param bool $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted
      *                              items
      * @return array
      */
-    public function getTopLevel($page = null, $perPage = null, $data = array(), $includeDeleted = false)
+    public function getTopLevel($page = null, $perPage = null, $data = [], $includeDeleted = false)
     {
         if (empty($data['where'])) {
 
-            $data['were'] = array();
+            $data['were'] = [];
         }
 
         if (!empty($data['useDraft'])) {
 
-            $data['where'][] = array('draft_parent_id', null);
+            $data['where'][] = ['draft_parent_id', null];
 
         } else {
 
-            $data['where'][] = array('published_parent_id', null);
+            $data['where'][] = ['published_parent_id', null];
         }
 
         return $this->getAll($page, $perPage, $data, $includeDeleted);
@@ -853,7 +857,7 @@ class Page extends Base
     /**
      * Get the siblings of a page, i.e those with the same parent
      *
-     * @param  int     $id       The page whose siblings to fetch
+     * @param  int $id The page whose siblings to fetch
      * @param  boolean $useDraft Whether to use published data, or draft data
      * @return array
      */
@@ -862,20 +866,20 @@ class Page extends Base
         $page = $this->getById($id);
 
         if (!$page) {
-            return array();
+            return [];
         }
 
         if (empty($data['where'])) {
-            $data['were'] = array();
+            $data['were'] = [];
         }
 
         if ($useDraft) {
 
-            $data['where'][] = array('draft_parent_id', $page->draft->parent_id);
+            $data['where'][] = ['draft_parent_id', $page->draft->parent_id];
 
         } else {
 
-            $data['where'][] = array('published_parent_id', $page->published->parent_id);
+            $data['where'][] = ['published_parent_id', $page->published->parent_id];
         }
 
         return $this->getAll(null, null, $data);
@@ -926,19 +930,19 @@ class Page extends Base
      * The getAll() method iterates over each returned item with this method so as to
      * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
      *
-     * @param  object $oObj      A reference to the object being formatted.
-     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
-     * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
-     * @param  array  $aBools    Fields which should be cast as booleans if not null
-     * @param  array  $aFloats   Fields which should be cast as floats if not null
+     * @param  object $oObj A reference to the object being formatted.
+     * @param  array $aData The same data array which is passed to _getcount_common, for reference if needed
+     * @param  array $aIntegers Fields which should be cast as integers if numerical and not null
+     * @param  array $aBools Fields which should be cast as booleans if not null
+     * @param  array $aFloats Fields which should be cast as floats if not null
      * @return void
      */
     protected function formatObject(
         &$oObj,
-        $aData = array(),
-        $aIntegers = array(),
-        $aBools = array(),
-        $aFloats = array()
+        $aData = [],
+        $aIntegers = [],
+        $aBools = [],
+        $aFloats = []
     )
     {
 
@@ -1030,37 +1034,38 @@ class Page extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->oDb->trans_begin();
+        $oDb = Factory::service('Database');
+        $oDb->trans_begin();
 
-        $this->oDb->where('id', $id);
-        $this->oDb->set('is_deleted', true);
-        $this->oDb->set('modified', 'NOW()', false);
+        $oDb->where('id', $id);
+        $oDb->set('is_deleted', true);
+        $oDb->set('modified', 'NOW()', false);
 
         if ($this->user_model->isLoggedIn()) {
 
-            $this->oDb->set('modified_by', activeUser('id'));
+            $oDb->set('modified_by', activeUser('id'));
         }
 
-        if ($this->oDb->update($this->table)) {
+        if ($oDb->update($this->table)) {
 
             //  Success, update children
             $children = $this->getIdsOfChildren($id);
 
             if ($children) {
 
-                $this->oDb->where_in('id', $children);
-                $this->oDb->set('is_deleted', true);
-                $this->oDb->set('modified', 'NOW()', false);
+                $oDb->where_in('id', $children);
+                $oDb->set('is_deleted', true);
+                $oDb->set('modified', 'NOW()', false);
 
                 if ($this->user_model->isLoggedIn()) {
 
-                    $this->oDb->set('modified_by', activeUser('id'));
+                    $oDb->set('modified_by', activeUser('id'));
                 }
 
-                if (!$this->oDb->update($this->table)) {
+                if (!$oDb->update($this->table)) {
 
                     $this->setError('Unable to delete children pages');
-                    $this->oDb->trans_rollback();
+                    $oDb->trans_rollback();
 
                     return false;
                 }
@@ -1083,14 +1088,14 @@ class Page extends Base
 
             // --------------------------------------------------------------------------
 
-            $this->oDb->trans_commit();
+            $oDb->trans_commit();
 
             return true;
 
         } else {
 
             //  Failed
-            $this->oDb->trans_rollback();
+            $oDb->trans_rollback();
 
             return false;
         }
@@ -1099,7 +1104,7 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Permenantly delete a page and it's children
+     * Permanently delete a page and it's children
      *
      * @param  int $id The ID of the page to destroy
      * @return boolean
@@ -1122,8 +1127,9 @@ class Page extends Base
      */
     public function getPreviewById($iPreviewId)
     {
-        $this->oDb->where('id', $iPreviewId);
-        $oResult = $this->oDb->get($this->tablePreview)->row();
+        $oDb = Factory::service('Database');
+        $oDb->where('id', $iPreviewId);
+        $oResult = $oDb->get($this->tablePreview)->row();
 
         // --------------------------------------------------------------------------
 
@@ -1144,7 +1150,7 @@ class Page extends Base
     /**
      * Returns the URL of a page
      *
-     * @param  integer $iPageId      The ID of the page to look up
+     * @param  integer $iPageId The ID of the page to look up
      * @param  boolean $usePublished Whether to use the `published` data, or the `draft` data
      * @return mixed                 String on success, false on failure
      */
