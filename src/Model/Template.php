@@ -44,7 +44,7 @@ class Template
 
         $this->aTemplateDirs[] = array(
             'type' => 'app',
-            'path' => FCPATH . APPPATH . 'modules/cms/templates/'
+            'path' => APPPATH . 'modules/cms/templates/'
         );
     }
 

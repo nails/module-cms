@@ -93,16 +93,16 @@ class TemplateBase
                     //  Nails asset
                     $this->icon = preg_replace('#^' . preg_quote(NAILS_PATH, '#') . '#', NAILS_URL, $sIconPath);
 
-                } elseif (preg_match('#^' . preg_quote(FCPATH . APPPATH, '#') . '#', $sIconPath)) {
+                } elseif (preg_match('#^' . preg_quote(APPPATH, '#') . '#', $sIconPath)) {
 
                     if (isPageSecure()) {
 
-                        $sPattern   = '#^' . preg_quote(FCPATH . APPPATH, '#') . '#';
+                        $sPattern   = '#^' . preg_quote(APPPATH, '#') . '#';
                         $this->icon = preg_replace($sPattern, SECURE_BASE_URL . APPPATH . '', $sIconPath);
 
                     } else {
 
-                        $sPattern   = '#^' . preg_quote(FCPATH . APPPATH, '#') . '#';
+                        $sPattern   = '#^' . preg_quote(APPPATH, '#') . '#';
                         $this->icon = preg_replace($sPattern, BASE_URL . APPPATH . '', $sIconPath);
                     }
                 }

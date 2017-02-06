@@ -39,7 +39,7 @@ class Widget
          * supplied ones.
          */
 
-        $this->aWidgetDirs[]   = FCPATH . APPPATH . 'modules/cms/widgets/';
+        $this->aWidgetDirs[]   = APPPATH . 'modules/cms/widgets/';
     }
 
     // --------------------------------------------------------------------------
