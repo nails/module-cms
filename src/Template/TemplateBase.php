@@ -16,19 +16,82 @@ use Nails\Factory;
 
 class TemplateBase
 {
+    /**
+     * Whether the template is enabled or not
+     * @var bool
+     */
     protected static $isDisabled;
+
+    /**
+     * Whether the template is the default template
+     * @var bool
+     */
     protected static $isDefault;
 
+    /**
+     * The template's label
+     * @var string
+     */
     protected $label;
+
+    /**
+     * The template's description
+     * @var string
+     */
     protected $description;
+
+    /**
+     * The template's grouping
+     * @var string
+     */
     protected $grouping;
+
+    /**
+     * The available widget areas
+     * @var array
+     */
     protected $widget_areas;
+
+    /**
+     * Additional fields to make available
+     * @var array
+     */
     protected $additional_fields;
+
+    /**
+     * Any manual config items to pass in
+     * @var string
+     */
     protected $manual_config;
+
+    /**
+     * The template's icon
+     * @var string
+     */
     protected $icon;
+
+    /**
+     * The template's slug
+     * @var string
+     */
     protected $slug;
+
+    /**
+     * Assets to load when in the editor
+     * @var array
+     */
     protected $assets_editor;
+
+    /**
+     * Assets to load when rendering
+     * @var array
+     */
     protected $assets_render;
+
+    /**
+     * The template's path
+     * @var string
+     */
     protected $path;
 
     // --------------------------------------------------------------------------
@@ -62,13 +125,13 @@ class TemplateBase
     {
         $this->label             = 'Template';
         $this->description       = '';
-        $this->widget_areas      = array();
-        $this->additional_fields = array();
-        $this->manual_config     = null;
-        $this->icon              = null;
+        $this->widget_areas      = [];
+        $this->additional_fields = [];
+        $this->manual_config     = '';
+        $this->icon              = '';
         $this->slug              = '';
-        $this->assets_editor     = array();
-        $this->assets_render     = array();
+        $this->assets_editor     = [];
+        $this->assets_render     = [];
         $this->path              = '';
 
         // --------------------------------------------------------------------------
@@ -80,11 +143,11 @@ class TemplateBase
         $this->path = dirname($oReflect->getFileName()) . '/';
 
         //  Icon
-        $aExtensions = array('png','jpg','jpeg','gif');
+        $aExtensions = ['png', 'jpg', 'jpeg', 'gif'];
 
         foreach ($aExtensions as $sExtension) {
 
-            $sIconPath = $this->path  . 'icon.' . $sExtension;
+            $sIconPath = $this->path . 'icon.' . $sExtension;
 
             if (is_file($sIconPath)) {
 
@@ -96,12 +159,9 @@ class TemplateBase
                 } elseif (preg_match('#^' . preg_quote(FCPATH . APPPATH, '#') . '#', $sIconPath)) {
 
                     if (isPageSecure()) {
-
                         $sPattern   = '#^' . preg_quote(FCPATH . APPPATH, '#') . '#';
                         $this->icon = preg_replace($sPattern, SECURE_BASE_URL . APPPATH . '', $sIconPath);
-
                     } else {
-
                         $sPattern   = '#^' . preg_quote(FCPATH . APPPATH, '#') . '#';
                         $this->icon = preg_replace($sPattern, BASE_URL . APPPATH . '', $sIconPath);
                     }
@@ -152,7 +212,7 @@ class TemplateBase
 
     /**
      * Returns the template's widget areas
-     * @return string
+     * @return array
      */
     public function getWidgetAreas()
     {
@@ -163,7 +223,7 @@ class TemplateBase
 
     /**
      * Returns the template's additional fields
-     * @return string
+     * @return array
      */
     public function getAdditionalFields()
     {
@@ -218,44 +278,47 @@ class TemplateBase
 
     /**
      * Returns the template's assets
+     *
+     * @param string $sType The type of assets to return
+     *
      * @return array
      */
     public function getAssets($sType)
     {
         if ($sType == 'EDITOR') {
-
             return $this->assets_editor;
-
         } elseif ($sType == 'RENDER') {
-
             return $this->assets_render;
-
         } else {
-
-            return array();
+            return [];
         }
     }
 
     // --------------------------------------------------------------------------
 
+
     /**
      * Format the template as a JSON object
+     *
+     * @param int $iJsonOptions The JSON options
+     * @param int $iJsonDepth The JSON depth
+     *
      * @return string
      */
     public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
     {
-        $oTemplate = new \stdClass();
-        $oTemplate->label = $this->getLabel();
-        $oTemplate->description = $this->getDescription();
-        $oTemplate->description = $this->getDescription();
-        $oTemplate->widget_areas = $this->getWidgetAreas();
+        $oTemplate                    = new \stdClass();
+        $oTemplate->label             = $this->getLabel();
+        $oTemplate->description       = $this->getDescription();
+        $oTemplate->description       = $this->getDescription();
+        $oTemplate->widget_areas      = $this->getWidgetAreas();
         $oTemplate->additional_fields = $this->getAdditionalFields();
-        $oTemplate->manual_config = $this->getManualConfig();
-        $oTemplate->icon = $this->getIcon();
-        $oTemplate->slug = $this->getSlug();
-        $oTemplate->assets_editor = $this->getAssets('EDITOR');
-        $oTemplate->assets_render = $this->getAssets('RENDER');
-        $oTemplate->path = $this->getPath();
+        $oTemplate->manual_config     = $this->getManualConfig();
+        $oTemplate->icon              = $this->getIcon();
+        $oTemplate->slug              = $this->getSlug();
+        $oTemplate->assets_editor     = $this->getAssets('EDITOR');
+        $oTemplate->assets_render     = $this->getAssets('RENDER');
+        $oTemplate->path              = $this->getPath();
 
         return json_encode($oTemplate, $iJsonOptions, $iJsonDepth);
     }
@@ -268,18 +331,18 @@ class TemplateBase
      */
     public function toArray()
     {
-        $aTemplate = array();
-        $aTemplate['label'] = $this->getLabel();
-        $aTemplate['description'] = $this->getDescription();
-        $aTemplate['description'] = $this->getDescription();
-        $aTemplate['widget_areas'] = $this->getWidgetAreas();
+        $aTemplate                      = [];
+        $aTemplate['label']             = $this->getLabel();
+        $aTemplate['description']       = $this->getDescription();
+        $aTemplate['description']       = $this->getDescription();
+        $aTemplate['widget_areas']      = $this->getWidgetAreas();
         $aTemplate['additional_fields'] = $this->getAdditionalFields();
-        $aTemplate['manual_config'] = $this->getManualConfig();
-        $aTemplate['icon'] = $this->getIcon();
-        $aTemplate['slug'] = $this->getSlug();
-        $aTemplate['assets_editor'] = $this->getAssets('EDITOR');
-        $aTemplate['assets_render'] = $this->getAssets('RENDER');
-        $aTemplate['path'] = $this->getPath();
+        $aTemplate['manual_config']     = $this->getManualConfig();
+        $aTemplate['icon']              = $this->getIcon();
+        $aTemplate['slug']              = $this->getSlug();
+        $aTemplate['assets_editor']     = $this->getAssets('EDITOR');
+        $aTemplate['assets_render']     = $this->getAssets('RENDER');
+        $aTemplate['path']              = $this->getPath();
 
         return $aTemplate;
     }
@@ -288,20 +351,22 @@ class TemplateBase
 
     /**
      * Renders the template with the provided data.
-     * @param  array  $aTplData    The widgets to include in the template
-     * @param  array  $aTplOptions Additional data created by the template
+     *
+     * @param  array $aTplData    The widgets to include in the template
+     * @param  array $aTplOptions Additional data created by the template
+     *
      * @return string
      */
-    public function render($aTplData = array(), $aTplOptions = array())
+    public function render($aTplData = [], $aTplOptions = [])
     {
         //  Process each widget area and render the HTML
-        $aWidgetAreas   = $this->getWidgetAreas();
-        $aRenderedAreas = array();
-        $oWidgetModel   = Factory::model('Widget', 'nailsapp/module-cms');
+        $aWidgetAreas = $this->getWidgetAreas();
+        $aRendered    = [];
+        $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
 
         foreach ($aWidgetAreas as $sAreaSlug => $oWidgetArea) {
 
-            $aWidgetData           = !empty($aTplData[$sAreaSlug]) ? $aTplData[$sAreaSlug] : array();
+            $aWidgetData           = !empty($aTplData[$sAreaSlug]) ? $aTplData[$sAreaSlug] : [];
             $aRendered[$sAreaSlug] = '';
 
             foreach ($aWidgetData as $oWidgetData) {
@@ -359,7 +424,6 @@ class TemplateBase
                         switch ($oBlock->type) {
                             case 'file':
                             case 'image':
-
                                 $oBlock->value = cdnServe($oBlock->value);
                                 break;
                         }
@@ -370,9 +434,9 @@ class TemplateBase
 
                 //  Swap page variables
                 $sPageTitle    = !empty($tplAdditionalFields['cmspage']) ? $tplAdditionalFields['cmspage']->title : '';
-                $pageShortTags = array(
-                    'page-title' => $sPageTitle
-                );
+                $pageShortTags = [
+                    'page-title' => $sPageTitle,
+                ];
 
                 foreach ($pageShortTags as $shortTag => $value) {
 
