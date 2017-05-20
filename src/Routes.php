@@ -10,7 +10,7 @@
  * @link
  */
 
-namespace Nails\Admin;
+namespace Nails\Cms;
 
 use Nails\Common\Interfaces\RouteGenerator;
 use Nails\Factory;
