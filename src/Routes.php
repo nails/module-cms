@@ -10,19 +10,19 @@
  * @link
  */
 
-namespace Nails\Routes\Cms;
+namespace Nails\Admin;
 
-use Nails\Common\Model\BaseRoutes;
+use Nails\Common\Interfaces\RouteGenerator;
 use Nails\Factory;
 use PDO;
 
-class Routes extends BaseRoutes
+class Routes implements RouteGenerator
 {
     /**
      * Returns an array of routes for this module
      * @return array
      */
-    public function getRoutes()
+    public static function generate()
     {
         $oDb        = Factory::service('ConsoleDatabase', 'nailsapp/module-console');
         $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
