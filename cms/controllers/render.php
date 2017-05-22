@@ -148,7 +148,8 @@ class Render extends Base
         $html = $this->oPageModel->render($data->template, $data->template_data, $data->template_options);
         if ($html !== false) {
 
-            $this->output->set_output($html);
+            $oOutput = Factory::service('Output');
+            $oOutput->set_output($html);
 
         } else {
 

@@ -13,12 +13,14 @@
 namespace Nails\Cms\Controller;
 
 use Nails\Admin\Controller\Base;
+use Nails\Factory;
 
 class BaseAdmin extends Base
 {
     public function __construct()
     {
         parent::__construct();
-        $this->asset->load('admin.css', 'nailsapp/module-cms');
+        $oAsset = Factory::service('Asset');
+        $oAsset->load('admin.css', 'nailsapp/module-cms');
     }
 }
