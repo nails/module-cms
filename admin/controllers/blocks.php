@@ -285,7 +285,7 @@ class Blocks extends BaseAdmin
             $oFormValidation->set_rules('label', '', 'xss_clean|required');
             $oFormValidation->set_rules('description', '', 'xss_clean');
             $oFormValidation->set_rules('located', '', 'xss_clean');
-            $oFormValidation->set_rules('type', '', 'xss_clean|required|callback_callbackBlockType');
+            $oFormValidation->set_rules('type', '', 'required|callback_callbackBlockType');
 
             switch ($this->input->post('type')) {
                 case 'email':
