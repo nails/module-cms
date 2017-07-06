@@ -18,6 +18,7 @@ class Render extends Base
 {
     protected $pageId;
     protected $isPreview;
+    protected $isHomepage;
     protected $oPageModel;
     protected $iHomepageId;
 
@@ -39,6 +40,7 @@ class Render extends Base
 
         $this->pageId      = $this->uri->rsegment(3);
         $this->isPreview   = false;
+        $this->isHomepage  = false;
         $this->iHomepageId = $this->oPageModel->getHomepageId();
     }
 
@@ -111,6 +113,7 @@ class Render extends Base
         $this->data['page']->seo->description = $data->seo_description;
         $this->data['page']->seo->keywords    = $data->seo_keywords;
         $this->data['page']->is_preview       = $this->isPreview;
+        $this->data['page']->is_homepage      = $this->isHomepage;
         $this->data['page']->breadcrumbs      = $data->breadcrumbs;
 
         //  Set some meta tags for the header
@@ -145,7 +148,8 @@ class Render extends Base
         $html = $this->oPageModel->render($data->template, $data->template_data, $data->template_options);
         if ($html !== false) {
 
-            $this->output->set_output($html);
+            $oOutput = Factory::service('Output');
+            $oOutput->set_output($html);
 
         } else {
 
@@ -185,7 +189,9 @@ class Render extends Base
 
         if ($homepage) {
 
-            $this->pageId = $homepage->id;
+            $this->isHomepage = true;
+            $this->pageId     = $homepage->id;
+
             $this->page();
 
         } else {

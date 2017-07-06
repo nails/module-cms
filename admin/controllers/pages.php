@@ -289,11 +289,12 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $this->asset->library('CMSWIDGETEDITOR');
-        $this->asset->load('admin.pages.edit.min.js', 'nailsapp/module-cms');
-        $this->asset->inline('var widgetEditor = new NAILS_Admin_CMS_WidgetEditor();', 'JS');
-        $this->asset->inline('var templates = [' . implode(',', $aTemplatesJson) . ']', 'JS');
-        $this->asset->inline('var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);', 'JS');
+        $oAsset = Factory::service('Asset');
+        $oAsset->library('CMSWIDGETEDITOR');
+        $oAsset->load('admin.pages.edit.min.js', 'nailsapp/module-cms');
+        $oAsset->inline('var widgetEditor = new NAILS_Admin_CMS_WidgetEditor();', 'JS');
+        $oAsset->inline('var templates = [' . implode(',', $aTemplatesJson) . ']', 'JS');
+        $oAsset->inline('var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);', 'JS');
 
         // --------------------------------------------------------------------------
 
@@ -437,11 +438,12 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $this->asset->library('CMSWIDGETEDITOR');
-        $this->asset->load('admin.pages.edit.min.js', 'nailsapp/module-cms');
-        $this->asset->inline('var widgetEditor = new NAILS_Admin_CMS_WidgetEditor();', 'JS');
-        $this->asset->inline('var templates = [' . implode(',', $aTemplatesJson) . ']', 'JS');
-        $this->asset->inline('var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);', 'JS');
+        $oAsset = Factory::service('Asset');
+        $oAsset->library('CMSWIDGETEDITOR');
+        $oAsset->load('admin.pages.edit.min.js', 'nailsapp/module-cms');
+        $oAsset->inline('var widgetEditor = new NAILS_Admin_CMS_WidgetEditor();', 'JS');
+        $oAsset->inline('var templates = [' . implode(',', $aTemplatesJson) . ']', 'JS');
+        $oAsset->inline('var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);', 'JS');
 
         // --------------------------------------------------------------------------
 

@@ -397,7 +397,7 @@ class Page extends Base
         $oDb->set('is_published', true);
         $oDb->set('modified', $oDate->format('Y-m-d H:i:s'));
 
-        if ($this->user_model->isLoggedIn()) {
+        if (isLoggedIn()) {
             $oDb->set('modified_by', activeUser('id'));
         }
 
@@ -1041,7 +1041,7 @@ class Page extends Base
         $oDb->set('is_deleted', true);
         $oDb->set('modified', 'NOW()', false);
 
-        if ($this->user_model->isLoggedIn()) {
+        if (isLoggedIn()) {
 
             $oDb->set('modified_by', activeUser('id'));
         }
@@ -1057,7 +1057,7 @@ class Page extends Base
                 $oDb->set('is_deleted', true);
                 $oDb->set('modified', 'NOW()', false);
 
-                if ($this->user_model->isLoggedIn()) {
+                if (isLoggedIn()) {
 
                     $oDb->set('modified_by', activeUser('id'));
                 }

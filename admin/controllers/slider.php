@@ -230,14 +230,16 @@ class Slider extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $this->asset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
-        $this->asset->library('MUSTACHE');
-        $this->asset->load('admin.sliders.edit.min.js', 'nailsapp/module-cms');
-        $this->asset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
-        $this->asset->inline('sliderEdit.setScheme("serve", "' . $this->cdn->urlServeScheme() . '");', 'JS');
-        $this->asset->inline('sliderEdit.setScheme("thumb", "' . $this->cdn->urlCropScheme() . '");', 'JS');
-        $this->asset->inline('sliderEdit.setManagerUrl("' . $cdnManagerUrl . '");', 'JS');
-        $this->asset->inline('sliderEdit.addSlides(' . json_encode($slides) . ');', 'JS');
+        $oCdn   = Factory::service('Cdn', 'nailsapp/module-cdn');
+        $oAsset = Factory::service('Asset');
+        $oAsset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
+        $oAsset->library('MUSTACHE');
+        $oAsset->load('admin.sliders.edit.min.js', 'nailsapp/module-cms');
+        $oAsset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
+        $oAsset->inline('sliderEdit.setScheme("serve", "' . $oCdn->urlServeScheme() . '");', 'JS');
+        $oAsset->inline('sliderEdit.setScheme("thumb", "' . $oCdn->urlCropScheme() . '");', 'JS');
+        $oAsset->inline('sliderEdit.setManagerUrl("' . $cdnManagerUrl . '");', 'JS');
+        $oAsset->inline('sliderEdit.addSlides(' . json_encode($slides) . ');', 'JS');
 
         // --------------------------------------------------------------------------
 
@@ -349,15 +351,17 @@ class Slider extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $this->asset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
-        $this->asset->library('MUSTACHE');
-        $this->asset->load('admin.sliders.edit.min.js', 'nailsapp/module-cms');
-        $this->asset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
-        $this->asset->inline('sliderEdit.setScheme("serve", "' . $this->cdn->urlServeScheme() . '");', 'JS');
-        $this->asset->inline('sliderEdit.setScheme("thumb", "' . $this->cdn->urlCropScheme() . '");', 'JS');
-        $this->asset->inline('sliderEdit.setScheme("scale", "' . $this->cdn->urlScaleScheme() . '");', 'JS');
-        $this->asset->inline('sliderEdit.setManagerUrl("' . $cdnManagerUrl . '");', 'JS');
-        $this->asset->inline('sliderEdit.addSlides(' . json_encode($slides) . ');', 'JS');
+        $oCdn   = Factory::service('Cdn', 'nailsapp/module-cdn');
+        $oAsset = Factory::service('Asset');
+        $oAsset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
+        $oAsset->library('MUSTACHE');
+        $oAsset->load('admin.sliders.edit.min.js', 'nailsapp/module-cms');
+        $oAsset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
+        $oAsset->inline('sliderEdit.setScheme("serve", "' . $oCdn->urlServeScheme() . '");', 'JS');
+        $oAsset->inline('sliderEdit.setScheme("thumb", "' . $oCdn->urlCropScheme() . '");', 'JS');
+        $oAsset->inline('sliderEdit.setScheme("scale", "' . $oCdn->urlScaleScheme() . '");', 'JS');
+        $oAsset->inline('sliderEdit.setManagerUrl("' . $cdnManagerUrl . '");', 'JS');
+        $oAsset->inline('sliderEdit.addSlides(' . json_encode($slides) . ');', 'JS');
 
         // --------------------------------------------------------------------------
 

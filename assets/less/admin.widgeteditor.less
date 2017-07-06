@@ -281,6 +281,30 @@
                     width: 100%;
                     min-height: 200px;
                 }
+                > ul.tabs {
+                    background: #EFEFEF;
+                    border-bottom-color: #E5E5E5;
+                    > .tab {
+                        a {
+                            border-color: #E5E5E5;
+                            background-color: #E5E5E5;
+                        }
+                        &.active {
+                            a {
+                            background-color: #FFFFFF;
+                            border-top-color: #E5E5E5;
+                            border-bottom-color: #FFFFFF;
+                            border-left-color: #E5E5E5;
+                            border-right-color: #E5E5E5;
+                            }
+                        }
+                    }
+                }
+                > section.tabs {
+                    > .tab-page {
+                        border: none;
+                    }
+                }
             }
         }
     }
