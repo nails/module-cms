@@ -27,14 +27,14 @@ class Template
     public function __construct()
     {
         $aModules            = _NAILS_GET_MODULES();
-        $this->aTemplateDirs = array();
+        $this->aTemplateDirs = [];
 
         foreach ($aModules as $oModule) {
 
-            $this->aTemplateDirs[] = array(
+            $this->aTemplateDirs[] = [
                 'type' => 'vendor',
-                'path' => $oModule->path . 'cms/templates/'
-            );
+                'path' => $oModule->path . 'cms/templates/',
+            ];
         }
 
         /**
@@ -42,27 +42,28 @@ class Template
          * supplied ones.
          */
 
-        $this->aTemplateDirs[] = array(
+        $this->aTemplateDirs[] = [
             'type' => 'app',
-            'path' => APPPATH . 'modules/cms/templates/'
-        );
+            'path' => APPPATH . 'modules/cms/templates/',
+        ];
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Get all available templates to the system
+     *
      * @param  string $loadAssets Whether or not to load template's assets, and if so whether EDITOR or RENDER assets.
+     *
      * @return array
      */
     public function getAvailable($loadAssets = '')
     {
         if (!empty($this->aLoadedTemplates)) {
-
             return $this->aLoadedTemplates;
         }
 
-        $aAvailableTemplates = array();
+        $aAvailableTemplates = [];
 
         foreach ($this->aTemplateDirs as $aDir) {
 
@@ -71,31 +72,29 @@ class Template
                 $aTemplates = directory_map($aDir['path']);
 
                 foreach ($aTemplates as $sTemplateDir => $aTemplateFiles) {
-
                     if (is_file($aDir['path'] . $sTemplateDir . '/template.php')) {
-
-                        $aAvailableTemplates[] = array(
+                        $aAvailableTemplates[] = [
                             'type' => $aDir['type'],
                             'path' => $aDir['path'],
-                            'name' => $sTemplateDir
-                        );
+                            'name' => rtrim($sTemplateDir, DIRECTORY_SEPARATOR),
+                        ];
                     }
                 }
             }
         }
 
         //  Load templates
-        $aTemplatesToInstanciate = array();
+        $aTemplatesToInstantiate = [];
         foreach ($aAvailableTemplates as $aTemplate) {
             include_once $aTemplate['path'] . $aTemplate['name'] . '/template.php';
 
-            //  Specify which templates to instanciates, app ones will override nails ones
-            $aTemplatesToInstanciate[$aTemplate['name']] = $aTemplate;
+            //  Specify which templates to instantiate, app ones will override nails ones
+            $aTemplatesToInstantiate[$aTemplate['name']] = $aTemplate;
         }
 
         //  Instantiate templates
-        $aLoadedTemplates = array();
-        foreach ($aTemplatesToInstanciate as $aTemplate) {
+        $aLoadedTemplates = [];
+        foreach ($aTemplatesToInstantiate as $aTemplate) {
 
             $sPrefix    = $aTemplate['type'] == 'vendor' ? 'Nails' : 'App';
             $sClassName = '\\' . $sPrefix . '\Cms\Template\\' . ucfirst(strtolower($aTemplate['name']));
@@ -132,8 +131,8 @@ class Template
         // --------------------------------------------------------------------------
 
         //  Sort the Templates into their sub groupings
-        $aOut          = array();
-        $aGeneric      = array();
+        $aOut          = [];
+        $aGeneric      = [];
         $sGenericLabel = 'Generic';
 
         foreach ($aLoadedTemplates as $sTemplateSlug => $oTemplate) {
@@ -182,8 +181,10 @@ class Template
 
     /**
      * Get an individual template
+     *
      * @param  string  $sSlug       The template's slug
      * @param  boolean $sLoadAssets Whether or not to load the template's assets, and if so whether EDITOR or RENDER assets.
+     *
      * @return mixed
      */
     public function getBySlug($sSlug, $sLoadAssets = false)
@@ -216,10 +217,12 @@ class Template
 
     /**
      * Load template assets
-     * @param  array  $aAssets An array of assets to load
+     *
+     * @param  array $aAssets An array of assets to load
+     *
      * @return void
      */
-    protected function loadAssets($aAssets = array())
+    protected function loadAssets($aAssets = [])
     {
         $oAsset = Factory::service('Asset');
         foreach ($aAssets as $aAsset) {

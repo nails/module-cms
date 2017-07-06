@@ -26,12 +26,12 @@ class Widget
      */
     public function __construct()
     {
-        $aModules           = _NAILS_GET_MODULES();
-        $this->aWidgetDirs = array();
+        $aModules          = _NAILS_GET_MODULES();
+        $this->aWidgetDirs = [];
 
         foreach ($aModules as $oModule) {
 
-            $this->aWidgetDirs[]   = $oModule->path . 'cms/widgets/';
+            $this->aWidgetDirs[] = $oModule->path . 'cms/widgets/';
         }
 
         /**
@@ -39,25 +39,26 @@ class Widget
          * supplied ones.
          */
 
-        $this->aWidgetDirs[]   = APPPATH . 'modules/cms/widgets/';
+        $this->aWidgetDirs[] = APPPATH . 'modules/cms/widgets/';
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Get all available widgets to the system
+     *
      * @param  string $loadAssets Whether or not to load widget's assets, and if so whether EDITOR or RENDER assets.
+     *
      * @return array
      */
     public function getAvailable($loadAssets = false)
     {
         if (!empty($this->aLoadedWidgets)) {
-
             return $this->aLoadedWidgets;
         }
 
         Factory::helper('directory');
-        $aAvailableWidgets = array();
+        $aAvailableWidgets = [];
 
         foreach ($this->aWidgetDirs as $sDir) {
 
@@ -69,17 +70,17 @@ class Widget
 
                     if (is_file($sDir . $sWidgetDir . '/widget.php')) {
 
-                        $aAvailableWidgets[$sWidgetDir] = array(
+                        $aAvailableWidgets[$sWidgetDir] = [
                             'path' => $sDir,
-                            'name' => $sWidgetDir
-                        );
+                            'name' => rtrim($sWidgetDir, DIRECTORY_SEPARATOR),
+                        ];
                     }
                 }
             }
         }
 
         //  Instantiate widgets
-        $aLoadedWidgets = array();
+        $aLoadedWidgets = [];
         foreach ($aAvailableWidgets as $aWidget) {
 
             include_once $aWidget['path'] . $aWidget['name'] . '/widget.php';
@@ -118,8 +119,8 @@ class Widget
         // --------------------------------------------------------------------------
 
         //  Sort the widgets into their sub groupings
-        $aOut          = array();
-        $aGeneric      = array();
+        $aOut          = [];
+        $aGeneric      = [];
         $sGenericLabel = 'Generic';
 
         foreach ($aLoadedWidgets as $sWidgetSlug => $oWidget) {
@@ -165,8 +166,10 @@ class Widget
 
     /**
      * Get an individual widget
+     *
      * @param  string $sSlug       The widget's slug
      * @param  string $sLoadAssets Whether or not to load the widget's assets, and if so whether EDITOR or RENDER assets.
+     *
      * @return mixed
      */
     public function getBySlug($sSlug, $sLoadAssets = false)
@@ -199,10 +202,12 @@ class Widget
 
     /**
      * Load widget assets
-     * @param  array  $aAssets An array of assets to load
+     *
+     * @param  array $aAssets An array of assets to load
+     *
      * @return void
      */
-    protected function loadAssets($aAssets = array())
+    protected function loadAssets($aAssets = [])
     {
         $oAsset = Factory::service('Asset');
         foreach ($aAssets as $aAsset) {

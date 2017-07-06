@@ -38,7 +38,7 @@
             $field                = array();
             $field['key']         = 'widget_data';
             $field['label']       = 'Widgets';
-            $field['default']     = isset($area->widget_data) ? json_encode($area->widget_data) : '';
+            $field['default']     = isset($area->widget_data) ? $area->widget_data : '';
 
             echo form_field_cms_widgets($field);
 

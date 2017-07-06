@@ -87,12 +87,16 @@ class Page extends Base
      * @param array     $aData
      *
      * @return bool
+     * @throws NailsException
      */
     public function update($mIds, $aData = [])
     {
         if (is_array($mIds)) {
             throw new NailsException('This model does not support updating multiple items at once');
+        } else {
+            $iPageId = $mIds;
         }
+
         //  Fetch the current version of this page, for reference.
         $oCurrent = $this->getById($iPageId);
 
@@ -183,12 +187,7 @@ class Page extends Base
             }
         }
 
-        $aUpdateData['draft_slug_end'] = end(
-            explode(
-                '/',
-                $aUpdateData['draft_slug']
-            )
-        );
+        $aUpdateData['draft_slug_end'] = end(explode('/', $aUpdateData['draft_slug']));
 
         // --------------------------------------------------------------------------
 
@@ -199,10 +198,11 @@ class Page extends Base
             $aUpdateData['draft_breadcrumbs'] = json_decode($oParent->draft_breadcrumbs);
         }
 
-        $oTemp        = new \stdClass();
-        $oTemp->id    = $oCurrent->id;
-        $oTemp->title = $aUpdateData['draft_title'];
-        $oTemp->slug  = $aUpdateData['draft_slug'];
+        $oTemp = (object) [
+            'id'    => $oCurrent->id,
+            'title' => $aUpdateData['draft_title'],
+            'slug'  => $aUpdateData['draft_slug'],
+        ];
 
         $aUpdateData['draft_breadcrumbs'][] = $oTemp;
         unset($oTemp);
@@ -360,9 +360,7 @@ class Page extends Base
         $oDate = Factory::factory('DateTime');
 
         if (!$oPage) {
-
             $this->setError('Invalid Page ID');
-
             return false;
         }
 
@@ -470,20 +468,17 @@ class Page extends Base
 
             // --------------------------------------------------------------------------
 
+            $oDb->trans_commit();
+
+            //  Regenerate SiteMap
+            if (isModuleEnabled('nailsapp/module-sitemap')) {
+                $oSiteMapModel = Factory::model('SiteMap', 'nailsapp/module-sitemap');
+                $oSiteMapModel->generate();
+            }
+
             //  Rewrite routes
             $oRoutesModel = Factory::model('Routes');
             $oRoutesModel->update();
-
-            // --------------------------------------------------------------------------
-
-            //  Regenerate sitemap
-            if (isModuleEnabled('nailsapp/module-sitemap')) {
-
-                $this->load->model('sitemap/sitemap_model');
-                $this->sitemap_model->generate();
-            }
-
-            $oDb->trans_commit();
 
             //  @TODO: Kill caches for this page and all children
             return true;

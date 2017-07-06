@@ -27,19 +27,18 @@ class Pages extends BaseAdmin
 
     /**
      * Announces this controller's navGroups
-     * @return stdClass
+     * @return \stdClass
      */
     public static function announce()
     {
         if (userHasPermission('admin:cms:pages:manage')) {
 
             //  Alerts
-            $oCi =& get_instance();
-
             //  Draft pages
-            $oCi->db->where('is_published', false);
-            $oCi->db->where('is_deleted', false);
-            $iNumDrafts = $oCi->db->count_all_results(NAILS_DB_PREFIX . 'cms_page');
+            $oDb = Factory::service('Database');
+            $oDb->where('is_published', false);
+            $oDb->where('is_deleted', false);
+            $iNumDrafts = $oDb->count_all_results(NAILS_DB_PREFIX . 'cms_page');
 
             $oAlert = Factory::factory('NavAlert', 'nailsapp/module-admin');
             $oAlert->setValue($iNumDrafts);
@@ -49,7 +48,7 @@ class Pages extends BaseAdmin
             $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
             $oNavGroup->setLabel('CMS');
             $oNavGroup->setIcon('fa-file-text');
-            $oNavGroup->addAction('Manage Pages', 'index', array($oAlert));
+            $oNavGroup->addAction('Manage Pages', 'index', [$oAlert]);
 
             return $oNavGroup;
         }
@@ -63,17 +62,17 @@ class Pages extends BaseAdmin
      */
     public static function permissions()
     {
-        $permissions = parent::permissions();
+        $aPermissions = parent::permissions();
 
-        $permissions['manage']  = 'Can manage pages';
-        $permissions['create']  = 'Can create a new page';
-        $permissions['edit']    = 'Can edit an existing page';
-        $permissions['preview'] = 'Can preview pages';
-        $permissions['delete']  = 'Can delete an existing page';
-        $permissions['restore'] = 'Can restore a deleted page';
-        $permissions['destroy'] = 'Can permenantly delete a page';
+        $aPermissions['manage']  = 'Can manage pages';
+        $aPermissions['create']  = 'Can create a new page';
+        $aPermissions['edit']    = 'Can edit an existing page';
+        $aPermissions['preview'] = 'Can preview pages';
+        $aPermissions['delete']  = 'Can delete an existing page';
+        $aPermissions['restore'] = 'Can restore a deleted page';
+        $aPermissions['destroy'] = 'Can permanently delete a page';
 
-        return $permissions;
+        return $aPermissions;
     }
 
     // --------------------------------------------------------------------------
@@ -93,7 +92,7 @@ class Pages extends BaseAdmin
         $this->oTemplateModel = Factory::model('Template', 'nailsapp/module-cms');
 
         //  Note the ID of the homepage
-        $this->iHomepageId = appSetting('homepage', 'nailsapp/module-cms');
+        $this->iHomepageId         = appSetting('homepage', 'nailsapp/module-cms');
         $this->data['iHomepageId'] = $this->iHomepageId;
     }
 
@@ -106,7 +105,6 @@ class Pages extends BaseAdmin
     public function index()
     {
         if (!userHasPermission('admin:cms:pages:manage')) {
-
             unauthorised();
         }
 
@@ -120,30 +118,31 @@ class Pages extends BaseAdmin
         $sTableAlias = $this->oPageModel->getTableAlias();
 
         //  Get pagination and search/sort variables
-        $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
-        $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
-        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $sTableAlias . '.draft_slug';
-        $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'asc';
-        $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
+        $oInput    = Factory::service('Input');
+        $page      = $oInput->get('page') ? $oInput->get('page') : 0;
+        $perPage   = $oInput->get('perPage') ? $oInput->get('perPage') : 50;
+        $sortOn    = $oInput->get('sortOn') ? $oInput->get('sortOn') : $sTableAlias . '.draft_slug';
+        $sortOrder = $oInput->get('sortOrder') ? $oInput->get('sortOrder') : 'asc';
+        $keywords  = $oInput->get('keywords') ? $oInput->get('keywords') : '';
 
         // --------------------------------------------------------------------------
 
         //  Define the sortable columns
-        $sortColumns = array(
-            $sTableAlias . '.draft_slug' => 'Hierarchy',
+        $sortColumns = [
+            $sTableAlias . '.draft_slug'  => 'Hierarchy',
             $sTableAlias . '.draft_title' => 'Label',
-            $sTableAlias . '.modified' => 'Modified'
-        );
+            $sTableAlias . '.modified'    => 'Modified',
+        ];
 
         // --------------------------------------------------------------------------
 
         //  Define the $data variable for the queries
-        $data = array(
-            'sort' => array(
-                array($sortOn, $sortOrder)
-            ),
-            'keywords' => $keywords
-        );
+        $data = [
+            'sort'     => [
+                [$sortOn, $sortOrder],
+            ],
+            'keywords' => $keywords,
+        ];
 
         //  Get the items for the page
         $totalRows           = $this->oPageModel->countAll($data);
@@ -157,7 +156,6 @@ class Pages extends BaseAdmin
 
         //  Add a header button
         if (userHasPermission('admin:cms:pages:create')) {
-
             Helper::addHeaderButton('admin/cms/pages/create', 'Add New Page');
         }
 
@@ -175,13 +173,13 @@ class Pages extends BaseAdmin
     public function create()
     {
         if (!userHasPermission('admin:cms:pages:create')) {
-
             unauthorised();
         }
 
         // --------------------------------------------------------------------------
 
-        if ($this->input->post()) {
+        $oInput = Factory::service('Input');
+        if ($oInput->post()) {
 
             $oFormValidation = Factory::service('FormValidation');
             $oFormValidation->set_rules('title', '', 'xss_clean');
@@ -201,34 +199,31 @@ class Pages extends BaseAdmin
 
             if ($oFormValidation->run()) {
 
-                $aPageData = array(
-                    'title' => $this->input->post('title'),
-                    'slug' => $this->input->post('slug'),
-                    'parent_id' => (int) $this->input->post('parent_id'),
-                    'template' => $this->input->post('template'),
-                    'template_data' => $this->input->post('template_data'),
-                    'template_options' => $this->input->post('template_options'),
-                    'seo_title' => $this->input->post('seo_title'),
-                    'seo_description' => $this->input->post('seo_description'),
-                    'seo_keywords' => $this->input->post('seo_keywords')
-                );
+                $aPageData = [
+                    'title'            => $oInput->post('title'),
+                    'slug'             => $oInput->post('slug'),
+                    'parent_id'        => (int) $oInput->post('parent_id'),
+                    'template'         => $oInput->post('template'),
+                    'template_data'    => $oInput->post('template_data'),
+                    'template_options' => $oInput->post('template_options'),
+                    'seo_title'        => $oInput->post('seo_title'),
+                    'seo_description'  => $oInput->post('seo_description'),
+                    'seo_keywords'     => $oInput->post('seo_keywords'),
+                ];
 
                 $aPageData['parent_id'] = !empty($aPageData['parent_id']) ? $aPageData['parent_id'] : null;
 
                 if (!empty($aPageData['template_options'][$aPageData['template']])) {
-
                     $aPageData['template_options'] = $aPageData['template_options'][$aPageData['template']];
                     $aPageData['template_options'] = json_encode($aPageData['template_options']);
-
                 } else {
-
                     $aPageData['template_options'] = null;
                 }
 
                 $oNewPageId = $this->oPageModel->create($aPageData);
                 if ($oNewPageId) {
 
-                    if ($this->input->post('action') == 'PUBLISH') {
+                    if ($oInput->post('action') == 'PUBLISH') {
 
                         redirect('admin/cms/pages/publish/' . $oNewPageId . '?editing=1');
 
@@ -236,17 +231,16 @@ class Pages extends BaseAdmin
 
                         $sStatus  = 'success';
                         $sMessage = 'Page created successfully!';
-                        $this->session->set_flashdata($sStatus, $sMessage);
+                        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                        $oSession->set_flashdata($sStatus, $sMessage);
                         redirect('admin/cms/pages/edit/' . $oNewPageId);
                     }
 
                 } else {
-
                     $this->data['error'] = 'Failed to create page. ' . $this->oPageModel->lastError();
                 }
 
             } else {
-
                 $this->data['error'] = lang('fv_there_were_errors');
             }
         }
@@ -254,13 +248,13 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Set method info
-        $this->data['page']->title  = 'Create Page';
+        $this->data['page']->title = 'Create Page';
 
         //  Get data, available templates & widgets
         $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
         $this->data['templates']       = $this->oTemplateModel->getAvailable('EDITOR');
 
-        $aTemplatesJson = array();
+        $aTemplatesJson = [];
         foreach ($this->data['templates'] as $oTemplateGroup) {
             $aTemplatesJson[] = $oTemplateGroup->getTemplatesAsJson();
         }
@@ -269,16 +263,16 @@ class Pages extends BaseAdmin
 
         //  Set the default template; either POST data or the first in the list.
         $this->data['defaultTemplate'] = '';
-        if ($this->input->post('template')) {
+        if ($oInput->post('template')) {
 
-            $this->data['defaultTemplate'] = $this->input->post('template');
+            $this->data['defaultTemplate'] = $oInput->post('template');
 
         } else {
 
             $oFirstGroup = reset($this->data['templates']);
             if (!empty($oFirstGroup)) {
 
-                $aTemplates = $oFirstGroup->getTemplates();
+                $aTemplates     = $oFirstGroup->getTemplates();
                 $oFirstTemplate = reset($aTemplates);
                 if (!empty($oFirstTemplate)) {
                     $this->data['defaultTemplate'] = $oFirstTemplate->getSlug();
@@ -310,23 +304,24 @@ class Pages extends BaseAdmin
     public function edit()
     {
         if (!userHasPermission('admin:cms:pages:edit')) {
-
             unauthorised();
         }
 
         // --------------------------------------------------------------------------
 
-        $oPage = $this->oPageModel->getById($this->uri->segment(5));
+        $oUri  = Factory::service('Uri');
+        $oPage = $this->oPageModel->getById($oUri->segment(5));
 
         if (!$oPage) {
-
-            $this->session->set_flashdata('error', 'No page found by that ID');
+            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession->set_flashdata('error', 'No page found by that ID');
             redirect('admin/cms/pages');
         }
 
         // --------------------------------------------------------------------------
 
-        if ($this->input->post()) {
+        $oInput = Factory::service('Input');
+        if ($oInput->post()) {
 
             $oFormValidation = Factory::service('FormValidation');
             $oFormValidation->set_rules('title', '', 'xss_clean');
@@ -346,33 +341,30 @@ class Pages extends BaseAdmin
 
             if ($oFormValidation->run()) {
 
-                $aPageData = array(
-                    'title' => $this->input->post('title'),
-                    'slug' => $this->input->post('slug'),
-                    'parent_id' => (int) $this->input->post('parent_id'),
-                    'template' => $this->input->post('template'),
-                    'template_data' => $this->input->post('template_data'),
-                    'template_options' => $this->input->post('template_options'),
-                    'seo_title' => $this->input->post('seo_title'),
-                    'seo_description' => $this->input->post('seo_description'),
-                    'seo_keywords' => $this->input->post('seo_keywords')
-                );
+                $aPageData = [
+                    'title'            => $oInput->post('title'),
+                    'slug'             => $oInput->post('slug'),
+                    'parent_id'        => (int) $oInput->post('parent_id'),
+                    'template'         => $oInput->post('template'),
+                    'template_data'    => $oInput->post('template_data'),
+                    'template_options' => $oInput->post('template_options'),
+                    'seo_title'        => $oInput->post('seo_title'),
+                    'seo_description'  => $oInput->post('seo_description'),
+                    'seo_keywords'     => $oInput->post('seo_keywords'),
+                ];
 
                 $aPageData['parent_id'] = !empty($aPageData['parent_id']) ? $aPageData['parent_id'] : null;
 
                 if (!empty($aPageData['template_options'][$aPageData['template']])) {
-
                     $aPageData['template_options'] = $aPageData['template_options'][$aPageData['template']];
                     $aPageData['template_options'] = json_encode($aPageData['template_options']);
-
                 } else {
-
                     $aPageData['template_options'] = null;
                 }
 
                 if ($this->oPageModel->update($oPage->id, $aPageData)) {
 
-                    if ($this->input->post('action') == 'PUBLISH') {
+                    if ($oInput->post('action') == 'PUBLISH') {
 
                         redirect('admin/cms/pages/publish/' . $oPage->id . '?editing=1');
 
@@ -380,17 +372,16 @@ class Pages extends BaseAdmin
 
                         $sStatus  = 'success';
                         $sMessage = 'Page saved successfully!';
-                        $this->session->set_flashdata($sStatus, $sMessage);
+                        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                        $oSession->set_flashdata($sStatus, $sMessage);
                         redirect('admin/cms/pages/edit/' . $oPage->id);
                     }
 
                 } else {
-
                     $this->data['error'] = 'Failed to update page. ' . $this->oPageModel->lastError();
                 }
 
             } else {
-
                 $this->data['error'] = lang('fv_there_were_errors');
             }
         }
@@ -405,7 +396,7 @@ class Pages extends BaseAdmin
         $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
         $this->data['templates']       = $this->oTemplateModel->getAvailable('EDITOR');
 
-        $aTemplatesJson = array();
+        $aTemplatesJson = [];
         foreach ($this->data['templates'] as $oTemplateGroup) {
             $aTemplatesJson[] = substr($oTemplateGroup->getTemplatesAsJson(), 1, -1);
         }
@@ -414,9 +405,9 @@ class Pages extends BaseAdmin
 
         //  Set the default template; either POST data or the first in the list.
         $this->data['defaultTemplate'] = '';
-        if ($this->input->post('template')) {
+        if ($oInput->post('template')) {
 
-            $this->data['defaultTemplate'] = $this->input->post('template');
+            $this->data['defaultTemplate'] = $oInput->post('template');
 
         } elseif (!empty($oPage->draft->template)) {
 
@@ -427,7 +418,7 @@ class Pages extends BaseAdmin
             $oFirstGroup = reset($this->data['templates']);
             if (!empty($oFirstGroup)) {
 
-                $aTemplates = $oFirstGroup->getTemplates();
+                $aTemplates     = $oFirstGroup->getTemplates();
                 $oFirstTemplate = reset($aTemplates);
                 if (!empty($oFirstTemplate)) {
                     $this->data['defaultTemplate'] = $oFirstTemplate->getSlug();
@@ -459,19 +450,21 @@ class Pages extends BaseAdmin
     public function publish()
     {
         if (!userHasPermission('admin:cms:pages:edit')) {
-
             unauthorised();
         }
 
         // --------------------------------------------------------------------------
 
-        $iId        = $this->uri->segment(5);
-        $bIsEditing = (bool) $this->input->get('editing');
+        $oUri       = Factory::service('Uri');
+        $oInput     = Factory::service('Input');
+        $oSession   = Factory::service('Session', 'nailsapp/module-auth');
+        $iId        = $oUri->segment(5);
+        $bIsEditing = (bool) $oInput->get('editing');
 
         if ($this->oPageModel->publish($iId)) {
 
             $oPage = $this->oPageModel->getById($iId);
-            $this->session->set_flashdata(
+            $oSession->set_flashdata(
                 'success',
                 'Page was published successfully - ' .
                 anchor(
@@ -482,17 +475,13 @@ class Pages extends BaseAdmin
             );
 
             if ($bIsEditing) {
-
                 redirect('admin/cms/pages/edit/' . $iId);
-
             } else {
-
                 redirect('admin/cms/pages');
             }
 
         } else {
-
-            $this->session->set_flashdata('error', 'Could not publish page. ' . $this->oPageModel->lastError());
+            $oSession->set_flashdata('error', 'Could not publish page. ' . $this->oPageModel->lastError());
         }
     }
 
@@ -505,29 +494,24 @@ class Pages extends BaseAdmin
     public function delete()
     {
         if (!userHasPermission('admin:cms:pages:delete')) {
-
             unauthorised();
         }
 
         // --------------------------------------------------------------------------
 
-        $id   = $this->uri->segment(5);
-        $page = $this->oPageModel->getById($id);
+        $oUri     = Factory::service('Uri');
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $id       = $oUri->segment(5);
+        $page     = $this->oPageModel->getById($id);
 
         if ($page && !$page->is_deleted) {
-
             if ($this->oPageModel->delete($id)) {
-
-                $this->session->set_flashdata('success', 'Page was deleted successfully.');
-
+                $oSession->set_flashdata('success', 'Page was deleted successfully.');
             } else {
-
-                $this->session->set_flashdata('error', 'Could not delete page. ' . $this->oPageModel->lastError());
+                $oSession->set_flashdata('error', 'Could not delete page. ' . $this->oPageModel->lastError());
             }
-
         } else {
-
-            $this->session->set_flashdata('error', 'Invalid page ID.');
+            $oSession->set_flashdata('error', 'Invalid page ID.');
         }
 
         redirect('admin/cms/pages');
@@ -542,29 +526,24 @@ class Pages extends BaseAdmin
     public function restore()
     {
         if (!userHasPermission('admin:cms:pages:restore')) {
-
             unauthorised();
         }
 
         // --------------------------------------------------------------------------
 
-        $id   = $this->uri->segment(5);
-        $page = $this->oPageModel->getById($id);
+        $oUri     = Factory::service('Uri');
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $id       = $oUri->segment(5);
+        $page     = $this->oPageModel->getById($id);
 
         if ($page && $page->is_deleted) {
-
             if ($this->oPageModel->restore($id)) {
-
-                $this->session->set_flashdata('success', 'Page was restored successfully. ');
-
+                $oSession->set_flashdata('success', 'Page was restored successfully. ');
             } else {
-
-                $this->session->set_flashdata('error', 'Could not restore page. ' . $this->oPageModel->lastError());
+                $oSession->set_flashdata('error', 'Could not restore page. ' . $this->oPageModel->lastError());
             }
-
         } else {
-
-            $this->session->set_flashdata('error', 'Invalid page ID.');
+            $oSession->set_flashdata('error', 'Invalid page ID.');
         }
 
         redirect('admin/cms/pages');
