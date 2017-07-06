@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Model;
 
+use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Factory;
 
@@ -42,12 +43,14 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Create a new CMS page
+     * Creates a new CMS Page
      *
-     * @param  array $aData The data to create the page with
-     * @return mixed         The ID of the page on success, false on failure
+     * @param array $aData         The data to create the page with
+     * @param bool  $bReturnObject Whether to return the ID or the object
+     *
+     * @return bool|mixed
      */
-    public function create($aData)
+    public function create($aData = [], $bReturnObject = false)
     {
         $oDb = Factory::service('Database');
         $oDb->trans_begin();
@@ -59,7 +62,6 @@ class Page extends Base
 
             $this->setError('Unable to create base page object. ' . $this->lastError());
             $oDb->trans_rollback();
-
             return false;
         }
 
@@ -67,13 +69,11 @@ class Page extends Base
         if ($this->update($iId, $aData)) {
 
             $oDb->trans_commit();
-
-            return $iId;
+            return $bReturnObject ? $this->getById($iId) : $iId;
 
         } else {
 
             $oDb->trans_rollback();
-
             return false;
         }
     }
@@ -83,19 +83,21 @@ class Page extends Base
     /**
      * Update a CMS Page
      *
-     * @param array|int $iPageId
-     * @param array $aData
+     * @param array|int $mIds
+     * @param array     $aData
+     *
      * @return bool
      */
-    public function update($iPageId, $aData)
+    public function update($mIds, $aData = [])
     {
+        if (is_array($mIds)) {
+            throw new NailsException('This model does not support updating multiple items at once');
+        }
         //  Fetch the current version of this page, for reference.
         $oCurrent = $this->getById($iPageId);
 
         if (!$oCurrent) {
-
             $this->setError('Invalid Page ID');
-
             return false;
         }
 
@@ -194,7 +196,6 @@ class Page extends Base
         $aUpdateData['draft_breadcrumbs'] = [];
 
         if (!empty($oParent->draft_breadcrumbs)) {
-
             $aUpdateData['draft_breadcrumbs'] = json_decode($oParent->draft_breadcrumbs);
         }
 
@@ -305,6 +306,7 @@ class Page extends Base
      * Create a page as normal but do so in the preview table.
      *
      * @param  array $aData The data to create the preview with
+     *
      * @return object
      */
     public function createPreview($aData)
@@ -322,9 +324,10 @@ class Page extends Base
     /**
      * Render a template with the provided widgets and additional data
      *
-     * @param  string $sTemplate The template to render
-     * @param  array $oTemplateData The template data (i.e. areas and widgets)
-     * @param  array $oTemplateOptions The template options
+     * @param  string $sTemplate        The template to render
+     * @param  array  $oTemplateData    The template data (i.e. areas and widgets)
+     * @param  array  $oTemplateOptions The template options
+     *
      * @return mixed                    String (the rendered template) on success, false on failure
      */
     public function render($sTemplate, $oTemplateData = [], $oTemplateOptions = [])
@@ -347,6 +350,7 @@ class Page extends Base
      * Publish a page
      *
      * @param  int $iId The ID of the page to publish
+     *
      * @return boolean
      */
     public function publish($iId)
@@ -501,6 +505,7 @@ class Page extends Base
      * methods and the count() method.
      *
      * @param array $data Data passed from the calling method
+     *
      * @return void
      **/
     public function getCountCommon($data = [])
@@ -586,6 +591,7 @@ class Page extends Base
      * Gets all pages, nested
      *
      * @param  boolean $useDraft Whether to use the published or draft version of pages
+     *
      * @return array
      */
     public function getAllNested($useDraft = true)
@@ -598,8 +604,9 @@ class Page extends Base
     /**
      * Get all pages nested, but as a flat array
      *
-     * @param  string $separator The separator to use between pages
+     * @param  string  $separator               The separator to use between pages
      * @param  boolean $murderParentsOfChildren Whether to include parents in the result
+     *
      * @return array
      */
     public function getAllNestedFlat($separator = ' &rsaquo; ', $murderParentsOfChildren = true)
@@ -650,9 +657,10 @@ class Page extends Base
      * Nests pages
      * Hat tip to Timur; http://stackoverflow.com/a/9224696/789224
      *
-     * @param  array &$list The pages to nest
-     * @param  int $parentId The parent ID of the page
+     * @param  array   &$list    The pages to nest
+     * @param  int     $parentId The parent ID of the page
      * @param  boolean $useDraft Whether to use published data or draft data
+     *
      * @return array
      */
     protected function nestPages(&$list, $parentId = null, $useDraft = true)
@@ -678,9 +686,10 @@ class Page extends Base
     /**
      * Find the parents of a page
      *
-     * @param  int $parentId The page to find parents for
-     * @param  \stdClass &$source The source page
-     * @param  string $separator The separator to use
+     * @param  int       $parentId  The page to find parents for
+     * @param  \stdClass &$source   The source page
+     * @param  string    $separator The separator to use
+     *
      * @return string
      */
     protected function findParents($parentId, &$source, $separator)
@@ -730,8 +739,9 @@ class Page extends Base
     /**
      * Get the IDs of a page's children
      *
-     * @param  int $iPageId The ID of the page to look at
+     * @param  int    $iPageId The ID of the page to look at
      * @param  string $sFormat How to return the data, one of ID, ID_SLUG, ID_SLUG_TITLE or ID_SLUG_TITLE_PUBLISHED
+     *
      * @return array
      */
     public function getIdsOfChildren($iPageId, $sFormat = 'ID')
@@ -794,11 +804,12 @@ class Page extends Base
     /**
      * Fetches all objects as a flat array, optionally paginated.
      *
-     * @param int $page The page number of the results, if null then no pagination
-     * @param int $perPage How many items per page of paginated results
-     * @param mixed $data Any data to pass to getCountCommon()
-     * @param bool $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted
+     * @param int   $page           The page number of the results, if null then no pagination
+     * @param int   $perPage        How many items per page of paginated results
+     * @param mixed $data           Any data to pass to getCountCommon()
+     * @param bool  $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted
      *                              items
+     *
      * @return array
      */
     public function getAllFlat($page = null, $perPage = null, $data = [], $includeDeleted = false)
@@ -826,11 +837,12 @@ class Page extends Base
     /**
      * Get the top level pages, i.e., those without a parent
      *
-     * @param int $page The page number of the results, if null then no pagination
-     * @param int $perPage How many items per page of paginated results
-     * @param mixed $data Any data to pass to getCountCommon()
-     * @param bool $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted
+     * @param int   $page           The page number of the results, if null then no pagination
+     * @param int   $perPage        How many items per page of paginated results
+     * @param mixed $data           Any data to pass to getCountCommon()
+     * @param bool  $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted
      *                              items
+     *
      * @return array
      */
     public function getTopLevel($page = null, $perPage = null, $data = [], $includeDeleted = false)
@@ -857,8 +869,9 @@ class Page extends Base
     /**
      * Get the siblings of a page, i.e those with the same parent
      *
-     * @param  int $id The page whose siblings to fetch
+     * @param  int     $id       The page whose siblings to fetch
      * @param  boolean $useDraft Whether to use published data, or draft data
+     *
      * @return array
      */
     public function getSiblings($id, $useDraft = true)
@@ -930,11 +943,12 @@ class Page extends Base
      * The getAll() method iterates over each returned item with this method so as to
      * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
      *
-     * @param  object $oObj A reference to the object being formatted.
-     * @param  array $aData The same data array which is passed to _getcount_common, for reference if needed
-     * @param  array $aIntegers Fields which should be cast as integers if numerical and not null
-     * @param  array $aBools Fields which should be cast as booleans if not null
-     * @param  array $aFloats Fields which should be cast as floats if not null
+     * @param  object $oObj      A reference to the object being formatted.
+     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
+     * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
+     * @param  array  $aBools    Fields which should be cast as booleans if not null
+     * @param  array  $aFloats   Fields which should be cast as floats if not null
+     *
      * @return void
      */
     protected function formatObject(
@@ -943,8 +957,7 @@ class Page extends Base
         $aIntegers = [],
         $aBools = [],
         $aFloats = []
-    )
-    {
+    ) {
 
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
 
@@ -1019,6 +1032,7 @@ class Page extends Base
      * Delete a page and it's children
      *
      * @param  int $id The ID of the page to delete
+     *
      * @return boolean
      */
     public function delete($id)
@@ -1107,6 +1121,7 @@ class Page extends Base
      * Permanently delete a page and it's children
      *
      * @param  int $id The ID of the page to destroy
+     *
      * @return boolean
      */
     public function destroy($id)
@@ -1123,6 +1138,7 @@ class Page extends Base
      * Get's a preview page by it's ID
      *
      * @param  integer $iPreviewId The Id of the preview to get
+     *
      * @return mixed                 stdClass on success, false on failure
      */
     public function getPreviewById($iPreviewId)
@@ -1150,8 +1166,9 @@ class Page extends Base
     /**
      * Returns the URL of a page
      *
-     * @param  integer $iPageId The ID of the page to look up
+     * @param  integer $iPageId      The ID of the page to look up
      * @param  boolean $usePublished Whether to use the `published` data, or the `draft` data
+     *
      * @return mixed                 String on success, false on failure
      */
     public function getUrl($iPageId, $usePublished = true)
