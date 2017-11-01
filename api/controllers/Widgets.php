@@ -79,7 +79,7 @@ class Widgets extends \Nails\Api\Controller\Base
         if (userHasPermission('admin:cms:pages:*') || userHasPermission('admin:cms:area:*')) {
 
             $sWidgetSlug  = $this->input->post('slug');
-            $aWidgetData  = $this->input->post('data');
+            $aWidgetData  = $this->input->post('data') ?: array();
             $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
             $oWidget      = $oWidgetModel->getBySlug($sWidgetSlug);
 
