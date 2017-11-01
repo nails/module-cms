@@ -105,7 +105,7 @@ class Create extends BaseMaker
     private function createWidget()
     {
         $aFields            = $this->getArguments();
-        $aFields['SLUG']    = $this->generateSlug($aFields['WIDGET_NAME']);
+        $aFields['SLUG']    = $this->generateSlug($aFields['NAME']);
         $aFields['SLUG_LC'] = strtolower($aFields['SLUG']);
         $sPath              = self::WIDGET_PATH . $aFields['SLUG'] . '/';
 

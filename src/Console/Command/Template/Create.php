@@ -94,7 +94,7 @@ class Create extends BaseMaker
     private function createTemplate()
     {
         $aFields         = $this->getArguments();
-        $aFields['SLUG'] = $this->generateSlug($aFields['TEMPLATE_NAME']);
+        $aFields['SLUG'] = $this->generateSlug($aFields['NAME']);
         $sPath           = self::TEMPLATE_PATH . $aFields['SLUG'] . '/';
 
         try {
