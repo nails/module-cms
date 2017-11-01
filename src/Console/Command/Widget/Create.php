@@ -173,7 +173,7 @@ class Create extends BaseMaker
     {
         Factory::helper('url');
 
-        $aSlug = explode('-', url_title($sString, '-', true));
+        $aSlug = explode('-', url_title($sString, '-', false));
         $aSlug = array_map('ucfirst', $aSlug);
 
         return implode($aSlug, '');
