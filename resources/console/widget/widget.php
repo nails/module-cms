@@ -11,10 +11,8 @@ return <<<'EOD'
 /**
  * This is the "{{SLUG}}" CMS widget definition
  */
- 
-namespace Nails\Cms\Widget;
 
-use Nails\Cms\Widget\WidgetBase;
+namespace Nails\Cms\Widget;
 
 class {{SLUG}} extends WidgetBase
 {
@@ -25,10 +23,10 @@ class {{SLUG}} extends WidgetBase
     {
         parent::__construct();
 
-        $this->label       = '{{WIDGET_NAME}}';
-        $this->description = '{{WIDGET_DESCRIPTION}}';
-        $this->grouping    = '{{WIDGET_GROUPING}}';
-        $this->keywords    = '{{WIDGET_KEYWORDS}}';
+        $this->label       = '{{NAME}}';
+        $this->description = '{{DESCRIPTION}}';
+        $this->grouping    = '{{GROUPING}}';
+        $this->keywords    = '{{KEYWORDS}}';
     }
 }
 

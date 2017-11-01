@@ -23,16 +23,22 @@ class Create extends BaseMaker
     {
         $this->setName('make:cms:template');
         $this->setDescription('Creates a new CMS template');
-        $this->addArgument(
-            'templateName',
-            InputArgument::OPTIONAL,
-            'Define the name of the template to create'
-        );
-        $this->addArgument(
-            'templateDescription',
-            InputArgument::OPTIONAL,
-            'The template\'s description'
-        );
+        $this->aArguments = [
+            [
+                'name'        => 'name',
+                'mode'        => InputArgument::OPTIONAL,
+                'description' => 'Define the name of the template to create',
+                'required'    => true,
+            ],
+            [
+                'name'        => 'description',
+                'mode'        => InputArgument::OPTIONAL,
+                'description' => 'The template\'s description',
+                'required'    => false,
+            ],
+        ];
+
+        parent::configure();
     }
 
     // --------------------------------------------------------------------------
@@ -40,8 +46,9 @@ class Create extends BaseMaker
     /**
      * Executes the app
      *
-     * @param  InputInterface $oInput The Input Interface provided by Symfony
+     * @param  InputInterface  $oInput  The Input Interface provided by Symfony
      * @param  OutputInterface $oOutput The Output Interface provided by Symfony
+     *
      * @return int
      */
     protected function execute(InputInterface $oInput, OutputInterface $oOutput)
@@ -133,6 +140,7 @@ class Create extends BaseMaker
      * Generate a class name safe slug
      *
      * @param  string $sString The input string
+     *
      * @return string
      */
     private function generateSlug($sString)
