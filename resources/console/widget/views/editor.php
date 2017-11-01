@@ -13,6 +13,6 @@ return <<<'EOD'
  */
 
 ?>
-<textarea name="some_variable"><?=!empty($some_variable) ? $some_variable : ''?></textarea>
+<textarea name="sSomeVariable"><?=$sSomeVariable?></textarea>
 
 EOD;
