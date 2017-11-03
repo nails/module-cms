@@ -211,12 +211,14 @@ class WidgetBase
     {
         if (is_file($this->path . 'views/editor.php')) {
 
+            //  Populate widget data
+            $this->populateWidgetData($aWidgetData);
+
             //  Add a reference to the CI super object, for view loading etc
             $oCi = get_instance();
 
             //  Extract the variables, so that the view can use them
             if ($aWidgetData) {
-
                 extract($aWidgetData);
             }
 
@@ -293,6 +295,9 @@ class WidgetBase
     {
         if (is_file($this->path . 'views/render.php')) {
 
+            //  Populate widget data
+            $this->populateWidgetData($aWidgetData);
+
             //  Add a reference to the CI super object, for view loading etc
             $oCi = get_instance();
 
@@ -322,5 +327,17 @@ class WidgetBase
         }
 
         return '';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Can be used to ensure that $aWidgetData has fields defined in both the editor
+     * and render views.
+     *
+     * @param array $aWidgetData The widget's data
+     */
+    protected function populateWidgetData(&$aWidgetData)
+    {
     }
 }

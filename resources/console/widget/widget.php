@@ -11,10 +11,8 @@ return <<<'EOD'
 /**
  * This is the "{{SLUG}}" CMS widget definition
  */
- 
-namespace Nails\Cms\Widget;
 
-use Nails\Cms\Widget\WidgetBase;
+namespace Nails\Cms\Widget;
 
 class {{SLUG}} extends WidgetBase
 {
@@ -25,10 +23,24 @@ class {{SLUG}} extends WidgetBase
     {
         parent::__construct();
 
-        $this->label       = '{{WIDGET_NAME}}';
-        $this->description = '{{WIDGET_DESCRIPTION}}';
-        $this->grouping    = '{{WIDGET_GROUPING}}';
-        $this->keywords    = '{{WIDGET_KEYWORDS}}';
+        $this->label       = '{{NAME}}';
+        $this->description = '{{DESCRIPTION}}';
+        $this->grouping    = '{{GROUPING}}';
+        $this->keywords    = '{{KEYWORDS}}';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Can be used to ensure that $aWidgetData has fields defined in both the
+     * editor and render views.
+     *
+     * @param array $aWidgetData The widget's data
+     */
+    protected function populateWidgetData(&$aWidgetData)
+    {
+        $aWidgetData                  = (array) $aWidgetData;
+        $aWidgetData['sSomeVariable'] = getFromArray('sSomeVariable', $aWidgetData);
     }
 }
 

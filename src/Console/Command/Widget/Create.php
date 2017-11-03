@@ -23,26 +23,33 @@ class Create extends BaseMaker
     {
         $this->setName('make:cms:widget');
         $this->setDescription('Creates a new CMS widget');
-        $this->addArgument(
-            'widgetName',
-            InputArgument::OPTIONAL,
-            'Define the name of the widget to create'
-        );
-        $this->addArgument(
-            'widgetDescription',
-            InputArgument::OPTIONAL,
-            'Define the description of the widget'
-        );
-        $this->addArgument(
-            'widgetGrouping',
-            InputArgument::OPTIONAL,
-            'Define the sidebar grouping of the widget'
-        );
-        $this->addArgument(
-            'widgetKeywords',
-            InputArgument::OPTIONAL,
-            'Define the searchable keywords of the widget'
-        );
+        $this->aArguments = [
+            [
+                'name'        => 'name',
+                'mode'        => InputArgument::OPTIONAL,
+                'description' => 'Define the name of the widget to create',
+                'required'    => true,
+            ],
+            [
+                'name'        => 'description',
+                'mode'        => InputArgument::OPTIONAL,
+                'description' => 'The widget\'s description',
+                'required'    => false,
+            ],
+            [
+                'name'        => 'grouping',
+                'mode'        => InputArgument::OPTIONAL,
+                'description' => 'Define the sidebar grouping of the widget',
+                'required'    => false,
+            ],
+            [
+                'name'        => 'keywords',
+                'mode'        => InputArgument::OPTIONAL,
+                'description' => 'Define the searchable keywords of the widget',
+                'required'    => false,
+            ],
+        ];
+        parent::configure();
     }
 
     // --------------------------------------------------------------------------
@@ -50,8 +57,9 @@ class Create extends BaseMaker
     /**
      * Executes the app
      *
-     * @param  InputInterface $oInput The Input Interface provided by Symfony
+     * @param  InputInterface  $oInput  The Input Interface provided by Symfony
      * @param  OutputInterface $oOutput The Output Interface provided by Symfony
+     *
      * @return int
      */
     protected function execute(InputInterface $oInput, OutputInterface $oOutput)
@@ -97,7 +105,7 @@ class Create extends BaseMaker
     private function createWidget()
     {
         $aFields            = $this->getArguments();
-        $aFields['SLUG']    = $this->generateSlug($aFields['WIDGET_NAME']);
+        $aFields['SLUG']    = $this->generateSlug($aFields['NAME']);
         $aFields['SLUG_LC'] = strtolower($aFields['SLUG']);
         $sPath              = self::WIDGET_PATH . $aFields['SLUG'] . '/';
 
@@ -167,13 +175,14 @@ class Create extends BaseMaker
      * Generate a class name safe slug
      *
      * @param  string $sString The input string
+     *
      * @return string
      */
     private function generateSlug($sString)
     {
         Factory::helper('url');
 
-        $aSlug = explode('-', url_title($sString, '-', true));
+        $aSlug = explode('-', url_title($sString, '-', false));
         $aSlug = array_map('ucfirst', $aSlug);
 
         return implode($aSlug, '');

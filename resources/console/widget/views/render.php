@@ -13,10 +13,10 @@ return <<<'EOD'
 
  */
 
-if (!empty($body)) {
+if (!empty($sSomeVariable)) {
     ?>
     <div class="cms-widget cms-widget-{{SLUG_LC}}">
-        <?=$some_variable?>
+        <?=$sSomeVariable?>
     </div>
     <?php
 }
