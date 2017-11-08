@@ -288,6 +288,14 @@ class Page extends Base
             //  Finish up.
             $oDb->trans_commit();
 
+            // --------------------------------------------------------------------------
+
+            //  Rewrite routes
+            $oRoutesModel = Factory::model('Routes');
+            $oRoutesModel->update();
+
+            // --------------------------------------------------------------------------
+
             return true;
 
         } else {
