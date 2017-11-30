@@ -1,9 +1,9 @@
 /* globals console, _nails, _nails_admin, _nails_api, Mustache */
 var NAILS_Admin_CMS_WidgetEditor;
-NAILS_Admin_CMS_WidgetEditor = function () {
+NAILS_Admin_CMS_WidgetEditor = function() {
     /**
      * Avoid scope issues in callbacks and anonymous functions by referring to `this` as `base`
-     * @type {Object}
+     * @type {NAILS_Admin_CMS_WidgetEditor}
      */
     var base = this;
 
@@ -11,9 +11,9 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Give other items a chance to check if the widget editor is ready or not
-     * @type {boolean}
+     * @type {Boolean}
      */
-    base.ready = false;
+    this.ready = false;
 
     // --------------------------------------------------------------------------
 
@@ -21,7 +21,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
      * An array of the available widgets
      * @type {Array}
      */
-    base.widgets = [];
+    this.widgets = [];
 
     // --------------------------------------------------------------------------
 
@@ -29,11 +29,11 @@ NAILS_Admin_CMS_WidgetEditor = function () {
      * An array of actions to render
      * @type {Array}
      */
-    base.actions = [
+    this.actions = [
         {
             'label': '<i class="fa fa-lg fa-times"></i>',
             'type': 'danger',
-            'callback': function () {
+            'callback': function() {
                 base.actionClose();
             }
         }
@@ -45,21 +45,21 @@ NAILS_Admin_CMS_WidgetEditor = function () {
      * An array of the data to use when rendering widget areas
      * @type {Array}
      */
-    base.widgetData = {};
+    this.widgetData = {};
 
     // --------------------------------------------------------------------------
 
     /**
      * The main editor container
      */
-    base.container = null;
+    this.container = null;
 
     // --------------------------------------------------------------------------
 
     /**
      * The individual editor sections
      */
-    base.sections = {};
+    this.sections = {};
 
     // --------------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
      * Whether the editor is currently open
      * @type {Boolean}
      */
-    base.isOpen = false;
+    this.isOpen = false;
 
     // --------------------------------------------------------------------------
 
@@ -75,7 +75,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
      * The currently active area
      * @type {String}
      */
-    base.activeArea = '';
+    this.activeArea = '';
 
     // --------------------------------------------------------------------------
 
@@ -83,7 +83,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
      * The name/slug of the default area
      * @type {String}
      */
-    base.defaultArea = 'default';
+    this.defaultArea = 'default';
 
     // --------------------------------------------------------------------------
 
@@ -91,7 +91,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
      * Holds the timeout when searching
      * @type {Number}
      */
-    base.searchTimeout = null;
+    this.searchTimeout = null;
 
     // --------------------------------------------------------------------------
 
@@ -99,7 +99,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
      * The delay before searching widgets, in milliseconds
      * @type {Number}
      */
-    base.searchDelay = 150;
+    this.searchDelay = 150;
 
     // --------------------------------------------------------------------------
 
@@ -107,7 +107,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
      * A map of useful keyboard keys
      * @type {{ESC: number}}
      */
-    base.keymap = {
+    this.keymap = {
         'ESC': 27
     };
 
@@ -115,9 +115,9 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Construct the CMS widget editor
-     * @return {Object}
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.__construct = function () {
+    this.__construct = function() {
 
         base.log('Constructing Widget Editor');
 
@@ -127,7 +127,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
         // Fetch and render available widgets
         base.loadSidebarWidgets()
-            .done(function () {
+            .done(function() {
                 base.renderSidebarWidgets();
                 base.ready = true;
                 base.log('Widget Editor ready');
@@ -140,9 +140,9 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Generate the base markup for the editor
-     * @return {Object}
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.generateMarkup = function () {
+    this.generateMarkup = function() {
 
         var item;
 
@@ -151,7 +151,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
             base.log('Injecting editor markup');
 
             base.container = $('<div>').addClass('group-cms widgeteditor');
-            base.sections  = {
+            base.sections = {
                 'header': $('<div>').addClass('widgeteditor-header').text('Some header text, maybe'),
                 'actions': $('<div>').addClass('widgeteditor-actions'),
                 'search': $('<div>').addClass('widgeteditor-search'),
@@ -198,14 +198,14 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Bind to various events
-     * @return {Object}
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.bindEvents = function () {
+    this.bindEvents = function() {
 
         var actionIndex, groupIndex;
 
         //  Actions
-        base.sections.actions.on('click', '.action', function () {
+        base.sections.actions.on('click', '.action', function() {
 
             actionIndex = $(this).data('action-index');
             base.log('Action clicked', actionIndex);
@@ -221,7 +221,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
         });
 
         //  Widgets
-        base.sections.widgets.on('click', '.widget-group', function () {
+        base.sections.widgets.on('click', '.widget-group', function() {
 
             base.log('Toggling visibility of group\'s widgets.');
 
@@ -247,13 +247,13 @@ NAILS_Admin_CMS_WidgetEditor = function () {
         });
 
         //  Search
-        base.sections.search.on('keyup', function () {
+        base.sections.search.on('keyup', function() {
 
             if (base.searchTimeout) {
                 clearTimeout(base.searchTimeout);
             }
 
-            base.searchTimeout = setTimeout(function () {
+            base.searchTimeout = setTimeout(function() {
 
                 var term = base.sections.search.find('input').val().trim();
                 base.searchWidgets(term);
@@ -262,13 +262,13 @@ NAILS_Admin_CMS_WidgetEditor = function () {
         });
 
         //  Body
-        base.sections.body.on('click', '.action-remove', function () {
+        base.sections.body.on('click', '.action-remove', function() {
 
             var domElement = $(this).closest('.widget');
-            var widget     = base.getWidget(domElement.data('slug'));
+            var widget = base.getWidget(domElement.data('slug'));
 
             base.confirm('Are you sure you wish to remove this "' + widget.label + '" widget from the interface?')
-                .done(function () {
+                .done(function() {
 
                     base.log('Removing Widget');
                     domElement.remove();
@@ -276,11 +276,11 @@ NAILS_Admin_CMS_WidgetEditor = function () {
                 });
         });
 
-        base.sections.body.on('click', '.action-refresh-editor', function () {
+        base.sections.body.on('click', '.action-refresh-editor', function() {
 
             var widget = $(this).closest('.widget');
-            var slug   = widget.data('slug');
-            var data   = widget.find(':input').serializeObject();
+            var slug = widget.data('slug');
+            var data = widget.find(':input').serializeObject();
 
             widget
                 .addClass('editor-loading')
@@ -294,7 +294,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
         });
 
         //  Keyboard shortcuts
-        $(document).on('keyup', function (e) {
+        $(document).on('keyup', function(e) {
             if (base.isOpen && e.which === base.keymap.ESC) {
                 base.actionClose();
             }
@@ -309,7 +309,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
      * Load the available widgets from the server
      * @return {Object} Deferred
      */
-    base.loadSidebarWidgets = function () {
+    this.loadSidebarWidgets = function() {
 
         var deferred, i, x, key, assetsCss, assetsJs;
 
@@ -320,7 +320,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
         _nails_api.call({
             'controller': 'cms/widgets',
             'method': 'index',
-            'success': function (data) {
+            'success': function(data) {
 
                 base.log('Succesfully fetched widgets from the server.');
                 base.widgets = data.widgets;
@@ -344,12 +344,12 @@ NAILS_Admin_CMS_WidgetEditor = function () {
                 //  Inject any assets to load into the  DOM
                 assetsCss = '';
                 for (i = 0; i < data.assets.css.length; i++) {
-                    assetsCss += data.assets.css[i] + "\n";
+                    assetsCss += data.assets.css[i] + '\n';
                 }
 
                 assetsJs = '';
                 for (i = 0; i < data.assets.js.length; i++) {
-                    assetsJs += data.assets.js[i] + "\n";
+                    assetsJs += data.assets.js[i] + '\n';
                 }
 
                 $('head').append(assetsCss);
@@ -357,7 +357,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
                 deferred.resolve();
             },
-            'error': function () {
+            'error': function() {
 
                 base.warn('Failed to load widgets from the server.');
                 deferred.reject();
@@ -371,9 +371,9 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Render the widgets
-     * @return {Object}
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.renderSidebarWidgets = function () {
+    this.renderSidebarWidgets = function() {
 
         base.sections.widgets.empty();
 
@@ -382,8 +382,8 @@ NAILS_Admin_CMS_WidgetEditor = function () {
         for (i = 0; i < base.widgets.length; i++) {
 
             //  Widget Group
-            label     = $('<span>').text(base.widgets[i].label);
-            toggle    = $('<i>').addClass('icon fa fa-chevron-up');
+            label = $('<span>').text(base.widgets[i].label);
+            toggle = $('<i>').addClass('icon fa fa-chevron-up');
             container = $('<div>').addClass('widget-group').data('group', i).append(label).append(toggle);
 
             //  Hidden by default?
@@ -397,8 +397,8 @@ NAILS_Admin_CMS_WidgetEditor = function () {
             //  Individual widgets
             for (x = 0; x < base.widgets[i].widgets.length; x++) {
 
-                icon      = $('<i>').addClass('icon fa ' + base.widgets[i].widgets[x].icon);
-                label     = $('<span>').text(base.widgets[i].widgets[x].label);
+                icon = $('<i>').addClass('icon fa ' + base.widgets[i].widgets[x].icon);
+                label = $('<span>').text(base.widgets[i].widgets[x].label);
                 container = $('<div>')
                     .addClass('widget widget-group-' + i)
                     .data('group', i)
@@ -424,9 +424,10 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Search widgets
-     * @param term
+     * @param {String} term The search term
+     * @return {void}
      */
-    base.searchWidgets = function (term) {
+    this.searchWidgets = function(term) {
 
         var keywords, i, regex, group;
 
@@ -435,7 +436,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
             base.log('Filtering widgets by term "' + term + '"');
 
             //  Hide widgets which do not match the search term
-            base.sections.widgets.find('.widget').each(function () {
+            base.sections.widgets.find('.widget').each(function() {
 
                 keywords = $(this).data('keywords').split(',');
                 for (i = keywords.length - 1; i >= 0; i--) {
@@ -456,7 +457,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
             });
 
             //  Hide group headings which no longer have any widgets showing
-            base.sections.widgets.find('.widget-group').each(function () {
+            base.sections.widgets.find('.widget-group').each(function() {
                 group = $(this).data('group');
                 if ($('.widget-group-' + group + '.search-show').length) {
                     $(this).removeClass('search-hide');
@@ -481,8 +482,9 @@ NAILS_Admin_CMS_WidgetEditor = function () {
      * @param {String}   label    The label of the button
      * @param {String}   type     The type of button (e.g., primary)
      * @param {Function} callback A callback to call when the button is clicked
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.addAction = function (label, type, callback) {
+    this.addAction = function(label, type, callback) {
 
         base.log('Adding action "' + label + '"');
         base.actions.push({
@@ -498,9 +500,9 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Render the actions
-     * @return {Object}
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.renderActions = function () {
+    this.renderActions = function() {
 
         var i, action;
 
@@ -523,9 +525,9 @@ NAILS_Admin_CMS_WidgetEditor = function () {
     /**
      * Show the widget editor and populate with the data for a particular area
      * @param  {String} area Load widgets for this area
-     * @return {Object}
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.show = function (area) {
+    this.show = function(area) {
 
         area = area || base.defaultArea;
 
@@ -539,7 +541,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
         if (base.widgetData[area] && base.widgetData[area].length) {
 
             base.log('Adding previous widgets');
-            var requestDom  = [];
+            var requestDom = [];
             var requestData = [];
 
             for (var key in base.widgetData[area]) {
@@ -574,7 +576,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
                 'data': {
                     'data': requestData
                 },
-                'success': function (data) {
+                'success': function(data) {
 
                     var i, widget;
 
@@ -597,7 +599,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
                         }
                     }
 
-                    //  Now instanciate everything
+                    //  Now instantiate everything
                     base.initWidgetEditorElements();
 
                     //  Finally, call the "dropped" callback on each widget
@@ -608,7 +610,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
                     }
 
                 },
-                'error': function (data) {
+                'error': function(data) {
 
                     var _data;
 
@@ -648,13 +650,13 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Close the editor
-     * @return {Object}
+     *@return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.close = function () {
+    this.close = function() {
 
         base.log('Closing Editor');
         base.container.removeClass('active');
-        base.isOpen     = false;
+        base.isOpen = false;
         base.activeArea = '';
 
         //  Destroy all sortables and draggables
@@ -673,9 +675,9 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Set up draggables
-     * @return {Object}
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.draggableConstruct = function () {
+    this.draggableConstruct = function() {
 
         base.sections.widgets.find('.widget').draggable({
             'helper': 'clone',
@@ -691,9 +693,9 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Destroy draggables
-     * @return {Object}
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.draggableDestroy = function () {
+    this.draggableDestroy = function() {
 
         base.sections.widgets
             .find('.widget.ui-draggable')
@@ -706,15 +708,15 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Set up sortables
-     * @return {Object}
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.sortableConstruct = function () {
+    this.sortableConstruct = function() {
 
         base.sections.body.find('> ul').sortable({
             placeholder: 'sortable-placeholder',
             handle: '.icon',
             axis: 'y',
-            start: function (e, ui) {
+            start: function(e, ui) {
                 //  If the element's group is hidden, but revealed by search then
                 //  the helper will not be visible, remove the classes which hide things
                 ui.helper.removeClass('hidden search-show search-hide');
@@ -723,12 +725,12 @@ NAILS_Admin_CMS_WidgetEditor = function () {
                 _nails_admin.destroyWysiwyg('basic', ui.helper);
                 _nails_admin.destroyWysiwyg('default', ui.helper);
             },
-            receive: function (e, ui) {
+            receive: function(e, ui) {
                 var sourceWidget, targetWidget, widgetSlug;
 
                 sourceWidget = ui.item;
                 targetWidget = ui.helper;
-                widgetSlug   = sourceWidget.data('slug');
+                widgetSlug = sourceWidget.data('slug');
 
                 //  Remove the hidden class  - if a group is hidden (but revealed
                 //  by search) then it'll not show when dropped.
@@ -739,7 +741,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
                 //  Allow auto sizing
                 targetWidget.removeAttr('style');
             },
-            stop: function (e, ui) {
+            stop: function(e, ui) {
 
                 _nails_admin.buildWysiwyg('basic', ui.helper);
                 _nails_admin.buildWysiwyg('default', ui.helper);
@@ -753,9 +755,9 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Destroy sortables
-     * @return {Object}
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.sortableDestroy = function () {
+    this.sortableDestroy = function() {
 
         var sortable = base.sections.body.find('> ul.ui-sortable');
 
@@ -774,12 +776,11 @@ NAILS_Admin_CMS_WidgetEditor = function () {
      * @param  {Object}        data      Any data to populate the editor with
      * @param  {Object}        widgetDom The widget's DOM element
      * @param  {Boolean}       skipSetup Whether to skip setup
-     * @return {Object}
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.addWidget = function (widget, data, widgetDom, skipSetup) {
+    this.addWidget = function(widget, data, widgetDom, skipSetup) {
 
         if (typeof widget === 'string') {
-
             widget = base.getWidget(widget);
         }
 
@@ -800,7 +801,6 @@ NAILS_Admin_CMS_WidgetEditor = function () {
             }
 
         } else {
-
             base.warn('Attempted to add an invalid widget');
         }
 
@@ -811,14 +811,15 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Setup the contents of a widget's editor
-     * @param slug
-     * @param data
-     * @param widgetDom
+     * @param {String} slug The widget's slug
+     * @param {Object} data The widget's data
+     * @param {Object} widgetDom The widget's DOM element
+     * @return {void}
      */
-    base.setupWidgetEditor = function (slug, data, widgetDom) {
+    this.setupWidgetEditor = function(slug, data, widgetDom) {
 
         base.getWidgetEditor(slug, data)
-            .done(function (data) {
+            .done(function(data) {
 
                 base.log('Editor Received');
                 base.setupWidgetEditorOk(widgetDom, data);
@@ -830,7 +831,7 @@ NAILS_Admin_CMS_WidgetEditor = function () {
                 var widget = base.getWidget(slug);
                 widget.callbacks.dropped.call(base, widgetDom);
             })
-            .fail(function (data) {
+            .fail(function(data) {
 
                 base.setupWidgetEditorFail(widgetDom, data.error);
             });
@@ -840,10 +841,11 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Callback when the widget editor setup is successful
-     * @param widgetDom
-     * @param editorData
+     * @param {Object} widgetDom The widget's DOM element
+     * @param {String} editorData The widget's editor HTML
+     * @return {void}
      */
-    base.setupWidgetEditorOk = function (widgetDom, editorData) {
+    this.setupWidgetEditorOk = function(widgetDom, editorData) {
         widgetDom
             .removeClass('editor-loading')
             .find('.editor-target')
@@ -854,10 +856,11 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Callback when the widget editor setup fails
-     * @param widgetDom
-     * @param error
+     * @param {Object} widgetDom The widget's DOM element
+     * @param {String} error The error string
+     * @return {void}
      */
-    base.setupWidgetEditorFail = function (widgetDom, error) {
+    this.setupWidgetEditorFail = function(widgetDom, error) {
         widgetDom
             .removeClass('editor-loading')
             .find('.editor-target')
@@ -869,9 +872,10 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Initialise all the items in a widget editor
-     * @param widgetDom
+     * @param {Object} [widgetDom] The widget's DOM element
+     * @return {void}
      */
-    base.initWidgetEditorElements = function (widgetDom) {
+    this.initWidgetEditorElements = function(widgetDom) {
 
         //  Table stripes
         _nails.addStripes();
@@ -881,13 +885,13 @@ NAILS_Admin_CMS_WidgetEditor = function () {
         _nails_admin.buildWysiwyg('default', widgetDom);
 
         //  Select2 Dropdowns
-        _nails_admin.initSelect2(widgetDom);
+        _nails_admin.initSelect2();
 
         //  Toggles
-        _nails_admin.initToggles(widgetDom);
+        _nails_admin.initToggles();
 
         //  Tipsys
-        _nails.initTipsy(widgetDom);
+        _nails.initTipsy();
     };
 
     // --------------------------------------------------------------------------
@@ -895,9 +899,9 @@ NAILS_Admin_CMS_WidgetEditor = function () {
     /**
      * Return a single widget
      * @param  {String} slug The slug of the widget to return
-     * @return {Object}
+     * @return {Object|Boolean} The widget object on success, false on failure
      */
-    base.getWidget = function (slug) {
+    this.getWidget = function(slug) {
 
         var i, x;
 
@@ -917,10 +921,10 @@ NAILS_Admin_CMS_WidgetEditor = function () {
     /**
      * Fetch the widget editor from the API
      * @param  {String} slug The slug of the widget to render the editor for
-     * @param  {Object} data Data to prefill the editor with
+     * @param  {Object} data Data to pre-fill the editor with
      * @return {Object}      A jQuery promise
      */
-    base.getWidgetEditor = function (slug, data) {
+    this.getWidgetEditor = function(slug, data) {
 
         var deferred;
 
@@ -934,11 +938,11 @@ NAILS_Admin_CMS_WidgetEditor = function () {
                 'slug': slug,
                 'data': data
             },
-            'success': function (data) {
-                base.log('Succesfully fetched widget editor from the server.');
+            'success': function(data) {
+                base.log('Successfully fetched widget editor from the server.');
                 deferred.resolve(data.editor);
             },
-            'error': function (data) {
+            'error': function(data) {
 
                 var _data;
 
@@ -963,9 +967,9 @@ NAILS_Admin_CMS_WidgetEditor = function () {
     /**
      * Return the data contents of an area
      * @param  {String} area The area to get data for
-     * @return {Array}
+     * @return {Array|Boolean} The widget area data on success, false on failure
      */
-    base.getAreaData = function (area) {
+    this.getAreaData = function(area) {
 
         area = area || base.defaultArea;
         base.log('Getting editor data for area "' + area + '"');
@@ -985,9 +989,9 @@ NAILS_Admin_CMS_WidgetEditor = function () {
      * Sets the data contents of an area
      * @param  {String} area The area to set data for
      * @param  {Array}  data  The data to set
-     * @return {Object}
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.setAreaData = function (area, data) {
+    this.setAreaData = function(area, data) {
 
         area = area || base.defaultArea;
         base.log('Setting editor data for area "' + area + '"', data);
@@ -1000,16 +1004,16 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Returns the data of widgets in the currently active editor
-     * @return {Array}
+     * @return {Array} The active editor's data
      */
-    base.getActiveData = function () {
+    this.getActiveData = function() {
 
         var widgets, out = [];
 
         base.log('Getting active editor\'s data');
 
         widgets = base.sections.body.find('> ul > .widget');
-        widgets.each(function () {
+        widgets.each(function() {
             out.push({
                 'slug': $(this).data('slug'),
                 'data': $(this).find(':input').serializeObject()
@@ -1021,7 +1025,11 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     // --------------------------------------------------------------------------
 
-    base.actionClose = function () {
+    /**
+     * Get's the active editor's data and closes the editor
+     * @return {void}
+     */
+    this.actionClose = function() {
         base.widgetData[base.activeArea] = base.getActiveData();
         base.close();
     };
@@ -1030,14 +1038,14 @@ NAILS_Admin_CMS_WidgetEditor = function () {
 
     /**
      * Show a confirmation dialog
-     * @param  {String} message The message/question to show
-     * @param  {String} title   The title of the dialog
+     * @param  {String} [message] The message/question to show
+     * @param  {String} [title]   The title of the dialog
      * @return {Object}         A jQuery Promise
      */
-    base.confirm = function (message, title) {
+    this.confirm = function(message, title) {
 
         message = message ? message : 'Are you sure you wish to complete this action?';
-        title   = title ? title : 'Are you sure?';
+        title = title ? title : 'Are you sure?';
 
         var deferred = $.Deferred();
 
@@ -1051,11 +1059,11 @@ NAILS_Admin_CMS_WidgetEditor = function () {
                 'dialogClass': 'group-cms widgeteditor-alert',
                 'buttons': {
 
-                    'OK': function () {
+                    'OK': function() {
                         $(this).dialog('close');
                         deferred.resolve();
                     },
-                    'Cancel': function () {
+                    'Cancel': function() {
                         $(this).dialog('close');
                         deferred.reject();
                     }
@@ -1070,10 +1078,10 @@ NAILS_Admin_CMS_WidgetEditor = function () {
     /**
      * Write a log to the console
      * @param  {String} message The message to log
-     * @param  {mixed}  payload Any additional data to display in the console
-     * @return {Object}
+     * @param  {mixed}  [payload] Any additional data to display in the console
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.log = function (message, payload) {
+    this.log = function(message, payload) {
 
         if (typeof(console.log) === 'function') {
             if (payload !== undefined) {
@@ -1091,10 +1099,10 @@ NAILS_Admin_CMS_WidgetEditor = function () {
     /**
      * Write a warning to the console
      * @param  {String} message The message to warn
-     * @param  {mixed}  payload Any additional data to display in the console
-     * @return {Object}
+     * @param  {mixed}  [payload] Any additional data to display in the console
+     * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
-    base.warn = function (message, payload) {
+    this.warn = function(message, payload) {
 
         if (typeof(console.warn) === 'function') {
             if (payload !== undefined) {
