@@ -20,7 +20,9 @@ class TemplateBase
      * Whether the template is enabled or not
      * @var bool
      */
-    protected static $isDisabled;
+    const DISABLED = false;
+
+    // --------------------------------------------------------------------------
 
     /**
      * Whether the template is the default template
@@ -102,7 +104,7 @@ class TemplateBase
      */
     public static function isDisabled()
     {
-        return !empty(static::$isDisabled);
+        return !empty(static::DISABLED);
     }
 
     // --------------------------------------------------------------------------
@@ -296,55 +298,39 @@ class TemplateBase
 
     // --------------------------------------------------------------------------
 
-
     /**
      * Format the template as a JSON object
      *
      * @param int $iJsonOptions The JSON options
-     * @param int $iJsonDepth The JSON depth
+     * @param int $iJsonDepth   The JSON depth
      *
      * @return string
      */
     public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
     {
-        $oTemplate                    = new \stdClass();
-        $oTemplate->label             = $this->getLabel();
-        $oTemplate->description       = $this->getDescription();
-        $oTemplate->description       = $this->getDescription();
-        $oTemplate->widget_areas      = $this->getWidgetAreas();
-        $oTemplate->additional_fields = $this->getAdditionalFields();
-        $oTemplate->manual_config     = $this->getManualConfig();
-        $oTemplate->icon              = $this->getIcon();
-        $oTemplate->slug              = $this->getSlug();
-        $oTemplate->assets_editor     = $this->getAssets('EDITOR');
-        $oTemplate->assets_render     = $this->getAssets('RENDER');
-        $oTemplate->path              = $this->getPath();
-
-        return json_encode($oTemplate, $iJsonOptions, $iJsonDepth);
+        return json_encode($this->toArray(), $iJsonOptions, $iJsonDepth);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Format the template as an array
-     * @return string
+     * @return array
      */
     public function toArray()
     {
-        $aTemplate                      = [];
-        $aTemplate['label']             = $this->getLabel();
-        $aTemplate['description']       = $this->getDescription();
-        $aTemplate['description']       = $this->getDescription();
-        $aTemplate['widget_areas']      = $this->getWidgetAreas();
-        $aTemplate['additional_fields'] = $this->getAdditionalFields();
-        $aTemplate['manual_config']     = $this->getManualConfig();
-        $aTemplate['icon']              = $this->getIcon();
-        $aTemplate['slug']              = $this->getSlug();
-        $aTemplate['assets_editor']     = $this->getAssets('EDITOR');
-        $aTemplate['assets_render']     = $this->getAssets('RENDER');
-        $aTemplate['path']              = $this->getPath();
-
-        return $aTemplate;
+        return [
+            'label'             => $this->getLabel(),
+            'description'       => $this->getDescription(),
+            'widget_areas'      => $this->getWidgetAreas(),
+            'additional_fields' => $this->getAdditionalFields(),
+            'manual_config'     => $this->getManualConfig(),
+            'icon'              => $this->getIcon(),
+            'slug'              => $this->getSlug(),
+            'assets_editor'     => $this->getAssets('EDITOR'),
+            'assets_render'     => $this->getAssets('RENDER'),
+            'path'              => $this->getPath(),
+        ];
     }
 
     // --------------------------------------------------------------------------

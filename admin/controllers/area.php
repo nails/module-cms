@@ -24,12 +24,11 @@ class Area extends BaseAdmin
 
     /**
      * Announces this controller's navGroups
-     * @return stdClass
+     * @return \Nails\Admin\Nav
      */
     public static function announce()
     {
         if (userHasPermission('admin:cms:area:manage')) {
-
             $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
             $oNavGroup->setLabel('CMS');
             $oNavGroup->setIcon('fa-file-text');
@@ -46,14 +45,14 @@ class Area extends BaseAdmin
      */
     public static function permissions()
     {
-        $permissions = parent::permissions();
+        $aPermissions = parent::permissions();
 
-        $permissions['manage'] = 'Can manage areas';
-        $permissions['create'] = 'Can create a new area';
-        $permissions['edit']   = 'Can edit an existing area';
-        $permissions['delete'] = 'Can delete an existing area';
+        $aPermissions['manage'] = 'Can manage areas';
+        $aPermissions['create'] = 'Can create a new area';
+        $aPermissions['edit']   = 'Can edit an existing area';
+        $aPermissions['delete'] = 'Can delete an existing area';
 
-        return $permissions;
+        return $aPermissions;
     }
 
     // --------------------------------------------------------------------------
@@ -79,7 +78,6 @@ class Area extends BaseAdmin
     public function index()
     {
         if (!userHasPermission('admin:cms:area:manage')) {
-
             unauthorised();
         }
 
@@ -93,29 +91,30 @@ class Area extends BaseAdmin
         $sTableAlias = $this->oAreaModel->getTableAlias();
 
         //  Get pagination and search/sort variables
-        $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
-        $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
-        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $sTableAlias . '.label';
-        $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'asc';
-        $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
+        $oInput    = Factory::service('Input');
+        $page      = $oInput->get('page') ? $oInput->get('page') : 0;
+        $perPage   = $oInput->get('perPage') ? $oInput->get('perPage') : 50;
+        $sortOn    = $oInput->get('sortOn') ? $oInput->get('sortOn') : $sTableAlias . '.label';
+        $sortOrder = $oInput->get('sortOrder') ? $oInput->get('sortOrder') : 'asc';
+        $keywords  = $oInput->get('keywords') ? $oInput->get('keywords') : '';
 
         // --------------------------------------------------------------------------
 
         //  Define the sortable columns
-        $sortColumns = array(
+        $sortColumns = [
             $sTableAlias . '.label'    => 'Label',
-            $sTableAlias . '.modified' => 'Modified'
-        );
+            $sTableAlias . '.modified' => 'Modified',
+        ];
 
         // --------------------------------------------------------------------------
 
         //  Define the $data variable for the queries
-        $data = array(
-            'sort' => array(
-                array($sortOn, $sortOrder)
-            ),
-            'keywords' => $keywords
-        );
+        $data = [
+            'sort'     => [
+                [$sortOn, $sortOrder],
+            ],
+            'keywords' => $keywords,
+        ];
 
         //  Get the items for the page
         $totalRows           = $this->oAreaModel->countAll($data);
@@ -145,13 +144,13 @@ class Area extends BaseAdmin
     public function create()
     {
         if (!userHasPermission('admin:cms:area:create')) {
-
             unauthorised();
         }
 
         // --------------------------------------------------------------------------
 
-        if ($this->input->post()) {
+        $oInput = Factory::service('Input');
+        if ($oInput->post()) {
 
             //  Validate form
             $oFormValidation = Factory::service('FormValidation');
@@ -159,7 +158,7 @@ class Area extends BaseAdmin
             $oFormValidation->set_rules('description', '', 'xss_clean|trim|max_length[255]');
             $oFormValidation->set_rules('widget-data', '', 'trim');
 
-            if ($this->input->post('slug')) {
+            if ($oInput->post('slug')) {
 
                 $sTable = $this->oAreaModel->getTableName();
                 $oFormValidation->set_rules(
@@ -175,28 +174,27 @@ class Area extends BaseAdmin
 
             if ($oFormValidation->run()) {
 
-                $aItemData                = array();
-                $aItemData['label']       = $this->input->post('label');
-                $aItemData['slug']        = $this->input->post('slug');
-                $aItemData['description'] = strip_tags($this->input->post('description'));
-                $aItemData['widget_data'] = $this->input->post('widget_data');
+                $aItemData                = [];
+                $aItemData['label']       = $oInput->post('label');
+                $aItemData['slug']        = $oInput->post('slug');
+                $aItemData['description'] = strip_tags($oInput->post('description'));
+                $aItemData['widget_data'] = $oInput->post('widget_data');
 
                 if ($this->oAreaModel->create($aItemData)) {
 
                     $sStatus  = 'success';
                     $sMessage = 'Area created successfully.';
 
-                    $this->session->set_flashdata($sStatus, $sMessage);
+                    $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                    $oSession->set_flashdata($sStatus, $sMessage);
                     redirect('admin/cms/area');
 
                 } else {
-
-                    $this->data['error']  = 'Failed to create area. ';
+                    $this->data['error'] = 'Failed to create area. ';
                     $this->data['error'] .= $this->oAreaModel->lastError();
                 }
 
             } else {
-
                 $this->data['error'] = lang('fv_there_were_errors');
             }
         }
@@ -219,24 +217,25 @@ class Area extends BaseAdmin
     public function edit()
     {
         if (!userHasPermission('admin:cms:area:edit')) {
-
             unauthorised();
         }
 
         // --------------------------------------------------------------------------
 
-        $area = $this->oAreaModel->getById($this->uri->segment(5));
+        $oUri               = Factory::service('Uri');
+        $area               = $this->oAreaModel->getById($oUri->segment(5));
         $this->data['area'] = $area;
 
         if (!$area) {
-
-            $this->session->set_flashdata('error', 'Invalid area ID.');
+            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession->set_flashdata('error', 'Invalid area ID.');
             redirect('admin/cms/area');
         }
 
         // --------------------------------------------------------------------------
 
-        if ($this->input->post()) {
+        $oInput = Factory::service('Input');
+        if ($oInput->post()) {
 
             //  Validate form
             $oFormValidation = Factory::service('FormValidation');
@@ -244,7 +243,7 @@ class Area extends BaseAdmin
             $oFormValidation->set_rules('description', '', 'xss_clean|trim|max_length[255]');
             $oFormValidation->set_rules('widget-data', '', 'trim');
 
-            if ($this->input->post('slug')) {
+            if ($oInput->post('slug')) {
 
                 $sTable = $this->oAreaModel->getTableName();
                 $oFormValidation->set_rules(
@@ -260,23 +259,24 @@ class Area extends BaseAdmin
 
             if ($oFormValidation->run()) {
 
-                $aItemData                = array();
-                $aItemData['label']       = $this->input->post('label');
-                $aItemData['slug']        = $this->input->post('slug');
-                $aItemData['description'] = strip_tags($this->input->post('description'));
-                $aItemData['widget_data'] = $this->input->post('widget_data');
+                $aItemData                = [];
+                $aItemData['label']       = $oInput->post('label');
+                $aItemData['slug']        = $oInput->post('slug');
+                $aItemData['description'] = strip_tags($oInput->post('description'));
+                $aItemData['widget_data'] = $oInput->post('widget_data');
 
                 if ($this->oAreaModel->update($area->id, $aItemData)) {
 
                     $sStatus  = 'success';
                     $sMessage = 'Area updated successfully.';
 
-                    $this->session->set_flashdata($sStatus, $sMessage);
+                    $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                    $oSession->set_flashdata($sStatus, $sMessage);
                     redirect('admin/cms/area');
 
                 } else {
 
-                    $this->data['error']  = 'Failed to update area. ';
+                    $this->data['error'] = 'Failed to update area. ';
                     $this->data['error'] .= $this->oAreaModel->lastError();
                 }
 
@@ -304,17 +304,17 @@ class Area extends BaseAdmin
     public function delete()
     {
         if (!userHasPermission('admin:cms:area:delete')) {
-
             unauthorised();
         }
 
         // --------------------------------------------------------------------------
 
-        $area = $this->oAreaModel->getById($this->uri->segment(5));
+        $oUri = Factory::service('Uri');
+        $area = $this->oAreaModel->getById($oUri->segment(5));
 
         if (!$area) {
-
-            $this->session->set_flashdata('error', 'Invalid area ID.');
+            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession->set_flashdata('error', 'Invalid area ID.');
             redirect('admin/cms/area');
         }
 
@@ -322,17 +322,18 @@ class Area extends BaseAdmin
 
         if ($this->oAreaModel->delete($area->id)) {
 
-            $sStatus = 'success';
-            $msg    = 'Area was deleted successfully.';
+            $sStatus  = 'success';
+            $sMessage = 'Area was deleted successfully.';
 
         } else {
 
-            $sStatus = 'error';
-            $msg    = 'Failed to delete area. ';
-            $msg   .= $this->oAreaModel->lastError();
+            $sStatus  = 'error';
+            $sMessage = 'Failed to delete area. ';
+            $sMessage .= $this->oAreaModel->lastError();
         }
 
-        $this->session->set_flashdata($sStatus, $msg);
+        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession->set_flashdata($sStatus, $sMessage);
         redirect('admin/cms/area');
     }
 }

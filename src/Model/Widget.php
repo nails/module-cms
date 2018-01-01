@@ -12,104 +12,82 @@
 
 namespace Nails\Cms\Model;
 
+use Nails\Cms\Exception\Widget\NotFoundException;
+use Nails\Cms\Widget\WidgetBase;
 use Nails\Factory;
 
 class Widget
 {
     protected $aLoadedWidgets;
-    protected $aWidgetDirs;
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Construct the model
-     */
-    public function __construct()
-    {
-        $aModules           = _NAILS_GET_MODULES();
-        $this->aWidgetDirs = array();
-
-        foreach ($aModules as $oModule) {
-
-            $this->aWidgetDirs[]   = $oModule->path . 'cms/widgets/';
-        }
-
-        /**
-         * Load App widgets afterwards so that they may override the module
-         * supplied ones.
-         */
-
-        $this->aWidgetDirs[]   = FCPATH . APPPATH . 'modules/cms/widgets/';
-    }
 
     // --------------------------------------------------------------------------
 
     /**
      * Get all available widgets to the system
-     * @param  string $loadAssets Whether or not to load widget's assets, and if so whether EDITOR or RENDER assets.
+     *
+     * @param bool $bLoadAssets Whether or not to load widget's assets, and if so whether EDITOR or RENDER assets.
+     *
+     * @throws NotFoundException
      * @return array
      */
-    public function getAvailable($loadAssets = false)
+    public function getAvailable($bLoadAssets = false)
     {
         if (!empty($this->aLoadedWidgets)) {
-
             return $this->aLoadedWidgets;
         }
 
         Factory::helper('directory');
-        $aAvailableWidgets = array();
+        $aAvailableWidgets = [];
+        $aModules          = _NAILS_GET_MODULES();
 
-        foreach ($this->aWidgetDirs as $sDir) {
+        //  Append the app
+        $aModules['app'] = (object) [
+            'path'      => FCPATH . APPPATH . 'modules/',
+            'namespace' => 'App\\',
+        ];
 
-            if (is_dir($sDir)) {
+        foreach ($aModules as $oModule) {
 
-                $aWidgets = directory_map($sDir);
+            $sWidgetDir = $oModule->path . 'cms/widgets/';
+            $aWidgets   = directory_map($sWidgetDir, 1);
+            if (!empty($aWidgets)) {
+                foreach ($aWidgets as $sWidgetName) {
+                    $sWidgetDefinition = $sWidgetDir . $sWidgetName . '/widget.php';
+                    $sWidgetClass      = $oModule->namespace . 'Cms\Widget\\' . ucfirst($sWidgetName);
+                    if (is_file($sWidgetDefinition)) {
 
-                foreach ($aWidgets as $sWidgetDir => $aWidgetFiles) {
+                        require_once $sWidgetDefinition;
 
-                    if (is_file($sDir . $sWidgetDir . '/widget.php')) {
+                        if (!class_exists($sWidgetClass)) {
+                            throw new NotFoundException(
+                                'Widget class "' . $sWidgetClass . '" missing from "' . $sWidgetDefinition . '"',
+                                500
+                            );
+                        }
 
-                        $aAvailableWidgets[$sWidgetDir] = array(
-                            'path' => $sDir,
-                            'name' => $sWidgetDir
-                        );
+                        $aAvailableWidgets[$sWidgetName] = (object) [
+                            'path'  => $sWidgetDir,
+                            'name'  => $sWidgetName,
+                            'class' => $sWidgetClass,
+                        ];
                     }
                 }
             }
         }
 
         //  Instantiate widgets
-        $aLoadedWidgets = array();
-        foreach ($aAvailableWidgets as $aWidget) {
+        $aLoadedWidgets = [];
+        foreach ($aAvailableWidgets as $oWidget) {
 
-            include_once $aWidget['path'] . $aWidget['name'] . '/widget.php';
+            $sClassName = $oWidget->class;
 
-            $sClassName = '\Nails\Cms\Widget\\' . ucfirst(strtolower($aWidget['name']));
+            if (!$sClassName::isDisabled()) {
 
-            if (!class_exists($sClassName)) {
+                $aLoadedWidgets[$oWidget->name] = new $sClassName();
 
-                log_message(
-                    'error',
-                    'CMS Widget discovered at "' . $aWidget['path'] . $aWidget['name'] .
-                    '" but does not contain class "' . $sClassName . '"'
-                );
-
-            } elseif (!empty($sClassName::isDisabled())) {
-
-                /**
-                 * This widget is disabled, ignore this template. Don't log
-                 * anything as it's likely a developer override to hide a default
-                 * template.
-                 */
-
-            } else {
-
-                $aLoadedWidgets[$aWidget['name']] = new $sClassName();
-
-                //  Load the template's assets if requested
-                if ($loadAssets) {
-
-                    $aAssets = $aLoadedWidgets[$aWidget['name']]->getAssets($loadAssets);
+                //  Load the widget's assets if requested
+                if ($bLoadAssets) {
+                    $aAssets = $aLoadedWidgets[$oWidget->name]->getAssets($bLoadAssets);
                     $this->loadAssets($aAssets);
                 }
             }
@@ -118,8 +96,8 @@ class Widget
         // --------------------------------------------------------------------------
 
         //  Sort the widgets into their sub groupings
-        $aOut          = array();
-        $aGeneric      = array();
+        $aOut          = [];
+        $aGeneric      = [];
         $sGenericLabel = 'Generic';
 
         foreach ($aLoadedWidgets as $sWidgetSlug => $oWidget) {
@@ -131,7 +109,6 @@ class Widget
                 $sKey = md5($sWidgetGrouping);
 
                 if (!isset($aOut[$sKey])) {
-
                     $aOut[$sKey] = Factory::factory('WidgetGroup', 'nailsapp/module-cms');
                     $aOut[$sKey]->setLabel($sWidgetGrouping);
                 }
@@ -143,7 +120,6 @@ class Widget
                 $sKey = md5($sGenericLabel);
 
                 if (!isset($aGeneric[$sKey])) {
-
                     $aGeneric[$sKey] = Factory::factory('WidgetGroup', 'nailsapp/module-cms');
                     $aGeneric[$sKey]->setLabel($sGenericLabel);
                 }
@@ -165,8 +141,10 @@ class Widget
 
     /**
      * Get an individual widget
+     *
      * @param  string $sSlug       The widget's slug
-     * @param  string $sLoadAssets Whether or not to load the widget's assets, and if so whether EDITOR or RENDER assets.
+     * @param  bool   $sLoadAssets Whether or not to load the widget's assets, and if so whether EDITOR or RENDER assets
+     *
      * @return mixed
      */
     public function getBySlug($sSlug, $sLoadAssets = false)
@@ -178,11 +156,9 @@ class Widget
             $aWidgets = $oWidgetGroup->getWidgets();
 
             foreach ($aWidgets as $oWidget) {
-
                 if ($sSlug == $oWidget->getSlug()) {
 
                     if ($sLoadAssets) {
-
                         $aAssets = $oWidget->getAssets($sLoadAssets);
                         $this->loadAssets($aAssets);
                     }
@@ -199,10 +175,12 @@ class Widget
 
     /**
      * Load widget assets
-     * @param  array  $aAssets An array of assets to load
+     *
+     * @param  array $aAssets An array of assets to load
+     *
      * @return void
      */
-    protected function loadAssets($aAssets = array())
+    protected function loadAssets($aAssets = [])
     {
         $oAsset = Factory::service('Asset');
         foreach ($aAssets as $aAsset) {
@@ -210,18 +188,14 @@ class Widget
             if (is_array($aAsset)) {
 
                 if (!empty($aAsset[1])) {
-
                     $bIsNails = $aAsset[1];
-
                 } else {
-
                     $bIsNails = false;
                 }
 
                 $oAsset->load($aAsset[0], $bIsNails);
 
             } elseif (is_string($aAsset)) {
-
                 $oAsset->load($aAsset);
             }
         }

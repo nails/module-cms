@@ -12,7 +12,9 @@ return <<<'EOD'
  * This is the "{{SLUG}}" CMS widget definition
  */
 
-namespace Nails\Cms\Widget;
+namespace App\Cms\Widget;
+
+use Nails\Cms\Widget\WidgetBase;
 
 class {{SLUG}} extends WidgetBase
 {

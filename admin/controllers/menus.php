@@ -24,7 +24,7 @@ class Menus extends BaseAdmin
 
     /**
      * Announces this controller's navGroups
-     * @return stdClass
+     * @return \Nails\Admin\Nav
      */
     public static function announce()
     {
@@ -94,29 +94,29 @@ class Menus extends BaseAdmin
         $sTableAlias = $this->oMenuModel->getTableAlias();
 
         //  Get pagination and search/sort variables
-        $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
-        $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
-        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $sTableAlias . '.label';
+        $page      = $this->input->get('page') ? $this->input->get('page') : 0;
+        $perPage   = $this->input->get('perPage') ? $this->input->get('perPage') : 50;
+        $sortOn    = $this->input->get('sortOn') ? $this->input->get('sortOn') : $sTableAlias . '.label';
         $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'asc';
-        $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
+        $keywords  = $this->input->get('keywords') ? $this->input->get('keywords') : '';
 
         // --------------------------------------------------------------------------
 
         //  Define the sortable columns
-        $sortColumns = array(
+        $sortColumns = [
             $sTableAlias . '.label'    => 'Label',
-            $sTableAlias . '.modified' => 'Modified'
-        );
+            $sTableAlias . '.modified' => 'Modified',
+        ];
 
         // --------------------------------------------------------------------------
 
         //  Define the $data variable for the queries
-        $data = array(
-            'sort' => array(
-                array($sortOn, $sortOrder)
-            ),
-            'keywords' => $keywords
-        );
+        $data = [
+            'sort'     => [
+                [$sortOn, $sortOrder],
+            ],
+            'keywords' => $keywords,
+        ];
 
         //  Get the items for the page
         $totalRows           = $this->oMenuModel->countAll($data);
@@ -163,18 +163,18 @@ class Menus extends BaseAdmin
             if ($oFormValidation->run()) {
 
                 //  Prepare the create data
-                $aItemData                = array();
+                $aItemData                = [];
                 $aItemData['label']       = $this->input->post('label');
                 $aItemData['description'] = strip_tags($this->input->post('description'));
-                $aItemData['items']       = array();
+                $aItemData['items']       = [];
 
                 //  Prepare the menu items
                 $aMenuItems = $this->input->post('menuItem');
                 $iNumItems  = isset($aMenuItems['id']) ? count($aMenuItems['id']) : 0;
 
-                for ($i=0; $i < $iNumItems; $i++) {
+                for ($i = 0; $i < $iNumItems; $i++) {
 
-                    $aItemData['items'][$i]              = array();
+                    $aItemData['items'][$i]              = [];
                     $aItemData['items'][$i]['id']        = isset($aMenuItems['id'][$i]) ? $aMenuItems['id'][$i] : null;
                     $aItemData['items'][$i]['parent_id'] = isset($aMenuItems['parent_id'][$i]) ? $aMenuItems['parent_id'][$i] : null;
                     $aItemData['items'][$i]['label']     = isset($aMenuItems['label'][$i]) ? $aMenuItems['label'][$i] : null;
@@ -192,7 +192,7 @@ class Menus extends BaseAdmin
 
                 } else {
 
-                    $this->data['error']  = 'Failed to create menu. ';
+                    $this->data['error'] = 'Failed to create menu. ';
                     $this->data['error'] .= $this->oMenuModel->lastError();
                 }
 
@@ -203,7 +203,7 @@ class Menus extends BaseAdmin
 
         } else {
 
-            $aItems = array();
+            $aItems = [];
         }
 
         // --------------------------------------------------------------------------
@@ -215,13 +215,13 @@ class Menus extends BaseAdmin
         //  Prepare the menu items
         if ($this->input->post()) {
 
-            $aMenuItems     = array();
+            $aMenuItems     = [];
             $aPostMenuItems = $this->input->post('menuItem');
-            $iNumItems       = !empty($aPostMenuItems['id']) ? count($aPostMenuItems['id']) : 0;
+            $iNumItems      = !empty($aPostMenuItems['id']) ? count($aPostMenuItems['id']) : 0;
 
-            for ($i=0; $i < $iNumItems; $i++) {
+            for ($i = 0; $i < $iNumItems; $i++) {
 
-                $aMenuItems[$i]              = array();
+                $aMenuItems[$i]              = [];
                 $aMenuItems[$i]['id']        = isset($aPostMenuItems['id'][$i]) ? $aPostMenuItems['id'][$i] : null;
                 $aMenuItems[$i]['parent_id'] = isset($aPostMenuItems['parent_id'][$i]) ? $aPostMenuItems['parent_id'][$i] : null;
                 $aMenuItems[$i]['label']     = isset($aPostMenuItems['label'][$i]) ? $aPostMenuItems['label'][$i] : null;
@@ -237,9 +237,9 @@ class Menus extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the CMS Pages
-        $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
-        $aPages     = $oPageModel->getAllNestedFlat();
-        $this->data['pages'] = array('' => 'Select a CMS Page') + $aPages;
+        $oPageModel          = Factory::model('Page', 'nailsapp/module-cms');
+        $aPages              = $oPageModel->getAllNestedFlat();
+        $this->data['pages'] = ['' => 'Select a CMS Page'] + $aPages;
 
         // --------------------------------------------------------------------------
 
@@ -270,7 +270,7 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $menu = $this->oMenuModel->getById($this->uri->segment(5));
+        $menu               = $this->oMenuModel->getById($this->uri->segment(5));
         $this->data['menu'] = $menu;
 
         if (!$menu) {
@@ -292,25 +292,24 @@ class Menus extends BaseAdmin
             if ($oFormValidation->run()) {
 
                 //  Prepare the create data
-                $aItemData                = array();
+                $aItemData                = [];
                 $aItemData['label']       = $this->input->post('label');
                 $aItemData['description'] = strip_tags($this->input->post('description'));
-                $aItemData['items']       = array();
+                $aItemData['items']       = [];
 
                 //  Prepare the menu items
                 $aMenuItems = $this->input->post('menuItem');
                 $iNumItems  = isset($aMenuItems['id']) ? count($aMenuItems['id']) : 0;
 
-                for ($i=0; $i < $iNumItems; $i++) {
+                for ($i = 0; $i < $iNumItems; $i++) {
 
-                    $aItemData['items'][$i]              = array();
+                    $aItemData['items'][$i]              = [];
                     $aItemData['items'][$i]['id']        = isset($aMenuItems['id'][$i]) ? $aMenuItems['id'][$i] : null;
                     $aItemData['items'][$i]['parent_id'] = isset($aMenuItems['parent_id'][$i]) ? $aMenuItems['parent_id'][$i] : null;
                     $aItemData['items'][$i]['label']     = isset($aMenuItems['label'][$i]) ? $aMenuItems['label'][$i] : null;
                     $aItemData['items'][$i]['url']       = isset($aMenuItems['url'][$i]) ? $aMenuItems['url'][$i] : null;
                     $aItemData['items'][$i]['page_id']   = isset($aMenuItems['page_id'][$i]) ? $aMenuItems['page_id'][$i] : null;
                 }
-
 
                 if ($this->oMenuModel->update($menu->id, $aItemData)) {
 
@@ -322,7 +321,7 @@ class Menus extends BaseAdmin
 
                 } else {
 
-                    $this->data['error']  = 'Failed to update menu. ';
+                    $this->data['error'] = 'Failed to update menu. ';
                     $this->data['error'] .= $this->oMenuModel->lastError();
                 }
 
@@ -344,13 +343,13 @@ class Menus extends BaseAdmin
 
         if ($this->input->post()) {
 
-            $aMenuItems     = array();
+            $aMenuItems     = [];
             $aPostMenuItems = $this->input->post('menuItem');
-            $iNumItems       = !empty($aPostMenuItems['id']) ? count($aPostMenuItems['id']) : 0;
+            $iNumItems      = !empty($aPostMenuItems['id']) ? count($aPostMenuItems['id']) : 0;
 
-            for ($i=0; $i < $iNumItems; $i++) {
+            for ($i = 0; $i < $iNumItems; $i++) {
 
-                $aMenuItems[$i]              = array();
+                $aMenuItems[$i]              = [];
                 $aMenuItems[$i]['id']        = isset($aPostMenuItems['id'][$i]) ? $aPostMenuItems['id'][$i] : null;
                 $aMenuItems[$i]['parent_id'] = isset($aPostMenuItems['parent_id'][$i]) ? $aPostMenuItems['parent_id'][$i] : null;
                 $aMenuItems[$i]['label']     = isset($aPostMenuItems['label'][$i]) ? $aPostMenuItems['label'][$i] : null;
@@ -366,9 +365,9 @@ class Menus extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the CMS Pages
-        $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
-        $aPages     = $oPageModel->getAllNestedFlat();
-        $this->data['pages'] = array('' => 'Select a CMS Page') + $aPages;
+        $oPageModel          = Factory::model('Page', 'nailsapp/module-cms');
+        $aPages              = $oPageModel->getAllNestedFlat();
+        $this->data['pages'] = ['' => 'Select a CMS Page'] + $aPages;
 
         // --------------------------------------------------------------------------
 
@@ -412,13 +411,13 @@ class Menus extends BaseAdmin
         if ($this->oMenuModel->delete($menu->id)) {
 
             $sStatus = 'success';
-            $msg    = 'Menu was deleted successfully.';
+            $msg     = 'Menu was deleted successfully.';
 
         } else {
 
             $sStatus = 'error';
-            $msg    = 'Failed to delete menu. ';
-            $msg   .= $this->oMenuModel->lastError();
+            $msg     = 'Failed to delete menu. ';
+            $msg     .= $this->oMenuModel->lastError();
         }
 
         $this->session->set_flashdata($sStatus, $msg);

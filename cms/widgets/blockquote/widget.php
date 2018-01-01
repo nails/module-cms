@@ -10,7 +10,9 @@
  * @link
  */
 
-namespace Nails\Cms\Widget;
+namespace Nails\Cms\Cms\Widget;
+
+use Nails\Cms\Widget\WidgetBase;
 
 class Blockquote extends WidgetBase
 {

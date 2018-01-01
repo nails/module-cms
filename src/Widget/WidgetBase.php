@@ -14,7 +14,12 @@ namespace Nails\Cms\Widget;
 
 class WidgetBase
 {
-    protected static $isDisabled;
+    /**
+     * Whether this widget is disabled or not
+     */
+    const DISABLED = false;
+
+    // --------------------------------------------------------------------------
 
     protected $label;
     protected $icon;
@@ -30,12 +35,12 @@ class WidgetBase
     // --------------------------------------------------------------------------
 
     /**
-     * Returns whether the template is disabled
+     * Returns whether the widget is disabled
      * @return bool
      */
     public static function isDisabled()
     {
-        return !empty(static::$isDisabled);
+        return !empty(static::DISABLED);
     }
 
     // --------------------------------------------------------------------------
@@ -45,18 +50,19 @@ class WidgetBase
      */
     public function __construct()
     {
-        $this->label              = 'Widget';
-        $this->icon               = 'fa-cube';
-        $this->description        = '';
-        $this->keywords           = '';
-        $this->grouping           = '';
-        $this->slug               = '';
-        $this->assets_editor      = array();
-        $this->assets_render      = array();
-        $this->path               = '';
-        $this->callbacks          = new \stdClass();
-        $this->callbacks->dropped = '';
-        $this->callbacks->removed = '';
+        $this->label         = 'Widget';
+        $this->icon          = 'fa-cube';
+        $this->description   = '';
+        $this->keywords      = '';
+        $this->grouping      = '';
+        $this->slug          = '';
+        $this->assets_editor = [];
+        $this->assets_render = [];
+        $this->path          = '';
+        $this->callbacks     = (object) [
+            'dropped' => '',
+            'removed' => '',
+        ];
 
         //  Autodetect some values
         $oReflect = new \ReflectionClass(get_called_class());
@@ -177,7 +183,7 @@ class WidgetBase
 
         } else {
 
-            return array();
+            return [];
         }
     }
 
@@ -204,10 +210,12 @@ class WidgetBase
     /**
      * Returns the HTML for the editor view. Any passed data will be used to
      * populate the values of the form elements.
-     * @param  array  $aWidgetData A normal widget_data object, prefixed to avoid naming collisions
+     *
+     * @param  array $aWidgetData A normal widget_data object, prefixed to avoid naming collisions
+     *
      * @return string
      */
-    public function getEditor($aWidgetData = array())
+    public function getEditor($aWidgetData = [])
     {
         if (is_file($this->path . 'views/editor.php')) {
 
@@ -242,56 +250,49 @@ class WidgetBase
 
     /**
      * Format the widget as a JSON object
+     *
+     * @param int $iJsonOptions
+     * @param int $iJsonDepth
+     *
      * @return string
      */
     public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
     {
-        $oWidget                           = new \stdClass();
-        $oWidget->label                    = $this->getLabel();
-        $oWidget->icon                     = $this->getIcon();
-        $oWidget->description              = $this->getDescription();
-        $oWidget->keywords                 = $this->getKeywords();
-        $oWidget->grouping                 = $this->getGrouping();
-        $oWidget->slug                     = $this->getSlug();
-        $oWidget->assets_editor            = $this->getAssets('EDITOR');
-        $oWidget->assets_render            = $this->getAssets('RENDER');
-        $oWidget->path                     = $this->getPath();
-        $oWidget->callbacks                = $this->getCallbacks();
-
-        return json_encode($oWidget, $iJsonOptions, $iJsonDepth);
+        return json_encode($this->toArray(), $iJsonOptions, $iJsonDepth);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Format the widget as an array
-     * @return string
+     * @return array
      */
     public function toArray()
     {
-        $aWidget                             = array();
-        $aWidget['label']                    = $this->getLabel();
-        $aWidget['icon']                     = $this->getIcon();
-        $aWidget['description']              = $this->getDescription();
-        $aWidget['keywords']                 = $this->getKeywords();
-        $aWidget['grouping']                 = $this->getGrouping();
-        $aWidget['slug']                     = $this->getSlug();
-        $aWidget['assets_editor']            = $this->getAssets('EDITOR');
-        $aWidget['assets_render']            = $this->getAssets('RENDER');
-        $aWidget['path']                     = $this->getPath();
-        $aWidget['callbacks']                = $this->getCallbacks();
-
-        return $aWidget;
+        return [
+            'label'         => $this->getLabel(),
+            'icon'          => $this->getIcon(),
+            'description'   => $this->getDescription(),
+            'keywords'      => $this->getKeywords(),
+            'grouping'      => $this->getGrouping(),
+            'slug'          => $this->getSlug(),
+            'assets_editor' => $this->getAssets('EDITOR'),
+            'assets_render' => $this->getAssets('RENDER'),
+            'path'          => $this->getPath(),
+            'callbacks'     => $this->getCallbacks(),
+        ];
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Renders the widget with the provided data.
-     * @param  array  $aWidgetData The widgets to include in the template
+     *
+     * @param  array $aWidgetData The data to render the widget with
+     *
      * @return string
      */
-    public function render($aWidgetData = array())
+    public function render($aWidgetData = [])
     {
         if (is_file($this->path . 'views/render.php')) {
 

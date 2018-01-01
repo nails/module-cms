@@ -20,7 +20,7 @@ class Settings extends BaseAdmin
 {
     /**
      * Announces this controller's navGroups
-     * @return stdClass
+     * @return \Nails\Admin\Nav
      */
     public static function announce()
     {
@@ -61,10 +61,10 @@ class Settings extends BaseAdmin
         //  Process POST
         if ($this->input->post()) {
 
-            $aSettings = array(
+            $aSettings = [
                 //  General Settings
                 'homepage' => (int) $this->input->post('homepage'),
-            );
+            ];
 
             // --------------------------------------------------------------------------
 
@@ -115,15 +115,15 @@ class Settings extends BaseAdmin
         $this->data['settings'] = appSetting(null, 'nailsapp/module-cms', true);
 
         //  Get Published pages
-        $oPagesModel = Factory::model('Page', 'nailsapp/module-cms');
+        $oPagesModel                  = Factory::model('Page', 'nailsapp/module-cms');
         $this->data['publishedPages'] = $oPagesModel->getAllFlat(
             null,
             null,
-            array(
-                'where' =>array(
-                    array('is_published', true)
-                )
-            )
+            [
+                'where' => [
+                    ['is_published', true],
+                ],
+            ]
         );
 
         Helper::loadView('index');

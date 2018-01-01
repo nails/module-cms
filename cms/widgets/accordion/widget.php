@@ -10,7 +10,9 @@
  * @link
  */
 
-namespace Nails\Cms\Widget;
+namespace Nails\Cms\Cms\Widget;
+
+use Nails\Cms\Widget\WidgetBase;
 
 class Accordion extends WidgetBase
 {
@@ -26,6 +28,6 @@ class Accordion extends WidgetBase
         $this->description = 'A collapsible accordion component.';
         $this->keywords    = 'accordion';
 
-        $this->assets_editor[] = array('admin.widget.accordion.css', 'nailsapp/module-cms');
+        $this->assets_editor[] = ['admin.widget.accordion.css', 'nailsapp/module-cms'];
     }
 }

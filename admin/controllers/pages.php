@@ -27,7 +27,7 @@ class Pages extends BaseAdmin
 
     /**
      * Announces this controller's navGroups
-     * @return stdClass
+     * @return \Nails\Admin\Nav
      */
     public static function announce()
     {
@@ -49,7 +49,7 @@ class Pages extends BaseAdmin
             $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
             $oNavGroup->setLabel('CMS');
             $oNavGroup->setIcon('fa-file-text');
-            $oNavGroup->addAction('Manage Pages', 'index', array($oAlert));
+            $oNavGroup->addAction('Manage Pages', 'index', [$oAlert]);
 
             return $oNavGroup;
         }
@@ -93,7 +93,7 @@ class Pages extends BaseAdmin
         $this->oTemplateModel = Factory::model('Template', 'nailsapp/module-cms');
 
         //  Note the ID of the homepage
-        $this->iHomepageId = appSetting('homepage', 'nailsapp/module-cms');
+        $this->iHomepageId         = appSetting('homepage', 'nailsapp/module-cms');
         $this->data['iHomepageId'] = $this->iHomepageId;
     }
 
@@ -120,30 +120,30 @@ class Pages extends BaseAdmin
         $sTableAlias = $this->oPageModel->getTableAlias();
 
         //  Get pagination and search/sort variables
-        $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
-        $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
-        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : $sTableAlias . '.draft_slug';
+        $page      = $this->input->get('page') ? $this->input->get('page') : 0;
+        $perPage   = $this->input->get('perPage') ? $this->input->get('perPage') : 50;
+        $sortOn    = $this->input->get('sortOn') ? $this->input->get('sortOn') : $sTableAlias . '.draft_slug';
         $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'asc';
-        $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
+        $keywords  = $this->input->get('keywords') ? $this->input->get('keywords') : '';
 
         // --------------------------------------------------------------------------
 
         //  Define the sortable columns
-        $sortColumns = array(
-            $sTableAlias . '.draft_slug' => 'Hierarchy',
+        $sortColumns = [
+            $sTableAlias . '.draft_slug'  => 'Hierarchy',
             $sTableAlias . '.draft_title' => 'Label',
-            $sTableAlias . '.modified' => 'Modified'
-        );
+            $sTableAlias . '.modified'    => 'Modified',
+        ];
 
         // --------------------------------------------------------------------------
 
         //  Define the $data variable for the queries
-        $data = array(
-            'sort' => array(
-                array($sortOn, $sortOrder)
-            ),
-            'keywords' => $keywords
-        );
+        $data = [
+            'sort'     => [
+                [$sortOn, $sortOrder],
+            ],
+            'keywords' => $keywords,
+        ];
 
         //  Get the items for the page
         $totalRows           = $this->oPageModel->countAll($data);
@@ -201,17 +201,17 @@ class Pages extends BaseAdmin
 
             if ($oFormValidation->run()) {
 
-                $aPageData = array(
-                    'title' => $this->input->post('title'),
-                    'slug' => $this->input->post('slug'),
-                    'parent_id' => (int) $this->input->post('parent_id'),
-                    'template' => $this->input->post('template'),
-                    'template_data' => $this->input->post('template_data'),
+                $aPageData = [
+                    'title'            => $this->input->post('title'),
+                    'slug'             => $this->input->post('slug'),
+                    'parent_id'        => (int) $this->input->post('parent_id'),
+                    'template'         => $this->input->post('template'),
+                    'template_data'    => $this->input->post('template_data'),
                     'template_options' => $this->input->post('template_options'),
-                    'seo_title' => $this->input->post('seo_title'),
-                    'seo_description' => $this->input->post('seo_description'),
-                    'seo_keywords' => $this->input->post('seo_keywords')
-                );
+                    'seo_title'        => $this->input->post('seo_title'),
+                    'seo_description'  => $this->input->post('seo_description'),
+                    'seo_keywords'     => $this->input->post('seo_keywords'),
+                ];
 
                 $aPageData['parent_id'] = !empty($aPageData['parent_id']) ? $aPageData['parent_id'] : null;
 
@@ -254,13 +254,13 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Set method info
-        $this->data['page']->title  = 'Create Page';
+        $this->data['page']->title = 'Create Page';
 
         //  Get data, available templates & widgets
         $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
         $this->data['templates']       = $this->oTemplateModel->getAvailable('EDITOR');
 
-        $aTemplatesJson = array();
+        $aTemplatesJson = [];
         foreach ($this->data['templates'] as $oTemplateGroup) {
             $aTemplatesJson[] = $oTemplateGroup->getTemplatesAsJson();
         }
@@ -278,7 +278,7 @@ class Pages extends BaseAdmin
             $oFirstGroup = reset($this->data['templates']);
             if (!empty($oFirstGroup)) {
 
-                $aTemplates = $oFirstGroup->getTemplates();
+                $aTemplates     = $oFirstGroup->getTemplates();
                 $oFirstTemplate = reset($aTemplates);
                 if (!empty($oFirstTemplate)) {
                     $this->data['defaultTemplate'] = $oFirstTemplate->getSlug();
@@ -346,17 +346,17 @@ class Pages extends BaseAdmin
 
             if ($oFormValidation->run()) {
 
-                $aPageData = array(
-                    'title' => $this->input->post('title'),
-                    'slug' => $this->input->post('slug'),
-                    'parent_id' => (int) $this->input->post('parent_id'),
-                    'template' => $this->input->post('template'),
-                    'template_data' => $this->input->post('template_data'),
+                $aPageData = [
+                    'title'            => $this->input->post('title'),
+                    'slug'             => $this->input->post('slug'),
+                    'parent_id'        => (int) $this->input->post('parent_id'),
+                    'template'         => $this->input->post('template'),
+                    'template_data'    => $this->input->post('template_data'),
                     'template_options' => $this->input->post('template_options'),
-                    'seo_title' => $this->input->post('seo_title'),
-                    'seo_description' => $this->input->post('seo_description'),
-                    'seo_keywords' => $this->input->post('seo_keywords')
-                );
+                    'seo_title'        => $this->input->post('seo_title'),
+                    'seo_description'  => $this->input->post('seo_description'),
+                    'seo_keywords'     => $this->input->post('seo_keywords'),
+                ];
 
                 $aPageData['parent_id'] = !empty($aPageData['parent_id']) ? $aPageData['parent_id'] : null;
 
@@ -405,7 +405,7 @@ class Pages extends BaseAdmin
         $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
         $this->data['templates']       = $this->oTemplateModel->getAvailable('EDITOR');
 
-        $aTemplatesJson = array();
+        $aTemplatesJson = [];
         foreach ($this->data['templates'] as $oTemplateGroup) {
             $aTemplatesJson[] = substr($oTemplateGroup->getTemplatesAsJson(), 1, -1);
         }
@@ -427,7 +427,7 @@ class Pages extends BaseAdmin
             $oFirstGroup = reset($this->data['templates']);
             if (!empty($oFirstGroup)) {
 
-                $aTemplates = $oFirstGroup->getTemplates();
+                $aTemplates     = $oFirstGroup->getTemplates();
                 $oFirstTemplate = reset($aTemplates);
                 if (!empty($oFirstTemplate)) {
                     $this->data['defaultTemplate'] = $oFirstTemplate->getSlug();
@@ -459,7 +459,6 @@ class Pages extends BaseAdmin
     public function publish()
     {
         if (!userHasPermission('admin:cms:pages:edit')) {
-
             unauthorised();
         }
 
