@@ -57,24 +57,17 @@ class Page extends Base
         $iId = parent::create();
 
         if (!$iId) {
-
             $this->setError('Unable to create base page object. ' . $this->lastError());
             $oDb->trans_rollback();
-
             return false;
         }
 
         //  Try and update it depending on how the update went, commit & update or rollback
         if ($this->update($iId, $aData)) {
-
             $oDb->trans_commit();
-
             return $iId;
-
         } else {
-
             $oDb->trans_rollback();
-
             return false;
         }
     }
@@ -298,6 +291,16 @@ class Page extends Base
 
             // --------------------------------------------------------------------------
 
+            //  Regenerate sitemap
+            //  @todo (Pablo - 2018-01-01) - Remove this coupling, use an event
+            if (isModuleEnabled('nailsapp/module-sitemap')) {
+                $this->load->model('sitemap/sitemap_model');
+                $this->sitemap_model->generate();
+            }
+
+            // --------------------------------------------------------------------------
+
+            //  @todo - Kill caches for this page and all children
             return true;
 
         } else {
@@ -475,6 +478,8 @@ class Page extends Base
                 $oDb->replace(NAILS_DB_PREFIX . 'cms_page_slug_history');
             }
 
+            $oDb->trans_commit();
+
             // --------------------------------------------------------------------------
 
             //  Rewrite routes
@@ -490,7 +495,7 @@ class Page extends Base
                 $this->sitemap_model->generate();
             }
 
-            $oDb->trans_commit();
+            // --------------------------------------------------------------------------
 
             //  @todo - Kill caches for this page and all children
             return true;
@@ -1090,6 +1095,8 @@ class Page extends Base
                 }
             }
 
+            $oDb->trans_commit();
+
             // --------------------------------------------------------------------------
 
             //  Rewrite routes
@@ -1099,23 +1106,19 @@ class Page extends Base
             // --------------------------------------------------------------------------
 
             //  Regenerate sitemap
+            //  @todo (Pablo - 2018-01-01) - Remove this coupling, use an event
             if (isModuleEnabled('nailsapp/module-sitemap')) {
-
                 $this->load->model('sitemap/sitemap_model');
                 $this->sitemap_model->generate();
             }
 
             // --------------------------------------------------------------------------
 
-            $oDb->trans_commit();
-
+            //  @todo - Kill caches for this page and all children
             return true;
 
         } else {
-
-            //  Failed
             $oDb->trans_rollback();
-
             return false;
         }
     }
