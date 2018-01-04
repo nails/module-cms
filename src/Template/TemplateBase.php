@@ -14,7 +14,7 @@ namespace Nails\Cms\Template;
 
 use Nails\Factory;
 
-class TemplateBase
+abstract class TemplateBase
 {
     /**
      * Whether the template is enabled or not
@@ -138,11 +138,9 @@ class TemplateBase
 
         // --------------------------------------------------------------------------
 
-        //  Autodetect some values
-        $oReflect = new \ReflectionClass(get_called_class());
-
-        //  Path
-        $this->path = dirname($oReflect->getFileName()) . '/';
+        //  Detect the path
+        $sCalledClass = get_called_class();
+        $this->path   = $sCalledClass::detectPath();
 
         //  Icon
         $aExtensions = ['png', 'jpg', 'jpeg', 'gif'];
@@ -175,6 +173,18 @@ class TemplateBase
         //  Slug - this should uniquely identify a type of template
         $this->slug = pathinfo($this->path);
         $this->slug = $this->slug['basename'];
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Detects the path of the called class
+     * @return string
+     */
+    public static function detectPath()
+    {
+        $oReflect = new \ReflectionClass(get_called_class());
+        return dirname($oReflect->getFileName()) . '/';
     }
 
     // --------------------------------------------------------------------------
@@ -299,6 +309,135 @@ class TemplateBase
     // --------------------------------------------------------------------------
 
     /**
+     * Renders the template with the provided data.
+     *
+     * @param  array $aTplData    The widgets to include in the template
+     * @param  array $aTplOptions Additional data created by the template
+     *
+     * @return string
+     */
+    public function render($aTplData = [], $aTplOptions = [])
+    {
+        //  Process each widget area and render the HTML
+        $aWidgetAreas  = $this->getWidgetAreas();
+        $aRenderedData = [];
+        $oWidgetModel  = Factory::model('Widget', 'nailsapp/module-cms');
+
+        foreach ($aWidgetAreas as $sAreaSlug => $oWidgetArea) {
+
+            $aWidgetData               = !empty($aTplData[$sAreaSlug]) ? $aTplData[$sAreaSlug] : [];
+            $aRenderedData[$sAreaSlug] = '';
+
+            foreach ($aWidgetData as $oWidgetData) {
+                $oWidget = $oWidgetModel->getBySlug($oWidgetData->slug, 'RENDER');
+                if ($oWidget) {
+                    $aRenderedData[$sAreaSlug] .= $oWidget->render((array) $oWidgetData->data);
+                }
+            }
+        }
+
+        return $this->loadView('view', $aTplOptions, $aRenderedData);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Load a specific view
+     *
+     * @param string $sView       The view to load
+     * @param array  $aTplOptions The selected template options
+     * @param array  $aTplData    The data to render the view with
+     *
+     * @return mixed|string
+     */
+    protected function loadView($sView, $aTplOptions, $aTplData)
+    {
+        //  Look for the view in the [potential] class hierarchy
+        $aClasses = array_filter(
+            array_merge(
+                [get_called_class()],
+                array_values(class_parents(get_called_class()))
+            )
+        );
+
+        foreach ($aClasses as $sClass) {
+
+            $sPath = $sClass::detectPath();
+
+            if (is_file($sPath . $sView . '.php')) {
+
+                //  Add a reference to the CI super object, for view loading etc
+                $oCi = get_instance();
+
+                /**
+                 * Extract data into variables in the local scope so the view can use them.
+                 * Basically copying how CI does it's view loading/rendering
+                 */
+                $NAILS_CONTROLLER_DATA =& getControllerData();
+                if ($NAILS_CONTROLLER_DATA) {
+                    extract($NAILS_CONTROLLER_DATA);
+                }
+
+                if ($aTplOptions) {
+                    extract($aTplOptions);
+                }
+
+                if ($aTplData) {
+                    extract($aTplData);
+                }
+
+                ob_start();
+                include $sPath . $sView . '.php';
+                $sBuffer = ob_get_contents();
+                @ob_end_clean();
+
+                //  Look for blocks
+                preg_match_all('/\[:([a-zA-Z0-9\-]+?):\]/', $sBuffer, $aMatches);
+
+                if ($aMatches[0]) {
+
+                    //  Get all the blocks which were found
+                    $oBlockModel = Factory::model('Block', 'nailsapp/module-cms');
+                    $aBlocks     = $oBlockModel->getBySlugs($aMatches[1]);
+
+                    //  Swap them in
+                    if ($aBlocks) {
+                        foreach ($aBlocks as $oBlock) {
+
+                            //  Translate some block types
+                            switch ($oBlock->type) {
+                                case 'file':
+                                case 'image':
+                                    $oBlock->value = cdnServe($oBlock->value);
+                                    break;
+                            }
+
+                            $sBuffer = str_replace('[:' . $oBlock->slug . ':]', $oBlock->value, $sBuffer);
+                        }
+                    }
+
+                    //  Swap page variables
+                    $sPageTitle    = !empty($tplAdditionalFields['cmspage']) ? $tplAdditionalFields['cmspage']->title : '';
+                    $pageShortTags = [
+                        'page-title' => $sPageTitle,
+                    ];
+
+                    foreach ($pageShortTags as $shortTag => $value) {
+                        $sBuffer = str_replace('[:' . $shortTag . ':]', $value, $sBuffer);
+                    }
+                }
+
+                //  Return the HTML
+                return $sBuffer;
+            }
+        }
+
+        return '';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Format the template as a JSON object
      *
      * @param int $iJsonOptions The JSON options
@@ -331,109 +470,5 @@ class TemplateBase
             'assets_render'     => $this->getAssets('RENDER'),
             'path'              => $this->getPath(),
         ];
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Renders the template with the provided data.
-     *
-     * @param  array $aTplData    The widgets to include in the template
-     * @param  array $aTplOptions Additional data created by the template
-     *
-     * @return string
-     */
-    public function render($aTplData = [], $aTplOptions = [])
-    {
-        //  Process each widget area and render the HTML
-        $aWidgetAreas = $this->getWidgetAreas();
-        $aRendered    = [];
-        $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
-
-        foreach ($aWidgetAreas as $sAreaSlug => $oWidgetArea) {
-
-            $aWidgetData           = !empty($aTplData[$sAreaSlug]) ? $aTplData[$sAreaSlug] : [];
-            $aRendered[$sAreaSlug] = '';
-
-            foreach ($aWidgetData as $oWidgetData) {
-                $oWidget = $oWidgetModel->getBySlug($oWidgetData->slug, 'RENDER');
-                if ($oWidget) {
-                    $aRendered[$sAreaSlug] .= $oWidget->render((array) $oWidgetData->data);
-                }
-            }
-        }
-
-        // --------------------------------------------------------------------------
-
-        if (is_file($this->path . 'view.php')) {
-
-            //  Add a reference to the CI super object, for view loading etc
-            $oCi = get_instance();
-
-            /**
-             * Extract data into variables in the local scope so the view can use them.
-             * Basically copying how CI does it's view loading/rendering
-             */
-
-            $NAILS_CONTROLLER_DATA =& getControllerData();
-            if ($NAILS_CONTROLLER_DATA) {
-                extract($NAILS_CONTROLLER_DATA);
-            }
-
-            if ($aTplOptions) {
-                extract($aTplOptions);
-            }
-
-            if ($aRendered) {
-                extract($aRendered);
-            }
-
-            ob_start();
-            include $this->path . 'view.php';
-            $buffer = ob_get_contents();
-            @ob_end_clean();
-
-            //  Look for blocks
-            preg_match_all('/\[:([a-zA-Z0-9\-]+?):\]/', $buffer, $matches);
-
-            if ($matches[0]) {
-
-                //  Get all the blocks which were found
-                $oBlockModel = Factory::model('Block', 'nailsapp/module-cms');
-                $aBlocks     = $oBlockModel->getBySlugs($matches[1]);
-
-                //  Swap them in
-                if ($aBlocks) {
-                    foreach ($aBlocks as $oBlock) {
-
-                        //  Translate some block types
-                        switch ($oBlock->type) {
-                            case 'file':
-                            case 'image':
-                                $oBlock->value = cdnServe($oBlock->value);
-                                break;
-                        }
-
-                        $buffer = str_replace('[:' . $oBlock->slug . ':]', $oBlock->value, $buffer);
-                    }
-                }
-
-                //  Swap page variables
-                $sPageTitle    = !empty($tplAdditionalFields['cmspage']) ? $tplAdditionalFields['cmspage']->title : '';
-                $pageShortTags = [
-                    'page-title' => $sPageTitle,
-                ];
-
-                foreach ($pageShortTags as $shortTag => $value) {
-
-                    $buffer = str_replace('[:' . $shortTag . ':]', $value, $buffer);
-                }
-            }
-
-            //  Return the HTML
-            return $buffer;
-        }
-
-        return '';
     }
 }

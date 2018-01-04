@@ -12,7 +12,7 @@
 
 namespace Nails\Cms\Widget;
 
-class WidgetBase
+abstract class WidgetBase
 {
     /**
      * Whether this widget is disabled or not
@@ -64,11 +64,9 @@ class WidgetBase
             'removed' => '',
         ];
 
-        //  Autodetect some values
-        $oReflect = new \ReflectionClass(get_called_class());
-
-        //  Path
-        $this->path = dirname($oReflect->getFileName()) . '/';
+        //  Detect the path
+        $sCalledClass = get_called_class();
+        $this->path   = $sCalledClass::detectPath();
 
         //  Slug - this should uniquely identify the widget
         $this->slug = pathinfo($this->path);
@@ -76,16 +74,24 @@ class WidgetBase
 
         //  Callbacks - attempt to auto-populate
         foreach ($this->callbacks as $sProperty => &$sCallback) {
-
             if (is_file($this->path . 'js/' . $sProperty . '.min.js')) {
-
                 $sCallback = file_get_contents($this->path . 'js/' . $sProperty . '.min.js');
-
             } elseif (is_file($this->path . 'js/' . $sProperty . '.js')) {
-
                 $sCallback = file_get_contents($this->path . 'js/' . $sProperty . '.js');
             }
         }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Detects the path of the called class
+     * @return string
+     */
+    public static function detectPath()
+    {
+        $oReflect = new \ReflectionClass(get_called_class());
+        return dirname($oReflect->getFileName()) . '/';
     }
 
     // --------------------------------------------------------------------------
@@ -125,7 +131,7 @@ class WidgetBase
 
     /**
      * Returns the widget's keywords
-     * @return array
+     * @return string
      */
     public function getKeywords()
     {
@@ -169,20 +175,18 @@ class WidgetBase
 
     /**
      * Returns the widget's assets
+     *
+     * @param string $sType the type of assets to return
+     *
      * @return array
      */
     public function getAssets($sType)
     {
         if ($sType == 'EDITOR') {
-
             return $this->assets_editor;
-
         } elseif ($sType == 'RENDER') {
-
             return $this->assets_render;
-
         } else {
-
             return [];
         }
     }
@@ -191,16 +195,16 @@ class WidgetBase
 
     /**
      * Returns the widget's callbacks
+     *
+     * @param string $sType the type of callback to return
+     *
      * @return mixed
      */
     public function getCallbacks($sType = '')
     {
         if (property_exists($this->callbacks, $sType)) {
-
             return $this->callbacks->{$sType};
-
         } else {
-
             return $this->callbacks;
         }
     }
@@ -211,39 +215,98 @@ class WidgetBase
      * Returns the HTML for the editor view. Any passed data will be used to
      * populate the values of the form elements.
      *
-     * @param  array $aWidgetData A normal widget_data object, prefixed to avoid naming collisions
+     * @param  array $aWidgetData The data to render the widget editor with
      *
      * @return string
      */
     public function getEditor($aWidgetData = [])
     {
-        if (is_file($this->path . 'views/editor.php')) {
+        return $this->loadView('editor', $aWidgetData);
+    }
 
-            //  Populate widget data
-            $this->populateWidgetData($aWidgetData);
+    // --------------------------------------------------------------------------
 
-            //  Add a reference to the CI super object, for view loading etc
-            $oCi = get_instance();
+    /**
+     * Renders the widget with the provided data.
+     *
+     * @param  array $aWidgetData The data to render the widget with
+     *
+     * @return string
+     */
+    public function render($aWidgetData = [])
+    {
+        return $this->loadView('render', $aWidgetData, true);
+    }
 
-            //  Extract the variables, so that the view can use them
-            if ($aWidgetData) {
-                extract($aWidgetData);
+    // --------------------------------------------------------------------------
+
+    /**
+     * Load a specific view
+     *
+     * @param string $sView                  The view to load
+     * @param array  $aWidgetData            The data to render the view with
+     * @param bool   $bExtractControllerData Whether to extract controller data or not
+     *
+     * @return string
+     */
+    protected function loadView($sView, array $aWidgetData, $bExtractControllerData = false)
+    {
+        //  Look for the view in the [potential] class hierarchy
+        $aClasses = array_filter(
+            array_merge(
+                [get_called_class()],
+                array_values(class_parents(get_called_class()))
+            )
+        );
+
+        foreach ($aClasses as $sClass) {
+
+            $sPath = $sClass::detectPath();
+
+            if (is_file($sPath . 'views/' . $sView . '.php')) {
+
+                //  Populate widget data
+                $this->populateWidgetData($aWidgetData);
+
+                //  Add a reference to the CI super object, for view loading etc
+                $oCi = get_instance();
+
+                /**
+                 * Extract data into variables in the local scope so the view can use them.
+                 * Basically copying how CI does it's view loading/rendering
+                 */
+                if ($bExtractControllerData) {
+                    $NAILS_CONTROLLER_DATA =& getControllerData();
+                    if ($NAILS_CONTROLLER_DATA) {
+                        extract($NAILS_CONTROLLER_DATA);
+                    }
+                }
+
+                if ($aWidgetData) {
+                    extract((array) $aWidgetData);
+                }
+
+                ob_start();
+                include $sPath . 'views/' . $sView . '.php';
+                $sBuffer = ob_get_contents();
+                @ob_end_clean();
+
+                return $sBuffer;
             }
-
-            //  Start the buffer, basically copying how CI does it's view loading
-            ob_start();
-
-            include $this->path . 'views/editor.php';
-
-            //  Flush buffer
-            $sBuffer = ob_get_contents();
-            @ob_end_clean();
-
-            //  Return the HTML
-            return $sBuffer;
         }
-
         return '';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Can be used to ensure that $aWidgetData has fields defined in both the editor
+     * and render views.
+     *
+     * @param array $aWidgetData The widget's data
+     */
+    protected function populateWidgetData(&$aWidgetData)
+    {
     }
 
     // --------------------------------------------------------------------------
@@ -281,64 +344,5 @@ class WidgetBase
             'path'          => $this->getPath(),
             'callbacks'     => $this->getCallbacks(),
         ];
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Renders the widget with the provided data.
-     *
-     * @param  array $aWidgetData The data to render the widget with
-     *
-     * @return string
-     */
-    public function render($aWidgetData = [])
-    {
-        if (is_file($this->path . 'views/render.php')) {
-
-            //  Populate widget data
-            $this->populateWidgetData($aWidgetData);
-
-            //  Add a reference to the CI super object, for view loading etc
-            $oCi = get_instance();
-
-            /**
-             * Extract data into variables in the local scope so the view can use them.
-             * Basically copying how CI does it's view loading/rendering
-             */
-            $NAILS_CONTROLLER_DATA =& getControllerData();
-            if ($NAILS_CONTROLLER_DATA) {
-                extract($NAILS_CONTROLLER_DATA);
-            }
-
-            if (!is_array($aWidgetData)) {
-                $aWidgetData = (array) $aWidgetData;
-            }
-
-            if ($aWidgetData) {
-                extract($aWidgetData);
-            }
-
-            ob_start();
-            include $this->path . 'views/render.php';
-            $sBuffer = ob_get_contents();
-            @ob_end_clean();
-
-            return $sBuffer;
-        }
-
-        return '';
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Can be used to ensure that $aWidgetData has fields defined in both the editor
-     * and render views.
-     *
-     * @param array $aWidgetData The widget's data
-     */
-    protected function populateWidgetData(&$aWidgetData)
-    {
     }
 }
