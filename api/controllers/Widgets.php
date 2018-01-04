@@ -62,6 +62,9 @@ class Widgets extends Base
                 }
             }
 
+            array_sort_multi($aWidgets, 'label');
+            $aWidgets = array_values($aWidgets);
+
             return [
                 'assets'  => [
                     'css' => $oAsset->output('CSS', false),
