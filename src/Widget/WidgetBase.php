@@ -27,6 +27,7 @@ abstract class WidgetBase
     protected $keywords;
     protected $grouping;
     protected $slug;
+    protected $screenshot;
     protected $assets_editor;
     protected $assets_render;
     protected $path;
@@ -56,6 +57,7 @@ abstract class WidgetBase
         $this->keywords      = '';
         $this->grouping      = '';
         $this->slug          = '';
+        $this->screenshot    = '';
         $this->assets_editor = [];
         $this->assets_render = [];
         $this->path          = '';
@@ -71,6 +73,13 @@ abstract class WidgetBase
         //  Slug - this should uniquely identify the widget
         $this->slug = pathinfo($this->path);
         $this->slug = $this->slug['basename'];
+
+        //  Detect the screenshot
+        if (is_file($this->path . 'screenshot.png')) {
+            $this->screenshot = 'data:image/jpg;base64,' . base64_encode(file_get_contents($this->path . 'screenshot.png'));
+        } elseif (is_file($this->path . 'screenshot.jpg')) {
+            $this->screenshot = 'data:image/jpg;base64,' . base64_encode(file_get_contents($this->path . 'screenshot.jpg'));
+        }
 
         //  Callbacks - attempt to auto-populate
         foreach ($this->callbacks as $sProperty => &$sCallback) {
@@ -158,6 +167,17 @@ abstract class WidgetBase
     public function getSlug()
     {
         return $this->slug;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the widget's screenshot
+     * @return string
+     */
+    public function getScreenshot()
+    {
+        return $this->screenshot;
     }
 
     // --------------------------------------------------------------------------
@@ -339,6 +359,7 @@ abstract class WidgetBase
             'keywords'      => $this->getKeywords(),
             'grouping'      => $this->getGrouping(),
             'slug'          => $this->getSlug(),
+            'screenshot'    => $this->getScreenshot(),
             'assets_editor' => $this->getAssets('EDITOR'),
             'assets_render' => $this->getAssets('RENDER'),
             'path'          => $this->getPath(),
