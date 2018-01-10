@@ -31,8 +31,8 @@ NAILS_Admin_CMS_WidgetEditor = function() {
      */
     this.actions = [
         {
-            'label': '<i class="fa fa-lg fa-times"></i>',
-            'type': 'danger',
+            'label': '<i class="fa fa-lg fa-check"></i>',
+            'type': 'success',
             'callback': function() {
                 base.actionClose();
             }
@@ -166,7 +166,10 @@ NAILS_Admin_CMS_WidgetEditor = function() {
                     '<a href="#" class="action action-refresh-editor fa fa-refresh"></a>' +
                     '<div class="description">{{description}}</div>' +
                     '<div class="editor-target fieldset">Widget Loading...</div>'
-                )
+                ),
+                'preview': $('<div>')
+                    .addClass('widgeteditor-preview')
+                    .html('<img width="250"><small></small>')
             };
 
             //  Add search input
@@ -179,7 +182,8 @@ NAILS_Admin_CMS_WidgetEditor = function() {
                 .append(base.sections.actions)
                 .append(base.sections.search)
                 .append(base.sections.widgets)
-                .append(base.sections.body);
+                .append(base.sections.body)
+                .append(base.sections.preview);
 
             $('body').append(base.container);
 
@@ -221,30 +225,57 @@ NAILS_Admin_CMS_WidgetEditor = function() {
         });
 
         //  Widgets
-        base.sections.widgets.on('click', '.widget-group', function() {
+        base.sections.widgets
+            .on('click', '.widget-group', function() {
 
-            base.log('Toggling visibility of group\'s widgets.');
+                base.log('Toggling visibility of group\'s widgets.');
 
-            var isOpen;
+                var isOpen;
 
-            if ($(this).hasClass('closed')) {
-                $(this).removeClass('closed');
-                isOpen = true;
-            } else {
-                $(this).addClass('closed');
-                isOpen = false;
-            }
+                if ($(this).hasClass('closed')) {
+                    $(this).removeClass('closed');
+                    isOpen = true;
+                } else {
+                    $(this).addClass('closed');
+                    isOpen = false;
+                }
 
-            groupIndex = $(this).data('group');
-            $('.widget-group-' + groupIndex, base.sections.widgets).toggleClass('hidden');
+                groupIndex = $(this).data('group');
+                $('.widget-group-' + groupIndex, base.sections.widgets).toggleClass('hidden');
 
-            //  Save the state to localstorage
-            _nails_admin.localStorage
-                .set(
-                    'widgeteditor-group-' + groupIndex + '-hidden',
-                    !isOpen
-                );
-        });
+                //  Save the state to localstorage
+                _nails_admin.localStorage
+                    .set(
+                        'widgeteditor-group-' + groupIndex + '-hidden',
+                        !isOpen
+                    );
+            })
+            .on('mouseenter', '.widget', function() {
+                var img = $(this).data('preview');
+                var description = $(this).data('description');
+                if (img || description) {
+                    base.sections.preview
+                        .css('top', ($(this).offset().top + 10) + 'px')
+                        .addClass('is-shown');
+                    if (img) {
+                        base.sections.preview
+                            .find('img')
+                            .attr('src', img)
+                            .show();
+                    } else {
+                        base.sections.preview
+                            .find('img')
+                            .hide();
+                    }
+                    base.sections.preview
+                        .find('small')
+                        .html(description);
+                }
+            })
+            .on('mouseleave', '.widget', function() {
+                base.sections.preview
+                    .removeClass('is-shown');
+            });
 
         //  Search
         base.sections.search.on('keyup', function() {
@@ -403,6 +434,8 @@ NAILS_Admin_CMS_WidgetEditor = function() {
                     .addClass('widget widget-group-' + i)
                     .data('group', i)
                     .data('slug', base.widgets[i].widgets[x].slug)
+                    .data('preview', base.widgets[i].widgets[x].screenshot)
+                    .data('description', base.widgets[i].widgets[x].description)
                     .data('keywords', base.widgets[i].widgets[x].keywords);
 
                 if (hidden === true || hidden === null) {

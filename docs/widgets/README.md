@@ -20,6 +20,7 @@ In addition, widgets can supply some custom JS to enhance the admin experience (
 |--- widgets/
 |------ MyWidget/
 |--------- widget.php
+|--------- screenshot.png
 |--------- views/render.php
 |--------- views/editor.php
 |--------- js/dropped.js
@@ -27,6 +28,8 @@ In addition, widgets can supply some custom JS to enhance the admin experience (
 ```
 
 `widget.php` contains a class which matches the name of the widget in the `App\Cms\Widget` namespace, e.g. `App\Cms\Widget\MyWidget`; this is your widget definition.
+
+`screenshot.php` is an optional screenshot to display along side the widget in the editor sidebar; this should be around 500px wide and show the widget with as little surrounding content as possible.
 
 `views/editor.php` is used in the admin widget area GUI and allows you to offer various options for the user to choose from.
 
