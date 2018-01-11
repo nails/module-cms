@@ -75,18 +75,22 @@ abstract class WidgetBase
         $this->slug = $this->slug['basename'];
 
         //  Detect the screenshot
-        if (is_file($this->path . 'screenshot.png')) {
-            $this->screenshot = 'data:image/jpg;base64,' . base64_encode(file_get_contents($this->path . 'screenshot.png'));
-        } elseif (is_file($this->path . 'screenshot.jpg')) {
-            $this->screenshot = 'data:image/jpg;base64,' . base64_encode(file_get_contents($this->path . 'screenshot.jpg'));
+        $aFiles = ['screenshot.png', 'screenshot.jpg', 'screenshot.gif'];
+        foreach ($aFiles as $sFile) {
+            $sPath = static::getFilePath($sFile);
+            if (!empty($sPath)) {
+                $this->screenshot = 'data:image/jpg;base64,' . base64_encode(file_get_contents($sPath));
+            }
         }
 
         //  Callbacks - attempt to auto-populate
         foreach ($this->callbacks as $sProperty => &$sCallback) {
-            if (is_file($this->path . 'js/' . $sProperty . '.min.js')) {
-                $sCallback = file_get_contents($this->path . 'js/' . $sProperty . '.min.js');
-            } elseif (is_file($this->path . 'js/' . $sProperty . '.js')) {
-                $sCallback = file_get_contents($this->path . 'js/' . $sProperty . '.js');
+            $aFiles = ['js/' . $sProperty . '.min.js', 'js/' . $sProperty . '.js'];
+            foreach ($aFiles as $sFile) {
+                $sPath = static::getFilePath($sFile);
+                if (!empty($sPath)) {
+                    $sCallback = file_get_contents($sPath);
+                }
             }
         }
     }
@@ -101,6 +105,35 @@ abstract class WidgetBase
     {
         $oReflect = new \ReflectionClass(get_called_class());
         return dirname($oReflect->getFileName()) . '/';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Looks for a file in the widget hierarchy and returns it if found
+     *
+     * @param string $sFile The file name to look for
+     *
+     * @return null|string
+     */
+    public static function getFilePath($sFile)
+    {
+        //  Look for the file in the [potential] class hierarchy
+        $aClasses = array_filter(
+            array_merge(
+                [get_called_class()],
+                array_values(class_parents(get_called_class()))
+            )
+        );
+
+        foreach ($aClasses as $sClass) {
+            $sPath = $sClass::detectPath();
+            if (is_file($sPath . $sFile)) {
+                return $sPath . $sFile;
+            }
+        }
+
+        return null;
     }
 
     // --------------------------------------------------------------------------
@@ -271,49 +304,37 @@ abstract class WidgetBase
      */
     protected function loadView($sView, array $aWidgetData, $bExtractControllerData = false)
     {
-        //  Look for the view in the [potential] class hierarchy
-        $aClasses = array_filter(
-            array_merge(
-                [get_called_class()],
-                array_values(class_parents(get_called_class()))
-            )
-        );
+        $sPath = static::getFilePath('views/' . $sView . '.php');
+        if (!empty($sPath)) {
+            //  Populate widget data
+            $this->populateWidgetData($aWidgetData);
 
-        foreach ($aClasses as $sClass) {
+            //  Add a reference to the CI super object, for view loading etc
+            $oCi = get_instance();
 
-            $sPath = $sClass::detectPath();
-
-            if (is_file($sPath . 'views/' . $sView . '.php')) {
-
-                //  Populate widget data
-                $this->populateWidgetData($aWidgetData);
-
-                //  Add a reference to the CI super object, for view loading etc
-                $oCi = get_instance();
-
-                /**
-                 * Extract data into variables in the local scope so the view can use them.
-                 * Basically copying how CI does it's view loading/rendering
-                 */
-                if ($bExtractControllerData) {
-                    $NAILS_CONTROLLER_DATA =& getControllerData();
-                    if ($NAILS_CONTROLLER_DATA) {
-                        extract($NAILS_CONTROLLER_DATA);
-                    }
+            /**
+             * Extract data into variables in the local scope so the view can use them.
+             * Basically copying how CI does it's view loading/rendering
+             */
+            if ($bExtractControllerData) {
+                $NAILS_CONTROLLER_DATA =& getControllerData();
+                if ($NAILS_CONTROLLER_DATA) {
+                    extract($NAILS_CONTROLLER_DATA);
                 }
-
-                if ($aWidgetData) {
-                    extract((array) $aWidgetData);
-                }
-
-                ob_start();
-                include $sPath . 'views/' . $sView . '.php';
-                $sBuffer = ob_get_contents();
-                @ob_end_clean();
-
-                return $sBuffer;
             }
+
+            if ($aWidgetData) {
+                extract((array) $aWidgetData);
+            }
+
+            ob_start();
+            include $sPath;
+            $sBuffer = ob_get_contents();
+            @ob_end_clean();
+
+            return $sBuffer;
         }
+
         return '';
     }
 

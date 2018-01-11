@@ -190,6 +190,35 @@ abstract class TemplateBase
     // --------------------------------------------------------------------------
 
     /**
+     * Looks for a file in the widget hierarchy and returns it if found
+     *
+     * @param string $sFile The file name to look for
+     *
+     * @return null|string
+     */
+    public static function getFilePath($sFile)
+    {
+        //  Look for the file in the [potential] class hierarchy
+        $aClasses = array_filter(
+            array_merge(
+                [get_called_class()],
+                array_values(class_parents(get_called_class()))
+            )
+        );
+
+        foreach ($aClasses as $sClass) {
+            $sPath = $sClass::detectPath();
+            if (is_file($sPath . $sFile)) {
+                return $sPath . $sFile;
+            }
+        }
+
+        return null;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Returns the template's label
      * @return string
      */
@@ -352,84 +381,72 @@ abstract class TemplateBase
      */
     protected function loadView($sView, $aTplOptions, $aTplData)
     {
-        //  Look for the view in the [potential] class hierarchy
-        $aClasses = array_filter(
-            array_merge(
-                [get_called_class()],
-                array_values(class_parents(get_called_class()))
-            )
-        );
+        $sPath = static::getFilePath($sView . '.php');
+        if (!empty($sPath)) {
 
-        foreach ($aClasses as $sClass) {
+            //  Add a reference to the CI super object, for view loading etc
+            $oCi = get_instance();
 
-            $sPath = $sClass::detectPath();
-
-            if (is_file($sPath . $sView . '.php')) {
-
-                //  Add a reference to the CI super object, for view loading etc
-                $oCi = get_instance();
-
-                /**
-                 * Extract data into variables in the local scope so the view can use them.
-                 * Basically copying how CI does it's view loading/rendering
-                 */
-                $NAILS_CONTROLLER_DATA =& getControllerData();
-                if ($NAILS_CONTROLLER_DATA) {
-                    extract($NAILS_CONTROLLER_DATA);
-                }
-
-                if ($aTplOptions) {
-                    extract($aTplOptions);
-                }
-
-                if ($aTplData) {
-                    extract($aTplData);
-                }
-
-                ob_start();
-                include $sPath . $sView . '.php';
-                $sBuffer = ob_get_contents();
-                @ob_end_clean();
-
-                //  Look for blocks
-                preg_match_all('/\[:([a-zA-Z0-9\-]+?):\]/', $sBuffer, $aMatches);
-
-                if ($aMatches[0]) {
-
-                    //  Get all the blocks which were found
-                    $oBlockModel = Factory::model('Block', 'nailsapp/module-cms');
-                    $aBlocks     = $oBlockModel->getBySlugs($aMatches[1]);
-
-                    //  Swap them in
-                    if ($aBlocks) {
-                        foreach ($aBlocks as $oBlock) {
-
-                            //  Translate some block types
-                            switch ($oBlock->type) {
-                                case 'file':
-                                case 'image':
-                                    $oBlock->value = cdnServe($oBlock->value);
-                                    break;
-                            }
-
-                            $sBuffer = str_replace('[:' . $oBlock->slug . ':]', $oBlock->value, $sBuffer);
-                        }
-                    }
-
-                    //  Swap page variables
-                    $sPageTitle    = !empty($tplAdditionalFields['cmspage']) ? $tplAdditionalFields['cmspage']->title : '';
-                    $pageShortTags = [
-                        'page-title' => $sPageTitle,
-                    ];
-
-                    foreach ($pageShortTags as $shortTag => $value) {
-                        $sBuffer = str_replace('[:' . $shortTag . ':]', $value, $sBuffer);
-                    }
-                }
-
-                //  Return the HTML
-                return $sBuffer;
+            /**
+             * Extract data into variables in the local scope so the view can use them.
+             * Basically copying how CI does it's view loading/rendering
+             */
+            $NAILS_CONTROLLER_DATA =& getControllerData();
+            if ($NAILS_CONTROLLER_DATA) {
+                extract($NAILS_CONTROLLER_DATA);
             }
+
+            if ($aTplOptions) {
+                extract($aTplOptions);
+            }
+
+            if ($aTplData) {
+                extract($aTplData);
+            }
+
+            ob_start();
+            include $sPath;
+            $sBuffer = ob_get_contents();
+            @ob_end_clean();
+
+            //  Look for blocks
+            preg_match_all('/\[:([a-zA-Z0-9\-]+?):\]/', $sBuffer, $aMatches);
+
+            if ($aMatches[0]) {
+
+                //  Get all the blocks which were found
+                $oBlockModel = Factory::model('Block', 'nailsapp/module-cms');
+                $aBlocks     = $oBlockModel->getBySlugs($aMatches[1]);
+
+                //  Swap them in
+                if ($aBlocks) {
+                    foreach ($aBlocks as $oBlock) {
+
+                        //  Translate some block types
+                        switch ($oBlock->type) {
+                            case 'file':
+                            case 'image':
+                                $oBlock->value = cdnServe($oBlock->value);
+                                break;
+                        }
+
+                        $sBuffer = str_replace('[:' . $oBlock->slug . ':]', $oBlock->value, $sBuffer);
+                    }
+                }
+
+                //  Swap page variables
+                $sPageTitle    = !empty($tplAdditionalFields['cmspage']) ? $tplAdditionalFields['cmspage']->title : '';
+                $pageShortTags = [
+                    'page-title' => $sPageTitle,
+                ];
+
+                foreach ($pageShortTags as $shortTag => $value) {
+                    $sBuffer = str_replace('[:' . $shortTag . ':]', $value, $sBuffer);
+                }
+            }
+
+            //  Return the HTML
+            return $sBuffer;
         }
 
         return '';
