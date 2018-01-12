@@ -358,6 +358,12 @@ abstract class TemplateBase
             $aRenderedData[$sAreaSlug] = '';
 
             foreach ($aWidgetData as $oWidgetData) {
+                if (empty($oWidgetData->slug)) {
+                    continue;
+                }
+                if (!property_exists($oWidgetData, 'data')) {
+                    $oWidgetData->data = [];
+                }
                 $oWidget = $oWidgetModel->getBySlug($oWidgetData->slug, 'RENDER');
                 if ($oWidget) {
                     $aRenderedData[$sAreaSlug] .= $oWidget->render((array) $oWidgetData->data);
