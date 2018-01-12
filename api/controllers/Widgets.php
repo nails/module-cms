@@ -132,37 +132,35 @@ class Widgets extends Base
             }
 
             $oInput       = Factory::service('Input');
-            $aWidgetData  = $oInput->post('data') ?: [];
+            $aWidgetData  = json_decode($oInput->post('data')) ?: [];
             $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
             $aOut         = ['data' => []];
 
-            foreach ($aWidgetData as $aData) {
+            foreach ($aWidgetData as $oData) {
 
-                $sRenderSlug = !empty($aData['slug']) ? $aData['slug'] : null;
-                if (!empty($sRenderSlug)) {
+                if (!empty($oData->slug)) {
 
-                    $oWidget = $oWidgetModel->getBySlug($aData['slug']);
+                    $oWidget = $oWidgetModel->getBySlug($oData->slug);
 
                     if ($oWidget) {
 
-                        $aRenderData    = !empty($aData['data']) ? $aData['data'] : [];
+                        $aRenderData    = !empty($oData->data) ? $oData->data : [];
                         $aOut['data'][] = [
-                            'slug'   => $aData['slug'],
-                            'editor' => $oWidget->getEditor($aRenderData),
+                            'slug'   => $oData->slug,
+                            'editor' => $oWidget->getEditor((array) $aRenderData),
                         ];
 
                     } else {
-
                         $aOut['data'][] = [
-                            'slug'   => $aData['slug'],
-                            'editor' => '"' . $aData['slug'] . '" is not a valid widget.',
+                            'slug'   => $oData->slug,
+                            'editor' => '"' . $oData->slug . '" is not a valid widget.',
                             'error'  => true,
                         ];
                     }
 
                 } else {
                     $aOut['data'][] = [
-                        'slug'   => $aData['slug'],
+                        'slug'   => null,
                         'editor' => 'No widget supplied.',
                         'error'  => true,
                     ];

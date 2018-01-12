@@ -578,7 +578,6 @@ NAILS_Admin_CMS_WidgetEditor = function() {
             var requestData = [];
 
             for (var key in base.widgetData[area]) {
-
                 if (base.widgetData[area].hasOwnProperty(key)) {
 
                     //  Add to the DOM, addWidget will populate
@@ -607,7 +606,7 @@ NAILS_Admin_CMS_WidgetEditor = function() {
                 'method': 'editors',
                 'action': 'POST',
                 'data': {
-                    'data': requestData
+                    'data': JSON.stringify(requestData)
                 },
                 'success': function(data) {
 
@@ -835,6 +834,16 @@ NAILS_Admin_CMS_WidgetEditor = function() {
 
         } else {
             base.warn('Attempted to add an invalid widget');
+
+            //  Show user feedback
+            var $error = $('<p>')
+                .addClass('alert alert-danger')
+                .html('Widget "' + widget + '" does not exist. <a href="#" class="action-remove">Remove?</a>');
+
+            $(widgetDom)
+                .empty()
+                .addClass('editor-missing')
+                .append($error);
         }
 
         return base;
