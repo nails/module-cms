@@ -14,6 +14,7 @@ namespace Nails\Cms\Model;
 
 use Nails\Common\Model\Base;
 use Nails\Factory;
+use Nails\Cms\Events;
 
 class Page extends Base
 {
@@ -82,10 +83,10 @@ class Page extends Base
      *
      * @return bool
      */
-    public function update($iPageId, $aData)
+    public function update($iId, $aData)
     {
         //  Fetch the current version of this page, for reference.
-        $oCurrent = $this->getById($iPageId);
+        $oCurrent = $this->getById($iId);
 
         if (!$oCurrent) {
 
@@ -260,14 +261,14 @@ class Page extends Base
                     }
 
                     //  Update each child
-                    foreach ($aUpdateData as $iPageId => $aCache) {
+                    foreach ($aUpdateData as $iId => $aCache) {
 
                         $aData = [
                             'draft_slug'        => $aCache['slug'],
                             'draft_breadcrumbs' => json_encode($aCache['crumb']),
                         ];
 
-                        if (!parent::update($iPageId, $aData)) {
+                        if (!parent::update($iId, $aData)) {
 
                             $this->setError('Failed to update child page\'s slug and breadcrumbs');
                             $oDb->trans_rollback();
@@ -291,12 +292,9 @@ class Page extends Base
 
             // --------------------------------------------------------------------------
 
-            //  Regenerate sitemap
-            //  @todo (Pablo - 2018-01-01) - Remove this coupling, use an event
-            if (isModuleEnabled('nailsapp/module-sitemap')) {
-                $this->load->model('sitemap/sitemap_model');
-                $this->sitemap_model->generate();
-            }
+            //  Trigger event
+            $oEvent = Factory::service('Event');
+            $oEvent->trigger(Events::PAGE_UPDATED, 'nailsapp/module-cms', [$iId]);
 
             // --------------------------------------------------------------------------
 
@@ -470,7 +468,6 @@ class Page extends Base
 
             //  Add any slug_history items
             foreach ($aSlugHistory as $item) {
-
                 $oDb->set('hash', md5($item['slug'] . $item['page_id']));
                 $oDb->set('slug', $item['slug']);
                 $oDb->set('page_id', $item['page_id']);
@@ -488,12 +485,9 @@ class Page extends Base
 
             // --------------------------------------------------------------------------
 
-            //  Regenerate sitemap
-            //  @todo (Pablo - 2018-01-01) - Remove this coupling, use an event
-            if (isModuleEnabled('nailsapp/module-sitemap')) {
-                $this->load->model('sitemap/sitemap_model');
-                $this->sitemap_model->generate();
-            }
+            //  Trigger event
+            $oEvent = Factory::service('Event');
+            $oEvent->trigger(Events::PAGE_PUBLISHED, 'nailsapp/module-cms', [$iId]);
 
             // --------------------------------------------------------------------------
 
@@ -1041,18 +1035,16 @@ class Page extends Base
     /**
      * Delete a page and it's children
      *
-     * @param  int $id The ID of the page to delete
+     * @param  int $iId The ID of the page to delete
      *
      * @return boolean
      */
-    public function delete($id)
+    public function delete($iId)
     {
-        $page = $this->getById($id);
+        $oPage = $this->getById($iId);
 
-        if (!$page) {
-
+        if (!$oPage) {
             $this->setError('Invalid page ID');
-
             return false;
         }
 
@@ -1061,19 +1053,18 @@ class Page extends Base
         $oDb = Factory::service('Database');
         $oDb->trans_begin();
 
-        $oDb->where('id', $id);
+        $oDb->where('id', $iId);
         $oDb->set('is_deleted', true);
         $oDb->set('modified', 'NOW()', false);
 
         if (isLoggedIn()) {
-
             $oDb->set('modified_by', activeUser('id'));
         }
 
         if ($oDb->update($this->table)) {
 
             //  Success, update children
-            $children = $this->getIdsOfChildren($id);
+            $children = $this->getIdsOfChildren($iId);
 
             if ($children) {
 
@@ -1082,15 +1073,12 @@ class Page extends Base
                 $oDb->set('modified', 'NOW()', false);
 
                 if (isLoggedIn()) {
-
                     $oDb->set('modified_by', activeUser('id'));
                 }
 
                 if (!$oDb->update($this->table)) {
-
                     $this->setError('Unable to delete children pages');
                     $oDb->trans_rollback();
-
                     return false;
                 }
             }
@@ -1105,12 +1093,9 @@ class Page extends Base
 
             // --------------------------------------------------------------------------
 
-            //  Regenerate sitemap
-            //  @todo (Pablo - 2018-01-01) - Remove this coupling, use an event
-            if (isModuleEnabled('nailsapp/module-sitemap')) {
-                $this->load->model('sitemap/sitemap_model');
-                $this->sitemap_model->generate();
-            }
+            //  Trigger event
+            $oEvent = Factory::service('Event');
+            $oEvent->trigger(Events::PAGE_DELETED, 'nailsapp/module-cms', [$iId]);
 
             // --------------------------------------------------------------------------
 
