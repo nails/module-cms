@@ -1005,7 +1005,7 @@ class Page extends Base
         // --------------------------------------------------------------------------
 
         //  Owner
-        $modifiedBy = (int) is_object($oObj->modified_by) ? $oObj->modified_by->id : $oObj->modified_by;
+        $modifiedBy = (int) (is_object($oObj->modified_by) ? $oObj->modified_by->id : $oObj->modified_by);
         
         $oObj->modified_by              = new \stdClass();
         $oObj->modified_by->id          = $modifiedBy;
