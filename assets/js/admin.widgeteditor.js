@@ -114,6 +114,14 @@ NAILS_Admin_CMS_WidgetEditor = function() {
     // --------------------------------------------------------------------------
 
     /**
+     * Any callbacks to apply to widgets on initialisation
+     * @type {Array}
+     */
+    this.widgetElements = [];
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Construct the CMS widget editor
      * @return {NAILS_Admin_CMS_WidgetEditor} The object itself, for chaining
      */
@@ -132,6 +140,35 @@ NAILS_Admin_CMS_WidgetEditor = function() {
                 base.ready = true;
                 base.log('Widget Editor ready');
             });
+
+        //  Default editor elements
+        this
+            .addWidgetEditorElement(function() {
+                _nails.addStripes();
+            })
+            .addWidgetEditorElement(function(widgetDom) {
+                _nails_admin.buildWysiwyg('basic', widgetDom);
+                _nails_admin.buildWysiwyg('default', widgetDom);
+            })
+            .addWidgetEditorElement(function() {
+                _nails_admin.initSelect2();
+            })
+            .addWidgetEditorElement(function() {
+                _nails_admin.initToggles();
+            })
+            .addWidgetEditorElement(function() {
+                _nails.initTipsy();
+            });
+
+        //  Look for any other globally defined items
+        if (window.NAILS_Admin_CMS_WidgetEditor.widgetEditorElement) {
+            for (var i = 0, j = window.NAILS_Admin_CMS_WidgetEditor.widgetEditorElement.length; i < j; i++) {
+                this
+                    .addWidgetEditorElement(
+                        window.NAILS_Admin_CMS_WidgetEditor.widgetEditorElement[i]
+                    );
+            }
+        }
 
         return base;
     };
@@ -912,28 +949,22 @@ NAILS_Admin_CMS_WidgetEditor = function() {
 
     // --------------------------------------------------------------------------
 
+    this.addWidgetEditorElement = function(callback) {
+        this.widgetElements.push(callback);
+        return this;
+    };
+
+    // --------------------------------------------------------------------------
+
     /**
      * Initialise all the items in a widget editor
      * @param {Object} [widgetDom] The widget's DOM element
      * @return {void}
      */
     this.initWidgetEditorElements = function(widgetDom) {
-
-        //  Table stripes
-        _nails.addStripes();
-
-        //  WYSIWYG editors
-        _nails_admin.buildWysiwyg('basic', widgetDom);
-        _nails_admin.buildWysiwyg('default', widgetDom);
-
-        //  Select2 Dropdowns
-        _nails_admin.initSelect2();
-
-        //  Toggles
-        _nails_admin.initToggles();
-
-        //  Tipsys
-        _nails.initTipsy();
+        for (var i = 0, j = this.widgetElements.length; i < j; i++) {
+            this.widgetElements[i].call(widgetDom);
+        }
     };
 
     // --------------------------------------------------------------------------
