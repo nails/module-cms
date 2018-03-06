@@ -24,7 +24,7 @@ class Slider extends BaseAdmin
 
     /**
      * Announces this controller's navGroups
-     * @return stdClass
+     * @return \Nails\Admin\Nav
      */
     public static function announce()
     {
@@ -93,29 +93,29 @@ class Slider extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get pagination and search/sort variables
-        $page      = $this->input->get('page')      ? $this->input->get('page')      : 0;
-        $perPage   = $this->input->get('perPage')   ? $this->input->get('perPage')   : 50;
-        $sortOn    = $this->input->get('sortOn')    ? $this->input->get('sortOn')    : 's.label';
+        $page      = $this->input->get('page') ? $this->input->get('page') : 0;
+        $perPage   = $this->input->get('perPage') ? $this->input->get('perPage') : 50;
+        $sortOn    = $this->input->get('sortOn') ? $this->input->get('sortOn') : 's.label';
         $sortOrder = $this->input->get('sortOrder') ? $this->input->get('sortOrder') : 'asc';
-        $keywords  = $this->input->get('keywords')  ? $this->input->get('keywords')  : '';
+        $keywords  = $this->input->get('keywords') ? $this->input->get('keywords') : '';
 
         // --------------------------------------------------------------------------
 
         //  Define the sortable columns
-        $sortColumns = array(
+        $sortColumns = [
             's.label'    => 'Label',
-            's.modified' => 'Modified Date'
-        );
+            's.modified' => 'Modified Date',
+        ];
 
         // --------------------------------------------------------------------------
 
         //  Define the $data variable for the queries
-        $data = array(
-            'sort' => array(
-                array($sortOn, $sortOrder)
-            ),
-            'keywords' => $keywords
-        );
+        $data = [
+            'sort'     => [
+                [$sortOn, $sortOrder],
+            ],
+            'keywords' => $keywords,
+        ];
 
         //  Get the items for the page
         $totalRows             = $this->oSliderModel->countAll($data);
@@ -128,7 +128,7 @@ class Slider extends BaseAdmin
         //  Add a header button
         if (userHasPermission('admin:cms:slider:create')) {
 
-             Helper::addHeaderButton('admin/cms/slider/create', 'Add New Slider');
+            Helper::addHeaderButton('admin/cms/slider/create', 'Add New Slider');
         }
 
         // --------------------------------------------------------------------------
@@ -154,13 +154,13 @@ class Slider extends BaseAdmin
         if ($this->input->post()) {
 
             //  Rebuild sliders
-            $slideIds  = $this->input->post('slideId') ? $this->input->post('slideId') : array();
-            $objectIds = $this->input->post('objectId') ? $this->input->post('objectId') : array();
-            $captions  = $this->input->post('caption') ? $this->input->post('caption') : array();
-            $urls      = $this->input->post('url') ? $this->input->post('url') : array();
+            $slideIds  = $this->input->post('slideId') ? $this->input->post('slideId') : [];
+            $objectIds = $this->input->post('objectId') ? $this->input->post('objectId') : [];
+            $captions  = $this->input->post('caption') ? $this->input->post('caption') : [];
+            $urls      = $this->input->post('url') ? $this->input->post('url') : [];
 
-            $slides = array();
-            for ($i=0; $i < count($slideIds); $i++) {
+            $slides = [];
+            for ($i = 0; $i < count($slideIds); $i++) {
 
                 $slides[$i]            = new \stdClass();
                 $slides[$i]->id        = !empty($slideIds[$i]) ? $slideIds[$i] : null;
@@ -180,7 +180,7 @@ class Slider extends BaseAdmin
             if ($oFormValidation->run()) {
 
                 //  Prepare the create data
-                $aSliderData                = array();
+                $aSliderData                = [];
                 $aSliderData['label']       = $this->input->post('label');
                 $aSliderData['description'] = strip_tags($this->input->post('description'));
                 $aSliderData['slides']      = $slides;
@@ -195,7 +195,7 @@ class Slider extends BaseAdmin
 
                 } else {
 
-                    $this->data['error']  = 'Failed to create slider. ';
+                    $this->data['error'] = 'Failed to create slider. ';
                     $this->data['error'] .= $this->oSliderModel->lastError();
                 }
 
@@ -206,7 +206,7 @@ class Slider extends BaseAdmin
 
         } else {
 
-            $slides = array();
+            $slides = [];
         }
 
         // --------------------------------------------------------------------------
@@ -219,13 +219,13 @@ class Slider extends BaseAdmin
         foreach ($slides as $slide) {
 
             $slide->imgSourceUrl = !empty($slide->object_id) ? cdnServe($slide->object_id) : null;
-            $slide->imgThumbUrl = !empty($slide->object_id) ? cdnScale($slide->object_id, 130, 130) : null;
+            $slide->imgThumbUrl  = !empty($slide->object_id) ? cdnScale($slide->object_id, 130, 130) : null;
         }
 
         // --------------------------------------------------------------------------
 
         //  Define the manager URL
-        $cdnManagerUrl = cdnManagerUrl('cms-slider', array('sliderEdit','setImgCallback'), null, isPageSecure());
+        $cdnManagerUrl = cdnManagerUrl('cms-slider', ['sliderEdit', 'setImgCallback'], null, isPageSecure());
 
         // --------------------------------------------------------------------------
 
@@ -261,7 +261,7 @@ class Slider extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $slider = $this->oSliderModel->getById($this->uri->segment(5));
+        $slider               = $this->oSliderModel->getById($this->uri->segment(5));
         $this->data['slider'] = $slider;
 
         if (!$slider) {
@@ -275,13 +275,13 @@ class Slider extends BaseAdmin
         if ($this->input->post()) {
 
             //  Rebuild sliders
-            $slideIds  = $this->input->post('slideId') ? $this->input->post('slideId') : array();
-            $objectIds = $this->input->post('objectId') ? $this->input->post('objectId') : array();
-            $captions  = $this->input->post('caption') ? $this->input->post('caption') : array();
-            $urls      = $this->input->post('url') ? $this->input->post('url') : array();
+            $slideIds  = $this->input->post('slideId') ? $this->input->post('slideId') : [];
+            $objectIds = $this->input->post('objectId') ? $this->input->post('objectId') : [];
+            $captions  = $this->input->post('caption') ? $this->input->post('caption') : [];
+            $urls      = $this->input->post('url') ? $this->input->post('url') : [];
 
-            $slides = array();
-            for ($i=0; $i < count($slideIds); $i++) {
+            $slides = [];
+            for ($i = 0; $i < count($slideIds); $i++) {
 
                 $slides[$i]            = new \stdClass();
                 $slides[$i]->id        = !empty($slideIds[$i]) ? $slideIds[$i] : null;
@@ -301,7 +301,7 @@ class Slider extends BaseAdmin
             if ($oFormValidation->run()) {
 
                 //  Prepare the create data
-                $aSliderData                = array();
+                $aSliderData                = [];
                 $aSliderData['label']       = $this->input->post('label');
                 $aSliderData['description'] = strip_tags($this->input->post('description'));
                 $aSliderData['slides']      = $slides;
@@ -316,7 +316,7 @@ class Slider extends BaseAdmin
 
                 } else {
 
-                    $this->data['error']  = 'Failed to update slider. ';
+                    $this->data['error'] = 'Failed to update slider. ';
                     $this->data['error'] .= $this->oSliderModel->lastError();
                 }
 
@@ -340,13 +340,13 @@ class Slider extends BaseAdmin
         foreach ($slides as $slide) {
 
             $slide->imgSourceUrl = !empty($slide->object_id) ? cdnServe($slide->object_id) : null;
-            $slide->imgThumbUrl = !empty($slide->object_id) ? cdnScale($slide->object_id, 130, 130) : null;
+            $slide->imgThumbUrl  = !empty($slide->object_id) ? cdnScale($slide->object_id, 130, 130) : null;
         }
 
         // --------------------------------------------------------------------------
 
         //  Define the manager URL
-        $cdnManagerUrl = cdnManagerUrl('cms-slider', array('sliderEdit','setImgCallback'), null, isPageSecure());
+        $cdnManagerUrl = cdnManagerUrl('cms-slider', ['sliderEdit', 'setImgCallback'], null, isPageSecure());
 
         // --------------------------------------------------------------------------
 
@@ -402,8 +402,8 @@ class Slider extends BaseAdmin
 
         } else {
 
-            $status   = 'error';
-            $message  = 'I failed to delete that slider. ';
+            $status  = 'error';
+            $message = 'I failed to delete that slider. ';
             $message .= $this->oSliderModel->lastError();
         }
 

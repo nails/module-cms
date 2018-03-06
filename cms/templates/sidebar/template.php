@@ -10,8 +10,9 @@
  * @link
  */
 
-namespace Nails\Cms\Template;
+namespace Nails\Cms\Cms\Template;
 
+use Nails\Cms\Template\TemplateBase;
 use Nails\Factory;
 
 class Sidebar extends TemplateBase
@@ -44,14 +45,14 @@ class Sidebar extends TemplateBase
         $this->additional_fields[0]->setClass('select2');
         $this->additional_fields[0]->setDefault('4');
         $this->additional_fields[0]->setOptions(
-            array(
+            [
                 '1' => '1 Column',
                 '2' => '2 Columns',
                 '3' => '3 Columns',
                 '4' => '4 Columns',
                 '5' => '5 Columns',
                 '6' => '6 Columns',
-            )
+            ]
         );
 
         $this->additional_fields[1] = Factory::factory('TemplateOption', 'nailsapp/module-cms');
@@ -61,10 +62,10 @@ class Sidebar extends TemplateBase
         $this->additional_fields[1]->setClass('select2');
         $this->additional_fields[1]->setDefault('LEFT');
         $this->additional_fields[1]->setOptions(
-            array(
-                'LEFT' => 'Left Hand Side',
-                'RIGHT' => 'Right Hand Side'
-            )
+            [
+                'LEFT'  => 'Left Hand Side',
+                'RIGHT' => 'Right Hand Side',
+            ]
         );
     }
 }

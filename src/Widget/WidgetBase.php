@@ -12,9 +12,14 @@
 
 namespace Nails\Cms\Widget;
 
-class WidgetBase
+abstract class WidgetBase
 {
-    protected static $isDisabled;
+    /**
+     * Whether this widget is disabled or not
+     */
+    const DISABLED = false;
+
+    // --------------------------------------------------------------------------
 
     protected $label;
     protected $icon;
@@ -22,6 +27,7 @@ class WidgetBase
     protected $keywords;
     protected $grouping;
     protected $slug;
+    protected $screenshot;
     protected $assets_editor;
     protected $assets_render;
     protected $path;
@@ -30,12 +36,12 @@ class WidgetBase
     // --------------------------------------------------------------------------
 
     /**
-     * Returns whether the template is disabled
+     * Returns whether the widget is disabled
      * @return bool
      */
     public static function isDisabled()
     {
-        return !empty(static::$isDisabled);
+        return !empty(static::DISABLED);
     }
 
     // --------------------------------------------------------------------------
@@ -45,41 +51,89 @@ class WidgetBase
      */
     public function __construct()
     {
-        $this->label              = 'Widget';
-        $this->icon               = 'fa-cube';
-        $this->description        = '';
-        $this->keywords           = '';
-        $this->grouping           = '';
-        $this->slug               = '';
-        $this->assets_editor      = array();
-        $this->assets_render      = array();
-        $this->path               = '';
-        $this->callbacks          = new \stdClass();
-        $this->callbacks->dropped = '';
-        $this->callbacks->removed = '';
+        $this->label         = 'Widget';
+        $this->icon          = 'fa-cube';
+        $this->description   = '';
+        $this->keywords      = '';
+        $this->grouping      = '';
+        $this->slug          = '';
+        $this->screenshot    = '';
+        $this->assets_editor = [];
+        $this->assets_render = [];
+        $this->path          = '';
+        $this->callbacks     = (object) [
+            'dropped' => '',
+            'removed' => '',
+        ];
 
-        //  Autodetect some values
-        $oReflect = new \ReflectionClass(get_called_class());
-
-        //  Path
-        $this->path = dirname($oReflect->getFileName()) . '/';
+        //  Detect the path
+        $sCalledClass = get_called_class();
+        $this->path   = $sCalledClass::detectPath();
 
         //  Slug - this should uniquely identify the widget
         $this->slug = pathinfo($this->path);
         $this->slug = $this->slug['basename'];
 
-        //  Callbacks - attempt to auto-populate
-        foreach ($this->callbacks as $sProperty => &$sCallback) {
-
-            if (is_file($this->path . 'js/' . $sProperty . '.min.js')) {
-
-                $sCallback = file_get_contents($this->path . 'js/' . $sProperty . '.min.js');
-
-            } elseif (is_file($this->path . 'js/' . $sProperty . '.js')) {
-
-                $sCallback = file_get_contents($this->path . 'js/' . $sProperty . '.js');
+        //  Detect the screenshot
+        $aFiles = ['screenshot.png', 'screenshot.jpg', 'screenshot.gif'];
+        foreach ($aFiles as $sFile) {
+            $sPath = static::getFilePath($sFile);
+            if (!empty($sPath)) {
+                $this->screenshot = 'data:image/jpg;base64,' . base64_encode(file_get_contents($sPath));
             }
         }
+
+        //  Callbacks - attempt to auto-populate
+        foreach ($this->callbacks as $sProperty => &$sCallback) {
+            $aFiles = ['js/' . $sProperty . '.min.js', 'js/' . $sProperty . '.js'];
+            foreach ($aFiles as $sFile) {
+                $sPath = static::getFilePath($sFile);
+                if (!empty($sPath)) {
+                    $sCallback = file_get_contents($sPath);
+                }
+            }
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Detects the path of the called class
+     * @return string
+     */
+    public static function detectPath()
+    {
+        $oReflect = new \ReflectionClass(get_called_class());
+        return dirname($oReflect->getFileName()) . '/';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Looks for a file in the widget hierarchy and returns it if found
+     *
+     * @param string $sFile The file name to look for
+     *
+     * @return null|string
+     */
+    public static function getFilePath($sFile)
+    {
+        //  Look for the file in the [potential] class hierarchy
+        $aClasses = array_filter(
+            array_merge(
+                [get_called_class()],
+                array_values(class_parents(get_called_class()))
+            )
+        );
+
+        foreach ($aClasses as $sClass) {
+            $sPath = $sClass::detectPath();
+            if (is_file($sPath . $sFile)) {
+                return $sPath . $sFile;
+            }
+        }
+
+        return null;
     }
 
     // --------------------------------------------------------------------------
@@ -119,7 +173,7 @@ class WidgetBase
 
     /**
      * Returns the widget's keywords
-     * @return array
+     * @return string
      */
     public function getKeywords()
     {
@@ -151,6 +205,17 @@ class WidgetBase
     // --------------------------------------------------------------------------
 
     /**
+     * Returns the widget's screenshot
+     * @return string
+     */
+    public function getScreenshot()
+    {
+        return $this->screenshot;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Returns the widget's path
      * @return string
      */
@@ -163,21 +228,19 @@ class WidgetBase
 
     /**
      * Returns the widget's assets
+     *
+     * @param string $sType the type of assets to return
+     *
      * @return array
      */
     public function getAssets($sType)
     {
         if ($sType == 'EDITOR') {
-
             return $this->assets_editor;
-
         } elseif ($sType == 'RENDER') {
-
             return $this->assets_render;
-
         } else {
-
-            return array();
+            return [];
         }
     }
 
@@ -185,16 +248,16 @@ class WidgetBase
 
     /**
      * Returns the widget's callbacks
+     *
+     * @param string $sType the type of callback to return
+     *
      * @return mixed
      */
     public function getCallbacks($sType = '')
     {
         if (property_exists($this->callbacks, $sType)) {
-
             return $this->callbacks->{$sType};
-
         } else {
-
             return $this->callbacks;
         }
     }
@@ -204,97 +267,45 @@ class WidgetBase
     /**
      * Returns the HTML for the editor view. Any passed data will be used to
      * populate the values of the form elements.
-     * @param  array  $aWidgetData A normal widget_data object, prefixed to avoid naming collisions
+     *
+     * @param  array $aWidgetData The data to render the widget editor with
+     *
      * @return string
      */
-    public function getEditor($aWidgetData = array())
+    public function getEditor($aWidgetData = [])
     {
-        if (is_file($this->path . 'views/editor.php')) {
-
-            //  Populate widget data
-            $this->populateWidgetData($aWidgetData);
-
-            //  Add a reference to the CI super object, for view loading etc
-            $oCi = get_instance();
-
-            //  Extract the variables, so that the view can use them
-            if ($aWidgetData) {
-                extract($aWidgetData);
-            }
-
-            //  Start the buffer, basically copying how CI does it's view loading
-            ob_start();
-
-            include $this->path . 'views/editor.php';
-
-            //  Flush buffer
-            $sBuffer = ob_get_contents();
-            @ob_end_clean();
-
-            //  Return the HTML
-            return $sBuffer;
-        }
-
-        return '';
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Format the widget as a JSON object
-     * @return string
-     */
-    public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
-    {
-        $oWidget                           = new \stdClass();
-        $oWidget->label                    = $this->getLabel();
-        $oWidget->icon                     = $this->getIcon();
-        $oWidget->description              = $this->getDescription();
-        $oWidget->keywords                 = $this->getKeywords();
-        $oWidget->grouping                 = $this->getGrouping();
-        $oWidget->slug                     = $this->getSlug();
-        $oWidget->assets_editor            = $this->getAssets('EDITOR');
-        $oWidget->assets_render            = $this->getAssets('RENDER');
-        $oWidget->path                     = $this->getPath();
-        $oWidget->callbacks                = $this->getCallbacks();
-
-        return json_encode($oWidget, $iJsonOptions, $iJsonDepth);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Format the widget as an array
-     * @return string
-     */
-    public function toArray()
-    {
-        $aWidget                             = array();
-        $aWidget['label']                    = $this->getLabel();
-        $aWidget['icon']                     = $this->getIcon();
-        $aWidget['description']              = $this->getDescription();
-        $aWidget['keywords']                 = $this->getKeywords();
-        $aWidget['grouping']                 = $this->getGrouping();
-        $aWidget['slug']                     = $this->getSlug();
-        $aWidget['assets_editor']            = $this->getAssets('EDITOR');
-        $aWidget['assets_render']            = $this->getAssets('RENDER');
-        $aWidget['path']                     = $this->getPath();
-        $aWidget['callbacks']                = $this->getCallbacks();
-
-        return $aWidget;
+        return $this->loadView('editor', $aWidgetData);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Renders the widget with the provided data.
-     * @param  array  $aWidgetData The widgets to include in the template
+     *
+     * @param  array $aWidgetData The data to render the widget with
+     *
      * @return string
      */
-    public function render($aWidgetData = array())
+    public function render($aWidgetData = [])
     {
-        if (is_file($this->path . 'views/render.php')) {
+        return $this->loadView('render', $aWidgetData, true);
+    }
 
+    // --------------------------------------------------------------------------
+
+    /**
+     * Load a specific view
+     *
+     * @param string $sView                  The view to load
+     * @param array  $aWidgetData            The data to render the view with
+     * @param bool   $bExtractControllerData Whether to extract controller data or not
+     *
+     * @return string
+     */
+    protected function loadView($sView, array $aWidgetData, $bExtractControllerData = false)
+    {
+        $sPath = static::getFilePath('views/' . $sView . '.php');
+        if (!empty($sPath)) {
             //  Populate widget data
             $this->populateWidgetData($aWidgetData);
 
@@ -305,21 +316,19 @@ class WidgetBase
              * Extract data into variables in the local scope so the view can use them.
              * Basically copying how CI does it's view loading/rendering
              */
-            $NAILS_CONTROLLER_DATA =& getControllerData();
-            if ($NAILS_CONTROLLER_DATA) {
-                extract($NAILS_CONTROLLER_DATA);
-            }
-
-            if (!is_array($aWidgetData)) {
-                $aWidgetData = (array) $aWidgetData;
+            if ($bExtractControllerData) {
+                $NAILS_CONTROLLER_DATA =& getControllerData();
+                if ($NAILS_CONTROLLER_DATA) {
+                    extract($NAILS_CONTROLLER_DATA);
+                }
             }
 
             if ($aWidgetData) {
-                extract($aWidgetData);
+                extract((array) $aWidgetData);
             }
 
             ob_start();
-            include $this->path . 'views/render.php';
+            include $sPath;
             $sBuffer = ob_get_contents();
             @ob_end_clean();
 
@@ -339,5 +348,43 @@ class WidgetBase
      */
     protected function populateWidgetData(&$aWidgetData)
     {
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Format the widget as a JSON object
+     *
+     * @param int $iJsonOptions
+     * @param int $iJsonDepth
+     *
+     * @return string
+     */
+    public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
+    {
+        return json_encode($this->toArray(), $iJsonOptions, $iJsonDepth);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Format the widget as an array
+     * @return array
+     */
+    public function toArray()
+    {
+        return [
+            'label'         => $this->getLabel(),
+            'icon'          => $this->getIcon(),
+            'description'   => $this->getDescription(),
+            'keywords'      => $this->getKeywords(),
+            'grouping'      => $this->getGrouping(),
+            'slug'          => $this->getSlug(),
+            'screenshot'    => $this->getScreenshot(),
+            'assets_editor' => $this->getAssets('EDITOR'),
+            'assets_render' => $this->getAssets('RENDER'),
+            'path'          => $this->getPath(),
+            'callbacks'     => $this->getCallbacks(),
+        ];
     }
 }

@@ -10,8 +10,9 @@
  * @link
  */
 
-namespace Nails\Cms\Template;
+namespace Nails\Cms\Cms\Template;
 
+use Nails\Cms\Template\TemplateBase;
 use Nails\Factory;
 
 class Columns extends TemplateBase

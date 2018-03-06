@@ -10,8 +10,9 @@
  * @link
  */
 
-namespace Nails\Cms\Template;
+namespace Nails\Cms\Cms\Template;
 
+use Nails\Cms\Template\TemplateBase;
 use Nails\Factory;
 
 class Redirect extends TemplateBase
@@ -41,7 +42,7 @@ class Redirect extends TemplateBase
         $this->additional_fields[0]->setLabel('Redirect To Page');
         $this->additional_fields[0]->setClass('select2');
         $this->additional_fields[0]->setOptions(
-            array('None') + $this->oPageModel->getAllNestedFlat()
+            ['None'] + $this->oPageModel->getAllNestedFlat()
         );
 
         $this->additional_fields[1] = Factory::factory('TemplateOption', 'nailsapp/module-cms');
@@ -61,10 +62,10 @@ class Redirect extends TemplateBase
         $this->additional_fields[2]->setLabel('Redirect Type');
         $this->additional_fields[2]->setClass('select2');
         $this->additional_fields[2]->setOptions(
-            array(
+            [
                 '302' => '302 Moved Temporarily',
-                '301' => '301 Moved Permanently'
-            )
+                '301' => '301 Moved Permanently',
+            ]
         );
     }
 
@@ -72,11 +73,13 @@ class Redirect extends TemplateBase
 
     /**
      * Executes the redirect
-     * @param  array  $aTplData    The widgets to include in the template
-     * @param  array  $aTplOptions Additional data created by the template
+     *
+     * @param  array $aTplData    The widgets to include in the template
+     * @param  array $aTplOptions Additional data created by the template
+     *
      * @return void
      */
-    public function render($aTplData = array(), $aTplOptions = array())
+    public function render($aTplData = [], $aTplOptions = [])
     {
         $sUrl = '';
 
@@ -88,7 +91,7 @@ class Redirect extends TemplateBase
 
             $oPage = $this->oPageModel->getById($aTplOptions['redirect_page_id']);
 
-            if ($oPage && ! $oPage->is_deleted && $oPage->is_published) {
+            if ($oPage && !$oPage->is_deleted && $oPage->is_published) {
 
                 $sUrl = $oPage->published->url;
             }
@@ -96,7 +99,7 @@ class Redirect extends TemplateBase
 
         // --------------------------------------------------------------------------
 
-        $iCode = ! empty($aTplOptions['redirect_code']) ? $aTplOptions['redirect_code'] : null;
+        $iCode = !empty($aTplOptions['redirect_code']) ? $aTplOptions['redirect_code'] : null;
 
         if ($sUrl) {
 

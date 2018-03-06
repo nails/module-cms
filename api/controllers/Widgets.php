@@ -12,9 +12,10 @@
 
 namespace Nails\Api\Cms;
 
+use Nails\Api\Controller\Base;
 use Nails\Factory;
 
-class Widgets extends \Nails\Api\Controller\Base
+class Widgets extends Base
 {
     /**
      * Require the user be authenticated to use any endpoint
@@ -23,17 +24,24 @@ class Widgets extends \Nails\Api\Controller\Base
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Returns all available widgets
+     * @return array
+     */
     public function getIndex()
     {
-        if (userHasPermission('admin:cms:pages:*') || userHasPermission('admin:cms:area:*')) {
+        try {
+
+            if (!isAdmin()) {
+                throw new \Exception('You do not have permission to view widgets.', 401);
+            }
 
             $oWidgetModel  = Factory::model('Widget', 'nailsapp/module-cms');
-            $oAssetLibrary = Factory::service('Asset');
-            $aWidgets      = array();
-            $aAssets       = array();
+            $oAsset        = Factory::service('Asset');
+            $aWidgets      = [];
             $aWidgetGroups = $oWidgetModel->getAvailable();
 
-            $oAssetLibrary->clear();
+            $oAsset->clear();
 
             foreach ($aWidgetGroups as $oWidgetGroup) {
 
@@ -44,120 +52,128 @@ class Widgets extends \Nails\Api\Controller\Base
                     $aWidgetAssets = $oWidget->getAssets('EDITOR');
 
                     foreach ($aWidgetAssets as $aAsset) {
-
                         $sAsset    = !empty($aAsset[0]) ? $aAsset[0] : '';
                         $sLocation = !empty($aAsset[1]) ? $aAsset[1] : '';
 
                         if (!empty($sAsset)) {
-                            $oAssetLibrary->load($sAsset, $sLocation);
+                            $oAsset->load($sAsset, $sLocation);
                         }
                     }
                 }
             }
 
-            return array(
-                'assets'  => array(
-                    'css' => $oAssetLibrary->output('CSS', false),
-                    'js' => $oAssetLibrary->output('JS', false)
-                ),
-                'widgets' => $aWidgets
-            );
+            array_sort_multi($aWidgets, 'label');
+            $aWidgets = array_values($aWidgets);
 
-        } else {
+            return [
+                'assets'  => [
+                    'css' => $oAsset->output('CSS', false),
+                    'js'  => $oAsset->output('JS', false),
+                ],
+                'widgets' => $aWidgets,
+            ];
 
-            return array(
-                'status' => 401,
-                'error'  => 'You do not have permission to view widgets.'
-            );
+        } catch (\Exception $e) {
+            return [
+                'status' => $e->getCode(),
+                'error'  => $e->getMessage(),
+            ];
         }
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Returns the editor for a particular widget, pre-populated with POST'ed data
+     * @return array
+     */
     public function postEditor()
     {
-        if (userHasPermission('admin:cms:pages:*') || userHasPermission('admin:cms:area:*')) {
+        try {
 
-            $sWidgetSlug  = $this->input->post('slug');
-            $aWidgetData  = $this->input->post('data') ?: array();
+            if (!isAdmin()) {
+                throw new \Exception('You do not have permission to view widgets.', 401);
+            }
+
+            $oInput       = Factory::service('Input');
+            $sWidgetSlug  = $oInput->post('slug');
+            $aWidgetData  = $oInput->post('data') ?: [];
             $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
             $oWidget      = $oWidgetModel->getBySlug($sWidgetSlug);
 
-            if ($oWidget) {
-
-                return array(
-                    'editor' => $oWidget->getEditor($aWidgetData)
-                );
-
-            } else {
-
-                return array(
-                    'status' => 400,
-                    'error'  => '"' . $sWidgetSlug . '" is not a valid widget.'
-                );
+            if (!$oWidget) {
+                throw new \Exception('"' . $sWidgetSlug . '" is not a valid widget.', 400);
             }
 
-        } else {
+            return [
+                'editor' => $oWidget->getEditor($aWidgetData),
+            ];
 
-            return array(
-                'status' => 401,
-                'error'  => 'You do not have permission to view widgets.'
-            );
+        } catch (\Exception $e) {
+            return [
+                'status' => $e->getCode(),
+                'error'  => $e->getMessage(),
+            ];
         }
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Returns the editors for all POST'ed widgets, pre-populated with data
+     * @return array
+     */
     public function postEditors()
     {
-        if (userHasPermission('admin:cms:pages:*') || userHasPermission('admin:cms:area:*')) {
+        try {
 
-            $aWidgetData  = $this->input->post('data') ?: array();
+            if (!isAdmin()) {
+                throw new \Exception('You do not have permission to view widgets.', 401);
+            }
+
+            $oInput       = Factory::service('Input');
+            $aWidgetData  = json_decode($oInput->post('data')) ?: [];
             $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
-            $aOut         = array('data' => array());
+            $aOut         = ['data' => []];
 
-            foreach ($aWidgetData as $aData) {
+            foreach ($aWidgetData as $oData) {
 
-                $sRenderSlug = !empty($aData['slug']) ? $aData['slug'] : null;
-                if (!empty($sRenderSlug)) {
+                if (!empty($oData->slug)) {
 
-                    $oWidget = $oWidgetModel->getBySlug($aData['slug']);
+                    $oWidget = $oWidgetModel->getBySlug($oData->slug);
 
                     if ($oWidget) {
 
-                        $aRenderData = !empty($aData['data']) ? $aData['data'] : array();
-                        $aOut['data'][] = array(
-                            'slug'   => $aData['slug'],
-                            'editor' => $oWidget->getEditor($aRenderData)
-                        );
+                        $aRenderData    = !empty($oData->data) ? $oData->data : [];
+                        $aOut['data'][] = [
+                            'slug'   => $oData->slug,
+                            'editor' => $oWidget->getEditor((array) $aRenderData),
+                        ];
 
                     } else {
-
-                        $aOut['data'][] = array(
-                            'slug'   => $aData['slug'],
-                            'editor' => '"' . $aData['slug'] . '" is not a valid widget.',
-                            'error'  => true
-                        );
+                        $aOut['data'][] = [
+                            'slug'   => $oData->slug,
+                            'editor' => '"' . $oData->slug . '" is not a valid widget.',
+                            'error'  => true,
+                        ];
                     }
 
                 } else {
-
-                    $aOut['data'][] = array(
-                        'slug'   => $aData['slug'],
+                    $aOut['data'][] = [
+                        'slug'   => null,
                         'editor' => 'No widget supplied.',
-                        'error'  => true
-                    );
+                        'error'  => true,
+                    ];
                 }
             }
 
             return $aOut;
 
-        } else {
-
-            return array(
-                'status' => 401,
-                'error'  => 'You do not have permission to view widgets.'
-            );
+        } catch (\Exception $e) {
+            return [
+                'status' => $e->getCode(),
+                'error'  => $e->getMessage(),
+            ];
         }
     }
 }

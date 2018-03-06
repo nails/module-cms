@@ -15,6 +15,7 @@ namespace Nails\Cms\Model;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Factory;
+use Nails\Cms\Events;
 
 class Page extends Base
 {
@@ -59,7 +60,6 @@ class Page extends Base
         $iId = parent::create();
 
         if (!$iId) {
-
             $this->setError('Unable to create base page object. ' . $this->lastError());
             $oDb->trans_rollback();
             return false;
@@ -67,12 +67,10 @@ class Page extends Base
 
         //  Try and update it depending on how the update went, commit & update or rollback
         if ($this->update($iId, $aData)) {
-
             $oDb->trans_commit();
             return $bReturnObject ? $this->getById($iId) : $iId;
 
         } else {
-
             $oDb->trans_rollback();
             return false;
         }
@@ -98,7 +96,7 @@ class Page extends Base
         }
 
         //  Fetch the current version of this page, for reference.
-        $oCurrent = $this->getById($iPageId);
+        $oCurrent = $this->getById($iId);
 
         if (!$oCurrent) {
             $this->setError('Invalid Page ID');
@@ -266,14 +264,14 @@ class Page extends Base
                     }
 
                     //  Update each child
-                    foreach ($aUpdateData as $iPageId => $aCache) {
+                    foreach ($aUpdateData as $iId => $aCache) {
 
                         $aData = [
                             'draft_slug'        => $aCache['slug'],
                             'draft_breadcrumbs' => json_encode($aCache['crumb']),
                         ];
 
-                        if (!parent::update($iPageId, $aData)) {
+                        if (!parent::update($iId, $aData)) {
 
                             $this->setError('Failed to update child page\'s slug and breadcrumbs');
                             $oDb->trans_rollback();
@@ -289,6 +287,21 @@ class Page extends Base
             //  Finish up.
             $oDb->trans_commit();
 
+            // --------------------------------------------------------------------------
+
+            //  Rewrite routes
+            $oRoutesModel = Factory::model('Routes');
+            $oRoutesModel->update();
+
+            // --------------------------------------------------------------------------
+
+            //  Trigger event
+            $oEvent = Factory::service('Event');
+            $oEvent->trigger(Events::PAGE_UPDATED, 'nailsapp/module-cms', [$iId]);
+
+            // --------------------------------------------------------------------------
+
+            //  @todo - Kill caches for this page and all children
             return true;
 
         } else {
@@ -458,7 +471,6 @@ class Page extends Base
 
             //  Add any slug_history items
             foreach ($aSlugHistory as $item) {
-
                 $oDb->set('hash', md5($item['slug'] . $item['page_id']));
                 $oDb->set('slug', $item['slug']);
                 $oDb->set('page_id', $item['page_id']);
@@ -466,15 +478,19 @@ class Page extends Base
                 $oDb->replace(NAILS_DB_PREFIX . 'cms_page_slug_history');
             }
 
+            $oDb->trans_commit();
+
             // --------------------------------------------------------------------------
 
             $oDb->trans_commit();
 
-            //  Regenerate SiteMap
-            if (isModuleEnabled('nailsapp/module-sitemap')) {
-                $oSiteMapModel = Factory::model('SiteMap', 'nailsapp/module-sitemap');
-                $oSiteMapModel->generate();
-            }
+            // --------------------------------------------------------------------------
+
+            //  Trigger event
+            $oEvent = Factory::service('Event');
+            $oEvent->trigger(Events::PAGE_PUBLISHED, 'nailsapp/module-cms', [$iId]);
+
+            // --------------------------------------------------------------------------
 
             //  Rewrite routes
             $oRoutesModel = Factory::model('Routes');
@@ -484,9 +500,7 @@ class Page extends Base
             return true;
 
         } else {
-
             $oDb->trans_rollback();
-
             return false;
         }
     }
@@ -996,7 +1010,8 @@ class Page extends Base
         // --------------------------------------------------------------------------
 
         //  Owner
-        $modifiedBy                     = (int) $oObj->modified_by;
+        $modifiedBy = (int) (is_object($oObj->modified_by) ? $oObj->modified_by->id : $oObj->modified_by);
+        
         $oObj->modified_by              = new \stdClass();
         $oObj->modified_by->id          = $modifiedBy;
         $oObj->modified_by->first_name  = isset($oObj->first_name) ? $oObj->first_name : '';
@@ -1026,18 +1041,16 @@ class Page extends Base
     /**
      * Delete a page and it's children
      *
-     * @param  int $id The ID of the page to delete
+     * @param  int $iId The ID of the page to delete
      *
      * @return boolean
      */
-    public function delete($id)
+    public function delete($iId)
     {
-        $page = $this->getById($id);
+        $oPage = $this->getById($iId);
 
-        if (!$page) {
-
+        if (!$oPage) {
             $this->setError('Invalid page ID');
-
             return false;
         }
 
@@ -1046,19 +1059,18 @@ class Page extends Base
         $oDb = Factory::service('Database');
         $oDb->trans_begin();
 
-        $oDb->where('id', $id);
+        $oDb->where('id', $iId);
         $oDb->set('is_deleted', true);
         $oDb->set('modified', 'NOW()', false);
 
         if (isLoggedIn()) {
-
             $oDb->set('modified_by', activeUser('id'));
         }
 
         if ($oDb->update($this->table)) {
 
             //  Success, update children
-            $children = $this->getIdsOfChildren($id);
+            $children = $this->getIdsOfChildren($iId);
 
             if ($children) {
 
@@ -1067,18 +1079,17 @@ class Page extends Base
                 $oDb->set('modified', 'NOW()', false);
 
                 if (isLoggedIn()) {
-
                     $oDb->set('modified_by', activeUser('id'));
                 }
 
                 if (!$oDb->update($this->table)) {
-
                     $this->setError('Unable to delete children pages');
                     $oDb->trans_rollback();
-
                     return false;
                 }
             }
+
+            $oDb->trans_commit();
 
             // --------------------------------------------------------------------------
 
@@ -1088,24 +1099,17 @@ class Page extends Base
 
             // --------------------------------------------------------------------------
 
-            //  Regenerate sitemap
-            if (isModuleEnabled('nailsapp/module-sitemap')) {
-
-                $this->load->model('sitemap/sitemap_model');
-                $this->sitemap_model->generate();
-            }
+            //  Trigger event
+            $oEvent = Factory::service('Event');
+            $oEvent->trigger(Events::PAGE_DELETED, 'nailsapp/module-cms', [$iId]);
 
             // --------------------------------------------------------------------------
 
-            $oDb->trans_commit();
-
+            //  @todo - Kill caches for this page and all children
             return true;
 
         } else {
-
-            //  Failed
             $oDb->trans_rollback();
-
             return false;
         }
     }

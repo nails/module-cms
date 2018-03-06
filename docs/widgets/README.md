@@ -20,13 +20,20 @@ In addition, widgets can supply some custom JS to enhance the admin experience (
 |--- widgets/
 |------ MyWidget/
 |--------- widget.php
+|--------- screenshot.png
 |--------- views/render.php
 |--------- views/editor.php
 |--------- js/dropped.js
                 
 ```
 
-`widget.php` is your widget definition. `views/editor.php` is used in the admin widget area GUI and allows you to offer various options for the user to choose from. `views/render.php` is the widgets "view" and is what is processed when the widget is rendered (and passed data, defined in `editor.php`).
+`widget.php` contains a class which matches the name of the widget in the `App\Cms\Widget` namespace, e.g. `App\Cms\Widget\MyWidget`; this is your widget definition.
+
+`screenshot.php` is an optional screenshot to display along side the widget in the editor sidebar; this should be around 500px wide and show the widget with as little surrounding content as possible.
+
+`views/editor.php` is used in the admin widget area GUI and allows you to offer various options for the user to choose from.
+
+`views/render.php` is the widgets "view" and is what is processed when the widget is rendered (and passed data, defined in `editor.php`).
 
 
 ### The Admin interface in detail
@@ -55,12 +62,12 @@ The helper `cmsWidget($sSlug, $aData)` is available for rendering widgets on the
 
 > Easily generate CMS Widgets using the [Console Command](/docs/console/README.md)
 
-In order for a widet to be recognised it must be defined in `widget.php`. A basic set up looks like this, notice that the class name matches the directory name:
+In order for a widget to be recognised it must be defined in `widget.php`. A basic set up looks like this, notice that the class name matches the directory name:
 
 ```php
 <?php
 
-namespace Nails\Cms\Widget;
+namespace App\Cms\Widget;
 
 use Nails\Cms\Widget\WidgetBase;
 
@@ -124,9 +131,10 @@ Additional Javascript is optional, but if available will be called each time a n
 
 ## Overriding widgets provided by modules
 
-    @todo - explain how to override widgets
+Widgets provided by the app are loaded last and, if the name matches exactly, override any module-provided widgets. This gives you an opportunity to alter the behaviour of the widget, or it's views. A common scenario is to set the `DISABLED` constant to `true` so that the widget is not offered to the end user.
 
 
-## Bundling templates with your module
+## Bundling widgets with your module
 
-    @todo - explain the differences when bundling templates in a module
+Widgets provided by modules behave exactly the same as widgets provided by the app, except that the namespace must match the module (as defined in the module's composer.json)
+

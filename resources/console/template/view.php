@@ -16,7 +16,7 @@ use Nails\Factory;
 
 $oView = Factory::service('View');
 $oView->load('structure/header', getControllerData());
-echo $body;
+echo $sBody;
 $oView->load('structure/footer', getControllerData());
 
 EOD;

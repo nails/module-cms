@@ -24,7 +24,7 @@ class Blocks extends BaseAdmin
 
     /**
      * Announces this controller's navGroups
-     * @return \stdClass
+     * @return \Nails\Admin\Nav
      */
     public static function announce()
     {

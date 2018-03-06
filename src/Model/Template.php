@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Model;
 
+use Nails\Cms\Exception\Template\NotFoundException;
 use Nails\Factory;
 
 class Template
@@ -30,10 +31,9 @@ class Template
         $this->aTemplateDirs = [];
 
         foreach ($aModules as $oModule) {
-
             $this->aTemplateDirs[] = [
-                'type' => 'vendor',
-                'path' => $oModule->path . 'cms/templates/',
+                'namespace' => $oModule->namespace,
+                'path'      => $oModule->path . 'cms/templates/',
             ];
         }
 
@@ -43,8 +43,8 @@ class Template
          */
 
         $this->aTemplateDirs[] = [
-            'type' => 'app',
-            'path' => APPPATH . 'modules/cms/templates/',
+            'namespace' => 'App\\',
+            'path'      => FCPATH . APPPATH . 'modules/cms/templates/',
         ];
     }
 
@@ -55,6 +55,7 @@ class Template
      *
      * @param  string $loadAssets Whether or not to load template's assets, and if so whether EDITOR or RENDER assets.
      *
+     * @throws NotFoundException
      * @return array
      */
     public function getAvailable($loadAssets = '')
@@ -74,9 +75,9 @@ class Template
                 foreach ($aTemplates as $sTemplateDir => $aTemplateFiles) {
                     if (is_file($aDir['path'] . $sTemplateDir . '/template.php')) {
                         $aAvailableTemplates[] = [
-                            'type' => $aDir['type'],
-                            'path' => $aDir['path'],
-                            'name' => rtrim($sTemplateDir, DIRECTORY_SEPARATOR),
+                            'namespace' => $aDir['namespace'],
+                            'path'      => $aDir['path'],
+                            'name'      => $sTemplateDir,
                         ];
                     }
                 }
@@ -86,9 +87,9 @@ class Template
         //  Load templates
         $aTemplatesToInstantiate = [];
         foreach ($aAvailableTemplates as $aTemplate) {
-            include_once $aTemplate['path'] . $aTemplate['name'] . '/template.php';
+            require_once $aTemplate['path'] . $aTemplate['name'] . '/template.php';
 
-            //  Specify which templates to instantiate, app ones will override nails ones
+            //  Specify which templates to instantiate, app ones will override module ones
             $aTemplatesToInstantiate[$aTemplate['name']] = $aTemplate;
         }
 
@@ -96,32 +97,21 @@ class Template
         $aLoadedTemplates = [];
         foreach ($aTemplatesToInstantiate as $aTemplate) {
 
-            $sPrefix    = $aTemplate['type'] == 'vendor' ? 'Nails' : 'App';
-            $sClassName = '\\' . $sPrefix . '\Cms\Template\\' . ucfirst(strtolower($aTemplate['name']));
+            $sClassName = $aTemplate['namespace'] . 'Cms\Template\\' . ucfirst(strtolower($aTemplate['name']));
 
             if (!class_exists($sClassName)) {
-
-                log_message(
-                    'error',
-                    'CMS Template discovered at "' . $aTemplate['path'] . $aTemplate['name'] .
-                    '" but does not contain class "' . $sClassName . '"'
+                throw new NotFoundException(
+                    'Template class "' . $sClassName . '" missing from "' . $aTemplate['path'] . '"',
+                    500
                 );
+            }
 
-            } elseif ($sClassName::isDisabled()) {
-
-                /**
-                 * This template is disabled, ignore this template. Don't log
-                 * anything as it's likely a developer override to hide a default
-                 * template.
-                 */
-
-            } else {
+            if (!$sClassName::isDisabled()) {
 
                 $aLoadedTemplates[$aTemplate['name']] = new $sClassName();
 
                 //  Load the template's assets if requested
                 if ($loadAssets) {
-
                     $aAssets = $aLoadedTemplates[$aTemplate['name']]->getAssets($loadAssets);
                     $this->loadAssets($aAssets);
                 }

@@ -14,13 +14,15 @@ namespace Nails\Cms\Template;
 
 use Nails\Factory;
 
-class TemplateBase
+abstract class TemplateBase
 {
     /**
      * Whether the template is enabled or not
      * @var bool
      */
-    protected static $isDisabled;
+    const DISABLED = false;
+
+    // --------------------------------------------------------------------------
 
     /**
      * Whether the template is the default template
@@ -102,7 +104,7 @@ class TemplateBase
      */
     public static function isDisabled()
     {
-        return !empty(static::$isDisabled);
+        return !empty(static::DISABLED);
     }
 
     // --------------------------------------------------------------------------
@@ -136,11 +138,9 @@ class TemplateBase
 
         // --------------------------------------------------------------------------
 
-        //  Autodetect some values
-        $oReflect = new \ReflectionClass(get_called_class());
-
-        //  Path
-        $this->path = dirname($oReflect->getFileName()) . '/';
+        //  Detect the path
+        $sCalledClass = get_called_class();
+        $this->path   = $sCalledClass::detectPath();
 
         //  Icon
         $aExtensions = ['png', 'jpg', 'jpeg', 'gif'];
@@ -173,6 +173,47 @@ class TemplateBase
         //  Slug - this should uniquely identify a type of template
         $this->slug = pathinfo($this->path);
         $this->slug = $this->slug['basename'];
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Detects the path of the called class
+     * @return string
+     */
+    public static function detectPath()
+    {
+        $oReflect = new \ReflectionClass(get_called_class());
+        return dirname($oReflect->getFileName()) . '/';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Looks for a file in the widget hierarchy and returns it if found
+     *
+     * @param string $sFile The file name to look for
+     *
+     * @return null|string
+     */
+    public static function getFilePath($sFile)
+    {
+        //  Look for the file in the [potential] class hierarchy
+        $aClasses = array_filter(
+            array_merge(
+                [get_called_class()],
+                array_values(class_parents(get_called_class()))
+            )
+        );
+
+        foreach ($aClasses as $sClass) {
+            $sPath = $sClass::detectPath();
+            if (is_file($sPath . $sFile)) {
+                return $sPath . $sFile;
+            }
+        }
+
+        return null;
     }
 
     // --------------------------------------------------------------------------
@@ -296,59 +337,6 @@ class TemplateBase
 
     // --------------------------------------------------------------------------
 
-
-    /**
-     * Format the template as a JSON object
-     *
-     * @param int $iJsonOptions The JSON options
-     * @param int $iJsonDepth The JSON depth
-     *
-     * @return string
-     */
-    public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
-    {
-        $oTemplate                    = new \stdClass();
-        $oTemplate->label             = $this->getLabel();
-        $oTemplate->description       = $this->getDescription();
-        $oTemplate->description       = $this->getDescription();
-        $oTemplate->widget_areas      = $this->getWidgetAreas();
-        $oTemplate->additional_fields = $this->getAdditionalFields();
-        $oTemplate->manual_config     = $this->getManualConfig();
-        $oTemplate->icon              = $this->getIcon();
-        $oTemplate->slug              = $this->getSlug();
-        $oTemplate->assets_editor     = $this->getAssets('EDITOR');
-        $oTemplate->assets_render     = $this->getAssets('RENDER');
-        $oTemplate->path              = $this->getPath();
-
-        return json_encode($oTemplate, $iJsonOptions, $iJsonDepth);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Format the template as an array
-     * @return string
-     */
-    public function toArray()
-    {
-        $aTemplate                      = [];
-        $aTemplate['label']             = $this->getLabel();
-        $aTemplate['description']       = $this->getDescription();
-        $aTemplate['description']       = $this->getDescription();
-        $aTemplate['widget_areas']      = $this->getWidgetAreas();
-        $aTemplate['additional_fields'] = $this->getAdditionalFields();
-        $aTemplate['manual_config']     = $this->getManualConfig();
-        $aTemplate['icon']              = $this->getIcon();
-        $aTemplate['slug']              = $this->getSlug();
-        $aTemplate['assets_editor']     = $this->getAssets('EDITOR');
-        $aTemplate['assets_render']     = $this->getAssets('RENDER');
-        $aTemplate['path']              = $this->getPath();
-
-        return $aTemplate;
-    }
-
-    // --------------------------------------------------------------------------
-
     /**
      * Renders the template with the provided data.
      *
@@ -360,26 +348,47 @@ class TemplateBase
     public function render($aTplData = [], $aTplOptions = [])
     {
         //  Process each widget area and render the HTML
-        $aWidgetAreas = $this->getWidgetAreas();
-        $aRendered    = [];
-        $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
+        $aWidgetAreas  = $this->getWidgetAreas();
+        $aRenderedData = [];
+        $oWidgetModel  = Factory::model('Widget', 'nailsapp/module-cms');
 
         foreach ($aWidgetAreas as $sAreaSlug => $oWidgetArea) {
 
-            $aWidgetData           = !empty($aTplData[$sAreaSlug]) ? $aTplData[$sAreaSlug] : [];
-            $aRendered[$sAreaSlug] = '';
+            $aWidgetData               = !empty($aTplData[$sAreaSlug]) ? $aTplData[$sAreaSlug] : [];
+            $aRenderedData[$sAreaSlug] = '';
 
             foreach ($aWidgetData as $oWidgetData) {
+                if (empty($oWidgetData->slug)) {
+                    continue;
+                }
+                if (!property_exists($oWidgetData, 'data')) {
+                    $oWidgetData->data = [];
+                }
                 $oWidget = $oWidgetModel->getBySlug($oWidgetData->slug, 'RENDER');
                 if ($oWidget) {
-                    $aRendered[$sAreaSlug] .= $oWidget->render((array) $oWidgetData->data);
+                    $aRenderedData[$sAreaSlug] .= $oWidget->render((array) $oWidgetData->data);
                 }
             }
         }
 
-        // --------------------------------------------------------------------------
+        return $this->loadView('view', $aTplOptions, $aRenderedData);
+    }
 
-        if (is_file($this->path . 'view.php')) {
+    // --------------------------------------------------------------------------
+
+    /**
+     * Load a specific view
+     *
+     * @param string $sView       The view to load
+     * @param array  $aTplOptions The selected template options
+     * @param array  $aTplData    The data to render the view with
+     *
+     * @return mixed|string
+     */
+    protected function loadView($sView, $aTplOptions, $aTplData)
+    {
+        $sPath = static::getFilePath($sView . '.php');
+        if (!empty($sPath)) {
 
             //  Add a reference to the CI super object, for view loading etc
             $oCi = get_instance();
@@ -388,7 +397,6 @@ class TemplateBase
              * Extract data into variables in the local scope so the view can use them.
              * Basically copying how CI does it's view loading/rendering
              */
-
             $NAILS_CONTROLLER_DATA =& getControllerData();
             if ($NAILS_CONTROLLER_DATA) {
                 extract($NAILS_CONTROLLER_DATA);
@@ -398,23 +406,23 @@ class TemplateBase
                 extract($aTplOptions);
             }
 
-            if ($aRendered) {
-                extract($aRendered);
+            if ($aTplData) {
+                extract($aTplData);
             }
 
             ob_start();
-            include $this->path . 'view.php';
-            $buffer = ob_get_contents();
+            include $sPath;
+            $sBuffer = ob_get_contents();
             @ob_end_clean();
 
             //  Look for blocks
-            preg_match_all('/\[:([a-zA-Z0-9\-]+?):\]/', $buffer, $matches);
+            preg_match_all('/\[:([a-zA-Z0-9\-]+?):\]/', $sBuffer, $aMatches);
 
-            if ($matches[0]) {
+            if ($aMatches[0]) {
 
                 //  Get all the blocks which were found
                 $oBlockModel = Factory::model('Block', 'nailsapp/module-cms');
-                $aBlocks     = $oBlockModel->getBySlugs($matches[1]);
+                $aBlocks     = $oBlockModel->getBySlugs($aMatches[1]);
 
                 //  Swap them in
                 if ($aBlocks) {
@@ -428,7 +436,7 @@ class TemplateBase
                                 break;
                         }
 
-                        $buffer = str_replace('[:' . $oBlock->slug . ':]', $oBlock->value, $buffer);
+                        $sBuffer = str_replace('[:' . $oBlock->slug . ':]', $oBlock->value, $sBuffer);
                     }
                 }
 
@@ -439,15 +447,51 @@ class TemplateBase
                 ];
 
                 foreach ($pageShortTags as $shortTag => $value) {
-
-                    $buffer = str_replace('[:' . $shortTag . ':]', $value, $buffer);
+                    $sBuffer = str_replace('[:' . $shortTag . ':]', $value, $sBuffer);
                 }
             }
 
             //  Return the HTML
-            return $buffer;
+            return $sBuffer;
         }
 
         return '';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Format the template as a JSON object
+     *
+     * @param int $iJsonOptions The JSON options
+     * @param int $iJsonDepth   The JSON depth
+     *
+     * @return string
+     */
+    public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
+    {
+        return json_encode($this->toArray(), $iJsonOptions, $iJsonDepth);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Format the template as an array
+     * @return array
+     */
+    public function toArray()
+    {
+        return [
+            'label'             => $this->getLabel(),
+            'description'       => $this->getDescription(),
+            'widget_areas'      => $this->getWidgetAreas(),
+            'additional_fields' => $this->getAdditionalFields(),
+            'manual_config'     => $this->getManualConfig(),
+            'icon'              => $this->getIcon(),
+            'slug'              => $this->getSlug(),
+            'assets_editor'     => $this->getAssets('EDITOR'),
+            'assets_render'     => $this->getAssets('RENDER'),
+            'path'              => $this->getPath(),
+        ];
     }
 }

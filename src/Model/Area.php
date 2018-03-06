@@ -12,8 +12,10 @@
 
 namespace Nails\Cms\Model;
 
-use Nails\Factory;
+use Nails\Cms\Exception\Widget\NotFoundException;
 use Nails\Common\Model\Base;
+use Nails\Environment;
+use Nails\Factory;
 
 class Area extends Base
 {
@@ -23,8 +25,8 @@ class Area extends Base
     public function __construct()
     {
         parent::__construct();
-        $this->table = NAILS_DB_PREFIX . 'cms_area';
-        $this->tableAlias = 'a';
+        $this->table             = NAILS_DB_PREFIX . 'cms_area';
+        $this->tableAlias        = 'a';
         $this->tableAutoSetSlugs = true;
     }
 
@@ -33,33 +35,34 @@ class Area extends Base
     /**
      * This method applies the conditionals which are common across the get_*()
      * methods and the count() method.
-     * @param  array $data Data passed from the calling method
+     *
+     * @param  array $aData Data passed from the calling method
+     *
      * @return void
      **/
-    protected function getCountCommon($data = array())
+    protected function getCountCommon($aData = [])
     {
-        if (!empty($data['keywords'])) {
+        if (!empty($aData['keywords'])) {
 
-            if (empty($data['or_like'])) {
-
-                $data['or_like'] = array();
+            if (empty($aData['or_like'])) {
+                $aData['or_like'] = [];
             }
 
-            $data['or_like'][] = array(
+            $aData['or_like'][] = [
                 'column' => $this->tableAlias . '.label',
-                'value'  => $data['keywords']
-            );
-            $data['or_like'][] = array(
+                'value'  => $aData['keywords'],
+            ];
+            $aData['or_like'][] = [
                 'column' => $this->tableAlias . '.slug',
-                'value'  => $data['keywords']
-            );
-            $data['or_like'][] = array(
+                'value'  => $aData['keywords'],
+            ];
+            $aData['or_like'][] = [
                 'column' => $this->tableAlias . '.description',
-                'value'  => $data['keywords']
-            );
+                'value'  => $aData['keywords'],
+            ];
         }
 
-        parent::getCountCommon($data);
+        parent::getCountCommon($aData);
     }
 
     // --------------------------------------------------------------------------
@@ -71,18 +74,19 @@ class Area extends Base
      * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
      *
      * @param  object $oObj      A reference to the object being formatted.
-     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
+     * @param  array  $aData     The same data array which is passed to getCountCommon, for reference if needed
      * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
      * @param  array  $aBools    Fields which should be cast as booleans if not null
      * @param  array  $aFloats   Fields which should be cast as floats if not null
+     *
      * @return void
      */
     protected function formatObject(
         &$oObj,
-        $aData = array(),
-        $aIntegers = array(),
-        $aBools = array(),
-        $aFloats = array()
+        $aData = [],
+        $aIntegers = [],
+        $aBools = [],
+        $aFloats = []
     ) {
 
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
@@ -94,7 +98,9 @@ class Area extends Base
 
     /**
      * Renders a CMS Area
-     * @param  mixed  $mAreaIdSlug The area's ID or slug
+     *
+     * @param  mixed $mAreaIdSlug The area's ID or slug
+     *
      * @return string
      */
     public function render($mAreaIdSlug)
@@ -103,7 +109,6 @@ class Area extends Base
         $oArea = $this->getByIdOrSlug($mAreaIdSlug);
 
         if ($oArea) {
-
             $sOut = $this->renderWithData($oArea->widget_data);
         }
 
@@ -114,7 +119,10 @@ class Area extends Base
 
     /**
      * Render an array of widget data
-     * @param  array  $aWidgetData The array of data to render
+     *
+     * @param  array $aWidgetData The array of data to render
+     *
+     * @throws NotFoundException
      * @return string
      */
     public function renderWithData($aWidgetData)
@@ -123,7 +131,7 @@ class Area extends Base
 
         if (!empty($aWidgetData)) {
 
-            //  If a string is passed, asusme it's a JSON encoded array
+            //  If a string is passed, assume it's a JSON encoded array
             if (is_string($aWidgetData)) {
                 $aWidgetData = json_decode($aWidgetData);
                 if (empty($aWidgetData)) {
@@ -134,9 +142,12 @@ class Area extends Base
             $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
 
             foreach ($aWidgetData as $oWidgetData) {
-
                 $oWidget = $oWidgetModel->getBySlug($oWidgetData->slug);
-                $sOut   .= $oWidget->render((array) $oWidgetData->data);
+                if (!empty($oWidget)) {
+                    $sOut .= $oWidget->render((array) $oWidgetData->data);
+                } elseif (Environment::not('PRODUCTION')) {
+                    throw new NotFoundException('"' . $oWidgetData->slug . '" is not a valid widget');
+                }
             }
         }
 
