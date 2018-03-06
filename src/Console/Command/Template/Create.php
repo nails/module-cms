@@ -12,7 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class Create extends BaseMaker
 {
     const RESOURCE_PATH = NAILS_PATH . 'module-cms/resources/console/template/';
-    const TEMPLATE_PATH = FCPATH . APPPATH . 'modules/cms/templates/';
+    const TEMPLATE_PATH = APPPATH . 'modules/cms/templates/';
 
     // --------------------------------------------------------------------------
 

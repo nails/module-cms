@@ -148,7 +148,7 @@ class Widget
      * Get an individual widget
      *
      * @param  string $sSlug       The widget's slug
-     * @param  bool   $sLoadAssets Whether or not to load the widget's assets, and if so whether EDITOR or RENDER assets
+     * @param  string $sLoadAssets Whether or not to load the widget's assets, and if so whether EDITOR or RENDER assets.
      *
      * @return mixed
      */

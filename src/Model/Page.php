@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Model;
 
+use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Factory;
 use Nails\Cms\Events;
@@ -43,13 +44,14 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Create a new CMS page
+     * Creates a new CMS Page
      *
-     * @param  array $aData The data to create the page with
+     * @param array $aData         The data to create the page with
+     * @param bool  $bReturnObject Whether to return the ID or the object
      *
-     * @return mixed         The ID of the page on success, false on failure
+     * @return bool|mixed
      */
-    public function create($aData)
+    public function create($aData = [], $bReturnObject = false)
     {
         $oDb = Factory::service('Database');
         $oDb->trans_begin();
@@ -66,7 +68,8 @@ class Page extends Base
         //  Try and update it depending on how the update went, commit & update or rollback
         if ($this->update($iId, $aData)) {
             $oDb->trans_commit();
-            return $iId;
+            return $bReturnObject ? $this->getById($iId) : $iId;
+
         } else {
             $oDb->trans_rollback();
             return false;
@@ -78,20 +81,25 @@ class Page extends Base
     /**
      * Update a CMS Page
      *
-     * @param array|int $iPageId
+     * @param array|int $mIds
      * @param array     $aData
      *
      * @return bool
+     * @throws NailsException
      */
-    public function update($iId, $aData)
+    public function update($mIds, $aData = [])
     {
+        if (is_array($mIds)) {
+            throw new NailsException('This model does not support updating multiple items at once');
+        } else {
+            $iPageId = $mIds;
+        }
+
         //  Fetch the current version of this page, for reference.
         $oCurrent = $this->getById($iId);
 
         if (!$oCurrent) {
-
             $this->setError('Invalid Page ID');
-
             return false;
         }
 
@@ -177,12 +185,7 @@ class Page extends Base
             }
         }
 
-        $aUpdateData['draft_slug_end'] = end(
-            explode(
-                '/',
-                $aUpdateData['draft_slug']
-            )
-        );
+        $aUpdateData['draft_slug_end'] = end(explode('/', $aUpdateData['draft_slug']));
 
         // --------------------------------------------------------------------------
 
@@ -190,14 +193,14 @@ class Page extends Base
         $aUpdateData['draft_breadcrumbs'] = [];
 
         if (!empty($oParent->draft_breadcrumbs)) {
-
             $aUpdateData['draft_breadcrumbs'] = json_decode($oParent->draft_breadcrumbs);
         }
 
-        $oTemp        = new \stdClass();
-        $oTemp->id    = $oCurrent->id;
-        $oTemp->title = $aUpdateData['draft_title'];
-        $oTemp->slug  = $aUpdateData['draft_slug'];
+        $oTemp = (object) [
+            'id'    => $oCurrent->id,
+            'title' => $aUpdateData['draft_title'],
+            'slug'  => $aUpdateData['draft_slug'],
+        ];
 
         $aUpdateData['draft_breadcrumbs'][] = $oTemp;
         unset($oTemp);
@@ -479,9 +482,7 @@ class Page extends Base
 
             // --------------------------------------------------------------------------
 
-            //  Rewrite routes
-            $oRoutesModel = Factory::model('Routes');
-            $oRoutesModel->update();
+            $oDb->trans_commit();
 
             // --------------------------------------------------------------------------
 
@@ -491,7 +492,11 @@ class Page extends Base
 
             // --------------------------------------------------------------------------
 
-            //  @todo - Kill caches for this page and all children
+            //  Rewrite routes
+            $oRoutesModel = Factory::model('Routes');
+            $oRoutesModel->update();
+
+            //  @TODO: Kill caches for this page and all children
             return true;
 
         } else {

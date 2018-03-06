@@ -89,7 +89,7 @@ class Template
         foreach ($aAvailableTemplates as $aTemplate) {
             require_once $aTemplate['path'] . $aTemplate['name'] . '/template.php';
 
-            //  Specify which templates to instantiates, app ones will override module ones
+            //  Specify which templates to instantiate, app ones will override module ones
             $aTemplatesToInstantiate[$aTemplate['name']] = $aTemplate;
         }
 

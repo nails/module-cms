@@ -37,7 +37,7 @@
 
             case 'richtext':
 
-                echo form_textarea('value', set_value('value', $block->value), 'class="wysiwyg"');
+                echo form_textarea('value', set_value('value', $block->value, false), 'class="wysiwyg"');
                 break;
 
             case 'image':
