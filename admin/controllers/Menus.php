@@ -156,7 +156,7 @@ class Menus extends BaseAdmin
 
             //  Validate form
             $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('label', '', 'xss_clean|trim|required');
+            $oFormValidation->set_rules('label', '', 'trim|required');
             $oFormValidation->set_rules('description', '', 'trim');
             $oFormValidation->set_message('required', lang('fv_required'));
 
@@ -285,7 +285,7 @@ class Menus extends BaseAdmin
 
             //  Validate form
             $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('label', '', 'xss_clean|trim|required');
+            $oFormValidation->set_rules('label', '', 'trim|required');
             $oFormValidation->set_rules('description', '', 'trim');
             $oFormValidation->set_message('required', lang('fv_required'));
 

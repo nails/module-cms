@@ -182,15 +182,15 @@ class Pages extends BaseAdmin
         if ($oInput->post()) {
 
             $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('title', '', 'xss_clean');
-            $oFormValidation->set_rules('slug', '', 'xss_clean|alpha_dash');
-            $oFormValidation->set_rules('parent_id', '', 'xss_clean|is_natural');
-            $oFormValidation->set_rules('template', '', 'xss_clean|trim|required');
+            $oFormValidation->set_rules('title', '', '');
+            $oFormValidation->set_rules('slug', '', 'alpha_dash');
+            $oFormValidation->set_rules('parent_id', '', 'is_natural');
+            $oFormValidation->set_rules('template', '', 'trim|required');
             $oFormValidation->set_rules('template_data', '', 'trim');
             $oFormValidation->set_rules('template_options', '', 'is_array');
-            $oFormValidation->set_rules('seo_title', '', 'xss_clean|trim|max_length[150]');
-            $oFormValidation->set_rules('seo_description', '', 'xss_clean|trim|max_length[300]');
-            $oFormValidation->set_rules('seo_keywords', '', 'xss_clean|trim|max_length[150]');
+            $oFormValidation->set_rules('seo_title', '', 'trim|max_length[150]');
+            $oFormValidation->set_rules('seo_description', '', 'trim|max_length[300]');
+            $oFormValidation->set_rules('seo_keywords', '', 'trim|max_length[150]');
             $oFormValidation->set_rules('action', '', 'required');
 
             $oFormValidation->set_message('alpha_dash', lang('fv_alpha_dash'));
@@ -324,15 +324,15 @@ class Pages extends BaseAdmin
         if ($oInput->post()) {
 
             $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('title', '', 'xss_clean');
-            $oFormValidation->set_rules('slug', '', 'xss_clean|alpha_dash');
-            $oFormValidation->set_rules('parent_id', '', 'xss_clean|is_natural');
-            $oFormValidation->set_rules('template', '', 'xss_clean|trim|required');
+            $oFormValidation->set_rules('title', '', '');
+            $oFormValidation->set_rules('slug', '', 'alpha_dash');
+            $oFormValidation->set_rules('parent_id', '', 'is_natural');
+            $oFormValidation->set_rules('template', '', 'trim|required');
             $oFormValidation->set_rules('template_data', '', 'trim');
             $oFormValidation->set_rules('template_options', '', 'is_array');
-            $oFormValidation->set_rules('seo_title', '', 'xss_clean|trim|max_length[150]');
-            $oFormValidation->set_rules('seo_description', '', 'xss_clean|trim|max_length[300]');
-            $oFormValidation->set_rules('seo_keywords', '', 'xss_clean|trim|max_length[150]');
+            $oFormValidation->set_rules('seo_title', '', 'trim|max_length[150]');
+            $oFormValidation->set_rules('seo_description', '', 'trim|max_length[300]');
+            $oFormValidation->set_rules('seo_keywords', '', 'trim|max_length[150]');
             $oFormValidation->set_rules('action', '', 'required');
 
             $oFormValidation->set_message('alpha_dash', lang('fv_alpha_dash'));

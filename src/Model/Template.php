@@ -44,7 +44,7 @@ class Template
 
         $this->aTemplateDirs[] = [
             'namespace' => 'App\\',
-            'path'      => FCPATH . APPPATH . 'modules/cms/templates/',
+            'path'      => APPPATH . 'modules/cms/templates/',
         ];
     }
 
@@ -97,18 +97,19 @@ class Template
         $aLoadedTemplates = [];
         foreach ($aTemplatesToInstantiate as $aTemplate) {
 
-            $sClassName = $aTemplate['namespace'] . 'Cms\Template\\' . ucfirst(strtolower($aTemplate['name']));
+            $sTemplateName  = trim($aTemplate['name'], DIRECTORY_SEPARATOR);
+            $sTemplateClass = $aTemplate['namespace'] . 'Cms\Template\\' . ucfirst($sTemplateName);
 
-            if (!class_exists($sClassName)) {
+            if (!class_exists($sTemplateClass)) {
                 throw new NotFoundException(
-                    'Template class "' . $sClassName . '" missing from "' . $aTemplate['path'] . '"',
+                    'Template class "' . $sTemplateClass . '" missing from "' . $aTemplate['path'] . '"',
                     500
                 );
             }
 
-            if (!$sClassName::isDisabled()) {
+            if (!$sTemplateClass::isDisabled()) {
 
-                $aLoadedTemplates[$aTemplate['name']] = new $sClassName();
+                $aLoadedTemplates[$aTemplate['name']] = new $sTemplateClass();
 
                 //  Load the template's assets if requested
                 if ($loadAssets) {

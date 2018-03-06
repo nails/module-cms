@@ -154,8 +154,8 @@ class Area extends BaseAdmin
 
             //  Validate form
             $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('label', '', 'xss_clean|trim|required');
-            $oFormValidation->set_rules('description', '', 'xss_clean|trim|max_length[255]');
+            $oFormValidation->set_rules('label', '', 'trim|required');
+            $oFormValidation->set_rules('description', '', 'trim|max_length[255]');
             $oFormValidation->set_rules('widget-data', '', 'trim');
 
             if ($oInput->post('slug')) {
@@ -164,7 +164,7 @@ class Area extends BaseAdmin
                 $oFormValidation->set_rules(
                     'slug',
                     '',
-                    'xss_clean|trim|alpha_dash|is_unique[' . $sTable . '.slug]'
+                    'trim|alpha_dash|is_unique[' . $sTable . '.slug]'
                 );
             }
 
@@ -239,8 +239,8 @@ class Area extends BaseAdmin
 
             //  Validate form
             $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('label', '', 'xss_clean|trim|required');
-            $oFormValidation->set_rules('description', '', 'xss_clean|trim|max_length[255]');
+            $oFormValidation->set_rules('label', '', 'trim|required');
+            $oFormValidation->set_rules('description', '', 'trim|max_length[255]');
             $oFormValidation->set_rules('widget-data', '', 'trim');
 
             if ($oInput->post('slug')) {
@@ -249,7 +249,7 @@ class Area extends BaseAdmin
                 $oFormValidation->set_rules(
                     'slug',
                     '',
-                    'xss_clean|trim|alpha_dash|unique_if_diff[' . $sTable . '.slug.' . $this->data['area']->slug . ']'
+                    'trim|alpha_dash|unique_if_diff[' . $sTable . '.slug.' . $this->data['area']->slug . ']'
                 );
             }
 

@@ -42,21 +42,22 @@ class Widget
 
         //  Append the app
         $aModules['app'] = (object) [
-            'path'      => FCPATH . APPPATH . 'modules/',
+            'path'      => APPPATH . 'modules/',
             'namespace' => 'App\\',
         ];
 
         foreach ($aModules as $oModule) {
 
             $sWidgetDir = $oModule->path . 'cms/widgets/';
-            
+
             if (!is_dir($sWidgetDir)) {
                 continue;
             }
-            
-            $aWidgets   = directory_map($sWidgetDir, 1);
+
+            $aWidgets = directory_map($sWidgetDir, 1);
             if (!empty($aWidgets)) {
                 foreach ($aWidgets as $sWidgetName) {
+                    $sWidgetName       = trim($sWidgetName, DIRECTORY_SEPARATOR);
                     $sWidgetDefinition = $sWidgetDir . $sWidgetName . '/widget.php';
                     $sWidgetClass      = $oModule->namespace . 'Cms\Widget\\' . ucfirst($sWidgetName);
                     if (is_file($sWidgetDefinition)) {

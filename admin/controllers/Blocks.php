@@ -209,11 +209,11 @@ class Blocks extends BaseAdmin
 
             switch ($this->data['block']->type) {
                 case 'email':
-                    $oFormValidation->set_rules('value', '', 'valid_email|xss_clean');
+                    $oFormValidation->set_rules('value', '', 'valid_email');
                     break;
 
                 case 'url':
-                    $oFormValidation->set_rules('value', '', 'valid_url|xss_clean');
+                    $oFormValidation->set_rules('value', '', 'valid_url');
                     break;
 
                 case 'file':
@@ -285,19 +285,19 @@ class Blocks extends BaseAdmin
             //  Form Validation
             $oFormValidation = Factory::service('FormValidation');
 
-            $oFormValidation->set_rules('slug', '', 'xss_clean|required|callback_callbackBlockSlug');
-            $oFormValidation->set_rules('label', '', 'xss_clean|required');
-            $oFormValidation->set_rules('description', '', 'xss_clean');
-            $oFormValidation->set_rules('located', '', 'xss_clean');
+            $oFormValidation->set_rules('slug', '', 'required|callback_callbackBlockSlug');
+            $oFormValidation->set_rules('label', '', 'required');
+            $oFormValidation->set_rules('description', '', '');
+            $oFormValidation->set_rules('located', '', '');
             $oFormValidation->set_rules('type', '', 'required|callback_callbackBlockType');
 
             switch ($oInput->post('type')) {
                 case 'email':
-                    $oFormValidation->set_rules('value', '', 'valid_email|xss_clean');
+                    $oFormValidation->set_rules('value', '', 'valid_email');
                     break;
 
                 case 'url':
-                    $oFormValidation->set_rules('value', '', 'valid_url|xss_clean');
+                    $oFormValidation->set_rules('value', '', 'valid_url');
                     break;
 
                 case 'file':
