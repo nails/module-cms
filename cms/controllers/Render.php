@@ -10,15 +10,15 @@
  * @link
  */
 
-use Nails\Factory;
 use App\Controller\Base;
 use Nails\Cms\Exception\RenderException;
+use Nails\Factory;
 
 class Render extends Base
 {
-    protected $pageId;
-    protected $isPreview;
-    protected $isHomepage;
+    protected $iPageId;
+    protected $bIsPreview;
+    protected $bIsHomepage;
     protected $oPageModel;
     protected $iHomepageId;
 
@@ -38,9 +38,10 @@ class Render extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->pageId      = $this->uri->rsegment(3);
-        $this->isPreview   = false;
-        $this->isHomepage  = false;
+        $oUri              = Factory::service('Uri');
+        $this->iPageId     = $oUri->rsegment(3);
+        $this->bIsPreview  = false;
+        $this->bIsHomepage = false;
         $this->iHomepageId = $this->oPageModel->getHomepageId();
     }
 
@@ -48,45 +49,38 @@ class Render extends Base
 
     /**
      * Loads a published CMS page
+     * @throws RenderException
      * @return void
      */
     public function page()
     {
-        if ($this->isPreview) {
-
-            $page = $this->oPageModel->getPreviewById($this->pageId);
-
+        if ($this->bIsPreview) {
+            $oPage = $this->oPageModel->getPreviewById($this->iPageId);
         } else {
-
-            $page = $this->oPageModel->getById($this->pageId);
+            $oPage = $this->oPageModel->getById($this->iPageId);
         }
 
-        if (!$page || $page->is_deleted) {
-
+        if (!$oPage || $oPage->is_deleted) {
             show_404();
         }
 
         // --------------------------------------------------------------------------
 
         //  If a page is not published and not being previewed, show_404()
-        if (!$page->is_published && !$this->isPreview) {
-
+        if (!$oPage->is_published && !$this->bIsPreview) {
             show_404();
         }
 
         // --------------------------------------------------------------------------
 
         //  Determine which data to use
-        if ($this->isPreview) {
-
-            $data = $page->draft;
-
+        if ($this->bIsPreview) {
+            $oData = $oPage->draft;
         } else {
-
-            $data = $page->published;
+            $oData = $oPage->published;
         }
 
-        $this->data['page_data'] =& $data;
+        $this->data['page_data'] =& $oData;
 
         // --------------------------------------------------------------------------
 
@@ -95,30 +89,30 @@ class Render extends Base
          * the non slug'd version
          */
 
-        if ($page->id === $this->iHomepageId && uri_string() == $data->slug) {
-
+        if ($oPage->id === $this->iHomepageId && uri_string() == $oData->slug) {
             $oSession = Factory::service('Session', 'nailsapp/module-auth');
             $oSession->keep_flashdata();
-
             redirect('', 'location', 301);
         }
 
         // --------------------------------------------------------------------------
 
         //  Set some page level data
-        $this->data['page']->id               = $page->id;
-        $this->data['page']->title            = $data->title;
-        $this->data['page']->seo              = new stdClass();
-        $this->data['page']->seo->title       = $data->seo_title;
-        $this->data['page']->seo->description = $data->seo_description;
-        $this->data['page']->seo->keywords    = $data->seo_keywords;
-        $this->data['page']->is_preview       = $this->isPreview;
-        $this->data['page']->is_homepage      = $this->isHomepage;
-        $this->data['page']->breadcrumbs      = $data->breadcrumbs;
+        $this->data['page']->id          = $oPage->id;
+        $this->data['page']->title       = $oData->title;
+        $this->data['page']->seo         = (object) [
+            'title'       => $oData->seo_title,
+            'description' => $oData->seo_description,
+            'keywords'    => $oData->seo_keywords,
+        ];
+        $this->data['page']->is_preview  = $this->bIsPreview;
+        $this->data['page']->is_homepage = $this->bIsHomepage;
+        $this->data['page']->breadcrumbs = $oData->breadcrumbs;
 
         //  Set some meta tags for the header
-        $this->meta->add('description', $data->seo_description);
-        $this->meta->add('keywords', $data->seo_keywords);
+        $oMeta = Factory::service('Meta');
+        $oMeta->add('description', $oData->seo_description);
+        $oMeta->add('keywords', $oData->seo_keywords);
 
         // --------------------------------------------------------------------------
 
@@ -128,31 +122,29 @@ class Render extends Base
          * a system alert (which the templates *should* handle).
          */
 
-        $hasDataAndNotPreview = !$this->data['message'] && !$this->isPreview;
-        $hasUnublishedChanges = $page->has_unpublished_changes;
-        $userHasPermission    = userHasPermission('admin:cms:pages:edit');
+        $bHasDataAndNotPreview  = !$this->data['message'] && !$this->bIsPreview;
+        $bHasUnpublishedChanges = $oPage->has_unpublished_changes;
+        $bUserHasPermission     = userHasPermission('admin:cms:pages:edit');
 
-        if ($hasDataAndNotPreview && $hasUnublishedChanges && $userHasPermission) {
-
+        if ($bHasDataAndNotPreview && $bHasUnpublishedChanges && $bUserHasPermission) {
             $this->data['message'] = lang(
                 'cms_notice_unpublished_changes',
-                array(
-                    site_url('admin/cms/pages/edit/' . $page->id)
-                )
+                [
+                    site_url('admin/cms/pages/edit/' . $oPage->id),
+                ]
             );
         }
 
         // --------------------------------------------------------------------------
 
         //  Actually render
-        $html = $this->oPageModel->render($data->template, $data->template_data, $data->template_options);
-        if ($html !== false) {
+        $sRenderedHtml = $this->oPageModel->render($oData->template, $oData->template_data, $oData->template_options);
+        if ($sRenderedHtml !== false) {
 
             $oOutput = Factory::service('Output');
-            $oOutput->set_output($html);
+            $oOutput->set_output($sRenderedHtml);
 
         } else {
-
             throw new RenderException('Failed to render CMS Page: ' . $this->oPageModel->lastError(), 1);
         }
     }
@@ -166,12 +158,9 @@ class Render extends Base
     public function preview()
     {
         if (userHasPermission('admin:cms:pages:edit')) {
-
-            $this->isPreview = true;
-            return $this->page();
-
+            $this->bIsPreview = true;
+            $this->page();
         } else {
-
             show_404();
         }
     }
@@ -185,17 +174,13 @@ class Render extends Base
     public function homepage()
     {
         //  Attempt to get the site's homepage
-        $homepage = $this->oPageModel->getHomepage();
+        $oHomepage = $this->oPageModel->getHomepage();
 
-        if ($homepage) {
-
-            $this->isHomepage = true;
-            $this->pageId     = $homepage->id;
-
+        if ($oHomepage) {
+            $this->bIsHomepage = true;
+            $this->iPageId     = $oHomepage->id;
             $this->page();
-
         } else {
-
             showFatalError('No homepage has been defined.');
         }
     }
@@ -209,15 +194,13 @@ class Render extends Base
     public function legacy_slug()
     {
         //  Get the page and attempt to 301 redirect
-        $id = $this->uri->rsegment(3);
+        $oUri = Factory::service('Uri');
+        $iId  = (int) $oUri->rsegment(3);
 
-        if ($id) {
-
-            $page = $this->oPageModel->getById($id);
-
-            if ($page && $page->is_published) {
-
-                redirect($page->published->slug, 'location', 301);
+        if ($iId) {
+            $oPage = $this->oPageModel->getById($iId);
+            if ($oPage && $oPage->is_published) {
+                redirect($oPage->published->slug, 'location', 301);
             }
         }
 
