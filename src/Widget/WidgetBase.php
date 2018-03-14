@@ -79,7 +79,17 @@ abstract class WidgetBase
         foreach ($aFiles as $sFile) {
             $sPath = static::getFilePath($sFile);
             if (!empty($sPath)) {
-                $this->screenshot = 'data:image/jpg;base64,' . base64_encode(file_get_contents($sPath));
+                $sCachePath = md5($sPath) . '-widget-' . basename($this->path) . '-' . basename($sPath);
+                if (file_exists(CACHE_PUBLIC_PATH . $sCachePath)) {
+                    $this->screenshot = CACHE_PUBLIC_URL . $sCachePath;
+                } else {
+                    //  Attempt to copy the file and serve the cached version
+                    if (copy($sPath, CACHE_PUBLIC_PATH . $sCachePath)) {
+                        $this->screenshot = CACHE_PUBLIC_URL . $sCachePath;
+                    } else {
+                        $this->screenshot = 'data:image/jpg;base64,' . base64_encode(file_get_contents($sPath));
+                    }
+                }
             }
         }
 
