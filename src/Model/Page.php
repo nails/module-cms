@@ -92,7 +92,7 @@ class Page extends Base
         if (is_array($mIds)) {
             throw new NailsException('This model does not support updating multiple items at once');
         } else {
-            $iPageId = $mIds;
+            $iId = $mIds;
         }
 
         //  Fetch the current version of this page, for reference.
@@ -1011,7 +1011,7 @@ class Page extends Base
 
         //  Owner
         $modifiedBy = (int) (is_object($oObj->modified_by) ? $oObj->modified_by->id : $oObj->modified_by);
-        
+
         $oObj->modified_by              = new \stdClass();
         $oObj->modified_by->id          = $modifiedBy;
         $oObj->modified_by->first_name  = isset($oObj->first_name) ? $oObj->first_name : '';
