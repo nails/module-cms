@@ -284,7 +284,7 @@ abstract class WidgetBase
      *
      * @return string
      */
-    public function getEditor($aWidgetData = [])
+    public function getEditor(array $aWidgetData = [])
     {
         return $this->loadView('editor', $aWidgetData);
     }
@@ -298,7 +298,7 @@ abstract class WidgetBase
      *
      * @return string
      */
-    public function render($aWidgetData = [])
+    public function render(array $aWidgetData = [])
     {
         return $this->loadView('render', $aWidgetData, true);
     }
@@ -332,7 +332,7 @@ abstract class WidgetBase
      *
      * @param array $aWidgetData The widget's data
      */
-    protected function populateWidgetData(&$aWidgetData)
+    protected function populateWidgetData(array &$aWidgetData)
     {
     }
 

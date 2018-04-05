@@ -345,7 +345,7 @@ abstract class TemplateBase
      *
      * @return string
      */
-    public function render($aTplData = [], $aTplOptions = [])
+    public function render(array $aTplData = [], array $aTplOptions = [])
     {
         //  Process each widget area and render the HTML
         $aWidgetAreas  = $this->getWidgetAreas();
@@ -385,7 +385,7 @@ abstract class TemplateBase
      *
      * @return mixed|string
      */
-    protected function loadView($sView, $aTplOptions, $aTplData)
+    protected function loadView($sView, array $aTplOptions, array $aTplData)
     {
         $sPath = static::getFilePath($sView . '.php');
         if (!empty($sPath)) {
