@@ -12,6 +12,8 @@
 
 namespace Nails\Cms\Widget;
 
+use Nails\Factory;
+
 abstract class WidgetBase
 {
     /**
