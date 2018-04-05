@@ -306,43 +306,17 @@ abstract class WidgetBase
     /**
      * Load a specific view
      *
-     * @param string $sView                  The view to load
-     * @param array  $aWidgetData            The data to render the view with
-     * @param bool   $bExtractControllerData Whether to extract controller data or not
+     * @param string $sView       The view to load
+     * @param array  $aWidgetData The data to render the view with
      *
      * @return string
      */
-    protected function loadView($sView, array $aWidgetData, $bExtractControllerData = false)
+    protected function loadView($sView, array $aWidgetData)
     {
         $sPath = static::getFilePath('views/' . $sView . '.php');
         if (!empty($sPath)) {
-            //  Populate widget data
             $this->populateWidgetData($aWidgetData);
-
-            //  Add a reference to the CI super object, for view loading etc
-            $oCi = get_instance();
-
-            /**
-             * Extract data into variables in the local scope so the view can use them.
-             * Basically copying how CI does it's view loading/rendering
-             */
-            if ($bExtractControllerData) {
-                $NAILS_CONTROLLER_DATA =& getControllerData();
-                if ($NAILS_CONTROLLER_DATA) {
-                    extract($NAILS_CONTROLLER_DATA);
-                }
-            }
-
-            if ($aWidgetData) {
-                extract((array) $aWidgetData);
-            }
-
-            ob_start();
-            include $sPath;
-            $sBuffer = ob_get_contents();
-            @ob_end_clean();
-
-            return $sBuffer;
+            return Factory::service('View')->load($sPath, $aWidgetData, true);
         }
 
         return '';

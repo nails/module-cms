@@ -390,30 +390,8 @@ abstract class TemplateBase
         $sPath = static::getFilePath($sView . '.php');
         if (!empty($sPath)) {
 
-            //  Add a reference to the CI super object, for view loading etc
-            $oCi = get_instance();
-
-            /**
-             * Extract data into variables in the local scope so the view can use them.
-             * Basically copying how CI does it's view loading/rendering
-             */
-            $NAILS_CONTROLLER_DATA =& getControllerData();
-            if ($NAILS_CONTROLLER_DATA) {
-                extract($NAILS_CONTROLLER_DATA);
-            }
-
-            if ($aTplOptions) {
-                extract($aTplOptions);
-            }
-
-            if ($aTplData) {
-                extract($aTplData);
-            }
-
-            ob_start();
-            include $sPath;
-            $sBuffer = ob_get_contents();
-            @ob_end_clean();
+            $oView   = Factory::service('View');
+            $sBuffer = $oView->load($sPath, array_merge($aTplOptions, $aTplData), true);
 
             //  Look for blocks
             preg_match_all('/\[:([a-zA-Z0-9\-]+?):\]/', $sBuffer, $aMatches);
@@ -441,13 +419,12 @@ abstract class TemplateBase
                 }
 
                 //  Swap page variables
-                $sPageTitle    = !empty($tplAdditionalFields['cmspage']) ? $tplAdditionalFields['cmspage']->title : '';
-                $pageShortTags = [
-                    'page-title' => $sPageTitle,
+                $aPageShortTags = [
+                    'page-title' => !empty($aTplData['cmspage']) ? $aTplData['cmspage']->title : '',
                 ];
 
-                foreach ($pageShortTags as $shortTag => $value) {
-                    $sBuffer = str_replace('[:' . $shortTag . ':]', $value, $sBuffer);
+                foreach ($aPageShortTags as $sShortTag => $sValue) {
+                    $sBuffer = str_replace('[:' . $sShortTag . ':]', $sValue, $sBuffer);
                 }
             }
 
