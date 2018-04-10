@@ -185,7 +185,8 @@ class Page extends Base
             }
         }
 
-        $aUpdateData['draft_slug_end'] = end(explode('/', $aUpdateData['draft_slug']));
+        $aSegments                     = explode('/', $aUpdateData['draft_slug']);
+        $aUpdateData['draft_slug_end'] = end($aSegments);
 
         // --------------------------------------------------------------------------
 
