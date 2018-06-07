@@ -10,7 +10,6 @@ return <<<'EOD'
 
 /**
  * This is the "{{SLUG}}" CMS widget view
-
  */
 
 if (!empty($sSomeVariable)) {
