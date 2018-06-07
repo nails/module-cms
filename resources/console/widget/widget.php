@@ -39,7 +39,7 @@ class {{SLUG}} extends WidgetBase
      *
      * @param array $aWidgetData The widget's data
      */
-    protected function populateWidgetData(&$aWidgetData)
+    protected function populateWidgetData(array &$aWidgetData)
     {
         $aWidgetData                  = (array) $aWidgetData;
         $aWidgetData['sSomeVariable'] = getFromArray('sSomeVariable', $aWidgetData);
