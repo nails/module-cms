@@ -62,7 +62,7 @@ class Widgets extends Base
                 }
             }
 
-            array_sort_multi($aWidgets, 'label');
+            arraySortMulti($aWidgets, 'label');
             $aWidgets = array_values($aWidgets);
 
             return [
