@@ -136,7 +136,7 @@ class Blocks extends BaseAdmin
         ];
 
         foreach ($this->data['blockTypes'] as $sSlug => $sLabel) {
-            $aCbFilters[0]->options[] = Helper::searchFilterObjectOption($sLabel, $sSlug, true);
+            $aCbFilters[0]->addOption($sLabel, $sSlug, true);
         }
 
         // --------------------------------------------------------------------------
