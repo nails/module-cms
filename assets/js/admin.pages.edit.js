@@ -1,7 +1,6 @@
 /* globals console, _nails_api */
 var NAILS_Admin_CMS_Pages_CreateEdit;
-NAILS_Admin_CMS_Pages_CreateEdit = function(widgetEditor, templates)
-{
+NAILS_Admin_CMS_Pages_CreateEdit = function(widgetEditor, templates) {
     /**
      * Avoid scope issues in callbacks and anonymous functions by referring to `this` as `base`
      * @type {Object}
@@ -96,11 +95,20 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(widgetEditor, templates)
         });
 
         $('button.launch-editor').on('click', function() {
+            if (!base.editor.isReady()) {
+                base.log('widget Editor not ready');
+                return false;
+            }
 
             var area = $(this).data('area');
             base.log('Launching editor for area "' + area + '"');
             base.editor.show(area);
             return false;
+        });
+
+        $(base.editor).on('widgeteditor-ready', function() {
+            $('button.launch-editor')
+                .removeClass('disabled');
         });
 
         $('#action-preview').on('click', function() {
@@ -223,8 +231,8 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(widgetEditor, templates)
 
         //  Size the iframe
         var previewPadding = parseFloat(preview.css('padding'));
-        var actionsHeight  = preview.find('> .actions').outerHeight();
-        var newHeight      = $(window).height() - (previewPadding*2) - actionsHeight;
+        var actionsHeight = preview.find('> .actions').outerHeight();
+        var newHeight = $(window).height() - (previewPadding * 2) - actionsHeight;
 
         preview.find('.iframe, .iframe > div').css('height', newHeight);
 

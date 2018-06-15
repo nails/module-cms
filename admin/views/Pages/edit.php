@@ -55,11 +55,8 @@
          */
 
         if (isset($cmspage)) {
-
             foreach ($pagesNestedFlat as $id => $label) {
-
                 if ($id == $cmspage->id) {
-
                     $aField['disabled_options'][] = $id;
                     break;
                 }
@@ -67,12 +64,9 @@
         }
 
         if (count($pagesNestedFlat) && count($aField['disabled_options']) < count($pagesNestedFlat)) {
-
             $pagesNestedFlat = ['' => 'No Parent Page'] + $pagesNestedFlat;
             echo form_field_dropdown($aField, $pagesNestedFlat);
-
         } else {
-
             echo form_hidden($aField['key'], '');
         }
 
@@ -88,7 +82,6 @@
             foreach ($templates as $oTemplateGroup) {
 
                 if ($numTemplateGroups > 1) {
-
                     ?>
                     <li class="template-group-label">
                         <?=$oTemplateGroup->getLabel()?>
@@ -99,23 +92,22 @@
                 foreach ($oTemplateGroup->getTemplates() as $oTemplate) {
 
                     //  This template selected?
-                    $selected = $defaultTemplate == $oTemplate->getSlug() ? true : false;
+                    $bIsSelected = $defaultTemplate == $oTemplate->getSlug();
 
                     //  Define attributes
-                    $attr              = [];
-                    $attr['class']     = $selected ? 'template selected' : 'template';
-                    $attr['data-slug'] = $oTemplate->getSlug();
+                    $aAttr              = [];
+                    $aAttr['class']     = $bIsSelected ? 'template selected' : 'template';
+                    $aAttr['data-slug'] = $oTemplate->getSlug();
 
                     //  Glue together
-                    $attrStr = '';
-                    foreach ($attr as $key => $value) {
-
-                        $attrStr .= $key . '="' . $value . '" ';
+                    $sAttrStr = '';
+                    foreach ($aAttr as $sKey => $sValue) {
+                        $sAttrStr .= $sKey . '="' . $sValue . '" ';
                     }
 
                     ?>
                     <li>
-                        <label <?=trim($attrStr)?> rel="tipsy-top" title="<?=$oTemplate->getDescription()?>">
+                        <label <?=trim($sAttrStr)?> rel="tipsy-top" title="<?=$oTemplate->getDescription()?>">
                             <?php
 
                             echo form_radio(
@@ -124,9 +116,9 @@
                                 set_radio(
                                     'template',
                                     $oTemplate->getSlug(),
-                                    $selected
+                                    $bIsSelected
                                 ),
-                                'data-slug="' . $attr['data-slug'] . '"'
+                                'data-slug="' . $aAttr['data-slug'] . '"'
                             );
 
                             echo '<span class="icon">';
@@ -146,7 +138,6 @@
                         </label>
                     </li>
                     <?php
-
                 }
             }
 
@@ -174,13 +165,12 @@
                     foreach ($aWidgetAreas as $sWidgetSlug => $oWidgetArea) {
 
                         $aAttr = [
-                            'class'     => 'btn btn-default launch-editor',
+                            'class'     => 'btn btn-default disabled launch-editor',
                             'data-area' => $sWidgetSlug,
                         ];
 
                         $sAttr = '';
                         foreach ($aAttr as $sKey => $sValue) {
-
                             $sAttr .= $sKey . '="' . $sValue . '" ';
                         }
 
@@ -230,32 +220,35 @@
                 //  Any other fields, if specified
                 if (!empty($aTplAdditionalFields)) {
 
-                    echo '<div id="additional-fields-' . $sTplSlug . '" class="additional-fields">';
+                    ?>
+                    <div id="additional-fields-<?=$sTplSlug?>" class="additional-fields">
+                        <?php
 
-                    foreach ($aTplAdditionalFields as $aField) {
+                        foreach ($aTplAdditionalFields as $oField) {
 
-                        //  Set the default key
-                        $sFieldKey     = $aField->getKey();
-                        $sFieldType    = $aField->getType();
-                        $aFieldOptions = $aField->getOptions();
-                        if (!empty($cmspage->draft->template_options->{$sFieldKey})) {
+                            //  Set the default key
+                            $sFieldKey     = $oField->getKey();
+                            $sFieldType    = $oField->getType();
+                            $aFieldOptions = $oField->getOptions();
+                            if (!empty($cmspage->draft->template_options->{$sFieldKey})) {
+                                $oField->setDefault($cmspage->draft->template_options->{$sFieldKey});
+                            }
 
-                            $aField->setDefault($cmspage->draft->template_options->{$sFieldKey});
+                            //  Override the field key
+                            $oField->setKey('template_options[' . $sTplSlug . '][' . $sFieldKey . ']');
+
+                            //  Render the appropriate field
+                            $sType = 'form_field_' . $oField->getProperty('type');
+                            if (function_exists($sType)) {
+                                echo $sType($oField->toArray());
+                            } else {
+                                echo form_field($oField->toArray());
+                            }
                         }
 
-                        //  Override the field key
-                        $aField->setKey('template_options[' . $sTplSlug . '][' . $sFieldKey . ']');
-
-                        //  Render the appropriate field
-                        $sType = 'form_field_' . $aField->getProperty('type');
-                        if (function_exists($sType)) {
-                            echo $sType($aField->toArray());
-                        } else {
-                            echo form_field($aField->toArray());
-                        }
-                    }
-
-                    echo '</div>';
+                        ?>
+                    </div>
+                    <?php
                 }
             }
         }

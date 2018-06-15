@@ -13,7 +13,16 @@ NAILS_Admin_CMS_WidgetEditor = function() {
      * Give other items a chance to check if the widget editor is ready or not
      * @type {Boolean}
      */
-    this.ready = false;
+    this.isEditorReady = false;
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Whether the editor is currently open
+     * @type {Boolean}
+     */
+    this.isEditorOpen = false;
+
 
     // --------------------------------------------------------------------------
 
@@ -60,14 +69,6 @@ NAILS_Admin_CMS_WidgetEditor = function() {
      * The individual editor sections
      */
     this.sections = {};
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Whether the editor is currently open
-     * @type {Boolean}
-     */
-    this.isOpen = false;
 
     // --------------------------------------------------------------------------
 
@@ -137,8 +138,9 @@ NAILS_Admin_CMS_WidgetEditor = function() {
         base.loadSidebarWidgets()
             .done(function() {
                 base.renderSidebarWidgets();
-                base.ready = true;
+                base.isEditorReady = true;
                 base.log('Widget Editor ready');
+                $(base).trigger('widgeteditor-ready');
             });
 
         //  Default editor elements
@@ -363,7 +365,7 @@ NAILS_Admin_CMS_WidgetEditor = function() {
 
         //  Keyboard shortcuts
         $(document).on('keyup', function(e) {
-            if (base.isOpen && e.which === base.keymap.ESC) {
+            if (base.isOpen() && e.which === base.keymap.ESC) {
                 base.actionClose();
             }
         });
@@ -707,7 +709,7 @@ NAILS_Admin_CMS_WidgetEditor = function() {
 
         //  Show the editor
         base.container.addClass('active');
-        base.isOpen = true;
+        base.isEditorOpen = true;
 
         //  Prevent scrolling on the body
         $('body').addClass('noscroll');
@@ -725,7 +727,7 @@ NAILS_Admin_CMS_WidgetEditor = function() {
 
         base.log('Closing Editor');
         base.container.removeClass('active');
-        base.isOpen = false;
+        base.isEditorOpen = false;
         base.activeArea = '';
 
         //  Destroy all sortables and draggables
@@ -1048,7 +1050,7 @@ NAILS_Admin_CMS_WidgetEditor = function() {
         base.log('Getting editor data for area "' + area + '"');
 
         //  If the editor is open then refresh the area
-        if (base.isOpen && area === base.activeArea) {
+        if (base.isOpen() && area === base.activeArea) {
             base.log('Editor is open with selected area, refreshing data');
             base.widgetData[area] = base.getActiveData();
         }
@@ -1186,6 +1188,26 @@ NAILS_Admin_CMS_WidgetEditor = function() {
         }
 
         return base;
+    };
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns whether the widget editor is ready or not
+     * @return {Boolean}
+     */
+    this.isReady = function() {
+        return base.isEditorReady;
+    };
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns whether the widget editor is open or not
+     * @return {Boolean}
+     */
+    this.isOpen = function() {
+        return base.isEditorOpen;
     };
 
     // --------------------------------------------------------------------------
