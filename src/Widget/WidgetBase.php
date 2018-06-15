@@ -18,8 +18,15 @@ abstract class WidgetBase
 {
     /**
      * Whether this widget is disabled or not
+     * @var bool
      */
     const DISABLED = false;
+
+    /**
+     * The default icon to use
+     * @var string
+     */
+    const DEFAULT_ICON = 'fa-cube';
 
     // --------------------------------------------------------------------------
 
@@ -54,7 +61,7 @@ abstract class WidgetBase
     public function __construct()
     {
         $this->label         = 'Widget';
-        $this->icon          = 'fa-cube';
+        $this->icon          = '';
         $this->description   = '';
         $this->keywords      = '';
         $this->grouping      = '';
@@ -167,7 +174,7 @@ abstract class WidgetBase
      */
     public function getIcon()
     {
-        return $this->icon;
+        return $this->icon ?: static::DEFAULT_ICON;
     }
 
     // --------------------------------------------------------------------------
