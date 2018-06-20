@@ -91,7 +91,7 @@ class Render extends Base
 
         if ($oPage->id === $this->iHomepageId && uri_string() == $oData->slug) {
             $oSession = Factory::service('Session', 'nailsapp/module-auth');
-            $oSession->keep_flashdata();
+            $oSession->keepFlashData();
             redirect('', 'location', 301);
         }
 

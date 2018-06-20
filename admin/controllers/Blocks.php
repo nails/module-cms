@@ -234,7 +234,7 @@ class Blocks extends BaseAdmin
                 if ($oModel->update($this->data['block']->id, ['value' => $oInput->post('value')])) {
 
                     $oSession = Factory::service('Session', 'nailsapp/module-auth');
-                    $oSession->set_flashdata('success', 'Block updated successfully.');
+                    $oSession->setFlashData('success', 'Block updated successfully.');
                     redirect('admin/cms/blocks');
 
                 } else {
@@ -328,7 +328,7 @@ class Blocks extends BaseAdmin
                 if ($oModel->create($aBlockData)) {
 
                     $oSession = Factory::service('Session', 'nailsapp/module-auth');
-                    $oSession->set_flashdata('success', 'Block created successfully.');
+                    $oSession->setFlashData('success', 'Block created successfully.');
                     redirect('admin/cms/blocks');
 
                 } else {
@@ -372,7 +372,7 @@ class Blocks extends BaseAdmin
         $oBlock = $oModel->getById($oUri->segment(5));
 
         if (!$oBlock) {
-            $oSession->set_flashdata('error', 'Invalid block ID.');
+            $oSession->setFlashData('error', 'Invalid block ID.');
             redirect('admin/cms/blocks');
         }
 
@@ -387,7 +387,7 @@ class Blocks extends BaseAdmin
             $sMsg    .= $oModel->lastError();
         }
 
-        $oSession->set_flashdata($sStatus, $sMsg);
+        $oSession->setFlashData($sStatus, $sMsg);
         redirect('admin/cms/blocks');
     }
 

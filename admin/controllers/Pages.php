@@ -232,7 +232,7 @@ class Pages extends BaseAdmin
                         $sStatus  = 'success';
                         $sMessage = 'Page created successfully!';
                         $oSession = Factory::service('Session', 'nailsapp/module-auth');
-                        $oSession->set_flashdata($sStatus, $sMessage);
+                        $oSession->setFlashData($sStatus, $sMessage);
                         redirect('admin/cms/pages/edit/' . $oNewPageId);
                     }
 
@@ -314,7 +314,7 @@ class Pages extends BaseAdmin
 
         if (!$oPage) {
             $oSession = Factory::service('Session', 'nailsapp/module-auth');
-            $oSession->set_flashdata('error', 'No page found by that ID');
+            $oSession->setFlashData('error', 'No page found by that ID');
             redirect('admin/cms/pages');
         }
 
@@ -373,7 +373,7 @@ class Pages extends BaseAdmin
                         $sStatus  = 'success';
                         $sMessage = 'Page saved successfully!';
                         $oSession = Factory::service('Session', 'nailsapp/module-auth');
-                        $oSession->set_flashdata($sStatus, $sMessage);
+                        $oSession->setFlashData($sStatus, $sMessage);
                         redirect('admin/cms/pages/edit/' . $oPage->id);
                     }
 
@@ -464,7 +464,7 @@ class Pages extends BaseAdmin
         if ($this->oPageModel->publish($iId)) {
 
             $oPage = $this->oPageModel->getById($iId);
-            $oSession->set_flashdata(
+            $oSession->setFlashData(
                 'success',
                 'Page was published successfully - ' .
                 anchor(
@@ -481,7 +481,7 @@ class Pages extends BaseAdmin
             }
 
         } else {
-            $oSession->set_flashdata('error', 'Could not publish page. ' . $this->oPageModel->lastError());
+            $oSession->setFlashData('error', 'Could not publish page. ' . $this->oPageModel->lastError());
         }
     }
 
@@ -506,12 +506,12 @@ class Pages extends BaseAdmin
 
         if ($page && !$page->is_deleted) {
             if ($this->oPageModel->delete($id)) {
-                $oSession->set_flashdata('success', 'Page was deleted successfully.');
+                $oSession->setFlashData('success', 'Page was deleted successfully.');
             } else {
-                $oSession->set_flashdata('error', 'Could not delete page. ' . $this->oPageModel->lastError());
+                $oSession->setFlashData('error', 'Could not delete page. ' . $this->oPageModel->lastError());
             }
         } else {
-            $oSession->set_flashdata('error', 'Invalid page ID.');
+            $oSession->setFlashData('error', 'Invalid page ID.');
         }
 
         redirect('admin/cms/pages');
@@ -538,12 +538,12 @@ class Pages extends BaseAdmin
 
         if ($page && $page->is_deleted) {
             if ($this->oPageModel->restore($id)) {
-                $oSession->set_flashdata('success', 'Page was restored successfully. ');
+                $oSession->setFlashData('success', 'Page was restored successfully. ');
             } else {
-                $oSession->set_flashdata('error', 'Could not restore page. ' . $this->oPageModel->lastError());
+                $oSession->setFlashData('error', 'Could not restore page. ' . $this->oPageModel->lastError());
             }
         } else {
-            $oSession->set_flashdata('error', 'Invalid page ID.');
+            $oSession->setFlashData('error', 'Invalid page ID.');
         }
 
         redirect('admin/cms/pages');

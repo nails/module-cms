@@ -186,7 +186,7 @@ class Area extends BaseAdmin
                     $sMessage = 'Area created successfully.';
 
                     $oSession = Factory::service('Session', 'nailsapp/module-auth');
-                    $oSession->set_flashdata($sStatus, $sMessage);
+                    $oSession->setFlashData($sStatus, $sMessage);
                     redirect('admin/cms/area');
 
                 } else {
@@ -228,7 +228,7 @@ class Area extends BaseAdmin
 
         if (!$area) {
             $oSession = Factory::service('Session', 'nailsapp/module-auth');
-            $oSession->set_flashdata('error', 'Invalid area ID.');
+            $oSession->setFlashData('error', 'Invalid area ID.');
             redirect('admin/cms/area');
         }
 
@@ -271,7 +271,7 @@ class Area extends BaseAdmin
                     $sMessage = 'Area updated successfully.';
 
                     $oSession = Factory::service('Session', 'nailsapp/module-auth');
-                    $oSession->set_flashdata($sStatus, $sMessage);
+                    $oSession->setFlashData($sStatus, $sMessage);
                     redirect('admin/cms/area');
 
                 } else {
@@ -314,7 +314,7 @@ class Area extends BaseAdmin
 
         if (!$area) {
             $oSession = Factory::service('Session', 'nailsapp/module-auth');
-            $oSession->set_flashdata('error', 'Invalid area ID.');
+            $oSession->setFlashData('error', 'Invalid area ID.');
             redirect('admin/cms/area');
         }
 
@@ -333,7 +333,7 @@ class Area extends BaseAdmin
         }
 
         $oSession = Factory::service('Session', 'nailsapp/module-auth');
-        $oSession->set_flashdata($sStatus, $sMessage);
+        $oSession->setFlashData($sStatus, $sMessage);
         redirect('admin/cms/area');
     }
 }
