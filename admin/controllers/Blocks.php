@@ -209,11 +209,11 @@ class Blocks extends BaseAdmin
 
             switch ($this->data['block']->type) {
                 case 'email':
-                    $oFormValidation->set_rules('value', '', 'valid_email');
+                    $oFormValidation->set_rules('value', '', 'trim|valid_email');
                     break;
 
                 case 'url':
-                    $oFormValidation->set_rules('value', '', 'valid_url');
+                    $oFormValidation->set_rules('value', '', 'trim|valid_url');
                     break;
 
                 case 'file':
@@ -223,13 +223,13 @@ class Blocks extends BaseAdmin
                     break;
 
                 default:
-                    $oFormValidation->set_rules('value', '', '');
+                    $oFormValidation->set_rules('value', '', 'trim');
                     break;
             }
 
             $oFormValidation->set_message('required', lang('fv_required'));
 
-            if ($oFormValidation->run($this)) {
+            if ($oFormValidation->run()) {
 
                 if ($oModel->update($this->data['block']->id, ['value' => $oInput->post('value')])) {
 
