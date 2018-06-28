@@ -390,10 +390,10 @@ NAILS_Admin_CMS_WidgetEditor = function() {
         _nails_api.call({
             'controller': 'cms/widgets',
             'method': 'index',
-            'success': function(data) {
+            'success': function(response) {
 
                 base.log('Succesfully fetched widgets from the server.');
-                base.widgets = data.widgets;
+                base.widgets = response.data.widgets;
 
                 //  Make the callbacks on each widget callable
                 for (i = base.widgets.length - 1; i >= 0; i--) {
@@ -413,13 +413,13 @@ NAILS_Admin_CMS_WidgetEditor = function() {
 
                 //  Inject any assets to load into the  DOM
                 assetsCss = '';
-                for (i = 0; i < data.assets.css.length; i++) {
-                    assetsCss += data.assets.css[i] + '\n';
+                for (i = 0; i < response.data.assets.css.length; i++) {
+                    assetsCss += response.data.assets.css[i] + '\n';
                 }
 
                 assetsJs = '';
-                for (i = 0; i < data.assets.js.length; i++) {
-                    assetsJs += data.assets.js[i] + '\n';
+                for (i = 0; i < response.data.assets.js.length; i++) {
+                    assetsJs += response.data.assets.js[i] + '\n';
                 }
 
                 $('head').append(assetsCss);

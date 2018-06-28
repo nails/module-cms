@@ -59,6 +59,9 @@
                         }
                     }
                 },
+                "nailsapp/module-api": {
+                    "namespace": "cms"
+                },
                 "nailsapp/module-cdn": {
                     "permitted-image-dimensions": [
                         "50x50",

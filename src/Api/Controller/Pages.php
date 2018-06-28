@@ -10,7 +10,7 @@
  * @link
  */
 
-namespace Nails\Api\Cms;
+namespace Nails\Cms\Api\Controller;
 
 use Nails\Api\Controller\Base;
 use Nails\Factory;
@@ -21,6 +21,27 @@ class Pages extends Base
      * Require the user be authenticated to use any endpoint
      */
     const REQUIRE_AUTH = true;
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Pages constructor.
+     *
+     * @param $oApiRouter
+     *
+     * @throws ApiException
+     */
+    public function __construct($oApiRouter)
+    {
+        parent::__construct($oApiRouter);
+        $oHttpCodes = Factory::service('HttpCodes');
+        if (!isAdmin()) {
+            throw new ApiException(
+                'You do not have permission to access this resource.',
+                $oHttpCodes::STATUS_UNAUTHORIZED
+            );
+        }
+    }
 
     // --------------------------------------------------------------------------
 
@@ -53,9 +74,12 @@ class Pages extends Base
 
         $iPreviewId = $oPageModel->createPreview($aPageData);
         if ($iPreviewId) {
-            return ['url' => site_url('cms/render/preview/' . $iPreviewId)];
+            $aOut = ['url' => site_url('cms/render/preview/' . $iPreviewId)];
         } else {
-            return ['status' => 500, 'error' => $oPageModel->lastError()];
+            $aOut = ['status' => 500, 'error' => $oPageModel->lastError()];
         }
+
+        return Factory::factory('ApiResponse', 'nailsapp/module-api')
+                      ->setData($aOut);
     }
 }
