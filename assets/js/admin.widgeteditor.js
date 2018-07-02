@@ -647,25 +647,25 @@ NAILS_Admin_CMS_WidgetEditor = function() {
                 'data': {
                     'data': JSON.stringify(requestData)
                 },
-                'success': function(data) {
+                'success': function(response) {
 
                     var i, widget;
 
                     base.log('Succesfully fetched widget editors from the server.');
-                    for (i = 0; i < data.data.length; i++) {
+                    for (i = 0; i < response.data.length; i++) {
 
-                        if (!data.data[i].error) {
+                        if (!response.data[i].error) {
 
                             base.setupWidgetEditorOk(
                                 requestDom[i],
-                                data.data[i].editor
+                                response.data[i].editor
                             );
 
                         } else {
 
                             base.setupWidgetEditorFail(
                                 requestDom[i],
-                                data.data[i].editor
+                                response.data[i].editor
                             );
                         }
                     }
@@ -674,9 +674,9 @@ NAILS_Admin_CMS_WidgetEditor = function() {
                     base.initWidgetEditorElements();
 
                     //  Finally, call the "dropped" callback on each widget
-                    for (i = 0; i < data.data.length; i++) {
+                    for (i = 0; i < response.data.length; i++) {
 
-                        widget = base.getWidget(data.data[i].slug);
+                        widget = base.getWidget(response.data[i].slug);
                         widget.callbacks.dropped.call(base, requestDom[i]);
                     }
 
@@ -1013,9 +1013,9 @@ NAILS_Admin_CMS_WidgetEditor = function() {
                 'slug': slug,
                 'data': data
             },
-            'success': function(data) {
+            'success': function(response) {
                 base.log('Successfully fetched widget editor from the server.');
-                deferred.resolve(data.editor);
+                deferred.resolve(response.data.editor);
             },
             'error': function(data) {
 
