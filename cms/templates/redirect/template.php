@@ -79,7 +79,7 @@ class Redirect extends TemplateBase
      *
      * @return void
      */
-    public function render($aTplData = [], $aTplOptions = [])
+    public function render(array $aTplData = [], array $aTplOptions = [])
     {
         $sUrl = '';
 
