@@ -12,8 +12,8 @@
 
 namespace Nails\Cms\Model;
 
-use Nails\Factory;
 use Nails\Common\Model\Base;
+use Nails\Factory;
 
 class Slider extends Base
 {
@@ -35,7 +35,7 @@ class Slider extends Base
         // --------------------------------------------------------------------------
 
         $this->table             = NAILS_DB_PREFIX . 'cms_slider';
-        $this->tableAlias       = 's';
+        $this->tableAlias        = 's';
         $this->table_item        = NAILS_DB_PREFIX . 'cms_slider_item';
         $this->table_item_prefix = 'si';
     }
@@ -45,10 +45,12 @@ class Slider extends Base
     /**
      * This method applies the conditionals which are common across the get_*()
      * methods and the count() method.
-     * @param array  $data Data passed from the calling method
+     *
+     * @param array $data Data passed from the calling method
+     *
      * @return void
      **/
-    protected function getCountCommon($data = array())
+    protected function getCountCommon($data = [])
     {
         $this->oDb->select($this->tableAlias . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
         $this->oDb->join(
@@ -68,17 +70,17 @@ class Slider extends Base
 
             if (empty($data['or_like'])) {
 
-                $data['or_like'] = array();
+                $data['or_like'] = [];
             }
 
-            $data['or_like'][] = array(
+            $data['or_like'][] = [
                 'column' => $this->tableAlias . '.label',
-                'value'  => $data['keywords']
-            );
-            $data['or_like'][] = array(
+                'value'  => $data['keywords'],
+            ];
+            $data['or_like'][] = [
                 'column' => $this->tableAlias . '.description',
-                'value'  => $data['keywords']
-            );
+                'value'  => $data['keywords'],
+            ];
         }
 
         parent::getCountCommon($data);
@@ -97,14 +99,15 @@ class Slider extends Base
      * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
      * @param  array  $aBools    Fields which should be cast as booleans if not null
      * @param  array  $aFloats   Fields which should be cast as floats if not null
+     *
      * @return void
      */
     protected function formatObject(
         &$oObj,
-        $aData = array(),
-        $aIntegers = array(),
-        $aBools = array(),
-        $aFloats = array()
+        array $aData = [],
+        array $aIntegers = [],
+        array $aBools = [],
+        array $aFloats = []
     ) {
 
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
@@ -134,7 +137,9 @@ class Slider extends Base
 
     /**
      * Gets the slides of an individual slider
-     * @param  int   $sliderId The Slider's ID
+     *
+     * @param  int $sliderId The Slider's ID
+     *
      * @return array
      */
     public function getSliderItems($sliderId)
@@ -155,7 +160,9 @@ class Slider extends Base
 
     /**
      * Format a slider item
+     *
      * @param  stdClass &$obj The slider item to format
+     *
      * @return voud
      */
     protected function formatObjectItem(&$obj)
@@ -174,11 +181,13 @@ class Slider extends Base
 
     /**
      * Creates a new object
+     *
      * @param  array   $data         The data to create the object with
      * @param  boolean $returnObject Whether to return just the new ID or the full object
+     *
      * @return mixed
      */
-    public function create($data = array(), $returnObject = false)
+    public function create(array $data = [], $returnObject = false)
     {
         $this->oDb->trans_begin();
 
@@ -208,15 +217,15 @@ class Slider extends Base
              * we do this update, so we can leverage the parent methods for the slides.
              */
 
-            $table       = $this->table;
+            $table      = $this->table;
             $tableAlias = $this->tableAlias;
 
-            $this->table       = $this->table_item;
+            $this->table      = $this->table_item;
             $this->tableAlias = $this->table_item_prefix;
 
-            for ($i=0; $i<count($slides); $i++) {
+            for ($i = 0; $i < count($slides); $i++) {
 
-                $data              = array();
+                $data              = [];
                 $data['slider_id'] = $sliderId;
                 $data['object_id'] = $slides[$i]->object_id;
                 $data['caption']   = $slides[$i]->caption;
@@ -226,7 +235,7 @@ class Slider extends Base
 
                 if (!$result) {
 
-                    $this->setError('Failed to create slide #' . ($i+1));
+                    $this->setError('Failed to create slide #' . ($i + 1));
                     $this->oDb->trans_rollback();
                     return false;
 
@@ -234,7 +243,7 @@ class Slider extends Base
             }
 
             //  Reset the table and table prefix
-            $this->table        = $table;
+            $this->table      = $table;
             $this->tableAlias = $tableAlias;
 
             //  Commit the transaction
@@ -257,11 +266,13 @@ class Slider extends Base
     /**
      * Updates an existing object
      * @todo Add transactions
-     * @param int      $id   The ID of the object to update
-     * @param array    $data The data to update the object with
+     *
+     * @param int   $id   The ID of the object to update
+     * @param array $data The data to update the object with
+     *
      * @return boolean
      **/
-    public function update($id, $data = array())
+    public function update($id, array $data = [])
     {
         $this->oDb->trans_begin();
 
@@ -282,16 +293,16 @@ class Slider extends Base
              * we do this update, so we can leverage the parent methods for the slides.
              */
 
-            $table       = $this->table;
+            $table      = $this->table;
             $tableAlias = $this->tableAlias;
 
-            $this->table       = $this->table_item;
+            $this->table      = $this->table_item;
             $this->tableAlias = $this->table_item_prefix;
 
-            $idsUpdated = array();
-            for ($i=0; $i<count($slides); $i++) {
+            $idsUpdated = [];
+            for ($i = 0; $i < count($slides); $i++) {
 
-                $data = array();
+                $data              = [];
                 $data['object_id'] = $slides[$i]->object_id;
                 $data['caption']   = $slides[$i]->caption;
                 $data['url']       = $slides[$i]->url;
@@ -304,7 +315,7 @@ class Slider extends Base
 
                     if (!$result) {
 
-                        $this->setError('Failed to update slide #' . ($i+1));
+                        $this->setError('Failed to update slide #' . ($i + 1));
                         $this->oDb->trans_rollback();
                         return false;
 
@@ -316,11 +327,11 @@ class Slider extends Base
                 } else {
 
                     $data['slider_id'] = $id;
-                    $result = parent::create($data);
+                    $result            = parent::create($data);
 
                     if (!$result) {
 
-                        $this->setError('Failed to create slide #' . ($i+1));
+                        $this->setError('Failed to create slide #' . ($i + 1));
                         $this->oDb->trans_rollback();
                         return false;
 
@@ -343,7 +354,7 @@ class Slider extends Base
             }
 
             //  Reset the table and table prefix
-            $this->table        = $table;
+            $this->table      = $table;
             $this->tableAlias = $tableAlias;
 
             //  Commit the transaction

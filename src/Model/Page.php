@@ -12,10 +12,10 @@
 
 namespace Nails\Cms\Model;
 
+use Nails\Cms\Events;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Factory;
-use Nails\Cms\Events;
 
 class Page extends Base
 {
@@ -51,7 +51,7 @@ class Page extends Base
      *
      * @return bool|mixed
      */
-    public function create($aData = [], $bReturnObject = false)
+    public function create(array $aData = [], $bReturnObject = false)
     {
         $oDb = Factory::service('Database');
         $oDb->trans_begin();
@@ -87,7 +87,7 @@ class Page extends Base
      * @return bool
      * @throws NailsException
      */
-    public function update($mIds, $aData = [])
+    public function update($mIds, array $aData = [])
     {
         if (is_array($mIds)) {
             throw new NailsException('This model does not support updating multiple items at once');
@@ -963,10 +963,10 @@ class Page extends Base
      */
     protected function formatObject(
         &$oObj,
-        $aData = [],
-        $aIntegers = [],
-        $aBools = [],
-        $aFloats = []
+        array $aData = [],
+        array $aIntegers = [],
+        array $aBools = [],
+        array $aFloats = []
     ) {
 
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
