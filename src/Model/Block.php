@@ -34,7 +34,7 @@ class Block extends Base
      * @param array  $data Data passed from the calling method
      * @return void
      **/
-    protected function getCountCommon($data = array())
+    protected function getCountCommon(array $data = array())
     {
         if (!empty($data['keywords'])) {
 

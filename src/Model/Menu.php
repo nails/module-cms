@@ -50,7 +50,7 @@ class Menu extends Base
      *
      * @return void
      **/
-    protected function getCountCommon($data = [])
+    protected function getCountCommon(array $data = [])
     {
         $this->oDb->select($this->tableAlias . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
         $this->oDb->join(

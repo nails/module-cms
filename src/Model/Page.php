@@ -518,7 +518,7 @@ class Page extends Base
      *
      * @return void
      **/
-    public function getCountCommon($data = [])
+    public function getCountCommon(array $data = [])
     {
         if (empty($data['select'])) {
 
@@ -822,7 +822,7 @@ class Page extends Base
      *
      * @return array
      */
-    public function getAllFlat($page = null, $perPage = null, $data = [], $includeDeleted = false)
+    public function getAllFlat($page = null, $perPage = null, array $data = [], $includeDeleted = false)
     {
         $out   = [];
         $pages = $this->getAll($page, $perPage, $data, $includeDeleted);
