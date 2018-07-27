@@ -241,19 +241,15 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(widgetEditor, templates) {
             'method': 'preview',
             'action': 'POST',
             'data': $('#main-form').serialize(),
-            'success': function(data) {
-                $('#page-preview iframe').attr('src', data.url);
+            'success': function(response) {
+                $('#page-preview iframe').attr('src', response.data.url);
             },
-            'error': function(data) {
+            'error': function(response) {
 
                 var _data;
-
                 try {
-
-                    _data = JSON.parse(data.responseText);
-
+                    _data = JSON.parse(response.responseText);
                 } catch (e) {
-
                     _data = {
                         'status': 500,
                         'error': 'An unknown error occurred.'
