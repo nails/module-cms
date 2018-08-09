@@ -614,51 +614,48 @@ class Page extends Base
     /**
      * Get all pages nested, but as a flat array
      *
-     * @param  string  $separator               The separator to use between pages
-     * @param  boolean $murderParentsOfChildren Whether to include parents in the result
+     * @param  string  $sSeparator               The separator to use between pages
+     * @param  boolean $bMurderParentsOfChildren Whether to include parents in the result
      *
      * @return array
      */
-    public function getAllNestedFlat($separator = ' &rsaquo; ', $murderParentsOfChildren = true)
+    public function getAllNestedFlat($sSeparator = null, $bMurderParentsOfChildren = true)
     {
-        $out   = [];
-        $pages = $this->getAll();
+        $sSeparator = $sSeparator ?: ' &rsaquo; ';
+        $aOut       = [];
+        $aPages     = $this->getAll();
 
-        foreach ($pages as $page) {
-
-            $out[$page->id] = $this->findParents($page->draft->parent_id, $pages, $separator) . $page->draft->title;
+        foreach ($aPages as $oPage) {
+            $aOut[$oPage->id] = $this->findParents($oPage->draft->parent_id, $aPages, $sSeparator) . $oPage->draft->title;
         }
 
-        asort($out);
+        asort($aOut);
 
         // --------------------------------------------------------------------------
 
         //  Remove parents from the array if they have any children
-        if ($murderParentsOfChildren) {
+        if ($bMurderParentsOfChildren) {
 
-            foreach ($out as $key => &$page) {
+            foreach ($aOut as $key => &$page) {
 
-                $found  = false;
-                $needle = $page . $separator;
+                $bFound  = false;
+                $sNeedle = $page . $sSeparator;
 
                 //  Hat tip - http://uk3.php.net/manual/en/function.array-search.php#90711
-                foreach ($out as $item) {
-
-                    if (strpos($item, $needle) !== false) {
-
-                        $found = true;
+                foreach ($aOut as $item) {
+                    if (strpos($item, $sNeedle) !== false) {
+                        $bFound = true;
                         break;
                     }
                 }
 
-                if ($found) {
-
-                    unset($out[$key]);
+                if ($bFound) {
+                    unset($aOut[$key]);
                 }
             }
         }
 
-        return $out;
+        return $aOut;
     }
 
     // --------------------------------------------------------------------------
@@ -696,13 +693,13 @@ class Page extends Base
     /**
      * Find the parents of a page
      *
-     * @param  int       $parentId  The page to find parents for
-     * @param  \stdClass &$source   The source page
-     * @param  string    $separator The separator to use
+     * @param  int       $parentId   The page to find parents for
+     * @param  \stdClass &$source    The source page
+     * @param  string    $sSeparator The separator to use
      *
      * @return string
      */
-    protected function findParents($parentId, &$source, $separator)
+    protected function findParents($parentId, &$source, $sSeparator)
     {
         if (!$parentId) {
 
@@ -726,14 +723,14 @@ class Page extends Base
                 if ($parent->draft->parent_id) {
 
                     //  Yes it does, repeat!
-                    $return = $this->findParents($parent->draft->parent_id, $source, $separator);
+                    $return = $this->findParents($parent->draft->parent_id, $source, $sSeparator);
 
-                    return $return ? $return . $parent->draft->title . $separator : $parent->draft->title;
+                    return $return ? $return . $parent->draft->title . $sSeparator : $parent->draft->title;
 
                 } else {
 
                     //  Nope, end of the line mademoiselle
-                    return $parent->draft->title . $separator;
+                    return $parent->draft->title . $sSeparator;
                 }
 
             } else {
@@ -824,18 +821,18 @@ class Page extends Base
      */
     public function getAllFlat($page = null, $perPage = null, array $data = [], $includeDeleted = false)
     {
-        $out   = [];
-        $pages = $this->getAll($page, $perPage, $data, $includeDeleted);
+        $out    = [];
+        $aPages = $this->getAll($page, $perPage, $data, $includeDeleted);
 
-        foreach ($pages as $page) {
+        foreach ($aPages as $oPage) {
 
             if (!empty($data['useDraft'])) {
 
-                $out[$page->id] = $page->draft->title;
+                $out[$oPage->id] = $oPage->draft->title;
 
             } else {
 
-                $out[$page->id] = $page->published->title;
+                $out[$oPage->id] = $oPage->published->title;
             }
         }
 
