@@ -10,7 +10,8 @@
  * @link
  */
 
-echo $oCi->load->view('structure/header', getControllerData());
+$oView = \Nails\Factory::service('View');
+echo $oView->load('structure/header', getControllerData(), true);
 
 $numColumns = isset($numColumns) ? (int) $numColumns : 2;
 $breakpoint = isset($breakpoint) ? $breakpoint : 'md';
@@ -26,4 +27,4 @@ for ($i=1; $i <= $numColumns; $i++) {
 }
 echo '</div>';
 
-echo $oCi->load->view('structure/footer', getControllerData());
+echo $oView->load('structure/footer', getControllerData(), true);

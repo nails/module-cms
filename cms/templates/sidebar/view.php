@@ -10,7 +10,8 @@
  * @link
  */
 
-echo $oCi->load->view('structure/header', getControllerData());
+$oView = \Nails\Factory::service('View');
+echo $oView->load('structure/header', getControllerData(), true);
 
 $sidebarSide  = !empty($sidebarSide) ? $sidebarSide : 'LEFT';
 $sidebarWidth = !empty($sidebarWidth) ? (int) $sidebarWidth : 4;
@@ -52,4 +53,4 @@ $contentWidth = 12 - $sidebarWidth;
     </div>
     <?php
 
-echo $oCi->load->view('structure/footer', getControllerData());
+echo $oView->load('structure/footer', getControllerData(), true);

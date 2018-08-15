@@ -10,6 +10,7 @@
  * @link
  */
 
-echo $oCi->load->view('structure/header', getControllerData());
+$oView = \Nails\Factory::service('View');
+echo $oView->load('structure/header', getControllerData(), true);
 echo $mainbody;
-echo $oCi->load->view('structure/footer', getControllerData());
+echo $oView->load('structure/footer', getControllerData(), true);
