@@ -291,8 +291,8 @@ class Page extends Base
             // --------------------------------------------------------------------------
 
             //  Rewrite routes
-            $oRoutesModel = Factory::model('Routes');
-            $oRoutesModel->update();
+            $oRoutesService = Factory::service('Routes');
+            $oRoutesService->update();
 
             // --------------------------------------------------------------------------
 
@@ -494,8 +494,8 @@ class Page extends Base
             // --------------------------------------------------------------------------
 
             //  Rewrite routes
-            $oRoutesModel = Factory::model('Routes');
-            $oRoutesModel->update();
+            $oRoutesService = Factory::service('Routes');
+            $oRoutesService->update();
 
             //  @TODO: Kill caches for this page and all children
             return true;
@@ -1092,8 +1092,8 @@ class Page extends Base
             // --------------------------------------------------------------------------
 
             //  Rewrite routes
-            $oRoutesModel = Factory::model('Routes');
-            $oRoutesModel->update();
+            $oRoutesService = Factory::service('Routes');
+            $oRoutesService->update();
 
             // --------------------------------------------------------------------------
 
