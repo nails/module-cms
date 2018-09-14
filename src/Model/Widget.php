@@ -115,7 +115,7 @@ class Widget
                 $sKey = md5($sWidgetGrouping);
 
                 if (!isset($aOut[$sKey])) {
-                    $aOut[$sKey] = Factory::factory('WidgetGroup', 'nailsapp/module-cms');
+                    $aOut[$sKey] = Factory::factory('WidgetGroup', 'nails/module-cms');
                     $aOut[$sKey]->setLabel($sWidgetGrouping);
                 }
 
@@ -126,7 +126,7 @@ class Widget
                 $sKey = md5($sGenericLabel);
 
                 if (!isset($aGeneric[$sKey])) {
-                    $aGeneric[$sKey] = Factory::factory('WidgetGroup', 'nailsapp/module-cms');
+                    $aGeneric[$sKey] = Factory::factory('WidgetGroup', 'nails/module-cms');
                     $aGeneric[$sKey]->setLabel($sGenericLabel);
                 }
 

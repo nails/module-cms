@@ -24,7 +24,7 @@ class Settings extends BaseAdmin
      */
     public static function announce()
     {
-        $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+        $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
         $oNavGroup->setLabel('Settings');
         $oNavGroup->setIcon('fa-wrench');
 
@@ -86,7 +86,7 @@ class Settings extends BaseAdmin
                 $oAppSettingModel = Factory::model('AppSetting');
 
                 //  Normal settings
-                if (!$oAppSettingModel->set($aSettings, 'nailsapp/module-cms')) {
+                if (!$oAppSettingModel->set($aSettings, 'nails/module-cms')) {
 
                     $sError    = $oAppSettingModel->lastError();
                     $bRollback = true;
@@ -112,10 +112,10 @@ class Settings extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get data
-        $this->data['settings'] = appSetting(null, 'nailsapp/module-cms', true);
+        $this->data['settings'] = appSetting(null, 'nails/module-cms', true);
 
         //  Get Published pages
-        $oPagesModel                  = Factory::model('Page', 'nailsapp/module-cms');
+        $oPagesModel                  = Factory::model('Page', 'nails/module-cms');
         $this->data['publishedPages'] = $oPagesModel->getAllFlat(
             null,
             null,

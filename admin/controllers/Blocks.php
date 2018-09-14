@@ -30,7 +30,7 @@ class Blocks extends BaseAdmin
     {
         if (userHasPermission('admin:cms:blocks:manage')) {
 
-            $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
             $oNavGroup->setLabel('CMS');
             $oNavGroup->setIcon('fa-file-text');
             $oNavGroup->addAction('Manage Blocks');
@@ -100,7 +100,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oModel      = Factory::model('Block', 'nailsapp/module-cms');
+        $oModel      = Factory::model('Block', 'nails/module-cms');
         $oInput      = Factory::service('Input');
         $sTableAlias = $oModel->getTableAlias();
 
@@ -190,7 +190,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oModel = Factory::model('Block', 'nailsapp/module-cms');
+        $oModel = Factory::model('Block', 'nails/module-cms');
         $oInput = Factory::service('Input');
         $oUri   = Factory::service('Uri');
 
@@ -233,7 +233,7 @@ class Blocks extends BaseAdmin
 
                 if ($oModel->update($this->data['block']->id, ['value' => $oInput->post('value')])) {
 
-                    $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                    $oSession = Factory::service('Session', 'nails/module-auth');
                     $oSession->setFlashData('success', 'Block updated successfully.');
                     redirect('admin/cms/blocks');
 
@@ -324,10 +324,10 @@ class Blocks extends BaseAdmin
                     'value'       => $oInput->post('value_' . $oInput->post('type')),
                 ];
 
-                $oModel = Factory::model('Block', 'nailsapp/module-cms');
+                $oModel = Factory::model('Block', 'nails/module-cms');
                 if ($oModel->create($aBlockData)) {
 
-                    $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                    $oSession = Factory::service('Session', 'nails/module-auth');
                     $oSession->setFlashData('success', 'Block created successfully.');
                     redirect('admin/cms/blocks');
 
@@ -348,7 +348,7 @@ class Blocks extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.blocks.create.min.js', 'nailsapp/module-cms');
+        $oAsset->load('admin.blocks.create.min.js', 'nails/module-cms');
 
         // --------------------------------------------------------------------------
 
@@ -365,9 +365,9 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oModel   = Factory::model('Block', 'nailsapp/module-cms');
+        $oModel   = Factory::model('Block', 'nails/module-cms');
         $oUri     = Factory::service('Uri');
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession = Factory::service('Session', 'nails/module-auth');
 
         $oBlock = $oModel->getById($oUri->segment(5));
 
@@ -406,7 +406,7 @@ class Blocks extends BaseAdmin
         $sSlug = strtolower($sSlug);
 
         $oFormValidation = Factory::service('FormValidation');
-        $oModel          = Factory::model('Block', 'nailsapp/module-cms');
+        $oModel          = Factory::model('Block', 'nails/module-cms');
 
         //  Check slug's characters are ok
         if (!preg_match('/[^a-z0-9\-\_]/', $sSlug)) {

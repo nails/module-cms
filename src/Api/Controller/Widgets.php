@@ -52,7 +52,7 @@ class Widgets extends Base
      */
     public function getIndex()
     {
-        $oWidgetModel  = Factory::model('Widget', 'nailsapp/module-cms');
+        $oWidgetModel  = Factory::model('Widget', 'nails/module-cms');
         $oAsset        = Factory::service('Asset');
         $aWidgets      = [];
         $aWidgetGroups = $oWidgetModel->getAvailable();
@@ -81,7 +81,7 @@ class Widgets extends Base
         arraySortMulti($aWidgets, 'label');
         $aWidgets = array_values($aWidgets);
 
-        return Factory::factory('ApiResponse', 'nailsapp/module-api')
+        return Factory::factory('ApiResponse', 'nails/module-api')
                       ->setData([
                           'assets'  => [
                               'css' => $oAsset->output('CSS', false),
@@ -102,14 +102,14 @@ class Widgets extends Base
         $oInput       = Factory::service('Input');
         $sWidgetSlug  = $oInput->post('slug');
         $aWidgetData  = $oInput->post('data') ?: [];
-        $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
+        $oWidgetModel = Factory::model('Widget', 'nails/module-cms');
         $oWidget      = $oWidgetModel->getBySlug($sWidgetSlug);
 
         if (!$oWidget) {
             throw new \Exception('"' . $sWidgetSlug . '" is not a valid widget.', 400);
         }
 
-        return Factory::factory('ApiResponse', 'nailsapp/module-api')
+        return Factory::factory('ApiResponse', 'nails/module-api')
                       ->setData([
                           'editor' => $oWidget->getEditor($aWidgetData),
                       ]);
@@ -125,7 +125,7 @@ class Widgets extends Base
     {
         $oInput       = Factory::service('Input');
         $aWidgetData  = json_decode($oInput->post('data')) ?: [];
-        $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
+        $oWidgetModel = Factory::model('Widget', 'nails/module-cms');
         $aOut         = [];
 
         foreach ($aWidgetData as $oData) {
@@ -159,7 +159,7 @@ class Widgets extends Base
             }
         }
 
-        return Factory::factory('ApiResponse', 'nailsapp/module-api')
+        return Factory::factory('ApiResponse', 'nails/module-api')
                       ->setData($aOut);
     }
 }

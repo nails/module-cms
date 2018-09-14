@@ -40,7 +40,7 @@ class Fullwidth extends TemplateBase
          * variable to the view
          */
 
-        $this->widget_areas['mainbody'] = Factory::factory('TemplateArea', 'nailsapp/module-cms');
+        $this->widget_areas['mainbody'] = Factory::factory('TemplateArea', 'nails/module-cms');
         $this->widget_areas['mainbody']->setTitle('Main Body');
     }
 }

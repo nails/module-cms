@@ -52,7 +52,7 @@ class Pages extends Base
     public function postPreview()
     {
         $oInput     = Factory::service('Input');
-        $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
+        $oPageModel = Factory::model('Page', 'nails/module-cms');
         $aPageData  = [
             'title'            => $oInput->post('title'),
             'slug'             => $oInput->post('slug'),
@@ -79,7 +79,7 @@ class Pages extends Base
             $aOut = ['status' => 500, 'error' => $oPageModel->lastError()];
         }
 
-        return Factory::factory('ApiResponse', 'nailsapp/module-api')
+        return Factory::factory('ApiResponse', 'nails/module-api')
                       ->setData($aOut);
     }
 }

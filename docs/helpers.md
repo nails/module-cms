@@ -8,7 +8,7 @@ The following helpers are amde available by the CMS module:
 
 ```php
 use Nails\Factory;
-Factory::helper('cms', 'nailsapp/module-cms');
+Factory::helper('cms', 'nails/module-cms');
 ```
 
 ### cmsBlock($sSlug)

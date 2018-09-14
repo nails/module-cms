@@ -136,7 +136,7 @@ class Template
 
                 if (!isset($aOut[$sKey])) {
 
-                    $aOut[$sKey] = Factory::factory('TemplateGroup', 'nailsapp/module-cms');
+                    $aOut[$sKey] = Factory::factory('TemplateGroup', 'nails/module-cms');
                     $aOut[$sKey]->setLabel($sTemplateGrouping);
                 }
 
@@ -148,7 +148,7 @@ class Template
 
                 if (!isset($aGeneric[$sKey])) {
 
-                    $aGeneric[$sKey] = Factory::factory('TemplateGroup', 'nailsapp/module-cms');
+                    $aGeneric[$sKey] = Factory::factory('TemplateGroup', 'nails/module-cms');
                     $aGeneric[$sKey]->setLabel($sGenericLabel);
                 }
 

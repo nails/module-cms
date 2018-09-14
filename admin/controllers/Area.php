@@ -29,7 +29,7 @@ class Area extends BaseAdmin
     public static function announce()
     {
         if (userHasPermission('admin:cms:area:manage')) {
-            $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
             $oNavGroup->setLabel('CMS');
             $oNavGroup->setIcon('fa-file-text');
             $oNavGroup->addAction('Manage Areas');
@@ -66,7 +66,7 @@ class Area extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $this->oAreaModel = Factory::model('Area', 'nailsapp/module-cms');
+        $this->oAreaModel = Factory::model('Area', 'nails/module-cms');
     }
 
     // --------------------------------------------------------------------------
@@ -185,7 +185,7 @@ class Area extends BaseAdmin
                     $sStatus  = 'success';
                     $sMessage = 'Area created successfully.';
 
-                    $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                    $oSession = Factory::service('Session', 'nails/module-auth');
                     $oSession->setFlashData($sStatus, $sMessage);
                     redirect('admin/cms/area');
 
@@ -227,7 +227,7 @@ class Area extends BaseAdmin
         $this->data['area'] = $area;
 
         if (!$area) {
-            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession = Factory::service('Session', 'nails/module-auth');
             $oSession->setFlashData('error', 'Invalid area ID.');
             redirect('admin/cms/area');
         }
@@ -270,7 +270,7 @@ class Area extends BaseAdmin
                     $sStatus  = 'success';
                     $sMessage = 'Area updated successfully.';
 
-                    $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                    $oSession = Factory::service('Session', 'nails/module-auth');
                     $oSession->setFlashData($sStatus, $sMessage);
                     redirect('admin/cms/area');
 
@@ -313,7 +313,7 @@ class Area extends BaseAdmin
         $area = $this->oAreaModel->getById($oUri->segment(5));
 
         if (!$area) {
-            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession = Factory::service('Session', 'nails/module-auth');
             $oSession->setFlashData('error', 'Invalid area ID.');
             redirect('admin/cms/area');
         }
@@ -332,7 +332,7 @@ class Area extends BaseAdmin
             $sMessage .= $this->oAreaModel->lastError();
         }
 
-        $oSession = Factory::service('Session', 'nailsapp/module-auth');
+        $oSession = Factory::service('Session', 'nails/module-auth');
         $oSession->setFlashData($sStatus, $sMessage);
         redirect('admin/cms/area');
     }

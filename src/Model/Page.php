@@ -298,7 +298,7 @@ class Page extends Base
 
             //  Trigger event
             $oEvent = Factory::service('Event');
-            $oEvent->trigger(Events::PAGE_UPDATED, 'nailsapp/module-cms', [$iId]);
+            $oEvent->trigger(Events::PAGE_UPDATED, 'nails/module-cms', [$iId]);
 
             // --------------------------------------------------------------------------
 
@@ -346,7 +346,7 @@ class Page extends Base
      */
     public function render($sTemplate, $oTemplateData = [], $oTemplateOptions = [])
     {
-        $oTemplateModel = Factory::model('Template', 'nailsapp/module-cms');
+        $oTemplateModel = Factory::model('Template', 'nails/module-cms');
         $oTemplate      = $oTemplateModel->getBySlug($sTemplate, 'RENDER');
 
         if (!$oTemplate) {
@@ -489,7 +489,7 @@ class Page extends Base
 
             //  Trigger event
             $oEvent = Factory::service('Event');
-            $oEvent->trigger(Events::PAGE_PUBLISHED, 'nailsapp/module-cms', [$iId]);
+            $oEvent->trigger(Events::PAGE_PUBLISHED, 'nails/module-cms', [$iId]);
 
             // --------------------------------------------------------------------------
 
@@ -914,7 +914,7 @@ class Page extends Base
      */
     public function getHomepageId()
     {
-        return appSetting('homepage', 'nailsapp/module-cms');
+        return appSetting('homepage', 'nails/module-cms');
     }
 
     // --------------------------------------------------------------------------
@@ -1099,7 +1099,7 @@ class Page extends Base
 
             //  Trigger event
             $oEvent = Factory::service('Event');
-            $oEvent->trigger(Events::PAGE_DELETED, 'nailsapp/module-cms', [$iId]);
+            $oEvent->trigger(Events::PAGE_DELETED, 'nails/module-cms', [$iId]);
 
             // --------------------------------------------------------------------------
 

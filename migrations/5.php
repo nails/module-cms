@@ -12,7 +12,7 @@
  * @link
  */
 
-namespace Nails\Database\Migration\Nailsapp\ModuleCms;
+namespace Nails\Database\Migration\Nails\ModuleCms;
 
 use Nails\Common\Console\Migrate\Base;
 
@@ -25,13 +25,13 @@ class Migration5 extends Base
     public function execute()
     {
         //  Delete any existing setting
-        $this->query("DELETE FROM `{{NAILS_DB_PREFIX}}app_setting` WHERE `grouping` = 'nailsapp/module-cms' AND `key` = 'homepage';");
+        $this->query("DELETE FROM `{{NAILS_DB_PREFIX}}app_setting` WHERE `grouping` = 'nails/module-cms' AND `key` = 'homepage';");
 
         //  Add the new one, if there is one
         $oResult = $this->query('SELECT * FROM {{NAILS_DB_PREFIX}}cms_page WHERE is_homepage=1');
         while ($oRow = $oResult->fetch(\PDO::FETCH_OBJ)) {
 
-            $this->query("INSERT INTO `{{NAILS_DB_PREFIX}}app_setting` (`grouping`, `key`, `value`, `is_encrypted`) VALUES ('nailsapp/module-cms', 'homepage', " . $oRow->id . ", 0);");
+            $this->query("INSERT INTO `{{NAILS_DB_PREFIX}}app_setting` (`grouping`, `key`, `value`, `is_encrypted`) VALUES ('nails/module-cms', 'homepage', " . $oRow->id . ", 0);");
             break;
         }
 

@@ -183,7 +183,7 @@ class Menu extends Base
         //  If the menu is tied to a page then fetch that page's URL
         if ($obj->page_id) {
 
-            $oPageModel   = Factory::model('Page', 'nailsapp/module-cms');
+            $oPageModel   = Factory::model('Page', 'nails/module-cms');
             $obj->pageUrl = $oPageModel->getUrl($obj->page_id);
 
         } else {

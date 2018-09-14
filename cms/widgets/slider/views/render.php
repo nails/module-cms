@@ -16,7 +16,7 @@ $iSliderId = !empty($sliderId) ? (int) $sliderId: null;
 
 if (!empty($iSliderId)) {
 
-    $oSliderModel = Factory::model('Slider', 'nailsapp/module-cms');
+    $oSliderModel = Factory::model('Slider', 'nails/module-cms');
     $oSlider      = $oSliderModel->getById($iSliderId);
 
     ?>

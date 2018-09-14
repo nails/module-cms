@@ -30,7 +30,7 @@ class Slider extends BaseAdmin
     {
         if (userHasPermission('admin:cms:slider:manage')) {
 
-            $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
             $oNavGroup->setLabel('CMS');
             $oNavGroup->setIcon('fa-file-text');
             $oNavGroup->addAction('Manage Sliders');
@@ -69,7 +69,7 @@ class Slider extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load common items
-        $this->oSliderModel = Factory::model('Slider', 'nailsapp/module-cms');
+        $this->oSliderModel = Factory::model('Slider', 'nails/module-cms');
     }
 
     // --------------------------------------------------------------------------
@@ -230,11 +230,11 @@ class Slider extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $oCdn   = Factory::service('Cdn', 'nailsapp/module-cdn');
+        $oCdn   = Factory::service('Cdn', 'nails/module-cdn');
         $oAsset = Factory::service('Asset');
         $oAsset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
         $oAsset->library('MUSTACHE');
-        $oAsset->load('admin.sliders.edit.min.js', 'nailsapp/module-cms');
+        $oAsset->load('admin.sliders.edit.min.js', 'nails/module-cms');
         $oAsset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
         $oAsset->inline('sliderEdit.setScheme("serve", "' . $oCdn->urlServeScheme() . '");', 'JS');
         $oAsset->inline('sliderEdit.setScheme("thumb", "' . $oCdn->urlCropScheme() . '");', 'JS');
@@ -351,11 +351,11 @@ class Slider extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $oCdn   = Factory::service('Cdn', 'nailsapp/module-cdn');
+        $oCdn   = Factory::service('Cdn', 'nails/module-cdn');
         $oAsset = Factory::service('Asset');
         $oAsset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
         $oAsset->library('MUSTACHE');
-        $oAsset->load('admin.sliders.edit.min.js', 'nailsapp/module-cms');
+        $oAsset->load('admin.sliders.edit.min.js', 'nails/module-cms');
         $oAsset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
         $oAsset->inline('sliderEdit.setScheme("serve", "' . $oCdn->urlServeScheme() . '");', 'JS');
         $oAsset->inline('sliderEdit.setScheme("thumb", "' . $oCdn->urlCropScheme() . '");', 'JS');

@@ -12,7 +12,7 @@
 
 use Nails\Factory;
 
-$oSliderModel = Factory::model('Slider', 'nailsapp/module-cms');
+$oSliderModel = Factory::model('Slider', 'nails/module-cms');
 $aSlidersFlat = $oSliderModel->getAllFlat();
 
 if (empty($aSlidersFlat)) {

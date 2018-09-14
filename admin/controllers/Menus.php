@@ -25,7 +25,7 @@ class Menus extends BaseAdmin
     public static function announce()
     {
         if (userHasPermission('admin:cms:menus:manage')) {
-            $oNavGroup = Factory::factory('Nav', 'nailsapp/module-admin');
+            $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
             $oNavGroup->setLabel('CMS');
             $oNavGroup->setIcon('fa-file-text');
             $oNavGroup->addAction('Manage Menus');
@@ -65,7 +65,7 @@ class Menus extends BaseAdmin
         }
 
         $oInput     = Factory::service('Input');
-        $oMenuModel = Factory::model('Menu', 'nailsapp/module-cms');
+        $oMenuModel = Factory::model('Menu', 'nails/module-cms');
 
         $sTableAlias  = $oMenuModel->getTableAlias();
         $iPage        = (int) $oInput->get('page') ?: 0;
@@ -146,10 +146,10 @@ class Menus extends BaseAdmin
                     ];
                 }
 
-                $oMenuModel = Factory::model('Menu', 'nailsapp/module-cms');
+                $oMenuModel = Factory::model('Menu', 'nails/module-cms');
                 if ($oMenuModel->create($aItemData)) {
 
-                    $oSession = Factory::service('Session', 'nailsapp/module-auth');
+                    $oSession = Factory::service('Session', 'nails/module-auth');
                     $oSession->setFlashData('success', 'Menu created successfully.');
                     redirect('admin/cms/menus');
 
@@ -196,7 +196,7 @@ class Menus extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the CMS Pages
-        $oPageModel          = Factory::model('Page', 'nailsapp/module-cms');
+        $oPageModel          = Factory::model('Page', 'nails/module-cms');
         $aPages              = $oPageModel->getAllNestedFlat();
         $this->data['pages'] = ['' => 'Select a CMS Page'] + $aPages;
 
@@ -206,7 +206,7 @@ class Menus extends BaseAdmin
         $oAsset = Factory::service('Asset');
         $oAsset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
         $oAsset->library('MUSTACHE');
-        $oAsset->load('admin.menus.edit.min.js', 'nailsapp/module-cms');
+        $oAsset->load('admin.menus.edit.min.js', 'nails/module-cms');
         $oAsset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
 
         // --------------------------------------------------------------------------
@@ -228,7 +228,7 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oMenuModel = Factory::model('Menu', 'nailsapp/module-cms');
+        $oMenuModel = Factory::model('Menu', 'nails/module-cms');
         $oMenu      = $oMenuModel->getById($this->uri->segment(5));
 
         if (!$oMenu) {
@@ -316,7 +316,7 @@ class Menus extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the CMS Pages
-        $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
+        $oPageModel = Factory::model('Page', 'nails/module-cms');
         $aPages     = $oPageModel->getAllNestedFlat(null, false);
 
         // --------------------------------------------------------------------------
@@ -325,7 +325,7 @@ class Menus extends BaseAdmin
         $oAsset = Factory::service('Asset');
         $oAsset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
         $oAsset->library('MUSTACHE');
-        $oAsset->load('admin.menus.edit.min.js', 'nailsapp/module-cms');
+        $oAsset->load('admin.menus.edit.min.js', 'nails/module-cms');
         $oAsset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
 
         // --------------------------------------------------------------------------
@@ -353,7 +353,7 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oMenuModel = Factory::model('Menu', 'nailsapp/module-cms');
+        $oMenuModel = Factory::model('Menu', 'nails/module-cms');
         $oMenu      = $oMenuModel->getById($this->uri->segment(5));
 
         if (!$oMenu) {

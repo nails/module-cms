@@ -1,5 +1,5 @@
 {
-    "name": "nailsapp/module-cms",
+    "name": "nails/module-cms",
     "keywords": ["Nails", "Shed Collective", "CodeIgniter", "CMS Module"],
     "homepage": "http://nailsapp.co.uk/modules/cms",
     "description": "This is the \"CMS\" module for Nails.",
@@ -27,7 +27,7 @@
     "prefer-stable": true,
     "require":
     {
-        "nailsapp/module-cdn": "dev-develop"
+        "nails/module-cdn": "dev-develop"
     },
     "autoload":
     {
@@ -44,25 +44,25 @@
                 "helpers": ["cms"]
             },
             "data": {
-                "nailsapp/module-admin": {
+                "nails/module-admin": {
                     "autoload": {
                         "assets": {
                             "js": [
                                 ["mustache.js/mustache.js", "NAILS-BOWER"],
                                 ["jquery-serialize-object/dist/jquery.serialize-object.min.js", "NAILS-BOWER"],
-                                ["admin.widgeteditor.min.js", "nailsapp/module-cms"]
+                                ["admin.widgeteditor.min.js", "nails/module-cms"]
                             ],
                             "css": [
-                                ["admin.css", "nailsapp/module-cms"],
-                                ["admin.widgeteditor.css", "nailsapp/module-cms"]
+                                ["admin.css", "nails/module-cms"],
+                                ["admin.widgeteditor.css", "nails/module-cms"]
                             ]
                         }
                     }
                 },
-                "nailsapp/module-api": {
+                "nails/module-api": {
                     "namespace": "cms"
                 },
-                "nailsapp/module-cdn": {
+                "nails/module-cdn": {
                     "permitted-image-dimensions": [
                         "50x50",
                         "130x130"

@@ -21,7 +21,7 @@ if (!function_exists('cmsBlock')) {
      */
     function cmsBlock($sSlug)
     {
-        $oBlockModel = Factory::model('Block', 'nailsapp/module-cms');
+        $oBlockModel = Factory::model('Block', 'nails/module-cms');
         $oBlock      = $oBlockModel->getBySlug($sSlug);
 
         if (!$oBlock) {
@@ -44,7 +44,7 @@ if (!function_exists('cmsSlider')) {
      */
     function cmsSlider($sIdSlug)
     {
-        $oSliderModel = Factory::model('Slider', 'nailsapp/module-cms');
+        $oSliderModel = Factory::model('Slider', 'nails/module-cms');
         return $oSliderModel->getByIdOrSlug($sIdSlug);
     }
 }
@@ -60,7 +60,7 @@ if (!function_exists('cmsMenu')) {
      */
     function cmsMenu($mIdSlug)
     {
-        $oMenuModel = Factory::model('Menu', 'nailsapp/module-cms');
+        $oMenuModel = Factory::model('Menu', 'nails/module-cms');
         return $oMenuModel->getByIdOrSlug($mIdSlug);
     }
 }
@@ -76,7 +76,7 @@ if (!function_exists('cmsMenuNested')) {
      */
     function cmsMenuNested($mIdSlug)
     {
-        $oMenuModel = Factory::model('Block', 'nailsapp/module-cms');
+        $oMenuModel = Factory::model('Block', 'nails/module-cms');
         $aData      = array('nestItems' => true);
         return $oMenuModel->getByIdOrSlug($mIdSlug, $aData);
     }
@@ -93,7 +93,7 @@ if (!function_exists('cmsPage')) {
      */
     function cmsPage($mIdSlug)
     {
-        $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
+        $oPageModel = Factory::model('Page', 'nails/module-cms');
         return $oPageModel->getByIdOrSlug($mIdSlug);
     }
 }
@@ -109,7 +109,7 @@ if (!function_exists('cmsArea')) {
      */
     function cmsArea($mIdSlug)
     {
-        $oAreaModel = Factory::model('Area', 'nailsapp/module-cms');
+        $oAreaModel = Factory::model('Area', 'nails/module-cms');
         return $oAreaModel->render($mIdSlug);
     }
 }
@@ -125,7 +125,7 @@ if (!function_exists('cmsAreaWithData')) {
      */
     function cmsAreaWithData($aData)
     {
-        $oAreaModel = Factory::model('Area', 'nailsapp/module-cms');
+        $oAreaModel = Factory::model('Area', 'nails/module-cms');
         return $oAreaModel->renderWithData($aData);
     }
 }
@@ -142,7 +142,7 @@ if (!function_exists('cmsWidget')) {
      */
     function cmsWidget($sSlug, $aData = array())
     {
-        $oWidgetModel = Factory::model('Widget', 'nailsapp/module-cms');
+        $oWidgetModel = Factory::model('Widget', 'nails/module-cms');
         $oWidget      = $oWidgetModel->getBySlug($sSlug);
 
         if ($oWidget) {

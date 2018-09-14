@@ -33,7 +33,7 @@ class {{SLUG}} extends TemplateBase
         //  Define template widget areas
         $this->widget_areas = [
             //  The template's body
-            'sBody' => Factory::factory('TemplateArea', 'nailsapp/module-cms')
+            'sBody' => Factory::factory('TemplateArea', 'nails/module-cms')
                 ->setTitle('Body')
         ];
     }

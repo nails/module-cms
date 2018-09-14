@@ -25,7 +25,7 @@ class Routes implements RouteGenerator
     public static function generate()
     {
         $oDb        = Factory::service('PDODatabase');
-        $oPageModel = Factory::model('Page', 'nailsapp/module-cms');
+        $oPageModel = Factory::model('Page', 'nails/module-cms');
         $aRoutes    = [];
 
         $oPages = $oDb->query(

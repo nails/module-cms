@@ -33,7 +33,7 @@ class Render extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->oPageModel = Factory::model('Page', 'nailsapp/module-cms');
+        $this->oPageModel = Factory::model('Page', 'nails/module-cms');
         $this->lang->load('cms');
 
         // --------------------------------------------------------------------------
@@ -90,7 +90,7 @@ class Render extends Base
          */
 
         if ($oPage->id === $this->iHomepageId && uri_string() == $oData->slug) {
-            $oSession = Factory::service('Session', 'nailsapp/module-auth');
+            $oSession = Factory::service('Session', 'nails/module-auth');
             $oSession->keepFlashData();
             redirect('', 'location', 301);
         }

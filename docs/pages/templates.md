@@ -93,11 +93,11 @@ class Fullwidth extends TemplateBase
         $this->widget_areas = [
 
             //  The main body of the page
-            'mainbody' => Factory::factory('TemplateArea', 'nailsapp/module-cms')
+            'mainbody' => Factory::factory('TemplateArea', 'nails/module-cms')
                 ->setTitle('Main Body'),
 
             //  The page's sidebar
-            'sidebar' => Factory::factory('TemplateArea', 'nailsapp/module-cms')
+            'sidebar' => Factory::factory('TemplateArea', 'nails/module-cms')
                 ->setTitle('Sidebar'),
         ];
     }
@@ -137,7 +137,7 @@ class Fullwidth extends TemplateBase
         $this->additional_fields = [
 
             //  The main body of the page
-            'mainbody' => Factory::factory('TemplateOption', 'nailsapp/module-cms')
+            'mainbody' => Factory::factory('TemplateOption', 'nails/module-cms')
                 ->setType('dropdown'),
                 ->setKey('number_of_columns'),
                 ->setLabel('No. of columns'),

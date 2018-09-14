@@ -350,7 +350,7 @@ abstract class TemplateBase
         //  Process each widget area and render the HTML
         $aWidgetAreas  = $this->getWidgetAreas();
         $aRenderedData = [];
-        $oWidgetModel  = Factory::model('Widget', 'nailsapp/module-cms');
+        $oWidgetModel  = Factory::model('Widget', 'nails/module-cms');
 
         foreach ($aWidgetAreas as $sAreaSlug => $oWidgetArea) {
 
@@ -399,7 +399,7 @@ abstract class TemplateBase
             if ($aMatches[0]) {
 
                 //  Get all the blocks which were found
-                $oBlockModel = Factory::model('Block', 'nailsapp/module-cms');
+                $oBlockModel = Factory::model('Block', 'nails/module-cms');
                 $aBlocks     = $oBlockModel->getBySlugs($aMatches[1]);
 
                 //  Swap them in

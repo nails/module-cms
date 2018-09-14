@@ -28,6 +28,6 @@ class Accordion extends WidgetBase
         $this->description = 'A collapsible accordion component.';
         $this->keywords    = 'accordion';
 
-        $this->assets_editor[] = ['admin.widget.accordion.css', 'nailsapp/module-cms'];
+        $this->assets_editor[] = ['admin.widget.accordion.css', 'nails/module-cms'];
     }
 }
