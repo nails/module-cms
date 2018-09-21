@@ -228,17 +228,20 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
+        $oUri       = Factory::service('Uri');
         $oMenuModel = Factory::model('Menu', 'nails/module-cms');
-        $oMenu      = $oMenuModel->getById($this->uri->segment(5));
+        $oMenu      = $oMenuModel->getById($oUri->segment(5));
 
         if (!$oMenu) {
-            $this->session->set_flashdata('error', 'Invalid menu ID.');
+            $oSession = Factory::service('Session', 'nails/module-auth');
+            $oSession->setFlashData('error', 'Invalid menu ID.');
             redirect('admin/cms/menus');
         }
 
         // --------------------------------------------------------------------------
 
-        if ($this->input->post()) {
+        $oInput = Factory::service('Input');
+        if ($oInput->post()) {
 
             //  Validate form
             $oFormValidation = Factory::service('FormValidation');
@@ -250,12 +253,12 @@ class Menus extends BaseAdmin
 
                 //  Prepare the create data
                 $aItemData                = [];
-                $aItemData['label']       = $this->input->post('label');
-                $aItemData['description'] = strip_tags($this->input->post('description'));
+                $aItemData['label']       = $oInput->post('label');
+                $aItemData['description'] = strip_tags($oInput->post('description'));
                 $aItemData['items']       = [];
 
                 //  Prepare the menu items
-                $aMenuItems = $this->input->post('menuItem');
+                $aMenuItems = $oInput->post('menuItem');
                 $iNumItems  = isset($aMenuItems['id']) ? count($aMenuItems['id']) : 0;
 
                 for ($i = 0; $i < $iNumItems; $i++) {
@@ -270,20 +273,16 @@ class Menus extends BaseAdmin
 
                 if ($oMenuModel->update($oMenu->id, $aItemData)) {
 
-                    $sStatus  = 'success';
-                    $sMessage = 'Menu updated successfully.';
-
-                    $this->session->set_flashdata($sStatus, $sMessage);
+                    $oSession = Factory::service('Session', 'nails/module-auth');
+                    $oSession->setFlashData('success', 'Menu updated successfully.');
                     redirect('admin/cms/menus');
 
                 } else {
-
                     $this->data['error'] = 'Failed to update menu. ';
                     $this->data['error'] .= $oMenuModel->lastError();
                 }
 
             } else {
-
                 $this->data['error'] = lang('fv_there_were_errors');
             }
 
@@ -293,10 +292,10 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        if ($this->input->post()) {
+        if ($oInput->post()) {
 
             $aMenuItems     = [];
-            $aPostMenuItems = $this->input->post('menuItem');
+            $aPostMenuItems = $oInput->post('menuItem');
             $iNumItems      = !empty($aPostMenuItems['id']) ? count($aPostMenuItems['id']) : 0;
 
             for ($i = 0; $i < $iNumItems; $i++) {
@@ -353,11 +352,13 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
+        $oUri       = Factory::service('Uri');
+        $oSession   = Factory::service('Session', 'nails/module-auth');
         $oMenuModel = Factory::model('Menu', 'nails/module-cms');
-        $oMenu      = $oMenuModel->getById($this->uri->segment(5));
+        $oMenu      = $oMenuModel->getById($oUri->segment(5));
 
         if (!$oMenu) {
-            $this->session->set_flashdata('error', 'Invalid menu ID.');
+            $oSession->setFlashData('error', 'Invalid menu ID.');
             redirect('admin/cms/menus');
         }
 
@@ -370,7 +371,7 @@ class Menus extends BaseAdmin
             $sMessage .= $oMenuModel->lastError();
         }
 
-        $this->session->set_flashdata($sStatus, $sMessage);
+        $oSession->setFlashData($sStatus, $sMessage);
         redirect('admin/cms/menus');
     }
 }
