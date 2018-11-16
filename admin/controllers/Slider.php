@@ -13,6 +13,7 @@
 namespace Nails\Admin\Cms;
 
 use Nails\Factory;
+use Nails\Functions;
 use Nails\Admin\Helper;
 use Nails\Cms\Controller\BaseAdmin;
 
@@ -213,7 +214,12 @@ class Slider extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Define the manager URL
-        $sCdnManagerUrl = cdnManagerUrl('cms-slider', ['sliderEdit', 'setImgCallback'], null, isPageSecure());
+        $sCdnManagerUrl = cdnManagerUrl(
+            'cms-slider',
+            ['sliderEdit', 'setImgCallback'],
+            null,
+            Functions::isPageSecure()
+        );
 
         // --------------------------------------------------------------------------
 
@@ -329,7 +335,12 @@ class Slider extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Define the manager URL
-        $sCdnManagerUrl = cdnManagerUrl('cms-slider', ['sliderEdit', 'setImgCallback'], null, isPageSecure());
+        $sCdnManagerUrl = cdnManagerUrl(
+            'cms-slider',
+            ['sliderEdit', 'setImgCallback'],
+            null,
+            Functions::isPageSecure()
+        );
 
         // --------------------------------------------------------------------------
 

@@ -13,6 +13,7 @@
 namespace Nails\Cms\Template;
 
 use Nails\Factory;
+use Nails\Functions;
 
 abstract class TemplateBase
 {
@@ -158,7 +159,7 @@ abstract class TemplateBase
 
                 } elseif (preg_match('#^' . preg_quote(APPPATH, '#') . '#', $sIconPath)) {
 
-                    if (isPageSecure()) {
+                    if (Functions::isPageSecure()) {
                         $sPattern   = '#^' . preg_quote(APPPATH, '#') . '#';
                         $this->icon = preg_replace($sPattern, SECURE_BASE_URL . APPPATH . '', $sIconPath);
                     } else {
