@@ -145,7 +145,7 @@ class Area extends Base
                 $oWidget = $oWidgetModel->getBySlug($oWidgetData->slug);
                 if (!empty($oWidget)) {
                     $sOut .= $oWidget->render((array) $oWidgetData->data);
-                } elseif (Environment::not('PRODUCTION')) {
+                } elseif (Environment::not(Environment::ENV_PROD)) {
                     throw new NotFoundException('"' . $oWidgetData->slug . '" is not a valid widget');
                 }
             }
