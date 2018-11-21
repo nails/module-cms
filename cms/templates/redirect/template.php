@@ -107,7 +107,7 @@ class Redirect extends TemplateBase
 
         } else {
 
-            show_404();
+            show404();
         }
     }
 }

@@ -197,7 +197,7 @@ class Blocks extends BaseAdmin
         $this->data['block'] = $oModel->getById($oUri->segment(5));
 
         if (!$this->data['block']) {
-            show_404();
+            show404();
         }
 
         // --------------------------------------------------------------------------

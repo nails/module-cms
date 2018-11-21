@@ -61,14 +61,14 @@ class Render extends Base
         }
 
         if (!$oPage || $oPage->is_deleted) {
-            show_404();
+            show404();
         }
 
         // --------------------------------------------------------------------------
 
-        //  If a page is not published and not being previewed, show_404()
+        //  If a page is not published and not being previewed, show404()
         if (!$oPage->is_published && !$this->bIsPreview) {
-            show_404();
+            show404();
         }
 
         // --------------------------------------------------------------------------
@@ -161,7 +161,7 @@ class Render extends Base
             $this->bIsPreview = true;
             $this->page();
         } else {
-            show_404();
+            show404();
         }
     }
 
@@ -207,6 +207,6 @@ class Render extends Base
         // --------------------------------------------------------------------------
 
         //  We don't know what to do, *falls over*
-        show_404();
+        show404();
     }
 }

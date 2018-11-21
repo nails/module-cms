@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Model;
 
+use Nails\Components;
 use Nails\Cms\Exception\Widget\NotFoundException;
 use Nails\Cms\Widget\WidgetBase;
 use Nails\Factory;
@@ -38,7 +39,7 @@ class Widget
 
         Factory::helper('directory');
         $aAvailableWidgets = [];
-        $aModules          = _NAILS_GET_MODULES();
+        $aModules          = Components::modules();
 
         //  Append the app
         $aModules['app'] = (object) [

@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Model;
 
+use Nails\Components;
 use Nails\Cms\Exception\Template\NotFoundException;
 use Nails\Factory;
 
@@ -27,7 +28,7 @@ class Template
      */
     public function __construct()
     {
-        $aModules            = _NAILS_GET_MODULES();
+        $aModules            = Components::modules();
         $this->aTemplateDirs = [];
 
         foreach ($aModules as $oModule) {
