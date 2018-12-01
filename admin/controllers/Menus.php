@@ -206,7 +206,8 @@ class Menus extends BaseAdmin
         $oAsset = Factory::service('Asset');
         $oAsset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
         $oAsset->library('MUSTACHE');
-        $oAsset->load('admin.menus.edit.min.js', 'nails/module-cms');
+        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
+        $oAsset->load('admin.menus.edit.js', 'nails/module-cms');
         $oAsset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
 
         // --------------------------------------------------------------------------
@@ -324,7 +325,8 @@ class Menus extends BaseAdmin
         $oAsset = Factory::service('Asset');
         $oAsset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
         $oAsset->library('MUSTACHE');
-        $oAsset->load('admin.menus.edit.min.js', 'nails/module-cms');
+        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
+        $oAsset->load('admin.menus.edit.js', 'nails/module-cms');
         $oAsset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
 
         // --------------------------------------------------------------------------

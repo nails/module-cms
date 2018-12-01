@@ -228,7 +228,8 @@ class Slider extends BaseAdmin
         $oAsset = Factory::service('Asset');
         $oAsset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
         $oAsset->library('MUSTACHE');
-        $oAsset->load('admin.sliders.edit.min.js', 'nails/module-cms');
+        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
+        $oAsset->load('admin.sliders.edit.js', 'nails/module-cms');
         $oAsset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
         $oAsset->inline('sliderEdit.setScheme("serve", "' . $oCdn->urlServeScheme() . '");', 'JS');
         $oAsset->inline('sliderEdit.setScheme("thumb", "' . $oCdn->urlCropScheme() . '");', 'JS');
@@ -349,7 +350,8 @@ class Slider extends BaseAdmin
         $oAsset = Factory::service('Asset');
         $oAsset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
         $oAsset->library('MUSTACHE');
-        $oAsset->load('admin.sliders.edit.min.js', 'nails/module-cms');
+        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
+        $oAsset->load('admin.sliders.edit.js', 'nails/module-cms');
         $oAsset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
         $oAsset->inline('sliderEdit.setScheme("serve", "' . $oCdn->urlServeScheme() . '");', 'JS');
         $oAsset->inline('sliderEdit.setScheme("thumb", "' . $oCdn->urlCropScheme() . '");', 'JS');

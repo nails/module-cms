@@ -3,19 +3,19 @@
  */
 .group-cms {
     //  Generic variables
-    @widgeteditor-zindex: 999;
+    $widgeteditor-zindex: 999;
 
     //  Header variables
-    @widgeteditor-header-height: 42px;
+    $widgeteditor-header-height: 42px;
 
     //  Search Variables
-    @widgeteditor-search-height: 40px;
+    $widgeteditor-search-height: 40px;
 
     //  Widget variables
-    @widgeteditor-widgets-width: 200px;
+    $widgeteditor-widgets-width: 200px;
 
     //  Body variables
-    @widgeteditor-body-padding: 1em;
+    $widgeteditor-body-padding: 1em;
 
     &.widgeteditor {
         position: fixed;
@@ -24,7 +24,7 @@
         top: 0;
         width: 100%;
         height: 100%;
-        z-index: @widgeteditor-zindex;
+        z-index: $widgeteditor-zindex;
         background: rgba(0, 0, 0, 0.8);
         transition: all 0.2s;
         transform: scale(0.95);
@@ -50,9 +50,9 @@
                 top: 0;
                 left: 0;
                 right: 0;
-                height: @widgeteditor-header-height;
+                height: $widgeteditor-header-height;
                 background: rgba(255, 255, 255, 1);
-                line-height: @widgeteditor-header-height;
+                line-height: $widgeteditor-header-height;
                 border-bottom: 1px solid #121618;
                 font-weight: bold;
                 padding: 0 1em;
@@ -62,7 +62,7 @@
             &actions {
                 top: 0;
                 right: 0;
-                height: @widgeteditor-header-height - 1;
+                height: $widgeteditor-header-height - 1;
                 text-align: right;
                 padding: 5px;
                 z-index: 2;
@@ -74,9 +74,9 @@
                 top: 0;
                 left: 0;
                 width: 100%;
-                height: @widgeteditor-search-height;
+                height: $widgeteditor-search-height;
                 background: rgba(255, 255, 255, 1);
-                line-height: @widgeteditor-search-height;
+                line-height: $widgeteditor-search-height;
                 z-index: 1;
                 &:before {
                     display: block;
@@ -98,10 +98,10 @@
                 }
             }
             &widgets {
-                top: @widgeteditor-header-height;
+                top: $widgeteditor-header-height;
                 left: 0;
                 bottom: 0;
-                width: @widgeteditor-widgets-width;
+                width: $widgeteditor-widgets-width;
                 background: #121618;
                 overflow-y: auto;
                 border-right: 1px solid #121618;
@@ -158,11 +158,11 @@
                 }
             }
             &body {
-                top: @widgeteditor-header-height;
-                left: @widgeteditor-widgets-width;
+                top: $widgeteditor-header-height;
+                left: $widgeteditor-widgets-width;
                 right: 0;
                 bottom: 0;
-                padding: @widgeteditor-body-padding;
+                padding: $widgeteditor-body-padding;
                 background: rgba(255, 255, 255, 0.75);
                 overflow: auto;
                 > ul {
@@ -219,7 +219,7 @@
             &preview {
                 background: #121618;
                 padding: 3px;
-                left: @widgeteditor-widgets-width + 13px;
+                left: $widgeteditor-widgets-width + 13px;
                 width: 256px;
                 border-radius: 0 3px 3px 3px;
                 visibility: hidden;
@@ -241,7 +241,7 @@
                 &.is-shown {
                     visibility: visible;
                     opacity: 1;
-                    left: @widgeteditor-widgets-width + 3px;
+                    left: $widgeteditor-widgets-width + 3px;
                     transition: opacity 1s .25s, visibility 1s .25s, top .25s;
                 }
                 small {
@@ -263,7 +263,7 @@
             cursor: grab;
             cursor: -moz-grab;
             cursor: -webkit-grab;
-            width: @widgeteditor-widgets-width - 1; // Account for the right border
+            width: $widgeteditor-widgets-width - 1; // Account for the right border
             position: relative;
             &.ui-draggable-dragging,
             &.ui-sortable-helper {
@@ -354,6 +354,6 @@
         }
     }
     &.widgeteditor-alert {
-        z-index: @widgeteditor-zindex + 1;
+        z-index: $widgeteditor-zindex + 1;
     }
 }

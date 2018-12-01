@@ -1,3 +1,7 @@
+'use strict';
+
+import '../sass/admin.widgeteditor.scss';
+
 /* globals console, _nails, _nails_admin, _nails_api, Mustache */
 var NAILS_Admin_CMS_WidgetEditor;
 NAILS_Admin_CMS_WidgetEditor = function() {

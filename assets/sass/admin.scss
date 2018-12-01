@@ -27,10 +27,10 @@
                 padding: 0;
                 list-style: none;
                 font-size: 100%;
-                @background: #CCCCCC;
-                @handle_width: 30px;
-                @actions_width: 70px;
-                @content_padding: 5px;
+                $background: #CCCCCC;
+                $handle_width: 30px;
+                $actions_width: 70px;
+                $content_padding: 5px;
                 li {
                     border: 1px solid rgba(159,159,159,1);
                     margin: 0;
@@ -61,33 +61,33 @@
                     div.handle {
                         left: 0;
                         bottom: 0;
-                        width: @handle_width;
+                        width: $handle_width;
                         cursor: url(../img/admin/cursors/openhand.cur), none !important;
                     }
                     div.content {
                         padding: 0;
                         margin: 0;
-                        margin-left: @handle_width;
-                        margin-right: @actions_width;
+                        margin-left: $handle_width;
+                        margin-right: $actions_width;
                         .containerLabel,
                         .containerUrl {
                             display: inline-block;
                             width: 50%;
                             padding: 0;
                             margin: 0;
-                            padding: @content_padding;
+                            padding: $content_padding;
                             input {
                                 margin: 0;
                             }
                         }
                         .containerLabel {
-                            padding-right: @content_padding/2;
+                            padding-right: $content_padding/2;
                             input {
                                 width: 100%;
                             }
                         }
                         .containerUrl {
-                            padding-left: @content_padding/2;
+                            padding-left: $content_padding/2;
                             input,
                             select {
                                 width: 45%;
@@ -103,7 +103,7 @@
                     }
                     div.actions {
                         right: 0;
-                        width: @actions_width;
+                        width: $actions_width;
                         a {
                             margin: 0;
                         }
@@ -111,7 +111,7 @@
                     ol {
                         font-size: 100%;
                         margin: 0;
-                        margin-left: @handle_width;
+                        margin-left: $handle_width;
                         padding: 0;
                         li {
                             border-right: 0;
@@ -269,14 +269,14 @@
                 border-top: 1px solid #AAAAAA;
                 border-bottom: 1px solid #AAAAAA;
                 &.loading {
-                    @colour1: rgba(213, 212, 214, 1);
+                    $colour1: rgba(213, 212, 214, 1);
                     background-image: linear-gradient(
                     -45deg,
-                    @colour1 25%,
+                    $colour1 25%,
                     transparent 25%,
                     transparent 50%,
-                    @colour1 50%,
-                    @colour1 75%,
+                    $colour1 50%,
+                    $colour1 75%,
                     transparent 75%,
                     transparent
                     );

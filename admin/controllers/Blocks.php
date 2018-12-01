@@ -348,7 +348,8 @@ class Blocks extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.blocks.create.min.js', 'nails/module-cms');
+        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
+        $oAsset->load('admin.blocks.create.js', 'nails/module-cms');
 
         // --------------------------------------------------------------------------
 
