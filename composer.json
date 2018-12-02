@@ -29,6 +29,10 @@
     {
         "nails/module-cdn": "dev-develop"
     },
+    "require-dev":
+    {
+        "phpunit/phpunit": "7.*"
+    },
     "autoload":
     {
         "psr-4": {"Nails\\Cms\\": "src/"}
