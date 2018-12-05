@@ -7,18 +7,18 @@ jobs:
   build:
     docker:
     # specify the version you desire here
-    - image: circleci/php:7.2-apache-stretch-node-browsers
+    - image: circleci/php:7.2.9-cli-stretch
 
     # Specify service dependencies here if necessary
     # CircleCI maintains a library of pre-built images
     # documented at https://circleci.com/docs/2.0/circleci-images/
     # - image: circleci/mysql:9.4
+    - image: circleci/node:current
 
     working_directory: ~/repo
 
     steps:
     - checkout
-    - nvm use stable
 
     # Download and cache dependencies
     - restore_cache:
