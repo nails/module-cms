@@ -6,34 +6,35 @@ version: 2
 jobs:
   build:
     docker:
-      # specify the version you desire here
-      - image: circleci/php:7.2-apache-stretch-node-browsers
+    # specify the version you desire here
+    - image: circleci/php:7.2-apache-stretch-node-browsers
 
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/mysql:9.4
+    # Specify service dependencies here if necessary
+    # CircleCI maintains a library of pre-built images
+    # documented at https://circleci.com/docs/2.0/circleci-images/
+    # - image: circleci/mysql:9.4
 
     working_directory: ~/repo
 
     steps:
-      - checkout
+    - checkout
+    - nvm use stable
 
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "composer.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+    # Download and cache dependencies
+    - restore_cache:
+        keys:
+        - v1-dependencies-{{ checksum "composer.json" }}
+        # fallback to using the latest cache if no exact match is found
+        - v1-dependencies-
 
-      - run: composer --no-interaction --optimize-autoloader install
-      - run: yarn install
-      - run: yarn build
+    - run: composer --no-interaction --optimize-autoloader install
+    - run: yarn install
+    - run: yarn build
 
-      - save_cache:
-          paths:
-            - ./vendor
-          key: v1-dependencies-{{ checksum "composer.json" }}
+    - save_cache:
+        paths:
+        - ./vendor
+        key: v1-dependencies-{{ checksum "composer.json" }}
 
-      # run tests!
-      - run: ./vendor/bin/phpunit
+    # run tests!
+    - run: ./vendor/bin/phpunit
