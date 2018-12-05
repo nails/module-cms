@@ -8,10 +8,7 @@ module.exports = {
         'admin.blocks.create': './assets/js/admin.blocks.create.js',
         'admin.menus.edit': './assets/js/admin.menus.edit.js',
         'admin.pages.edit': './assets/js/admin.pages.edit.js',
-        'admin.sliders.edit': './assets/js/admin.sliders.edit.js',
-        'admin.widget.accordion': './assets/js/admin.widget.accordion.js',
-        'admin.widget.tabs': './assets/js/admin.widget.tabs.js',
-        'admin.widgeteditor': './assets/js/admin.widgeteditor.js'
+        'admin.sliders.edit': './assets/js/admin.sliders.edit.js'
     },
     output: {
         filename: '[name].min.js',

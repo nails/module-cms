@@ -54,11 +54,10 @@
                             "js": [
                                 ["mustache.js/mustache.js", "NAILS-BOWER"],
                                 ["jquery-serialize-object/dist/jquery.serialize-object.min.js", "NAILS-BOWER"],
-                                "admin.widgeteditor.js"
+                                "admin.min.js"
                             ],
                             "css": [
-                                "admin.min.css",
-                                "admin.widgeteditor.min.css"
+                                "admin.min.css"
                             ]
                         }
                     }

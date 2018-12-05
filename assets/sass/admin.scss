@@ -2,6 +2,10 @@
    Nails CMS Module Admin Styles
 -------------------------------------------------------------- */
 
+@import './components/widget.accordion.scss';
+@import './components/widget.tabs.scss';
+@import './components/widgeteditor.scss';
+
 .group-cms {
     /**
      * Menus
