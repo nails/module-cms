@@ -51,14 +51,12 @@ NAILS_Admin_CMS_Blocks_Create = function()
         //  Destroy the richtext editor, if there is one
         if (typeof(CKEDITOR.instances['default-value-richtext-editor']) !== 'undefined')
         {
-            console.log('Destroy');
             CKEDITOR.instances['default-value-richtext-editor'].destroy();
         }
 
         //  Custom actions dependant on the block type
         if (type === 'richtext') {
 
-            console.log('IT LIVES');
             CKEDITOR.replace(
                 'default-value-richtext-editor',
                 {
