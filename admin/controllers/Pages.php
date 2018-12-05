@@ -287,9 +287,12 @@ class Pages extends BaseAdmin
         $oAsset->library('CMSWIDGETEDITOR');
         //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
         $oAsset->load('admin.pages.edit.js', 'nails/module-cms');
-        $oAsset->inline('var widgetEditor = new NAILS_Admin_CMS_WidgetEditor();', 'JS');
-        $oAsset->inline('var templates = [' . implode(',', $aTemplatesJson) . ']', 'JS');
-        $oAsset->inline('var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);', 'JS');
+        $oAsset->inline(implode("\n", [
+            'var widgetEditor = new window.WidgetEditor.default();',
+            'widgetEditor.construct();',
+            'var templates = [' . implode(',', $aTemplatesJson) . ']',
+            'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);'
+        ]), 'JS');
 
         // --------------------------------------------------------------------------
 
@@ -434,9 +437,12 @@ class Pages extends BaseAdmin
         $oAsset->library('CMSWIDGETEDITOR');
         //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
         $oAsset->load('admin.pages.edit.js', 'nails/module-cms');
-        $oAsset->inline('var widgetEditor = new NAILS_Admin_CMS_WidgetEditor();', 'JS');
-        $oAsset->inline('var templates = [' . implode(',', $aTemplatesJson) . ']', 'JS');
-        $oAsset->inline('var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);', 'JS');
+        $oAsset->inline(implode("\n", [
+            'var widgetEditor = new window.WidgetEditor.default();',
+            'widgetEditor.construct();',
+            'var templates = [' . implode(',', $aTemplatesJson) . ']',
+            'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);'
+        ]), 'JS');
 
         // --------------------------------------------------------------------------
 

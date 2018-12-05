@@ -27,7 +27,5 @@ class Accordion extends WidgetBase
         $this->icon        = 'fa-list-alt';
         $this->description = 'A collapsible accordion component.';
         $this->keywords    = 'accordion';
-
-        $this->assets_editor[] = ['admin.widget.accordion.min.css', 'nails/module-cms'];
     }
 }

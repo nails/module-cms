@@ -1,8 +1,8 @@
 'use strict';
 
 import '../sass/admin.scss';
-import WidgetEditor from './components/WidgetEditor.js';
+
+require('expose-loader?WidgetEditor!./components/WidgetEditor.js');
 
 (function() {
-    new WidgetEditor();
 })();

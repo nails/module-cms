@@ -17,7 +17,5 @@ class Tabs extends WidgetBase
         $this->icon        = 'fa-folder-o';
         $this->description = 'Show tabbed content.';
         $this->keywords    = 'tabs, tabbed';
-
-        $this->assets_editor[] = ['admin.widget.tabs.min.css', 'nails/module-cms'];
     }
 }

@@ -4,11 +4,7 @@ const path = require('path');
 
 module.exports = {
     entry: {
-        'admin': './assets/js/admin.js',
-        'admin.blocks.create': './assets/js/admin.blocks.create.js',
-        'admin.menus.edit': './assets/js/admin.menus.edit.js',
-        'admin.pages.edit': './assets/js/admin.pages.edit.js',
-        'admin.sliders.edit': './assets/js/admin.sliders.edit.js'
+        'admin': './assets/js/admin.js'
     },
     output: {
         filename: '[name].min.js',
