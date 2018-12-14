@@ -18,6 +18,7 @@
     },
     "scripts": {
         "build": "webpack -p",
+        "build-dev": "webpack",
         "watch": "webpack --watch"
     }
 }
