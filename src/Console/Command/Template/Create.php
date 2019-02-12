@@ -19,10 +19,12 @@ class Create extends BaseMaker
     /**
      * Configure the command
      */
-    protected function configure()
+    protected function configure(): void
     {
-        $this->setName('make:cms:template');
-        $this->setDescription('Creates a new CMS template');
+        $this
+            ->setName('make:cms:template')
+            ->setDescription('Creates a new CMS template');
+
         $this->aArguments = [
             [
                 'name'        => 'name',
@@ -51,7 +53,7 @@ class Create extends BaseMaker
      *
      * @return int
      */
-    protected function execute(InputInterface $oInput, OutputInterface $oOutput)
+    protected function execute(InputInterface $oInput, OutputInterface $oOutput): int
     {
         parent::execute($oInput, $oOutput);
 
@@ -91,7 +93,7 @@ class Create extends BaseMaker
      *
      * @throws \Exception
      */
-    private function createTemplate()
+    private function createTemplate(): void
     {
         $aFields         = $this->getArguments();
         $aFields['SLUG'] = $this->generateSlug($aFields['NAME']);
@@ -143,7 +145,7 @@ class Create extends BaseMaker
      *
      * @return string
      */
-    private function generateSlug($sString)
+    private function generateSlug($sString): string
     {
         Factory::helper('url');
 
