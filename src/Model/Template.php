@@ -45,7 +45,7 @@ class Template
 
         $this->aTemplateDirs[] = [
             'namespace' => 'App\\',
-            'path'      => APPPATH . 'modules/cms/templates/',
+            'path'      => NAILS_APP_PATH . 'application/modules/cms/templates/',
         ];
     }
 

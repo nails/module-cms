@@ -43,7 +43,7 @@ class Widget
 
         //  Append the app
         $aModules['app'] = (object) [
-            'path'      => APPPATH . 'modules/',
+            'path'      => NAILS_APP_PATH . 'application/modules/',
             'namespace' => 'App\\',
         ];
 

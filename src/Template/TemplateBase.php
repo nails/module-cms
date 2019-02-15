@@ -157,14 +157,14 @@ abstract class TemplateBase
                     //  Nails asset
                     $this->icon = preg_replace('#^' . preg_quote(NAILS_PATH, '#') . '#', NAILS_URL, $sIconPath);
 
-                } elseif (preg_match('#^' . preg_quote(APPPATH, '#') . '#', $sIconPath)) {
+                } elseif (preg_match('#^' . preg_quote(NAILS_APP_PATH . 'application/', '#') . '#', $sIconPath)) {
 
                     if (Functions::isPageSecure()) {
-                        $sPattern   = '#^' . preg_quote(APPPATH, '#') . '#';
-                        $this->icon = preg_replace($sPattern, SECURE_BASE_URL . APPPATH . '', $sIconPath);
+                        $sPattern   = '#^' . preg_quote(NAILS_APP_PATH . 'application/', '#') . '#';
+                        $this->icon = preg_replace($sPattern, SECURE_BASE_URL . NAILS_APP_PATH . 'application/', $sIconPath);
                     } else {
-                        $sPattern   = '#^' . preg_quote(APPPATH, '#') . '#';
-                        $this->icon = preg_replace($sPattern, BASE_URL . APPPATH . '', $sIconPath);
+                        $sPattern   = '#^' . preg_quote(NAILS_APP_PATH . 'application/', '#') . '#';
+                        $this->icon = preg_replace($sPattern, BASE_URL . NAILS_APP_PATH . 'application/', $sIconPath);
                     }
                 }
                 break;

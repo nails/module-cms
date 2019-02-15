@@ -12,7 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class Create extends BaseMaker
 {
     const RESOURCE_PATH = NAILS_PATH . 'module-cms/resources/console/widget/';
-    const WIDGET_PATH   = APPPATH . 'modules/cms/widgets/';
+    const WIDGET_PATH   = NAILS_APP_PATH . 'application/modules/cms/widgets/';
 
     // --------------------------------------------------------------------------
 
