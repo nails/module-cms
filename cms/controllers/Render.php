@@ -11,6 +11,7 @@
  */
 
 use App\Controller\Base;
+use Nails\Common\Exception\NailsException;
 use Nails\Cms\Exception\RenderException;
 use Nails\Factory;
 
@@ -181,7 +182,7 @@ class Render extends Base
             $this->iPageId     = $oHomepage->id;
             $this->page();
         } else {
-            showFatalError('No homepage has been defined.');
+            throw new NailsException('No homepage has been defined.');
         }
     }
 
