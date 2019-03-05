@@ -6,12 +6,13 @@ This module brings a full featured BYOFE (Bring Your Own Front End) Content Mana
 
 The CMS is broken down into the following five concepts:
 
-- [Widgets](/docs/widgets/README.md) - Small blocks of code which can render user input
-- [Areas](/docs/areas/README.md) - Complex areas which contain multiple configurable widgets
-- [Blocks](/docs/blocks/README.md) - Single, small blocks of content
-- [Menus](/docs/menus/README.md) - Fully configurable, nestable menus
-- [Pages](/docs/pages/README.md) - Entire pages made up of multiple widget areas
+- [Widgets](widgets/README.md) - Small blocks of code which can render user input
+- [Areas](areas/README.md) - Complex areas which contain multiple configurable widgets
+- [Blocks](blocks/README.md) - Single, small blocks of content
+- [Menus](menus/README.md) - Fully configurable, nestable menus
+- [Pages](pages/README.md) - Entire pages made up of multiple widget areas
 
 Additional information:
 
-- [Helpers](/docs/helpers.md) - The helper function made available by this module
+- [Helpers](helpers.md) - The helper function made available by this module
+- [Events](events.md) - The events exposed by this module

@@ -18,14 +18,14 @@ class Events extends Base
     /**
      * Fired when a CMS Page is created
      *
-     * @param integer $iId The Page ID
+     * @param int $iId The Page ID
      */
     const PAGE_CREATED = 'PAGE:CREATED';
 
     /**
      * Fired when a CMS Page is updated
      *
-     * @param integer   $iId        The Page ID
+     * @param int       $iId        The Page ID
      * @param \stdClass $oOldObject The old Page object
      */
     const PAGE_UPDATED = 'PAGE:UPDATED';
@@ -33,21 +33,21 @@ class Events extends Base
     /**
      * Fired when a CMS Page is deleted
      *
-     * @param integer $iId The Page ID
+     * @param int $iId The Page ID
      */
     const PAGE_DELETED = 'PAGE:DELETED';
 
     /**
      * Fired when a CMS Page is published
      *
-     * @param integer $iId The Page ID
+     * @param int $iId The Page ID
      */
     const PAGE_PUBLISHED = 'PAGE:PUBLISHED';
 
     /**
      * Fired when a CMS Page is unpublished
      *
-     * @param integer $iId The Page ID
+     * @param int $iId The Page ID
      */
     const PAGE_UNPUBLISHED = 'PAGE:UNPUBLISHED';
 }
