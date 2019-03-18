@@ -29,7 +29,7 @@ if (!empty($panels)) {
         $aPanels[] = array(
             'title'     => getFromArray($i, $aTitle),
             'body'      => getFromArray($i, $aBody),
-            'collapsed' => $i != 0
+            'collapsed' => $i !== 0
         );
     }
 }
@@ -52,7 +52,7 @@ if (!empty($aPanels)) {
                 <div class="panel panel-default">
                     <div class="panel-heading" role="tab" id="<?=$sPanelId . '-' . $iCounter?>-heading">
                         <h4 class="panel-title">
-                            <a role="button" data-toggle="collapse" data-parent="#<?=$sUuid?>" href="#<?=$sPanelId . '-' . $iCounter?>-body" aria-expanded="<?=$sCollapsed ? 'false' : 'true'?>" aria-controls="<?=$sPanelId . '-' . $iCounter?>-body">
+                            <a role="button" data-toggle="collapse" data-parent="#<?=$sUuid?>" href="#<?=$sPanelId . '-' . $iCounter?>-body" aria-expanded="<?=$sCollapsed ? 'true' : 'false'?>" aria-controls="<?=$sPanelId . '-' . $iCounter?>-body">
                                 <?=$aPanel['title']?>
                             </a>
                         </h4>
