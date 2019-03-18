@@ -119,7 +119,7 @@ class Create extends BaseMaker
 
         } catch (TemplateExistsException $e) {
             //  Do not clean up (delete existing template)!
-            throw new \Exception($e->getMessage(), $e->getCode());
+            throw $e;
         } catch (\Exception $e) {
             //  Clean up
             if (!empty($aFiles)) {
@@ -129,10 +129,7 @@ class Create extends BaseMaker
             }
             rmdir($sPath);
 
-            throw new \Exception(
-                $e->getMessage(),
-                $e->getCode()
-            );
+            throw $e;
         }
     }
 

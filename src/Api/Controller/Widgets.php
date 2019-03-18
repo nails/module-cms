@@ -14,6 +14,7 @@ namespace Nails\Cms\Api\Controller;
 
 use Nails\Api\Controller\Base;
 use Nails\Api\Exception\ApiException;
+use Nails\Common\Exception\NailsException;
 use Nails\Factory;
 
 class Widgets extends Base
@@ -106,7 +107,7 @@ class Widgets extends Base
         $oWidget      = $oWidgetModel->getBySlug($sWidgetSlug);
 
         if (!$oWidget) {
-            throw new \Exception('"' . $sWidgetSlug . '" is not a valid widget.', 400);
+            throw new NailsException('"' . $sWidgetSlug . '" is not a valid widget.', 400);
         }
 
         return Factory::factory('ApiResponse', 'nails/module-api')

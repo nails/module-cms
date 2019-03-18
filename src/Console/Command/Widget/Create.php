@@ -3,6 +3,7 @@
 namespace Nails\Cms\Console\Command\Widget;
 
 use Nails\Cms\Exception\Console\WidgetExistsException;
+use Nails\Common\Exception\NailsException;
 use Nails\Console\Command\BaseMaker;
 use Nails\Factory;
 use Symfony\Component\Console\Input\InputArgument;
@@ -136,9 +137,13 @@ class Create extends BaseMaker
                     $sWriteFile = !empty($sFile[1]) ? $sFile[1] : '';
 
                     if (empty($sReadFile)) {
-                        throw new \Exception('File was passed as an array but could not determine the file to read!');
+                        throw new NailsException(
+                            'File was passed as an array but could not determine the file to read!'
+                        );
                     } elseif (empty($sWriteFile)) {
-                        throw new \Exception('File was passed as an array but could not determine the file to write!');
+                        throw new NailsException(
+                            'File was passed as an array but could not determine the file to write!'
+                        );
                     }
 
                 } else {
@@ -153,7 +158,7 @@ class Create extends BaseMaker
 
         } catch (WidgetExistsException $e) {
             //  Do not clean up (delete existing widget)!
-            throw new \Exception($e->getMessage(), $e->getCode());
+            throw $e;
         } catch (\Exception $e) {
             //  Clean up
             if (!empty($aFiles)) {
@@ -168,7 +173,7 @@ class Create extends BaseMaker
             }
             rmdir($sPath);
 
-            throw new \Exception($e->getMessage(), $e->getCode());
+            throw $e;
         }
     }
 
