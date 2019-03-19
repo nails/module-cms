@@ -13,10 +13,16 @@
 namespace Nails\Cms\Model;
 
 use Nails\Common\Model\Base;
+use Nails\Common\Service\Database;
 use Nails\Factory;
 
 class Menu extends Base
 {
+    /**
+     * The Database service
+     *
+     * @var Database
+     */
     private $oDb;
 
     // --------------------------------------------------------------------------
@@ -46,11 +52,11 @@ class Menu extends Base
      * This method applies the conditionals which are common across the get_*()
      * methods and the count() method.
      *
-     * @param array $data Data passed from the calling method
+     * @param array $aData Data passed from the calling method
      *
      * @return void
      **/
-    protected function getCountCommon(array $data = [])
+    protected function getCountCommon(array $aData = [])
     {
         $this->oDb->select($this->tableAlias . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
         $this->oDb->join(
@@ -66,24 +72,23 @@ class Menu extends Base
 
         // --------------------------------------------------------------------------
 
-        if (!empty($data['keywords'])) {
+        if (!empty($aData['keywords'])) {
 
-            if (empty($data['or_like'])) {
-
-                $data['or_like'] = [];
+            if (empty($aData['or_like'])) {
+                $aData['or_like'] = [];
             }
 
-            $data['or_like'][] = [
+            $aData['or_like'][] = [
                 'column' => $this->tableAlias . '.label',
-                'value'  => $data['keywords'],
+                'value'  => $aData['keywords'],
             ];
-            $data['or_like'][] = [
+            $aData['or_like'][] = [
                 'column' => $this->tableAlias . '.description',
-                'value'  => $data['keywords'],
+                'value'  => $aData['keywords'],
             ];
         }
 
-        parent::getCountCommon($data);
+        parent::getCountCommon($aData);
     }
 
     // --------------------------------------------------------------------------
@@ -92,12 +97,12 @@ class Menu extends Base
      * Formats a single object
      *
      * The getAll() method iterates over each returned item with this method so as to
-     * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
+     * correctly format the output. Use this to cast integers and bools and/or organise data into objects.
      *
      * @param  object $oObj      A reference to the object being formatted.
      * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
      * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
-     * @param  array  $aBools    Fields which should be cast as booleans if not null
+     * @param  array  $aBools    Fields which should be cast as bools if not null
      * @param  array  $aFloats   Fields which should be cast as floats if not null
      *
      * @return void
@@ -109,16 +114,16 @@ class Menu extends Base
         array $aBools = [],
         array $aFloats = []
     ) {
-
         parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
 
-        $oTemp              = new \stdClass();
-        $oTemp->id          = (int) $oObj->modified_by;
-        $oTemp->email       = $oObj->email;
-        $oTemp->first_name  = $oObj->first_name;
-        $oTemp->last_name   = $oObj->last_name;
-        $oTemp->gender      = $oObj->gender;
-        $oTemp->profile_img = $oObj->profile_img ? (int) $oObj->profile_img : null;
+        $oTemp = (object) [
+            'id'          => (int) $oObj->modified_by,
+            'email'       => $oObj->email,
+            'first_name'  => $oObj->first_name,
+            'last_name'   => $oObj->last_name,
+            'gender'      => $oObj->gender,
+            'profile_img' => (int) $oObj->profile_img ?: null,
+        ];
 
         $oObj->modified_by = $oTemp;
 
@@ -139,28 +144,26 @@ class Menu extends Base
     /**
      * Gets the items of an individual menu
      *
-     * @param  int     $menuId The Menu's ID
-     * @param  boolean $nested Whether to nest the menu items or not
+     * @param  int  $iMenuId The Menu's ID
+     * @param  bool $bNested Whether to nest the menu items or not
      *
      * @return array
      */
-    public function getMenuItems($menuId, $nested = false)
+    public function getMenuItems($iMenuId, $bNested = false)
     {
-        $this->oDb->where('menu_id', $menuId);
+        $this->oDb->where('menu_id', $iMenuId);
         $this->oDb->order_by('order');
-        $items = $this->oDb->get($this->table_item)->result();
+        $aItems = $this->oDb->get($this->table_item)->result();
 
-        foreach ($items as $i) {
-
-            $this->formatObjectItem($i);
+        foreach ($aItems as &$oItem) {
+            $this->formatObjectItem($oItem);
         }
 
-        if ($nested) {
-
-            $items = $this->nestItems($items);
+        if ($bNested) {
+            $aItems = $this->nestItems($aItems);
         }
 
-        return $items;
+        return $aItems;
     }
 
     // --------------------------------------------------------------------------
@@ -168,32 +171,29 @@ class Menu extends Base
     /**
      * Format a menu item
      *
-     * @param  stdClass &$obj The menu item to format
+     * @param  \stdClass &$oObj The menu item to format
      *
      * @return voud
      */
-    protected function formatObjectItem(&$obj)
+    protected function formatObjectItem(&$oObj)
     {
-        parent::formatObject($obj);
+        parent::formatObject($oObj);
 
         // --------------------------------------------------------------------------
 
-        $obj->page_id = $obj->page_id ? (int) $obj->page_id : null;
+        $oObj->page_id = $oObj->page_id ? (int) $oObj->page_id : null;
 
         //  If the menu is tied to a page then fetch that page's URL
-        if ($obj->page_id) {
-
-            $oPageModel   = Factory::model('Page', 'nails/module-cms');
-            $obj->pageUrl = $oPageModel->getUrl($obj->page_id);
-
+        if ($oObj->page_id) {
+            $oPageModel    = Factory::model('Page', 'nails/module-cms');
+            $oObj->pageUrl = $oPageModel->getUrl($oObj->page_id);
         } else {
-
-            $obj->pageUrl = null;
+            $oObj->pageUrl = null;
         }
 
         // --------------------------------------------------------------------------
 
-        unset($obj->menu_id);
+        unset($oObj->menu_id);
     }
 
     // --------------------------------------------------------------------------
@@ -201,34 +201,30 @@ class Menu extends Base
     /**
      * Creates a new object
      *
-     * @param  array   $data         The data to create the object with
-     * @param  boolean $returnObject Whether to return just the new ID or the full object
+     * @param  array $aData         The data to create the object with
+     * @param  bool  $bReturnObject Whether to return just the new ID or the full object
      *
      * @return mixed
      */
-    public function create(array $data = [], $returnObject = false)
+    public function create(array $aData = [], $bReturnObject = false)
     {
         $this->oDb->trans_begin();
 
-        if (isset($data['items'])) {
-
-            $items = $data['items'];
-            unset($data['items']);
+        if (isset($aData['items'])) {
+            $items = $aData['items'];
+            unset($aData['items']);
         }
 
-        $data['slug'] = $this->generateSlug($data['label']);
+        $aData['slug'] = $this->generateSlug($aData['label']);
 
-        $result = parent::create($data, $returnObject);
+        $result = parent::create($aData, $bReturnObject);
 
         if ($result && $items) {
 
-            if ($returnObject) {
-
-                $menuId = $result->id;
-
+            if ($bReturnObject) {
+                $iMenuId = $result->id;
             } else {
-
-                $menuId = $result;
+                $iMenuId = $result;
             }
 
             /**
@@ -242,25 +238,24 @@ class Menu extends Base
             $this->table      = $this->table_item;
             $this->tableAlias = $this->table_item_prefix;
 
-            $newIds  = [];
-            $counter = 0;
+            $newIds   = [];
+            $iCounter = 0;
 
             foreach ($items as $item) {
 
-                $data            = [];
-                $data['menu_id'] = $menuId;
-                $data['page_id'] = !empty($item['page_id']) ? $item['page_id'] : null;
-                $data['url']     = !empty($item['url']) ? $item['url'] : null;
-                $data['label']   = !empty($item['label']) ? $item['label'] : null;
-                $data['order']   = $counter;
+                $aData = [
+                    'menu_id' => $iMenuId,
+                    'page_id' => !empty($item['page_id']) ? $item['page_id'] : null,
+                    'url'     => !empty($item['url']) ? $item['url'] : null,
+                    'label'   => !empty($item['label']) ? $item['label'] : null,
+                    'order'   => $iCounter,
+                ];
 
                 /**
                  * Is both a page_id _and_ url set? If so, complain
                  */
-
-                if (!empty($data['page_id']) && !empty($data['url'])) {
-
-                    $this->setError('Can only set a URL or a CMS Page for item #' . ($counter + 1) . ', not both.');
+                if (!empty($aData['page_id']) && !empty($aData['url'])) {
+                    $this->setError('Can only set a URL or a CMS Page for item #' . ($iCounter + 1) . ', not both.');
                     $this->oDb->trans_rollback();
                     return false;
                 }
@@ -274,35 +269,33 @@ class Menu extends Base
 
                 if (!empty($item['parent_id']) && is_numeric($item['parent_id'])) {
 
-                    $data['parent_id'] = $item['parent_id'];
+                    $aData['parent_id'] = $item['parent_id'];
 
                 } elseif (!empty($item['parent_id'])) {
 
-                    $parentId          = $item['parent_id'];
-                    $data['parent_id'] = !empty($newIds[$parentId]) ? $newIds[$parentId] : null;
+                    $parentId           = $item['parent_id'];
+                    $aData['parent_id'] = !empty($newIds[$parentId]) ? $newIds[$parentId] : null;
 
-                    if (empty($data['parent_id'])) {
-
-                        $this->setError('Failed to determine the parent item of item #' . ($counter + 1));
+                    if (empty($aData['parent_id'])) {
+                        $this->setError('Failed to determine the parent item of item #' . ($iCounter + 1));
                         $this->oDb->trans_rollback();
                         return false;
                     }
                 }
 
-                $result = parent::create($data);
+                $result = parent::create($aData);
 
                 if (!$result) {
 
-                    $this->setError('Failed to create item #' . ($counter + 1));
+                    $this->setError('Failed to create item #' . ($iCounter + 1));
                     $this->oDb->trans_rollback();
                     return false;
 
                 } else {
-
                     $newIds[$item['id']] = $result;
                 }
 
-                $counter++;
+                $iCounter++;
             }
 
             //  Reset the table and table prefix
@@ -313,11 +306,8 @@ class Menu extends Base
             $this->oDb->trans_commit();
 
         } elseif ($result) {
-
             $this->oDb->trans_commit();
-
         } else {
-
             $this->oDb->trans_rollback();
         }
 
@@ -328,26 +318,26 @@ class Menu extends Base
 
     /**
      * Updates an existing object
+     *
      * @todo Add transactions
      *
-     * @param int   $id   The ID of the object to update
-     * @param array $data The data to update the object with
+     * @param int   $id    The ID of the object to update
+     * @param array $aData The data to update the object with
      *
-     * @return boolean
+     * @return bool
      **/
-    public function update($id, array $data = [])
+    public function update($id, array $aData = [])
     {
         $this->oDb->trans_begin();
 
-        if (isset($data['items'])) {
-
-            $items = $data['items'];
-            unset($data['items']);
+        if (isset($aData['items'])) {
+            $items = $aData['items'];
+            unset($aData['items']);
         }
 
-        $data['slug'] = $this->generateSlug($data['label'], '', '', null, null, $id);
+        $aData['slug'] = $this->generateSlug($aData['label'], '', '', null, null, $id);
 
-        $result = parent::update($id, $data);
+        $result = parent::update($id, $aData);
 
         if ($result && $items) {
 
@@ -362,25 +352,24 @@ class Menu extends Base
             $this->table      = $this->table_item;
             $this->tableAlias = $this->table_item_prefix;
 
-            $idsUpdated = [];
-            $newIds     = [];
-            $counter    = 0;
+            $aIdsUpdated = [];
+            $newIds      = [];
+            $iCounter    = 0;
 
             foreach ($items as $item) {
 
-                $data            = [];
-                $data['page_id'] = !empty($item['page_id']) ? $item['page_id'] : null;
-                $data['url']     = !empty($item['url']) ? $item['url'] : null;
-                $data['label']   = !empty($item['label']) ? $item['label'] : null;
-                $data['order']   = $counter;
+                $aData = [
+                    'page_id' => !empty($item['page_id']) ? $item['page_id'] : null,
+                    'url'     => !empty($item['url']) ? $item['url'] : null,
+                    'label'   => !empty($item['label']) ? $item['label'] : null,
+                    'order'   => $iCounter,
+                ];
 
                 /**
                  * Is both a page_id _and_ url set? If so, complain
                  */
-
-                if (!empty($data['page_id']) && !empty($data['url'])) {
-
-                    $this->setError('Can only set a URL or a CMS Page for item #' . ($counter + 1) . ', not both.');
+                if (!empty($aData['page_id']) && !empty($aData['url'])) {
+                    $this->setError('Can only set a URL or a CMS Page for item #' . ($iCounter + 1) . ', not both.');
                     $this->oDb->trans_rollback();
                     return false;
                 }
@@ -391,26 +380,23 @@ class Menu extends Base
                  * _after_ their parents, so we can assume that the parent's [newly created]
                  * ID is in $newIds - if it's not, then bugger,
                  */
-
                 if (!empty($item['parent_id']) && is_numeric($item['parent_id'])) {
 
-                    $data['parent_id'] = $item['parent_id'];
+                    $aData['parent_id'] = $item['parent_id'];
 
                 } elseif (!empty($item['parent_id'])) {
 
-                    $parentId          = $item['parent_id'];
-                    $data['parent_id'] = !empty($newIds[$parentId]) ? $newIds[$parentId] : null;
+                    $parentId           = $item['parent_id'];
+                    $aData['parent_id'] = !empty($newIds[$parentId]) ? $newIds[$parentId] : null;
 
-                    if (empty($data['parent_id'])) {
-
-                        $this->setError('Failed to determine the parent item of item #' . ($counter + 1));
+                    if (empty($aData['parent_id'])) {
+                        $this->setError('Failed to determine the parent item of item #' . ($iCounter + 1));
                         $this->oDb->trans_rollback();
                         return false;
                     }
 
                 } else {
-
-                    $data['parent_id'] = null;
+                    $aData['parent_id'] = null;
                 }
 
                 /**
@@ -422,48 +408,46 @@ class Menu extends Base
                 //  Update or create? If create remember and save ID
                 if (!empty($item['id']) && is_numeric($item['id'])) {
 
-                    $result = parent::update($item['id'], $data);
+                    $result = parent::update($item['id'], $aData);
 
                     if (!$result) {
 
-                        $this->setError('Failed to update item #' . ($counter + 1));
+                        $this->setError('Failed to update item #' . ($iCounter + 1));
                         $this->oDb->trans_rollback();
                         return false;
 
                     } else {
-
-                        $idsUpdated[] = $item['id'];
+                        $aIdsUpdated[] = $item['id'];
                     }
 
                 } else {
 
-                    $data['menu_id'] = $id;
-                    $result          = parent::create($data);
+                    $aData['menu_id'] = $id;
+                    $result           = parent::create($aData);
 
                     if (!$result) {
 
-                        $this->setError('Failed to create item #' . ($counter + 1));
+                        $this->setError('Failed to create item #' . ($iCounter + 1));
                         $this->oDb->trans_rollback();
                         return false;
 
                     } else {
 
-                        $idsUpdated[]        = $result;
+                        $aIdsUpdated[]       = $result;
                         $newIds[$item['id']] = $result;
                     }
                 }
 
-                $counter++;
+                $iCounter++;
             }
 
             //  Remove any items which weren't updated or created
-            $idsUpdated = array_filter($idsUpdated);
-            $idsUpdated = array_unique($idsUpdated);
+            $aIdsUpdated = array_filter($aIdsUpdated);
+            $aIdsUpdated = array_unique($aIdsUpdated);
 
-            if ($idsUpdated) {
-
+            if ($aIdsUpdated) {
                 $this->oDb->where('menu_id', $id);
-                $this->oDb->where_not_in('id', $idsUpdated);
+                $this->oDb->where_not_in('id', $aIdsUpdated);
                 $this->oDb->delete($this->table);
             }
 
@@ -475,11 +459,8 @@ class Menu extends Base
             $this->oDb->trans_commit();
 
         } elseif ($result) {
-
             $this->oDb->trans_commit();
-
         } else {
-
             $this->oDb->trans_rollback();
         }
 
@@ -492,24 +473,22 @@ class Menu extends Base
      * Nests menu items
      * Hat tip to Timur; http://stackoverflow.com/a/9224696/789224
      *
-     * @param  stdClass &$list  The list to nest
-     * @param  int      $parent The parent list item's ID
+     * @param  \stdClass &$list      The list to nest
+     * @param  int        $iParentId The parent list item's ID
      *
      * @return array
      */
-    protected function nestItems(&$list, $parent = null)
+    protected function nestItems(&$list, $iParentId = null)
     {
-        $result = [];
+        $aResult = [];
 
         for ($i = 0, $c = count($list); $i < $c; $i++) {
-
-            if ($list[$i]->parent_id == $parent) {
-
+            if ($list[$i]->parent_id == $iParentId) {
                 $list[$i]->children = $this->nestItems($list, $list[$i]->id);
-                $result[]           = $list[$i];
+                $aResult[]          = $list[$i];
             }
         }
 
-        return $result;
+        return $aResult;
     }
 }
