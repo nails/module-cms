@@ -11,20 +11,20 @@
  */
 
 //  Show some empty rows and columns by default
-$aEmptyTableData = array(
-    array('','','','',''),
-    array('','','','',''),
-    array('','','','',''),
-    array('','','','',''),
-    array('','','','',''),
-    array('','','','',''),
-    array('','','','',''),
-    array('','','','',''),
-    array('','','','',''),
-    array('','','','',''),
-    array('','','','',''),
-    array('','','','','')
-);
+$aEmptyTableData = [
+    ['','','','',''],
+    ['','','','',''],
+    ['','','','',''],
+    ['','','','',''],
+    ['','','','',''],
+    ['','','','',''],
+    ['','','','',''],
+    ['','','','',''],
+    ['','','','',''],
+    ['','','','',''],
+    ['','','','',''],
+    ['','','','',''],
+];
 $sEmptyTableData = json_encode($aEmptyTableData);
 
 ?>
@@ -34,46 +34,9 @@ $sEmptyTableData = json_encode($aEmptyTableData);
 </textarea>
 <?php
 
-$aField                = array();
-$aField['key']         = 'tblAttr';
-$aField['label']       = 'Attributes';
-$aField['default']     = isset(${$aField['key']}) ? ${$aField['key']} : '';
-$aField['placeholder'] = 'Any additional attributes to include in the table.';
-
-echo form_field($aField);
-
-// --------------------------------------------------------------------------
-
-$aField                = array();
-$aField['key']         = 'tblResponsive';
-$aField['label']       = 'Responsive';
-$aField['default']     = isset(${$aField['key']}) ? ${$aField['key']} : '';
-
-echo form_field_boolean($aField);
-
-// --------------------------------------------------------------------------
-
-$aField                = array();
-$aField['key']         = 'tblStriped';
-$aField['label']       = 'Striped';
-$aField['default']     = isset(${$aField['key']}) ? ${$aField['key']} : '';
-
-echo form_field_boolean($aField);
-
-// --------------------------------------------------------------------------
-
-$aField                = array();
-$aField['key']         = 'tblBordered';
-$aField['label']       = 'Bordered';
-$aField['default']     = isset(${$aField['key']}) ? ${$aField['key']} : '';
-
-echo form_field_boolean($aField);
-
-// --------------------------------------------------------------------------
-
-$aField                = array();
-$aField['key']         = 'tblHover';
-$aField['label']       = 'Highlight on Hover';
-$aField['default']     = isset(${$aField['key']}) ? ${$aField['key']} : '';
-
-echo form_field_boolean($aField);
+echo form_field([
+    'key'         => 'tblAttr',
+    'label'       => 'Attributes',
+    'default'     => isset($tblAttr) ? $tblAttr : '',
+    'placeholder' => 'Any additional attributes to include in the table.',
+]);

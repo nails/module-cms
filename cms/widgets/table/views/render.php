@@ -10,38 +10,32 @@
  * @link
  */
 
-$tblData       = !empty($tblData) ? $tblData : '';
-$tblAttr       = !empty($tblAttr) ? $tblAttr : '';
-$tblResponsive = !empty($tblResponsive) ? 'table-responsive' : '';
-$tblStriped    = !empty($tblStriped) ? 'table-striped' : '';
-$tblBordered   = !empty($tblBordered) ? 'table-bordered' : '';
-$tblHover      = !empty($tblHover) ? 'table-hover' : '';
+$sTableData = !empty($tblData) ? $tblData : '';
+$sTblAttr = !empty($tblAttr) ? $tblAttr : '';
 
-if (!empty($tblData)) {
-
-    $tblData = json_decode($tblData);
-
+if (!empty($sTableData)) {
+    $sTableData = json_decode($sTableData);
     ?>
-    <div class="cms-widget cms-widget-table <?=$tblResponsive?>">
-        <table class="table <?=$tblStriped?> <?=$tblBordered?> <?=$tblHover?>" <?=$tblAttr?>>
+    <div class="cms-widget cms-widget-table">
+        <table class="table" <?=$sTblAttr?>>
             <tbody>
             <?php
-
-            foreach ($tblData as $iRowNum => $aColumns) {
-
+            foreach ($sTableData as $iRowNum => $aColumns) {
                 $sOddEven = $iRowNum % 2 ? 'odd' : 'even';
-                echo '<tr data-row="' . $iRowNum . '" class="cms-widget-table-row cms-widgettable-row-' . $sOddEven . '">';
-
+                ?>
+                <tr data-row="<?=$iRowNum?>" class="cms-widget-table-row cms-widgettable-row-<?=$sOddEven?>">
+                    <?php
                     foreach ($aColumns as $iColNum => $sCellData) {
-
-                        echo '<td data-row="' . $iColNum . '" class="cms-widget-table-cell">';
-                        echo $sCellData;
-                        echo '</td>';
+                        ?>
+                        <td data-row="<?=$iColNum?>" class="cms-widget-table-cell">
+                            <?=$sCellData?>
+                        </td>
+                        <?php
                     }
-
-                echo '</tr>';
+                    ?>
+                </tr>
+                <?php
             }
-
             ?>
             </tbody>
         </table>
