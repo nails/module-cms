@@ -1,29 +1,45 @@
 <?php
 
-return array(
-    'models' => array(
-        'Area' => function () {
+return [
+    'services'  => [
+        'Widget'   => function () {
+            if (class_exists('\App\Cms\Service\Widget')) {
+                return new \App\Cms\Service\Widget();
+            } else {
+                return new \Nails\Cms\Service\Widget();
+            }
+        },
+        'Template' => function () {
+            if (class_exists('\App\Cms\Service\Template')) {
+                return new \App\Cms\Service\Template();
+            } else {
+                return new \Nails\Cms\Service\Template();
+            }
+        },
+    ],
+    'models'    => [
+        'Area'   => function () {
             if (class_exists('\App\Cms\Model\Area')) {
                 return new \App\Cms\Model\Area();
             } else {
                 return new \Nails\Cms\Model\Area();
             }
         },
-        'Block' => function () {
+        'Block'  => function () {
             if (class_exists('\App\Cms\Model\Block')) {
                 return new \App\Cms\Model\Block();
             } else {
                 return new \Nails\Cms\Model\Block();
             }
         },
-        'Menu' => function () {
+        'Menu'   => function () {
             if (class_exists('\App\Cms\Model\Menu')) {
                 return new \App\Cms\Model\Menu();
             } else {
                 return new \Nails\Cms\Model\Menu();
             }
         },
-        'Page' => function () {
+        'Page'   => function () {
             if (class_exists('\App\Cms\Model\Page')) {
                 return new \App\Cms\Model\Page();
             } else {
@@ -37,30 +53,16 @@ return array(
                 return new \Nails\Cms\Model\Slider();
             }
         },
-        'Widget' => function () {
-            if (class_exists('\App\Cms\Model\Widget')) {
-                return new \App\Cms\Model\Widget();
-            } else {
-                return new \Nails\Cms\Model\Widget();
-            }
-        },
-        'Template' => function () {
-            if (class_exists('\App\Cms\Model\Template')) {
-                return new \App\Cms\Model\Template();
-            } else {
-                return new \Nails\Cms\Model\Template();
-            }
-        }
-    ),
-    'factories' => array(
-        'TemplateGroup' => function () {
+    ],
+    'factories' => [
+        'TemplateGroup'  => function () {
             if (class_exists('\App\Cms\Template\TemplateGroup')) {
                 return new \App\Cms\Template\TemplateGroup();
             } else {
                 return new \Nails\Cms\Template\TemplateGroup();
             }
         },
-        'TemplateArea' => function () {
+        'TemplateArea'   => function () {
             if (class_exists('\App\Cms\Template\TemplateArea')) {
                 return new \App\Cms\Template\TemplateArea();
             } else {
@@ -74,12 +76,12 @@ return array(
                 return new \Nails\Cms\Template\TemplateOption();
             }
         },
-        'WidgetGroup' => function () {
+        'WidgetGroup'    => function () {
             if (class_exists('\App\Cms\Widget\WidgetGroup')) {
                 return new \App\Cms\Widget\WidgetGroup();
             } else {
                 return new \Nails\Cms\Widget\WidgetGroup();
             }
-        }
-    )
-);
+        },
+    ],
+];

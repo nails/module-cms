@@ -49,14 +49,15 @@ class Widgets extends Base
 
     /**
      * Returns all available widgets
+     *
      * @return array
      */
     public function getIndex()
     {
-        $oWidgetModel  = Factory::model('Widget', 'nails/module-cms');
-        $oAsset        = Factory::service('Asset');
-        $aWidgets      = [];
-        $aWidgetGroups = $oWidgetModel->getAvailable();
+        $oWidgetService = Factory::service('Widget', 'nails/module-cms');
+        $oAsset         = Factory::service('Asset');
+        $aWidgets       = [];
+        $aWidgetGroups  = $oWidgetService->getAvailable();
 
         $oAsset->clear();
 
@@ -83,57 +84,59 @@ class Widgets extends Base
         $aWidgets = array_values($aWidgets);
 
         return Factory::factory('ApiResponse', 'nails/module-api')
-                      ->setData([
-                          'assets'  => [
-                              'css' => $oAsset->output('CSS', false),
-                              'js'  => $oAsset->output('JS', false),
-                          ],
-                          'widgets' => $aWidgets,
-                      ]);
+            ->setData([
+                'assets'  => [
+                    'css' => $oAsset->output('CSS', false),
+                    'js'  => $oAsset->output('JS', false),
+                ],
+                'widgets' => $aWidgets,
+            ]);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Returns the editor for a particular widget, pre-populated with POST'ed data
+     *
      * @return array
      */
     public function postEditor()
     {
-        $oInput       = Factory::service('Input');
-        $sWidgetSlug  = $oInput->post('slug');
-        $aWidgetData  = $oInput->post('data') ?: [];
-        $oWidgetModel = Factory::model('Widget', 'nails/module-cms');
-        $oWidget      = $oWidgetModel->getBySlug($sWidgetSlug);
+        $oInput         = Factory::service('Input');
+        $sWidgetSlug    = $oInput->post('slug');
+        $aWidgetData    = $oInput->post('data') ?: [];
+        $oWidgetService = Factory::service('Widget', 'nails/module-cms');
+        $oWidget        = $oWidgetService->getBySlug($sWidgetSlug);
 
         if (!$oWidget) {
             throw new NailsException('"' . $sWidgetSlug . '" is not a valid widget.', 400);
         }
 
         return Factory::factory('ApiResponse', 'nails/module-api')
-                      ->setData([
-                          'editor' => $oWidget->getEditor($aWidgetData),
-                      ]);
+            ->setData([
+                'editor' => $oWidget->getEditor($aWidgetData),
+            ]);
     }
 
     // --------------------------------------------------------------------------
 
     /**
      * Returns the editors for all POST'ed widgets, pre-populated with data
+     *
      * @return array
      */
     public function postEditors()
     {
-        $oInput       = Factory::service('Input');
-        $aWidgetData  = json_decode($oInput->post('data')) ?: [];
-        $oWidgetModel = Factory::model('Widget', 'nails/module-cms');
-        $aOut         = [];
+        $oInput         = Factory::service('Input');
+        $aWidgetData    = json_decode($oInput->post('data')) ?: [];
+        $oWidgetService = Factory::service('Widget', 'nails/module-cms');
+        $aOut           = [];
 
         foreach ($aWidgetData as $oData) {
 
             if (!empty($oData->slug)) {
 
-                $oWidget = $oWidgetModel->getBySlug($oData->slug);
+                $oWidget = $oWidgetService->getBySlug($oData->slug);
 
                 if ($oWidget) {
 
@@ -161,6 +164,6 @@ class Widgets extends Base
         }
 
         return Factory::factory('ApiResponse', 'nails/module-api')
-                      ->setData($aOut);
+            ->setData($aOut);
     }
 }

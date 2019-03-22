@@ -346,8 +346,8 @@ class Page extends Base
      */
     public function render($sTemplate, $oTemplateData = [], $oTemplateOptions = [])
     {
-        $oTemplateModel = Factory::model('Template', 'nails/module-cms');
-        $oTemplate      = $oTemplateModel->getBySlug($sTemplate, 'RENDER');
+        $oTemplateService = Factory::service('Template', 'nails/module-cms');
+        $oTemplate        = $oTemplateService->getBySlug($sTemplate, 'RENDER');
 
         if (!$oTemplate) {
             $this->setError('"' . $sTemplate . '" is not a valid template.');
@@ -664,9 +664,9 @@ class Page extends Base
      * Nests pages
      * Hat tip to Timur; http://stackoverflow.com/a/9224696/789224
      *
-     * @param  array   &$list    The pages to nest
-     * @param  int     $parentId The parent ID of the page
-     * @param  boolean $useDraft Whether to use published data or draft data
+     * @param  array   &$list     The pages to nest
+     * @param  int      $parentId The parent ID of the page
+     * @param  boolean  $useDraft Whether to use published data or draft data
      *
      * @return array
      */
@@ -693,9 +693,9 @@ class Page extends Base
     /**
      * Find the parents of a page
      *
-     * @param  int       $parentId   The page to find parents for
-     * @param  \stdClass &$source    The source page
-     * @param  string    $sSeparator The separator to use
+     * @param  int        $parentId   The page to find parents for
+     * @param  \stdClass &$source     The source page
+     * @param  string     $sSeparator The separator to use
      *
      * @return string
      */

@@ -351,7 +351,7 @@ abstract class TemplateBase
         //  Process each widget area and render the HTML
         $aWidgetAreas  = $this->getWidgetAreas();
         $aRenderedData = [];
-        $oWidgetModel  = Factory::model('Widget', 'nails/module-cms');
+        $oWidgetService  = Factory::service('Widget', 'nails/module-cms');
 
         foreach ($aWidgetAreas as $sAreaSlug => $oWidgetArea) {
 
@@ -365,7 +365,7 @@ abstract class TemplateBase
                 if (!property_exists($oWidgetData, 'data')) {
                     $oWidgetData->data = [];
                 }
-                $oWidget = $oWidgetModel->getBySlug($oWidgetData->slug, 'RENDER');
+                $oWidget = $oWidgetService->getBySlug($oWidgetData->slug, 'RENDER');
                 if ($oWidget) {
                     $aRenderedData[$sAreaSlug] .= $oWidget->render((array) $oWidgetData->data);
                 }

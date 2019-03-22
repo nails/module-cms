@@ -254,10 +254,10 @@ class Blocks extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Fetch data
-        $oLanguageModel = Factory::model('Language');
+        $oLanguageService = Factory::service('Language');
 
-        $this->data['languages']    = $oLanguageModel->getAllEnabledFlat();
-        $this->data['default_code'] = $oLanguageModel->getDefaultCode();
+        $this->data['languages']    = $oLanguageService->getAllEnabledFlat();
+        $this->data['default_code'] = $oLanguageService->getDefaultCode();
 
         // --------------------------------------------------------------------------
 

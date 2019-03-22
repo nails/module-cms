@@ -20,6 +20,7 @@ class Settings extends BaseAdmin
 {
     /**
      * Announces this controller's navGroups
+     *
      * @return \Nails\Admin\Nav
      */
     public static function announce()
@@ -39,6 +40,7 @@ class Settings extends BaseAdmin
 
     /**
      * Returns an array of permissions which can be configured for the user
+     *
      * @return array
      */
     public static function permissions(): array
@@ -54,6 +56,7 @@ class Settings extends BaseAdmin
 
     /**
      * Manage Email settings
+     *
      * @return void
      */
     public function index()
@@ -82,13 +85,13 @@ class Settings extends BaseAdmin
 
                 $oDb->trans_begin();
 
-                $bRollback        = false;
-                $oAppSettingModel = Factory::model('AppSetting');
+                $bRollback          = false;
+                $oAppSettingService = Factory::service('AppSetting');
 
                 //  Normal settings
-                if (!$oAppSettingModel->set($aSettings, 'nails/module-cms')) {
+                if (!$oAppSettingService->set($aSettings, 'nails/module-cms')) {
 
-                    $sError    = $oAppSettingModel->lastError();
+                    $sError    = $oAppSettingService->lastError();
                     $bRollback = true;
                 }
 

@@ -1,16 +1,16 @@
 <?php
 
 /**
- * This model handle CMS Widgets
+ * This service handle CMS Widgets
  *
  * @package     Nails
  * @subpackage  module-cms
- * @category    Model
+ * @category    Service
  * @author      Nails Dev Team
  * @link
  */
 
-namespace Nails\Cms\Model;
+namespace Nails\Cms\Service;
 
 use Nails\Components;
 use Nails\Cms\Exception\Widget\NotFoundException;

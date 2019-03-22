@@ -139,10 +139,10 @@ class Area extends Base
                 }
             }
 
-            $oWidgetModel = Factory::model('Widget', 'nails/module-cms');
+            $oWidgetService = Factory::service('Widget', 'nails/module-cms');
 
             foreach ($aWidgetData as $oWidgetData) {
-                $oWidget = $oWidgetModel->getBySlug($oWidgetData->slug);
+                $oWidget = $oWidgetService->getBySlug($oWidgetData->slug);
                 if (!empty($oWidget)) {
                     $sOut .= $oWidget->render((array) $oWidgetData->data);
                 } elseif (Environment::not(Environment::ENV_PROD)) {

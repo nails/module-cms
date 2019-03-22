@@ -19,14 +19,15 @@ use Nails\Cms\Controller\BaseAdmin;
 class Pages extends BaseAdmin
 {
     protected $oPageModel;
-    protected $oWidgetModel;
-    protected $oTemplateModel;
+    protected $oWidgetService;
+    protected $oTemplateService;
     protected $iHomepageId;
 
     // --------------------------------------------------------------------------
 
     /**
      * Announces this controller's navGroups
+     *
      * @return \Nails\Admin\Nav
      */
     public static function announce()
@@ -58,6 +59,7 @@ class Pages extends BaseAdmin
 
     /**
      * Returns an array of permissions which can be configured for the user
+     *
      * @return array
      */
     public static function permissions(): array
@@ -87,9 +89,9 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load common items
-        $this->oPageModel     = Factory::model('Page', 'nails/module-cms');
-        $this->oWidgetModel   = Factory::model('Widget', 'nails/module-cms');
-        $this->oTemplateModel = Factory::model('Template', 'nails/module-cms');
+        $this->oPageModel       = Factory::model('Page', 'nails/module-cms');
+        $this->oWidgetService   = Factory::service('Widget', 'nails/module-cms');
+        $this->oTemplateService = Factory::service('Template', 'nails/module-cms');
 
         //  Note the ID of the homepage
         $this->iHomepageId         = appSetting('homepage', 'nails/module-cms');
@@ -100,6 +102,7 @@ class Pages extends BaseAdmin
 
     /**
      * Browse CMS Pages
+     *
      * @return void
      */
     public function index()
@@ -168,6 +171,7 @@ class Pages extends BaseAdmin
 
     /**
      * Create a new CMS Page
+     *
      * @return void
      */
     public function create()
@@ -252,7 +256,7 @@ class Pages extends BaseAdmin
 
         //  Get data, available templates & widgets
         $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
-        $this->data['templates']       = $this->oTemplateModel->getAvailable('EDITOR');
+        $this->data['templates']       = $this->oTemplateService->getAvailable('EDITOR');
 
         $aTemplatesJson = [];
         foreach ($this->data['templates'] as $oTemplateGroup) {
@@ -291,7 +295,7 @@ class Pages extends BaseAdmin
             'var widgetEditor = new window.WidgetEditor.default();',
             'widgetEditor.construct();',
             'var templates = [' . implode(',', $aTemplatesJson) . ']',
-            'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);'
+            'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);',
         ]), 'JS');
 
         // --------------------------------------------------------------------------
@@ -303,6 +307,7 @@ class Pages extends BaseAdmin
 
     /**
      * Edit a CMS Page
+     *
      * @return void
      */
     public function edit()
@@ -398,7 +403,7 @@ class Pages extends BaseAdmin
         //  Get data, available templates & widgets
         $this->data['cmspage']         = $oPage;
         $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
-        $this->data['templates']       = $this->oTemplateModel->getAvailable('EDITOR');
+        $this->data['templates']       = $this->oTemplateService->getAvailable('EDITOR');
 
         $aTemplatesJson = [];
         foreach ($this->data['templates'] as $oTemplateGroup) {
@@ -441,7 +446,7 @@ class Pages extends BaseAdmin
             'var widgetEditor = new window.WidgetEditor.default();',
             'widgetEditor.construct();',
             'var templates = [' . implode(',', $aTemplatesJson) . ']',
-            'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);'
+            'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);',
         ]), 'JS');
 
         // --------------------------------------------------------------------------
@@ -453,6 +458,7 @@ class Pages extends BaseAdmin
 
     /**
      * Publish a CMS Page
+     *
      * @return void
      */
     public function publish()
@@ -497,6 +503,7 @@ class Pages extends BaseAdmin
 
     /**
      * Delete a CMS Page
+     *
      * @return void
      */
     public function delete()
@@ -529,6 +536,7 @@ class Pages extends BaseAdmin
 
     /**
      * Restore a CMS Page
+     *
      * @return void
      */
     public function restore()

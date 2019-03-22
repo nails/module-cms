@@ -16,7 +16,9 @@ if (!function_exists('cmsBlock')) {
 
     /**
      * Returns a block's value
+     *
      * @param  string $sSlug The block's slug
+     *
      * @return string
      */
     function cmsBlock($sSlug)
@@ -39,7 +41,9 @@ if (!function_exists('cmsSlider')) {
 
     /**
      * Returns a CMS slider
+     *
      * @param  string $sIdSlug The slider's ID or slug
+     *
      * @return mixed
      */
     function cmsSlider($sIdSlug)
@@ -55,7 +59,9 @@ if (!function_exists('cmsMenu')) {
 
     /**
      * Returns a CMS menu
+     *
      * @param  string|integer $mIdSlug The menu's ID or slug
+     *
      * @return mixed
      */
     function cmsMenu($mIdSlug)
@@ -71,13 +77,15 @@ if (!function_exists('cmsMenuNested')) {
 
     /**
      * Returns a CMS menu
+     *
      * @param  string|integer $mIdSlug The menu's ID or slug
+     *
      * @return mixed
      */
     function cmsMenuNested($mIdSlug)
     {
         $oMenuModel = Factory::model('Block', 'nails/module-cms');
-        $aData      = array('nestItems' => true);
+        $aData      = ['nestItems' => true];
         return $oMenuModel->getByIdOrSlug($mIdSlug, $aData);
     }
 }
@@ -88,7 +96,9 @@ if (!function_exists('cmsPage')) {
 
     /**
      * Returns a CMS page
+     *
      * @param  string $mIdSlug The page's ID or slug
+     *
      * @return mixed
      */
     function cmsPage($mIdSlug)
@@ -104,7 +114,9 @@ if (!function_exists('cmsArea')) {
 
     /**
      * Returns a rendered CMS area
+     *
      * @param  string $mIdSlug The area's ID or slug
+     *
      * @return string
      */
     function cmsArea($mIdSlug)
@@ -120,7 +132,9 @@ if (!function_exists('cmsAreaWithData')) {
 
     /**
      * Returns a rendered CMS area using the supplied data
+     *
      * @param  array $aData The widget data to use
+     *
      * @return string
      */
     function cmsAreaWithData($aData)
@@ -136,14 +150,16 @@ if (!function_exists('cmsWidget')) {
 
     /**
      * Returns a rendered CMS widget
+     *
      * @param  string $sSlug The widget's slug
      * @param  array  $aData Data to pass to the widget's render function
+     *
      * @return string
      */
-    function cmsWidget($sSlug, $aData = array())
+    function cmsWidget($sSlug, $aData = [])
     {
-        $oWidgetModel = Factory::model('Widget', 'nails/module-cms');
-        $oWidget      = $oWidgetModel->getBySlug($sSlug);
+        $oWidgetService = Factory::service('Widget', 'nails/module-cms');
+        $oWidget        = $oWidgetService->getBySlug($sSlug);
 
         if ($oWidget) {
 
