@@ -1,10 +1,14 @@
+var container, inpData, data, table;
 
-var container, data, table
+function saveChange(inpData, instance) {
+    console.log('saving');
+    inpData.val(JSON.stringify(instance.getData()));
+}
 
 container = $('.handsontable', domElement).get(0);
-inpData   = $('.table-data', domElement);
-data      = JSON.parse(inpData.val());
-table     = new Handsontable(
+inpData = $('.table-data', domElement);
+data = JSON.parse(inpData.val());
+table = new Handsontable(
     container,
     {
         data: data,
@@ -15,7 +19,19 @@ table     = new Handsontable(
         stretchH: 'all',
         columnSorting: false,
         afterChange: function(change, source) {
-            inpData.val(JSON.stringify(this.getData()));
+            saveChange(inpData, this);
+        },
+        afterCreateCol: function(change, source) {
+            saveChange(inpData, this);
+        },
+        afterCreateRow: function(change, source) {
+            saveChange(inpData, this);
+        },
+        afterRemoveCol: function(change, source) {
+            saveChange(inpData, this);
+        },
+        afterRemoveRow: function(change, source) {
+            saveChange(inpData, this);
         }
     }
 );
