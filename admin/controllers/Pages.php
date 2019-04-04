@@ -191,7 +191,7 @@ class Pages extends BaseAdmin
             $oFormValidation->set_rules('parent_id', '', 'is_natural');
             $oFormValidation->set_rules('template', '', 'trim|required');
             $oFormValidation->set_rules('template_data', '', 'trim');
-            $oFormValidation->set_rules('template_options', '', 'is_array');
+            $oFormValidation->set_rules('template_options[]', '', 'is_array');
             $oFormValidation->set_rules('seo_title', '', 'trim|max_length[150]');
             $oFormValidation->set_rules('seo_description', '', 'trim|max_length[300]');
             $oFormValidation->set_rules('seo_keywords', '', 'trim|max_length[150]');
@@ -338,7 +338,7 @@ class Pages extends BaseAdmin
             $oFormValidation->set_rules('parent_id', '', 'is_natural');
             $oFormValidation->set_rules('template', '', 'trim|required');
             $oFormValidation->set_rules('template_data', '', 'trim');
-            $oFormValidation->set_rules('template_options', '', 'is_array');
+            $oFormValidation->set_rules('template_options[]', '', 'is_array');
             $oFormValidation->set_rules('seo_title', '', 'trim|max_length[150]');
             $oFormValidation->set_rules('seo_description', '', 'trim|max_length[300]');
             $oFormValidation->set_rules('seo_keywords', '', 'trim|max_length[150]');
