@@ -291,8 +291,11 @@ class Page extends Base
             // --------------------------------------------------------------------------
 
             //  Rewrite routes
-            $oRoutesService = Factory::service('Routes');
-            $oRoutesService->update();
+            //  If routes are generated with the preview table selected then the routes file will _empty_
+            if ($this->table !== $this->tablePreview) {
+                $oRoutesService = Factory::service('Routes');
+                $oRoutesService->update();
+            }
 
             // --------------------------------------------------------------------------
 
