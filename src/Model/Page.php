@@ -87,7 +87,7 @@ class Page extends Base
      * @return bool
      * @throws NailsException
      */
-    public function update($mIds, array $aData = [])
+    public function update($mIds, array $aData = []): bool
     {
         if (is_array($mIds)) {
             throw new NailsException('This model does not support updating multiple items at once');
@@ -1046,7 +1046,7 @@ class Page extends Base
      *
      * @return boolean
      */
-    public function delete($iId)
+    public function delete($iId): bool
     {
         $oPage = $this->getById($iId);
 
@@ -1124,7 +1124,7 @@ class Page extends Base
      *
      * @return boolean
      */
-    public function destroy($id)
+    public function destroy($id): bool
     {
         //  @TODO: implement this?
         $this->setError('It is not possible to destroy pages using this system.');

@@ -94,11 +94,11 @@ class Slider extends Base
      * The getAll() method iterates over each returned item with this method so as to
      * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
      *
-     * @param  object $oObj      A reference to the object being formatted.
-     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
-     * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
-     * @param  array  $aBools    Fields which should be cast as booleans if not null
-     * @param  array  $aFloats   Fields which should be cast as floats if not null
+     * @param object $oObj      A reference to the object being formatted.
+     * @param array  $aData     The same data array which is passed to _getcount_common, for reference if needed
+     * @param array  $aIntegers Fields which should be cast as integers if numerical and not null
+     * @param array  $aBools    Fields which should be cast as booleans if not null
+     * @param array  $aFloats   Fields which should be cast as floats if not null
      *
      * @return void
      */
@@ -138,7 +138,7 @@ class Slider extends Base
     /**
      * Gets the slides of an individual slider
      *
-     * @param  int $sliderId The Slider's ID
+     * @param int $sliderId The Slider's ID
      *
      * @return array
      */
@@ -161,7 +161,7 @@ class Slider extends Base
     /**
      * Format a slider item
      *
-     * @param  stdClass &$obj The slider item to format
+     * @param stdClass &$obj The slider item to format
      *
      * @return voud
      */
@@ -182,8 +182,8 @@ class Slider extends Base
     /**
      * Creates a new object
      *
-     * @param  array   $data         The data to create the object with
-     * @param  boolean $returnObject Whether to return just the new ID or the full object
+     * @param array $data         The data to create the object with
+     * @param bool  $returnObject Whether to return just the new ID or the full object
      *
      * @return mixed
      */
@@ -265,14 +265,13 @@ class Slider extends Base
 
     /**
      * Updates an existing object
-     * @todo Add transactions
      *
      * @param int   $id   The ID of the object to update
      * @param array $data The data to update the object with
      *
-     * @return boolean
-     **/
-    public function update($id, array $data = [])
+     * @return bool
+     */
+    public function update($id, array $data = []): bool
     {
         $this->oDb->trans_begin();
 

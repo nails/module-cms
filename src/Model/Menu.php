@@ -326,7 +326,7 @@ class Menu extends Base
      *
      * @return bool
      **/
-    public function update($id, array $aData = [])
+    public function update($id, array $aData = []): bool
     {
         $this->oDb->trans_begin();
 
