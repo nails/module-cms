@@ -32,7 +32,7 @@
 
             case 'plaintext':
 
-                echo form_textarea('value', set_value('value', $block->value));
+                echo form_textarea('value', set_value('value', $block->value, false));
                 break;
 
             case 'richtext':
