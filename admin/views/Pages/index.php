@@ -121,7 +121,7 @@
                                 echo anchor(
                                     'admin/cms/pages/delete/' . $oPage->id,
                                     lang('action_delete'),
-                                    'data-body="This will remove the page, and any of it\'s children, from the site." class="confirm btn btn-xs btn-danger"'
+                                    'data-body="This will remove the page, and any of its children, from the site." class="confirm btn btn-xs btn-danger"'
                                 );
                             }
 
