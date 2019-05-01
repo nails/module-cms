@@ -50,16 +50,4 @@ class Events extends Base
      * @param int $iId The Page ID
      */
     const PAGE_UNPUBLISHED = 'PAGE:UNPUBLISHED';
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Returns the namespace for events fired by this module
-     *
-     * @return stirng
-     */
-    public static function getEventNamespace(): string
-    {
-        return 'nails/module-cms';
-    }
 }
