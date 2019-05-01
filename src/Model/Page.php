@@ -301,7 +301,7 @@ class Page extends Base
 
             //  Trigger event
             $oEvent = Factory::service('Event');
-            $oEvent->trigger(Events::PAGE_UPDATED, 'nails/module-cms', [$iId]);
+            $oEvent->trigger(Events::PAGE_UPDATED, Events::getEventNamespace(), [$iId]);
 
             // --------------------------------------------------------------------------
 
@@ -492,7 +492,7 @@ class Page extends Base
 
             //  Trigger event
             $oEvent = Factory::service('Event');
-            $oEvent->trigger(Events::PAGE_PUBLISHED, 'nails/module-cms', [$iId]);
+            $oEvent->trigger(Events::PAGE_PUBLISHED, Events::getEventNamespace(), [$iId]);
 
             // --------------------------------------------------------------------------
 
@@ -1102,7 +1102,7 @@ class Page extends Base
 
             //  Trigger event
             $oEvent = Factory::service('Event');
-            $oEvent->trigger(Events::PAGE_DELETED, 'nails/module-cms', [$iId]);
+            $oEvent->trigger(Events::PAGE_DELETED, Events::getEventNamespace(), [$iId]);
 
             // --------------------------------------------------------------------------
 
