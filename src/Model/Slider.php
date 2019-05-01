@@ -281,7 +281,7 @@ class Slider extends Base
             unset($data['slides']);
         }
 
-        $data['slug'] = $this->generateSlug($data['label'], '', '', null, null, $id);
+        $data['slug'] = $this->generateSlug($data['label'], $id);
 
         $result = parent::update($id, $data);
 

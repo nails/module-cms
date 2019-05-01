@@ -163,10 +163,6 @@ class Page extends Base
 
             $aUpdateData['draft_slug'] = $this->generateSlug(
                 $aUpdateData['draft_title'],
-                $sSlugPrefix,
-                '',
-                null,
-                'draft_slug',
                 $oCurrent->id
             );
 

@@ -335,7 +335,7 @@ class Menu extends Base
             unset($aData['items']);
         }
 
-        $aData['slug'] = $this->generateSlug($aData['label'], '', '', null, null, $id);
+        $aData['slug'] = $this->generateSlug($aData['label'], $id);
 
         $result = parent::update($id, $aData);
 
