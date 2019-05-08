@@ -39,6 +39,7 @@ class Page extends Base
         $this->destructiveDelete = false;
         $this->defaultSortColumn = null;
         $this->searchableFields  = ['draft_title', 'draft_template_data'];
+        $this->tableSlugColumn   = 'draft_slug';
     }
 
     // --------------------------------------------------------------------------
@@ -318,7 +319,7 @@ class Page extends Base
     /**
      * Create a page as normal but do so in the preview table.
      *
-     * @param  array $aData The data to create the preview with
+     * @param array $aData The data to create the preview with
      *
      * @return object
      */
@@ -337,9 +338,9 @@ class Page extends Base
     /**
      * Render a template with the provided widgets and additional data
      *
-     * @param  string $sTemplate        The template to render
-     * @param  array  $oTemplateData    The template data (i.e. areas and widgets)
-     * @param  array  $oTemplateOptions The template options
+     * @param string $sTemplate        The template to render
+     * @param array  $oTemplateData    The template data (i.e. areas and widgets)
+     * @param array  $oTemplateOptions The template options
      *
      * @return mixed                    String (the rendered template) on success, false on failure
      */
@@ -362,7 +363,7 @@ class Page extends Base
     /**
      * Publish a page
      *
-     * @param  int $iId The ID of the page to publish
+     * @param int $iId The ID of the page to publish
      *
      * @return boolean
      */
@@ -599,7 +600,7 @@ class Page extends Base
     /**
      * Gets all pages, nested
      *
-     * @param  boolean $useDraft Whether to use the published or draft version of pages
+     * @param boolean $useDraft Whether to use the published or draft version of pages
      *
      * @return array
      */
@@ -613,8 +614,8 @@ class Page extends Base
     /**
      * Get all pages nested, but as a flat array
      *
-     * @param  string  $sSeparator               The separator to use between pages
-     * @param  boolean $bMurderParentsOfChildren Whether to include parents in the result
+     * @param string  $sSeparator               The separator to use between pages
+     * @param boolean $bMurderParentsOfChildren Whether to include parents in the result
      *
      * @return array
      */
@@ -663,9 +664,9 @@ class Page extends Base
      * Nests pages
      * Hat tip to Timur; http://stackoverflow.com/a/9224696/789224
      *
-     * @param  array   &$list     The pages to nest
-     * @param  int      $parentId The parent ID of the page
-     * @param  boolean  $useDraft Whether to use published data or draft data
+     * @param array   &$list     The pages to nest
+     * @param int      $parentId The parent ID of the page
+     * @param boolean  $useDraft Whether to use published data or draft data
      *
      * @return array
      */
@@ -692,9 +693,9 @@ class Page extends Base
     /**
      * Find the parents of a page
      *
-     * @param  int        $parentId   The page to find parents for
-     * @param  \stdClass &$source     The source page
-     * @param  string     $sSeparator The separator to use
+     * @param int        $parentId   The page to find parents for
+     * @param \stdClass &$source     The source page
+     * @param string     $sSeparator The separator to use
      *
      * @return string
      */
@@ -745,8 +746,8 @@ class Page extends Base
     /**
      * Get the IDs of a page's children
      *
-     * @param  int    $iPageId The ID of the page to look at
-     * @param  string $sFormat How to return the data, one of ID, ID_SLUG, ID_SLUG_TITLE or ID_SLUG_TITLE_PUBLISHED
+     * @param int    $iPageId The ID of the page to look at
+     * @param string $sFormat How to return the data, one of ID, ID_SLUG, ID_SLUG_TITLE or ID_SLUG_TITLE_PUBLISHED
      *
      * @return array
      */
@@ -875,8 +876,8 @@ class Page extends Base
     /**
      * Get the siblings of a page, i.e those with the same parent
      *
-     * @param  int     $id       The page whose siblings to fetch
-     * @param  boolean $useDraft Whether to use published data, or draft data
+     * @param int     $id       The page whose siblings to fetch
+     * @param boolean $useDraft Whether to use published data, or draft data
      *
      * @return array
      */
@@ -949,11 +950,11 @@ class Page extends Base
      * The getAll() method iterates over each returned item with this method so as to
      * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
      *
-     * @param  object $oObj      A reference to the object being formatted.
-     * @param  array  $aData     The same data array which is passed to _getcount_common, for reference if needed
-     * @param  array  $aIntegers Fields which should be cast as integers if numerical and not null
-     * @param  array  $aBools    Fields which should be cast as booleans if not null
-     * @param  array  $aFloats   Fields which should be cast as floats if not null
+     * @param object $oObj      A reference to the object being formatted.
+     * @param array  $aData     The same data array which is passed to _getcount_common, for reference if needed
+     * @param array  $aIntegers Fields which should be cast as integers if numerical and not null
+     * @param array  $aBools    Fields which should be cast as booleans if not null
+     * @param array  $aFloats   Fields which should be cast as floats if not null
      *
      * @return void
      */
@@ -998,8 +999,8 @@ class Page extends Base
         $oObj->draft->template_data        = json_decode($oObj->draft->template_data);
         $oObj->published->template_options = json_decode($oObj->published->template_options);
         $oObj->draft->template_options     = json_decode($oObj->draft->template_options);
-        $oObj->published->breadcrumbs      = json_decode($oObj->published->breadcrumbs);
-        $oObj->draft->breadcrumbs          = json_decode($oObj->draft->breadcrumbs);
+        $oObj->published->breadcrumbs      = json_decode($oObj->published->breadcrumbs) ?: [];
+        $oObj->draft->breadcrumbs          = json_decode($oObj->draft->breadcrumbs) ?: [];
 
         //  Unpublished changes?
         $oObj->has_unpublished_changes = $oObj->is_published && $oObj->draft->hash != $oObj->published->hash;
@@ -1038,7 +1039,7 @@ class Page extends Base
     /**
      * Delete a page and it's children
      *
-     * @param  int $iId The ID of the page to delete
+     * @param int $iId The ID of the page to delete
      *
      * @return boolean
      */
@@ -1116,7 +1117,7 @@ class Page extends Base
     /**
      * Permanently delete a page and it's children
      *
-     * @param  int $id The ID of the page to destroy
+     * @param int $id The ID of the page to destroy
      *
      * @return boolean
      */
@@ -1133,7 +1134,7 @@ class Page extends Base
     /**
      * Get's a preview page by it's ID
      *
-     * @param  integer $iPreviewId The Id of the preview to get
+     * @param integer $iPreviewId The Id of the preview to get
      *
      * @return mixed                 stdClass on success, false on failure
      */
@@ -1162,8 +1163,8 @@ class Page extends Base
     /**
      * Returns the URL of a page
      *
-     * @param  integer $iPageId      The ID of the page to look up
-     * @param  boolean $usePublished Whether to use the `published` data, or the `draft` data
+     * @param integer $iPageId      The ID of the page to look up
+     * @param boolean $usePublished Whether to use the `published` data, or the `draft` data
      *
      * @return mixed                 String on success, false on failure
      */
