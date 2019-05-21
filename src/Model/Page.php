@@ -31,8 +31,6 @@ class Page extends Base
     {
         parent::__construct();
 
-        Factory::helper('directory');
-
         $this->table             = NAILS_DB_PREFIX . 'cms_page';
         $this->tablePreview      = $this->table . '_preview';
         $this->tableAlias        = 'p';

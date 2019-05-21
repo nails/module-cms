@@ -37,7 +37,6 @@ class Widget
             return $this->aLoadedWidgets;
         }
 
-        Factory::helper('directory');
         $aAvailableWidgets = [];
         $aModules          = Components::modules();
 
@@ -50,12 +49,7 @@ class Widget
         foreach ($aModules as $oModule) {
 
             $sWidgetDir = $oModule->path . 'cms/widgets/';
-
-            if (!is_dir($sWidgetDir)) {
-                continue;
-            }
-
-            $aWidgets = directory_map($sWidgetDir, 1);
+            $aWidgets   = directoryMap($sWidgetDir, 1);
             if (!empty($aWidgets)) {
                 foreach ($aWidgets as $sWidgetName) {
                     $sWidgetName       = trim($sWidgetName, DIRECTORY_SEPARATOR);

@@ -69,18 +69,15 @@ class Template
 
         foreach ($this->aTemplateDirs as $aDir) {
 
-            if (is_dir($aDir['path'])) {
+            $aTemplates = directoryMap($aDir['path']);
 
-                $aTemplates = directory_map($aDir['path']);
-
-                foreach ($aTemplates as $sTemplateDir => $aTemplateFiles) {
-                    if (is_file($aDir['path'] . $sTemplateDir . '/template.php')) {
-                        $aAvailableTemplates[] = [
-                            'namespace' => $aDir['namespace'],
-                            'path'      => $aDir['path'],
-                            'name'      => $sTemplateDir,
-                        ];
-                    }
+            foreach ($aTemplates as $sTemplateDir => $aTemplateFiles) {
+                if (is_file($aDir['path'] . $sTemplateDir . '/template.php')) {
+                    $aAvailableTemplates[] = [
+                        'namespace' => $aDir['namespace'],
+                        'path'      => $aDir['path'],
+                        'name'      => $sTemplateDir,
+                    ];
                 }
             }
         }
