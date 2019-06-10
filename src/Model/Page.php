@@ -1133,7 +1133,7 @@ class Page extends Base
 
             $oDb->trans_commit();
 
-        } catch (\Excepton $e) {
+        } catch (\Exception $e) {
             $oDb->trans_rollback();
             $this->setError($e->getMessage());
             return false;
