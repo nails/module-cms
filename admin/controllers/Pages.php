@@ -23,6 +23,7 @@ use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Exception\ValidationException;
 use Nails\Common\Resource;
+use Nails\Common\Service\Asset;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Uri;
@@ -307,7 +308,7 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        //  Assets
+        /** @var Asset $oAsset */
         $oAsset = Factory::service('Asset');
         $oAsset->library('CMSWIDGETEDITOR');
         //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
@@ -458,7 +459,7 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        //  Assets
+        /** @var Asset $oAsset */
         $oAsset = Factory::service('Asset');
         $oAsset->library('CMSWIDGETEDITOR');
         //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
@@ -525,6 +526,12 @@ class Pages extends BaseAdmin
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Safely unpublishes a page
+     *
+     * @throws FactoryException
+     * @throws ModelException
+     */
     public function unpublish()
     {
         if (!userHasPermission('admin:cms:pages:edit')) {
@@ -561,7 +568,7 @@ class Pages extends BaseAdmin
                         $oPage,
                         $oInput->post('child_behaviour')
                     )
-                    ->unpublishHandleRedirects(
+                    ->unpublishDeleteHandleRedirects(
                         $oPage,
                         $oInput->post('redirect_behaviour'),
                         $oInput->post('redirect_url')
@@ -590,12 +597,28 @@ class Pages extends BaseAdmin
 
         unset($this->data['aOtherPages'][$oPage->id]);
 
+        /** @var Asset $oAsset */
+        $oAsset = Factory::service('Asset');
+        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
+        $oAsset->load('admin.pages.unpublish.js', 'nails/module-cms');
+        $oAsset->inline(
+            'var pageUnpublish = new NAILS_Admin_CMS_Pages_Unpublish();',
+            'JS'
+        );
+
         Helper::loadView('unpublish');
     }
 
     // --------------------------------------------------------------------------
 
-    private function unpublishHandleChildren(Resource $oPage, string $sBehaviour)
+    /**
+     * @param Resource $oPage      The page being unpublished
+     * @param string   $sBehaviour The children behaviour
+     *
+     * @return $this
+     * @throws ValidationException
+     */
+    private function unpublishHandleChildren(Resource $oPage, string $sBehaviour): Pages
     {
         $aChildren = $this->oPageModel->getIdsOfChildren($oPage->id);
         if (!empty($aChildren)) {
@@ -621,7 +644,7 @@ class Pages extends BaseAdmin
     // --------------------------------------------------------------------------
 
     /**
-     * @param Resource $oPage      The page being unpublished
+     * @param Resource $oPage      The page being unpublished or deleted
      * @param string   $sBehaviour The redirect behaviour
      * @param string   $sUrl       The URL to redirect to (if using URL based redirects)
      *
@@ -630,7 +653,7 @@ class Pages extends BaseAdmin
      * @throws FactoryException
      * @throws ModelException
      */
-    private function unpublishHandleRedirects(Resource $oPage, string $sBehaviour, string $sUrl): Pages
+    protected function unpublishDeleteHandleRedirects(Resource $oPage, string $sBehaviour, string $sUrl): Pages
     {
         if (Components::exists('nails/module-redirect')) {
             switch ($sBehaviour) {
@@ -691,24 +714,73 @@ class Pages extends BaseAdmin
             unauthorised();
         }
 
-        // --------------------------------------------------------------------------
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
 
-        $oUri     = Factory::service('Uri');
-        $oSession = Factory::service('Session', 'nails/module-auth');
-        $id       = $oUri->segment(5);
-        $page     = $this->oPageModel->getById($id);
+        $iId   = $oUri->segment(5);
+        $oPage = $this->oPageModel->getById($iId);
+        if (empty($oPage)) {
+            show404();
+        }
+        $oPageData = $oPage->is_published ? $oPage->published : $oPage->draft;
 
-        if ($page && !$page->is_deleted) {
-            if ($this->oPageModel->delete($id)) {
-                $oSession->setFlashData('success', 'Page was deleted successfully.');
-            } else {
-                $oSession->setFlashData('error', 'Could not delete page. ' . $this->oPageModel->lastError());
+        if ($oInput->post()) {
+
+            /** @var Database $oDb */
+            $oDb = Factory::service('Database');
+
+            try {
+
+                $oDb->trans_begin();
+
+                //  Delete the parent page
+                if (!$this->oPageModel->delete($oPage->id)) {
+                    throw new NailsException('Failed to delete page. ' . $this->oPageModel->lastError());
+                }
+
+                $this
+                    ->unpublishDeleteHandleRedirects(
+                        $oPage,
+                        $oInput->post('redirect_behaviour'),
+                        $oInput->post('redirect_url')
+                    );
+
+                $oDb->trans_commit();
+
+                /** @var Session $oSession */
+                $oSession = Factory::service('Session', 'nails/module-auth');
+                $oSession->setFlashData('success', 'Page deleted successfully');
+
+                redirect($oInput->post('return_to') ?: 'admin/cms/pages');
+
+            } catch (NailsException $e) {
+                $oDb->trans_rollback();
+                $this->data['error'] = $e->getMessage();
             }
-        } else {
-            $oSession->setFlashData('error', 'Invalid page ID.');
         }
 
-        redirect('admin/cms/pages');
+        $this->data['sReturnTo']   = $oInput->get('return_to') ?: $oInput->post('return_to');
+        $this->data['bRedirects']  = Components::exists('nails/module-redirect');
+        $this->data['oPage']       = $oPage;
+        $this->data['oPageData']   = $oPageData;
+        $this->data['aChildren']   = $this->oPageModel->getIdsOfChildren($oPage->id);
+        $this->data['page']->title = 'Delete "' . $oPageData->title . '"';
+        $this->data['aOtherPages'] = $this->oPageModel->getAllFlat();
+
+        unset($this->data['aOtherPages'][$oPage->id]);
+
+        /** @var Asset $oAsset */
+        $oAsset = Factory::service('Asset');
+        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
+        $oAsset->load('admin.pages.unpublish.js', 'nails/module-cms');
+        $oAsset->inline(
+            'var pageUnpublish = new NAILS_Admin_CMS_Pages_Unpublish();',
+            'JS'
+        );
+
+        Helper::loadView('delete');
     }
 
     // --------------------------------------------------------------------------

@@ -16,6 +16,7 @@ use Nails\Cms\Events;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
+use Nails\Common\Service\Routes;
 use Nails\Factory;
 
 class Page extends Base
@@ -289,15 +290,17 @@ class Page extends Base
             //  Rewrite routes
             //  If routes are generated with the preview table selected then the routes file will _empty_
             if ($this->table !== $this->tablePreview) {
+                /** @var Routes $oRoutesService */
                 $oRoutesService = Factory::service('Routes');
                 $oRoutesService->update();
             }
 
             // --------------------------------------------------------------------------
 
-            //  Trigger event
-            $oEvent = Factory::service('Event');
-            $oEvent->trigger(Events::PAGE_UPDATED, Events::getEventNamespace(), [$iId]);
+            $this->triggerEvent(
+                static::EVENT_UPDATED,
+                [$iId]
+            );
 
             // --------------------------------------------------------------------------
 
@@ -482,13 +485,14 @@ class Page extends Base
 
             // --------------------------------------------------------------------------
 
-            //  Trigger event
-            $oEvent = Factory::service('Event');
-            $oEvent->trigger(Events::PAGE_PUBLISHED, Events::getEventNamespace(), [$iId]);
+            $this->triggerEvent(
+                Events::PAGE_PUBLISHED,
+                [$iId]
+            );
 
             // --------------------------------------------------------------------------
 
-            //  Rewrite routes
+            /** @var Routes $oRoutesService */
             $oRoutesService = Factory::service('Routes');
             $oRoutesService->update();
 
@@ -531,13 +535,14 @@ class Page extends Base
 
         // --------------------------------------------------------------------------
 
-        //  Trigger event
-        $oEvent = Factory::service('Event');
-        $oEvent->trigger(Events::PAGE_UNPUBLISHED, Events::getEventNamespace(), [$iId]);
+        $this->triggerEvent(
+            Events::PAGE_UNPUBLISHED
+            [$iId]
+        );
 
         // --------------------------------------------------------------------------
 
-        //  Rewrite routes
+        /** @var Routes $oRoutesService */
         $oRoutesService = Factory::service('Routes');
         $oRoutesService->update();
 
@@ -1089,25 +1094,30 @@ class Page extends Base
 
         // --------------------------------------------------------------------------
 
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->trans_begin();
 
-        $oDb->where('id', $iId);
-        $oDb->set('is_deleted', true);
-        $oDb->set('modified', 'NOW()', false);
+        try {
 
-        if (isLoggedIn()) {
-            $oDb->set('modified_by', activeUser('id'));
-        }
+            $oDb->where('id', $iId);
+            $oDb->set('is_deleted', true);
+            $oDb->set('modified', 'NOW()', false);
 
-        if ($oDb->update($this->table)) {
+            if (isLoggedIn()) {
+                $oDb->set('modified_by', activeUser('id'));
+            }
+
+            if (!$oDb->update($this->table)) {
+                throw new NailsException('Failed to delete item');
+            }
 
             //  Success, update children
-            $children = $this->getIdsOfChildren($iId);
+            $aChildren = $this->getIdsOfChildren($iId);
 
-            if ($children) {
+            if ($aChildren) {
 
-                $oDb->where_in('id', $children);
+                $oDb->where_in('id', $aChildren);
                 $oDb->set('is_deleted', true);
                 $oDb->set('modified', 'NOW()', false);
 
@@ -1116,35 +1126,36 @@ class Page extends Base
                 }
 
                 if (!$oDb->update($this->table)) {
-                    $this->setError('Unable to delete children pages');
-                    $oDb->trans_rollback();
-                    return false;
+                    throw new NailsException('Unable to delete children pages');
                 }
+
             }
 
             $oDb->trans_commit();
 
-            // --------------------------------------------------------------------------
-
-            //  Rewrite routes
-            $oRoutesService = Factory::service('Routes');
-            $oRoutesService->update();
-
-            // --------------------------------------------------------------------------
-
-            //  Trigger event
-            $oEvent = Factory::service('Event');
-            $oEvent->trigger(Events::PAGE_DELETED, Events::getEventNamespace(), [$iId]);
-
-            // --------------------------------------------------------------------------
-
-            //  @todo - Kill caches for this page and all children
-            return true;
-
-        } else {
+        } catch (\Excepton $e) {
             $oDb->trans_rollback();
+            $this->setError($e->getMessage());
             return false;
         }
+
+        // --------------------------------------------------------------------------
+
+        /** @var Routes $oRoutesService */
+        $oRoutesService = Factory::service('Routes');
+        $oRoutesService->update();
+
+        // --------------------------------------------------------------------------
+
+        $this->triggerEvent(
+            static::EVENT_DELETED,
+            [$iId]
+        );
+
+        // --------------------------------------------------------------------------
+
+        //  @todo - Kill caches for this page and all children
+        return true;
     }
 
     // --------------------------------------------------------------------------

@@ -2,26 +2,17 @@
     <?=form_open()?>
     <?=form_hidden('return_to', $sReturnTo)?>
     <p>
-        You are about to unpublish the page "<?=$oPage->published->title?>". Please confirm the following options:
+        You are about to delete the page "<?=$oPageData->title?>". Please confirm the following options:
     </p>
     <fieldset>
         <legend>Children</legend>
         <?php
         if (!empty($aChildren)) {
             ?>
-            <p class="alert alert-warning">
-                This page has children, please decide how they should be processed
+            <p class="alert alert-danger">
+                This page has children which will be deleted if you continue.
             </p>
             <?php
-            echo form_field_dropdown([
-                'key'     => 'child_behaviour',
-                'label'   => 'Behaviour',
-                'class'   => 'select2',
-                'options' => [
-                    'NONE'      => 'Do not make any changes to child pages',
-                    'UNPUBLISH' => 'Unpublish all child pages',
-                ],
-            ]);
         } else {
             ?>
             <p class="alert alert-success">
@@ -61,8 +52,8 @@
     }
     ?>
     <div class="admin-floating-controls">
-        <button type="submit" class="btn btn-warning">
-            Unpublish Page
+        <button type="submit" class="btn btn-danger">
+            Delete Page
         </button>
         <a href="<?=$sReturnTo?>" class="btn btn-default pull-right">
             Cancel

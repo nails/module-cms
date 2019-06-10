@@ -16,28 +16,6 @@ use Nails\Common\Events\Base;
 class Events extends Base
 {
     /**
-     * Fired when a CMS Page is created
-     *
-     * @param int $iId The Page ID
-     */
-    const PAGE_CREATED = 'PAGE:CREATED';
-
-    /**
-     * Fired when a CMS Page is updated
-     *
-     * @param int       $iId        The Page ID
-     * @param \stdClass $oOldObject The old Page object
-     */
-    const PAGE_UPDATED = 'PAGE:UPDATED';
-
-    /**
-     * Fired when a CMS Page is deleted
-     *
-     * @param int $iId The Page ID
-     */
-    const PAGE_DELETED = 'PAGE:DELETED';
-
-    /**
      * Fired when a CMS Page is published
      *
      * @param int $iId The Page ID
