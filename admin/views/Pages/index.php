@@ -2,12 +2,8 @@
     <p>
         Browse editable pages.
     </p>
-    <?php
-
-        echo adminHelper('loadSearch', $search);
-        echo adminHelper('loadPagination', $pagination);
-
-    ?>
+    <?=adminHelper('loadSearch', $search)?>
+    <?=adminHelper('loadPagination', $pagination)?>
     <div class="table-responsive">
         <table>
             <thead>
@@ -19,138 +15,147 @@
                 </tr>
             </thead>
             <tbody>
-            <?php
+                <?php
 
-            if ($pages) {
+                if ($pages) {
+                    foreach ($pages as $oPage) {
 
-                foreach ($pages as $oPage) {
+                        ?>
+                        <tr class="page">
+                            <td class="title indentosaurus <?=$oPage->draft->depth ? 'indented' : ''?>">
+                                <?=str_repeat('<div class="indentor"></div>', $oPage->draft->depth)?>
+                                <div class="indentor-content">
+                                    <?php
 
-                    ?>
-                    <tr class="page">
-                        <td class="title indentosaurus <?=$oPage->draft->depth ? 'indented' : ''?>">
-                            <?=str_repeat('<div class="indentor"></div>', $oPage->draft->depth)?>
-                            <div class="indentor-content">
-                            <?php
+                                    /**
+                                     * A little feedback on the status of the page:
+                                     * - If it's in draft state then simply show it's in draft
+                                     * - If it's published and there are unpublished changes then indicate that
+                                     */
 
-                            /**
-                             * A little feedback on the status of the page:
-                             * - If it's in draft state then simply show it's in draft
-                             * - If it's published and there are unpublished changes then indicate that
-                             */
+                                    if ($oPage->is_published) {
 
-                            if ($oPage->is_published) {
+                                        $sPublishedHash = !empty($oPage->published->hash) ? $oPage->published->hash : 'NOHASH';
+                                        $sDraftHash     = !empty($oPage->draft->hash) ? $oPage->draft->hash : 'NOHASH';
 
-                                $sPublishedHash = !empty($oPage->published->hash) ? $oPage->published->hash : 'NOHASH';
-                                $sDraftHash     = !empty($oPage->draft->hash) ? $oPage->draft->hash : 'NOHASH' ;
+                                        if ($sPublishedHash !== $sDraftHash) {
+                                            ?>
+                                            <strong class="label label-unpublished-changes"
+                                                    rel="tipsy"
+                                                    title="This page is visible on site but changes have been made which have not been published."
+                                            >
+                                                Unpublished Changes
+                                            </strong>
+                                            <?php
+                                        }
 
-                                if ($sPublishedHash !== $sDraftHash) {
+                                    } else {
+                                        ?>
+                                        <strong class="label label-draft"
+                                                rel="tipsy"
+                                                title="This page has not been published. It is not available to your site\'s visitors."
+                                        >
+                                            Draft
+                                        </strong>
+                                        <?php
+                                    }
 
-                                    echo '<strong class="label label-unpublished-changes" rel="tipsy" title="This page is visible on site but changes have been made which have not been published.">Unpublished Changes</strong>';
-                                }
+                                    if ($oPage->id == $iHomepageId) {
+                                        ?>
+                                        <strong class="label label-homepage">
+                                            Homepage
+                                        </strong>
+                                        <?php
+                                    }
 
-                            } else {
+                                    echo anchor('admin/cms/pages/edit/' . $oPage->id, $oPage->draft->title);
 
-                                echo '<strong class="label label-draft" rel="tipsy" title="This page has not been published. It is not available to your site\'s visitors.">Draft</strong>';
-                            }
+                                    $aBreadcrumbs = $oPage->draft->breadcrumbs;
+                                    array_pop($aBreadcrumbs);
 
-                            if ($oPage->id == $iHomepageId) {
-                                echo '<strong class="label label-homepage">Homepage</strong>';
-                            }
+                                    ?>
+                                    <small class="text-muted">
+                                        <?php
+                                        if ($aBreadcrumbs) {
 
-                            echo anchor('admin/cms/pages/edit/' . $oPage->id, $oPage->draft->title);
+                                            $aOut = [];
+                                            foreach ($aBreadcrumbs as $oCrumb) {
+                                                $aOut[] = $oCrumb->title;
+                                            }
 
-                            $aBreadcrumbs = $oPage->draft->breadcrumbs;
-                            array_pop($aBreadcrumbs);
+                                            echo implode(' // ', $aOut);
 
-                            echo '<small class="text-muted">';
-                            if ($aBreadcrumbs) {
+                                        } else {
+                                            echo 'Top Level Page';
+                                        }
 
-                                $aOut = array();
+                                        ?>
+                                    </small>
+                                </div>
+                            </td>
+                            <?=adminHelper('loadUserCell', $oPage->modified_by)?>
+                            <?=adminHelper('loadDatetimeCell', $oPage->modified)?>
+                            <td class="actions">
+                                <?php
 
-                                foreach ($aBreadcrumbs as $oCrumb) {
-
-                                    $aOut[] = $oCrumb->title;
-                                }
-
-                                echo implode(' // ', $aOut);
-
-                            } else {
-
-                                echo 'Top Level Page';
-                            }
-
-                            echo '</small>';
-
-                            ?>
-                            </div>
-                        </td>
-                        <?=adminHelper('loadUserCell', $oPage->modified_by)?>
-                        <?=adminHelper('loadDatetimeCell', $oPage->modified)?>
-                        <td class="actions">
-                            <?php
-
-                            if ($oPage->is_published) {
-
-                                echo anchor(
-                                    $oPage->published->url,
-                                    lang('action_view'),
-                                    'class="btn btn-xs btn-default" target="cms-page-' . $oPage->id . '"'
-                                );
-                            }
-
-                            if (userHasPermission('admin:cms:pages:edit')) {
-
-                                echo anchor(
-                                    'admin/cms/pages/edit/' . $oPage->id,
-                                    lang('action_edit'),
-                                    'class="btn btn-xs btn-primary"'
-                                );
-
-                                if (!$oPage->is_published || $sPublishedHash !== $sDraftHash) {
-
+                                if ($oPage->is_published) {
                                     echo anchor(
-                                        'admin/cms/pages/publish/' . $oPage->id,
-                                        lang('action_publish'),
-                                        'data-body="Publish this page immediately?" class="confirm btn btn-xs btn-success"'
+                                        $oPage->published->url,
+                                        lang('action_view'),
+                                        'class="btn btn-xs btn-default" target="cms-page-' . $oPage->id . '"'
                                     );
                                 }
-                            }
 
-                            if (userHasPermission('admin:cms:pages:delete')) {
+                                if (userHasPermission('admin:cms:pages:edit')) {
+                                    echo anchor(
+                                        'admin/cms/pages/edit/' . $oPage->id,
+                                        lang('action_edit'),
+                                        'class="btn btn-xs btn-primary"'
+                                    );
 
-                                echo anchor(
-                                    'admin/cms/pages/delete/' . $oPage->id,
-                                    lang('action_delete'),
-                                    'data-body="This will remove the page, and any of its children, from the site." class="confirm btn btn-xs btn-danger"'
-                                );
-                            }
+                                    if (!$oPage->is_published || $sPublishedHash !== $sDraftHash) {
+                                        echo anchor(
+                                            'admin/cms/pages/publish/' . $oPage->id . '?return_to=' . $sReturnTo,
+                                            lang('action_publish'),
+                                            'data-body="Publish this page immediately?" class="confirm btn btn-xs btn-success"'
+                                        );
+                                    } else {
+                                        echo anchor(
+                                            'admin/cms/pages/unpublish/' . $oPage->id . '?return_to=' . $sReturnTo,
+                                            'Unpublish',
+                                            'class="btn btn-xs btn-warning"'
+                                        );
+                                    }
+                                }
 
-                            ?>
+                                if (userHasPermission('admin:cms:pages:delete')) {
+                                    echo anchor(
+                                        'admin/cms/pages/delete/' . $oPage->id . '?return_to=' . $sReturnTo,
+                                        lang('action_delete'),
+                                        'class="btn btn-xs btn-danger"'
+                                    );
+                                }
+
+                                ?>
+                            </td>
+                        </tr>
+                        <?php
+
+                    }
+                } else {
+                    ?>
+                    <tr>
+                        <td colspan="4" class="no-data">
+                            No editable pages found
                         </td>
                     </tr>
                     <?php
 
                 }
 
-            } else {
-
                 ?>
-                <tr>
-                    <td colspan="4" class="no-data">
-                        No editable pages found
-                    </td>
-                </tr>
-                <?php
-
-            }
-
-            ?>
             </tbody>
         </table>
     </div>
-    <?php
-
-        echo adminHelper('loadPagination', $pagination);
-
-    ?>
+    <?=adminHelper('loadPagination', $pagination)?>
 </div>

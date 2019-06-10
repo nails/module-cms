@@ -12,15 +12,32 @@
 
 namespace Nails\Admin\Cms;
 
-use Nails\Factory;
 use Nails\Admin\Helper;
+use Nails\Auth\Service\Session;
 use Nails\Cms\Controller\BaseAdmin;
+use Nails\Cms\Model\Page;
+use Nails\Cms\Service\Template;
+use Nails\Cms\Service\Widget;
+use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\ModelException;
+use Nails\Common\Exception\NailsException;
+use Nails\Common\Exception\ValidationException;
+use Nails\Common\Resource;
+use Nails\Common\Service\Database;
+use Nails\Common\Service\Input;
+use Nails\Common\Service\Uri;
+use Nails\Components;
+use Nails\Factory;
 
 class Pages extends BaseAdmin
 {
+    /** @var Page */
     protected $oPageModel;
+    /** @var Widget */
     protected $oWidgetService;
+    /** @var Template */
     protected $oTemplateService;
+    /** @var int */
     protected $iHomepageId;
 
     // --------------------------------------------------------------------------
@@ -89,8 +106,11 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load common items
-        $this->oPageModel       = Factory::model('Page', 'nails/module-cms');
-        $this->oWidgetService   = Factory::service('Widget', 'nails/module-cms');
+        /** @var Page oPageModel */
+        $this->oPageModel = Factory::model('Page', 'nails/module-cms');
+        /** @var Widget oWidgetService */
+        $this->oWidgetService = Factory::service('Widget', 'nails/module-cms');
+        /** @var Template oTemplateService */
         $this->oTemplateService = Factory::service('Template', 'nails/module-cms');
 
         //  Note the ID of the homepage
@@ -154,6 +174,7 @@ class Pages extends BaseAdmin
         //  Set Search and Pagination objects for the view
         $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
         $this->data['pagination'] = Helper::paginationObject($page, $perPage, $totalRows);
+        $this->data['sReturnTo']  = urlencode($oInput->server('REQUEST_URI'));
 
         // --------------------------------------------------------------------------
 
@@ -474,6 +495,7 @@ class Pages extends BaseAdmin
         $oSession   = Factory::service('Session', 'nails/module-auth');
         $iId        = $oUri->segment(5);
         $bIsEditing = (bool) $oInput->get('editing');
+        $sReturnTo  = $oInput->get('return_to');
 
         if ($this->oPageModel->publish($iId)) {
 
@@ -488,15 +510,172 @@ class Pages extends BaseAdmin
                 )
             );
 
-            if ($bIsEditing) {
-                redirect('admin/cms/pages/edit/' . $iId);
-            } else {
-                redirect('admin/cms/pages');
-            }
-
         } else {
             $oSession->setFlashData('error', 'Could not publish page. ' . $this->oPageModel->lastError());
         }
+
+        if (!empty($sReturnTo)) {
+            redirect($sReturnTo);
+        } elseif ($bIsEditing) {
+            redirect('admin/cms/pages/edit/' . $iId);
+        } else {
+            redirect('admin/cms/pages');
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function unpublish()
+    {
+        if (!userHasPermission('admin:cms:pages:edit')) {
+            unauthorised();
+        }
+
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+
+        $iId   = $oUri->segment(5);
+        $oPage = $this->oPageModel->getById($iId);
+        if (empty($oPage) || !$oPage->is_published) {
+            show404();
+        }
+
+        if ($oInput->post()) {
+
+            /** @var Database $oDb */
+            $oDb = Factory::service('Database');
+
+            try {
+
+                $oDb->trans_begin();
+
+                //  Unpublish the parent page
+                if (!$this->oPageModel->unpublish($oPage->id)) {
+                    throw new NailsException('Failed to unpublish page. ' . $this->oPageModel->lastError());
+                }
+
+                $this
+                    ->unpublishHandleChildren(
+                        $oPage,
+                        $oInput->post('child_behaviour')
+                    )
+                    ->unpublishHandleRedirects(
+                        $oPage,
+                        $oInput->post('redirect_behaviour'),
+                        $oInput->post('redirect_url')
+                    );
+
+                $oDb->trans_commit();
+
+                /** @var Session $oSession */
+                $oSession = Factory::service('Session', 'nails/module-auth');
+                $oSession->setFlashData('success', 'Page unpublished successfully');
+
+                redirect($oInput->post('return_to') ?: 'admin/cms/pages');
+
+            } catch (NailsException $e) {
+                $oDb->trans_rollback();
+                $this->data['error'] = $e->getMessage();
+            }
+        }
+
+        $this->data['sReturnTo']   = $oInput->get('return_to') ?: $oInput->post('return_to');
+        $this->data['bRedirects']  = Components::exists('nails/module-redirect');
+        $this->data['oPage']       = $oPage;
+        $this->data['aChildren']   = $this->oPageModel->getIdsOfChildren($oPage->id);
+        $this->data['page']->title = 'Unpublish "' . $oPage->published->title . '"';
+        $this->data['aOtherPages'] = $this->oPageModel->getAllFlat();
+
+        unset($this->data['aOtherPages'][$oPage->id]);
+
+        Helper::loadView('unpublish');
+    }
+
+    // --------------------------------------------------------------------------
+
+    private function unpublishHandleChildren(Resource $oPage, string $sBehaviour)
+    {
+        $aChildren = $this->oPageModel->getIdsOfChildren($oPage->id);
+        if (!empty($aChildren)) {
+            switch ($sBehaviour) {
+                case 'NONE':
+                    break;
+
+                case 'UNPUBLISH':
+                    foreach ($aChildren as $iChildId) {
+                        $this->oPageModel->unpublish($iChildId);
+                    }
+                    break;
+
+                default:
+                    throw new ValidationException('Invalid child behaviour value.');
+                    break;
+            }
+        }
+
+        return $this;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @param Resource $oPage      The page being unpublished
+     * @param string   $sBehaviour The redirect behaviour
+     * @param string   $sUrl       The URL to redirect to (if using URL based redirects)
+     *
+     * @return $this
+     * @throws ValidationException
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    private function unpublishHandleRedirects(Resource $oPage, string $sBehaviour, string $sUrl): Pages
+    {
+        if (Components::exists('nails/module-redirect')) {
+            switch ($sBehaviour) {
+                case 'NONE':
+                    $sUrl = null;
+                    break;
+
+                case 'URL':
+                    $sUrl = prep_url($sUrl);
+                    break;
+
+                default:
+                    if (!is_numeric($sBehaviour)) {
+                        throw new ValidationException(
+                            'Invalid redirect behaviour value.' . json_encode($_POST)
+                        );
+                    }
+
+                    $oRedirectPage = $this->oPageModel->getById($sBehaviour);
+                    if (empty($oRedirectPage)) {
+                        throw new ValidationException(
+                            'Invalid redirect behaviour value. Page does not exist.'
+                        );
+                    }
+
+                    if (!$oRedirectPage->is_published) {
+                        throw new ValidationException(
+                            'Invalid redirect behaviour value. Page is not published.'
+                        );
+                    }
+
+                    $sUrl = $oRedirectPage->published->url;
+                    break;
+            }
+
+            if (!empty($sUrl)) {
+                $oModel = Factory::model('Redirect', 'nails/module-redirect');
+                $oModel->create([
+                    'old_url' => $oPage->published->url,
+                    'new_url' => $sUrl,
+                ]);
+            }
+        }
+
+        return $this;
     }
 
     // --------------------------------------------------------------------------

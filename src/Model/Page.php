@@ -15,6 +15,7 @@ namespace Nails\Cms\Model;
 use Nails\Cms\Events;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
+use Nails\Common\Service\Database;
 use Nails\Factory;
 
 class Page extends Base
@@ -481,10 +482,6 @@ class Page extends Base
 
             // --------------------------------------------------------------------------
 
-            $oDb->trans_commit();
-
-            // --------------------------------------------------------------------------
-
             //  Trigger event
             $oEvent = Factory::service('Event');
             $oEvent->trigger(Events::PAGE_PUBLISHED, Events::getEventNamespace(), [$iId]);
@@ -502,6 +499,51 @@ class Page extends Base
             $oDb->trans_rollback();
             return false;
         }
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function unpublish(int $iId)
+    {
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+        /** @var \DateTime $oNow */
+        $oNow = Factory::factory('DateTime');
+
+        $oPage = $this->getById($iId);
+
+        if (!$oPage) {
+            $this->setError('Invalid Page ID');
+            return false;
+        }
+
+        // --------------------------------------------------------------------------
+
+        $oDb->set('is_published', false);
+        $oDb->set('modified', $oNow->format('Y-m-d H:i:s'));
+        $oDb->set('modified_by', activeUser('id') ?: null);
+        $oDb->where('id', $iId);
+
+        if (!$oDb->update($this->table)) {
+            $this->setError('Failed to');
+            return false;
+        }
+
+        // --------------------------------------------------------------------------
+
+        //  Trigger event
+        $oEvent = Factory::service('Event');
+        $oEvent->trigger(Events::PAGE_UNPUBLISHED, Events::getEventNamespace(), [$iId]);
+
+        // --------------------------------------------------------------------------
+
+        //  Rewrite routes
+        $oRoutesService = Factory::service('Routes');
+        $oRoutesService->update();
+
+        // --------------------------------------------------------------------------
+
+        return true;
     }
 
     // --------------------------------------------------------------------------
@@ -809,32 +851,27 @@ class Page extends Base
     /**
      * Fetches all objects as a flat array, optionally paginated.
      *
-     * @param int   $page           The page number of the results, if null then no pagination
-     * @param int   $perPage        How many items per page of paginated results
-     * @param mixed $data           Any data to pass to getCountCommon()
-     * @param bool  $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted
-     *                              items
+     * @param int   $iPage           The page number of the results, if null then no pagination
+     * @param int   $iPerPage        How many items per page of paginated results
+     * @param mixed $aData           Any data to pass to getCountCommon()
+     * @param bool  $bIncludeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
      *
      * @return array
      */
-    public function getAllFlat($page = null, $perPage = null, array $data = [], $includeDeleted = false)
+    public function getAllFlat($iPage = null, $iPerPage = null, array $aData = [], $bIncludeDeleted = false)
     {
-        $out    = [];
-        $aPages = $this->getAll($page, $perPage, $data, $includeDeleted);
+        $aOut   = [];
+        $aPages = $this->getAll($iPage, $iPerPage, $aData, $bIncludeDeleted);
 
         foreach ($aPages as $oPage) {
-
-            if (!empty($data['useDraft'])) {
-
-                $out[$oPage->id] = $oPage->draft->title;
-
+            if (!empty($aData['useDraft'])) {
+                $aOut[$oPage->id] = $oPage->draft->title;
             } else {
-
-                $out[$oPage->id] = $oPage->published->title;
+                $aOut[$oPage->id] = $oPage->published->title;
             }
         }
 
-        return $out;
+        return $aOut;
     }
 
     // --------------------------------------------------------------------------
