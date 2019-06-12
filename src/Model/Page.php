@@ -536,7 +536,7 @@ class Page extends Base
         // --------------------------------------------------------------------------
 
         $this->triggerEvent(
-            Events::PAGE_UNPUBLISHED
+            Events::PAGE_UNPUBLISHED,
             [$iId]
         );
 
