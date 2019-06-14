@@ -40,7 +40,7 @@ class Area extends Base
      *
      * @return void
      **/
-    protected function getCountCommon(array $aData = [])
+    protected function getCountCommon(array $aData = []): void
     {
         if (!empty($aData['keywords'])) {
 
