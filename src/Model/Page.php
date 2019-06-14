@@ -563,7 +563,7 @@ class Page extends Base
      *
      * @return void
      **/
-    public function getCountCommon(array $data = [])
+    public function getCountCommon(array $data = []): void
     {
         if (empty($data['select'])) {
 
