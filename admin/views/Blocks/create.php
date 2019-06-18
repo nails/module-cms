@@ -1,3 +1,6 @@
+<?php
+$oInput = \Nails\Factory::service('Input');
+?>
 <div class="group-cms blocks create">
     <?=form_open()?>
     <fieldset>
@@ -66,7 +69,7 @@
         $field['label']       = 'Default Value';
         $field['placeholder'] = 'Define the default value';
 
-        $sDisplay = set_value('type') == 'plaintext' || !$this->input->post() ? 'block' : 'none';
+        $sDisplay = set_value('type') == 'plaintext' || !$oInput->post() ? 'block' : 'none';
         echo '<div id="default-value-plaintext" class="default-value" style="display:' . $sDisplay . ';">';
             echo form_field_textarea($field);
         echo '</div>';

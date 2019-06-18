@@ -1,3 +1,6 @@
+<?php
+$oInput = \Nails\Factory::service('Input');
+?>
 <div class="group-cms pages edit">
     <?php
 
@@ -182,9 +185,9 @@
             }
         }
 
-        if ($this->input->post('template_data')) {
+        if ($oInput->post('template_data')) {
 
-            $sTemplateData = $this->input->post('template_data');
+            $sTemplateData = $oInput->post('template_data');
 
         } elseif (!empty($cmspage->draft->template_data)) {
 

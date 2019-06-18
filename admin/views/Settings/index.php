@@ -1,8 +1,11 @@
+<?php
+$oInput = \Nails\Factory::service('Input');
+?>
 <div class="group-cms settings">
     <?php
 
         echo form_open();
-        $sActiveTab = $this->input->post('active_tab') ?: 'tab-homepage';
+        $sActiveTab = $oInput->post('active_tab') ?: 'tab-homepage';
         echo '<input type="hidden" name="active_tab" value="' . $sActiveTab . '" id="active-tab">';
 
     ?>

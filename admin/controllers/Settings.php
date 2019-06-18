@@ -61,12 +61,12 @@ class Settings extends BaseAdmin
      */
     public function index()
     {
-        //  Process POST
-        if ($this->input->post()) {
+        $oInput = Factory::service('Input');
+        if ($oInput->post()) {
 
             $aSettings = [
                 //  General Settings
-                'homepage' => (int) $this->input->post('homepage'),
+                'homepage' => (int) $oInput->post('homepage'),
             ];
 
             // --------------------------------------------------------------------------
