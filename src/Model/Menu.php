@@ -445,11 +445,11 @@ class Menu extends Base
             $aIdsUpdated = array_filter($aIdsUpdated);
             $aIdsUpdated = array_unique($aIdsUpdated);
 
+            $this->oDb->where('menu_id', $id);
             if ($aIdsUpdated) {
-                $this->oDb->where('menu_id', $id);
                 $this->oDb->where_not_in('id', $aIdsUpdated);
-                $this->oDb->delete($this->table);
             }
+            $this->oDb->delete($this->table);
 
             //  Reset the table and table prefix
             $this->table      = $table;
