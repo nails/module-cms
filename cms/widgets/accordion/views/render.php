@@ -10,7 +10,7 @@
  * @link
  */
 
-$sUuid   = md5(microtime(true));
+$sUuid   = md5(microtime(true)+rand(1,1000));
 
 if (!empty($panels)) {
 
