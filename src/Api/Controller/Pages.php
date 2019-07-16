@@ -74,7 +74,7 @@ class Pages extends Base
 
         $iPreviewId = $oPageModel->createPreview($aPageData);
         if ($iPreviewId) {
-            $aOut = ['url' => site_url('cms/render/preview/' . $iPreviewId)];
+            $aOut = ['url' => siteUrl('cms/render/preview/' . $iPreviewId)];
         } else {
             $aOut = ['status' => 500, 'error' => $oPageModel->lastError()];
         }

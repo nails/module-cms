@@ -53,7 +53,7 @@ class Redirect extends TemplateBase
             'Manually set the URL to redirect to, this will override any option set above.'
         );
         $this->additional_fields[1]->setTip(
-            'URLs which do not begin with http(s):// will automatically be prefixed with ' . site_url()
+            'URLs which do not begin with http(s):// will automatically be prefixed with ' . siteUrl()
         );
 
         $this->additional_fields[2] = Factory::factory('TemplateOption', 'nails/module-cms');

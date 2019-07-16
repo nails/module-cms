@@ -1030,9 +1030,9 @@ class Page extends Base
 
         //  Other data
         $oObj->published->depth = count(explode('/', $oObj->published->slug)) - 1;
-        $oObj->published->url   = site_url($oObj->published->slug);
+        $oObj->published->url   = siteUrl($oObj->published->slug);
         $oObj->draft->depth     = count(explode('/', $oObj->draft->slug)) - 1;
-        $oObj->draft->url       = site_url($oObj->draft->slug);
+        $oObj->draft->url       = siteUrl($oObj->draft->slug);
 
         //  Decode JSON
         $oObj->published->template_data    = json_decode($oObj->published->template_data);

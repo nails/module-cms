@@ -131,7 +131,7 @@ class Render extends Base
             $this->data['message'] = lang(
                 'cms_notice_unpublished_changes',
                 [
-                    site_url('admin/cms/pages/edit/' . $oPage->id),
+                    siteUrl('admin/cms/pages/edit/' . $oPage->id),
                 ]
             );
         }
