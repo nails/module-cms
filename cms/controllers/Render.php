@@ -11,8 +11,9 @@
  */
 
 use App\Controller\Base;
-use Nails\Common\Exception\NailsException;
 use Nails\Cms\Exception\RenderException;
+use Nails\Common\Exception\NailsException;
+use Nails\Common\Service\Meta;
 use Nails\Factory;
 
 class Render extends Base
@@ -50,8 +51,9 @@ class Render extends Base
 
     /**
      * Loads a published CMS page
-     * @throws RenderException
+     *
      * @return void
+     * @throws RenderException
      */
     public function page()
     {
@@ -110,10 +112,33 @@ class Render extends Base
         $this->data['page']->is_homepage = $this->bIsHomepage;
         $this->data['page']->breadcrumbs = $oData->breadcrumbs;
 
-        //  Set some meta tags for the header
-        $oMeta = Factory::service('Meta');
-        $oMeta->add('description', $oData->seo_description);
-        $oMeta->add('keywords', $oData->seo_keywords);
+        //  Set some meta tags for the header, avoid duplicates by removing existing tags
+        /** @var Meta $oMeta */
+        $oMeta       = Factory::service('Meta');
+        $aProperties = [
+            //  Descriptions
+            ['name', 'description', $oData->seo_description],
+            ['property', 'og:description', $oData->seo_description],
+            ['property', 'twitter:description', $oData->seo_description],
+
+            //  Keywords
+            ['name', 'keywords', $oData->seo_keywords],
+        ];
+
+        foreach ($aProperties as $aProperty) {
+
+            list($sTagProperty, $sProperty, $sValue) = $aProperty;
+
+            if (!empty($sValue)) {
+                $oMeta
+                    ->removeByPropertyPattern(
+                        array_filter([
+                            [$sTagProperty => '^' . $sProperty . '$'],
+                        ])
+                    )
+                    ->add($sProperty, $sValue);
+            }
+        }
 
         // --------------------------------------------------------------------------
 
@@ -154,6 +179,7 @@ class Render extends Base
 
     /**
      * Loads a draft CMS page
+     *
      * @return void
      */
     public function preview()
@@ -170,6 +196,7 @@ class Render extends Base
 
     /**
      * Loads the homepage
+     *
      * @return void
      */
     public function homepage()
@@ -190,6 +217,7 @@ class Render extends Base
 
     /**
      * Loads a legacy slug and redirects to the new page if found
+     *
      * @return void
      */
     public function legacy_slug()
