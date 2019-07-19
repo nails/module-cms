@@ -36,7 +36,7 @@ class Render extends Base
         // --------------------------------------------------------------------------
 
         $this->oPageModel = Factory::model('Page', 'nails/module-cms');
-        $this->lang->load('cms');
+        get_instance()->lang->load('cms');
 
         // --------------------------------------------------------------------------
 
