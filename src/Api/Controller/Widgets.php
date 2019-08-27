@@ -17,10 +17,17 @@ use Nails\Api\Exception\ApiException;
 use Nails\Common\Exception\NailsException;
 use Nails\Factory;
 
+/**
+ * Class Widgets
+ *
+ * @package Nails\Cms\Api\Controller
+ */
 class Widgets extends Base
 {
     /**
      * Require the user be authenticated to use any endpoint
+     *
+     * @var bool
      */
     const REQUIRE_AUTH = true;
 

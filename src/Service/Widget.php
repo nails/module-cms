@@ -12,13 +12,22 @@
 
 namespace Nails\Cms\Service;
 
-use Nails\Components;
 use Nails\Cms\Exception\Widget\NotFoundException;
-use Nails\Cms\Widget\WidgetBase;
+use Nails\Components;
 use Nails\Factory;
 
+/**
+ * Class Widget
+ *
+ * @package Nails\Cms\Service
+ */
 class Widget
 {
+    /**
+     * The loaded widgets
+     *
+     * @var array
+     */
     protected $aLoadedWidgets;
 
     // --------------------------------------------------------------------------
@@ -31,7 +40,7 @@ class Widget
      * @throws NotFoundException
      * @return array
      */
-    public function getAvailable($bLoadAssets = false)
+    public function getAvailable($bLoadAssets = false, $bIncludeHidden = false)
     {
         if (!empty($this->aLoadedWidgets)) {
             return $this->aLoadedWidgets;
@@ -82,15 +91,18 @@ class Widget
 
             $sClassName = $oWidget->class;
 
-            if (!$sClassName::isDisabled()) {
+            if ($sClassName::isDisabled()) {
+                continue;
+            } elseif (!$bIncludeHidden && $sClassName::isHidden()) {
+                continue;
+            }
 
-                $aLoadedWidgets[$oWidget->name] = new $sClassName();
+            $aLoadedWidgets[$oWidget->name] = new $sClassName();
 
-                //  Load the widget's assets if requested
-                if ($bLoadAssets) {
-                    $aAssets = $aLoadedWidgets[$oWidget->name]->getAssets($bLoadAssets);
-                    $this->loadAssets($aAssets);
-                }
+            //  Load the widget's assets if requested
+            if ($bLoadAssets) {
+                $aAssets = $aLoadedWidgets[$oWidget->name]->getAssets($bLoadAssets);
+                $this->loadAssets($aAssets);
             }
         }
 
@@ -143,14 +155,14 @@ class Widget
     /**
      * Get an individual widget
      *
-     * @param  string $sSlug       The widget's slug
-     * @param  string $sLoadAssets Whether or not to load the widget's assets, and if so whether EDITOR or RENDER assets.
+     * @param string $sSlug       The widget's slug
+     * @param string $sLoadAssets Whether or not to load the widget's assets, and if so whether EDITOR or RENDER assets.
      *
      * @return mixed
      */
     public function getBySlug($sSlug, $sLoadAssets = false)
     {
-        $aWidgetGroups = $this->getAvailable();
+        $aWidgetGroups = $this->getAvailable(false, true);
 
         foreach ($aWidgetGroups as $oWidgetGroup) {
 
@@ -177,7 +189,7 @@ class Widget
     /**
      * Load widget assets
      *
-     * @param  array $aAssets An array of assets to load
+     * @param array $aAssets An array of assets to load
      *
      * @return void
      */

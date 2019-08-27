@@ -14,16 +14,28 @@ namespace Nails\Cms\Widget;
 
 use Nails\Factory;
 
+/**
+ * Class WidgetBase
+ *
+ * @package Nails\Cms\Widget
+ */
 abstract class WidgetBase
 {
     /**
      * Whether this widget is disabled or not
+     *
      * @var bool
      */
     const DISABLED = false;
 
     /**
+     * Whether this widget is hidden or not. Hidden widgets can still be used, but will not be offered for use in the editor
+     */
+    const HIDDEN = false;
+
+    /**
      * The default icon to use
+     *
      * @var string
      */
     const DEFAULT_ICON = 'fa-cube';
@@ -46,11 +58,24 @@ abstract class WidgetBase
 
     /**
      * Returns whether the widget is disabled
+     *
      * @return bool
      */
-    public static function isDisabled()
+    public static function isDisabled(): bool
     {
         return !empty(static::DISABLED);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns whether the widget is hidden
+     *
+     * @return bool
+     */
+    public static function isHidden(): bool
+    {
+        return !empty(static::HIDDEN);
     }
 
     // --------------------------------------------------------------------------
@@ -118,6 +143,7 @@ abstract class WidgetBase
 
     /**
      * Detects the path of the called class
+     *
      * @return string
      */
     public static function detectPath()
@@ -159,6 +185,7 @@ abstract class WidgetBase
 
     /**
      * Returns the widget's label
+     *
      * @return string
      */
     public function getLabel()
@@ -170,6 +197,7 @@ abstract class WidgetBase
 
     /**
      * Returns the widget's icon
+     *
      * @return string
      */
     public function getIcon()
@@ -181,6 +209,7 @@ abstract class WidgetBase
 
     /**
      * Returns the widget's description
+     *
      * @return string
      */
     public function getDescription()
@@ -192,6 +221,7 @@ abstract class WidgetBase
 
     /**
      * Returns the widget's keywords
+     *
      * @return string
      */
     public function getKeywords()
@@ -203,6 +233,7 @@ abstract class WidgetBase
 
     /**
      * Returns the widget's grouping
+     *
      * @return string
      */
     public function getGrouping()
@@ -214,6 +245,7 @@ abstract class WidgetBase
 
     /**
      * Returns the widget's slug
+     *
      * @return string
      */
     public function getSlug()
@@ -225,6 +257,7 @@ abstract class WidgetBase
 
     /**
      * Returns the widget's screenshot
+     *
      * @return string
      */
     public function getScreenshot()
@@ -236,6 +269,7 @@ abstract class WidgetBase
 
     /**
      * Returns the widget's path
+     *
      * @return string
      */
     public function getPath()
@@ -287,7 +321,7 @@ abstract class WidgetBase
      * Returns the HTML for the editor view. Any passed data will be used to
      * populate the values of the form elements.
      *
-     * @param  array $aWidgetData The data to render the widget editor with
+     * @param array $aWidgetData The data to render the widget editor with
      *
      * @return string
      */
@@ -301,7 +335,7 @@ abstract class WidgetBase
     /**
      * Renders the widget with the provided data.
      *
-     * @param  array $aWidgetData The data to render the widget with
+     * @param array $aWidgetData The data to render the widget with
      *
      * @return string
      */
@@ -362,6 +396,7 @@ abstract class WidgetBase
 
     /**
      * Format the widget as an array
+     *
      * @return array
      */
     public function toArray()
