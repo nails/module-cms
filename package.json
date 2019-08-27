@@ -14,7 +14,7 @@
         "sass-loader": "^7.3",
         "expose-loader": "^0.7.5",
         "webpack": "^4.39",
-        "webpack-command": "^0.4"
+        "webpack-command": "^0.5"
     },
     "scripts": {
         "build": "webpack -p",
