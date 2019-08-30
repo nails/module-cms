@@ -162,7 +162,7 @@ class Page extends Base
         //  Work out the slug
         if (empty($aData['slug']) || $this->table === $this->tablePreview) {
 
-            $aUpdateData['draft_slug'] = $this->generateSlug(
+            $aUpdateData['draft_slug'] = $sSlugPrefix . $this->generateSlug(
                 $aUpdateData['draft_title'],
                 $oCurrent->id
             );
