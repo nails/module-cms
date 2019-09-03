@@ -354,6 +354,9 @@
         }
     }
     &.widgeteditor-alert {
-        z-index: $widgeteditor-zindex + 1;
+        z-index: $widgeteditor-zindex + 2 !important;
+        & + .ui-widget-overlay {
+            z-index: $widgeteditor-zindex + 1 !important;
+        }
     }
 }
