@@ -1,7 +1,6 @@
 /* globals Mustache */
 var NAILS_Admin_CMS_Sliders_Create_Edit;
-NAILS_Admin_CMS_Sliders_Create_Edit = function()
-{
+NAILS_Admin_CMS_Sliders_Create_Edit = function() {
     /**
      * Avoid scope issues in callbacks and anonymous functions by referring to `this` as `base`
      * @type {Object}
@@ -11,53 +10,55 @@ NAILS_Admin_CMS_Sliders_Create_Edit = function()
     // --------------------------------------------------------------------------
 
     base.settingImgFor = null;
-    base.schemeServe   = '';
-    base.schemeThumb   = '';
-    base.schemeScale   = '';
-    base.managerUrl    = '';
+    base.schemeServe = '';
+    base.schemeThumb = '';
+    base.schemeScale = '';
+    base.managerUrl = '';
 
     // --------------------------------------------------------------------------
 
-    base.__construct = function()
-    {
-        $('#addSlide').on('click', function()
-        {
+    base.__construct = function() {
+
+        $('#addSlide').on('click', function() {
             base.addSlide();
             return false;
         });
 
-        $(document).on('click', '.btnSetImg', function()
-        {
+        $(document).on('click', '.btnSetImg', function() {
+            if (base.managerUrl.length === 0) {
+                console.log('Manager URL not available yet');
+                return false;
+            }
             base.setImg($(this));
             return false;
         });
 
-        $(document).on('click', '.btnRemoveImg', function()
-        {
+        $(document).on('click', '.btnRemoveImg', function() {
             base.removeImg($(this));
             return false;
         });
 
-        $(document).on('click', '.btnRemoveSlide', function()
-        {
+        $(document).on('click', '.btnRemoveSlide', function() {
             base.removeSlide($(this));
             return false;
         });
 
         $('#slides tbody').sortable({
             handle: '.sortHandle',
-            axis:'y',
-            start: function(e, ui)
-            {
+            axis: 'y',
+            start: function(e, ui) {
                 ui.placeholder.height(ui.helper.outerHeight());
             },
         });
+
+        $.get(window.SITE_URL + 'api/cdn/manager/url?bucket=cms-slider&callback=setImgCallback', function(data) {
+            base.managerUrl = data.data;
+        })
     };
 
     // --------------------------------------------------------------------------
 
-    base.addSlides = function(slides)
-    {
+    base.addSlides = function(slides) {
         for (var key in slides) {
             if (slides.hasOwnProperty(key)) {
                 base.addSlide(slides[key]);
@@ -67,8 +68,7 @@ NAILS_Admin_CMS_Sliders_Create_Edit = function()
 
     // --------------------------------------------------------------------------
 
-    base.addSlide = function(slide)
-    {
+    base.addSlide = function(slide) {
         var html;
 
         html = $('#templateSlideRow').html();
@@ -86,32 +86,28 @@ NAILS_Admin_CMS_Sliders_Create_Edit = function()
 
     // --------------------------------------------------------------------------
 
-    base.removeSlide = function(elem)
-    {
+    base.removeSlide = function(elem) {
         $('<div>').text('Are you sure you wish to remove this slide?').dialog({
             title: 'Are you sure?',
             resizable: false,
             draggable: false,
             modal: true,
             buttons:
-            {
-                OK: function()
                 {
-                    elem.closest('tr').remove();
-                    $(this).dialog('close');
-                },
-                Cancel: function()
-                {
-                    $(this).dialog('close');
-                },
-            }
+                    OK: function() {
+                        elem.closest('tr').remove();
+                        $(this).dialog('close');
+                    },
+                    Cancel: function() {
+                        $(this).dialog('close');
+                    },
+                }
         });
     };
 
     // --------------------------------------------------------------------------
 
-    base.fixCellWidth = function()
-    {
+    base.fixCellWidth = function() {
         //  Remove all inline styles
         $('#slides tbody tr td.caption').removeAttr('style');
 
@@ -124,8 +120,7 @@ NAILS_Admin_CMS_Sliders_Create_Edit = function()
 
     // --------------------------------------------------------------------------
 
-    base.setImg = function(elem)
-    {
+    base.setImg = function(elem) {
         //  Save which item we're setting the image for
         base.settingImgFor = elem;
 
@@ -133,8 +128,8 @@ NAILS_Admin_CMS_Sliders_Create_Edit = function()
 
         //  Open the CDN Manager
         var url;
-        url  = base.managerUrl;
-        url += url.indexOf( '?' ) >= 0 ? '&isModal=1' : '?isModal=1';
+        url = base.managerUrl;
+        url += url.indexOf('?') >= 0 ? '&isModal=1' : '?isModal=1';
 
         $.fancybox.open({
             'href': url,
@@ -147,12 +142,10 @@ NAILS_Admin_CMS_Sliders_Create_Edit = function()
                     'locked': false
                 }
             },
-            'beforeLoad': function()
-            {
+            'beforeLoad': function() {
                 $('body').addClass('noScroll');
             },
-            'afterClose': function()
-            {
+            'afterClose': function() {
                 base.settingImgFor = null;
                 $('body').removeClass('noScroll');
             }
@@ -161,8 +154,7 @@ NAILS_Admin_CMS_Sliders_Create_Edit = function()
 
     // --------------------------------------------------------------------------
 
-    base.setImgCallback = function(bucket, filename, objectId)
-    {
+    base.setImgCallback = function(bucket, filename, objectId) {
         var container, file, thumbData, thumbUrl, thumb, serveData, serveUrl, serve;
 
         //  Get the container
@@ -204,8 +196,7 @@ NAILS_Admin_CMS_Sliders_Create_Edit = function()
 
     // --------------------------------------------------------------------------
 
-    base.removeImg = function(elem)
-    {
+    base.removeImg = function(elem) {
         var container;
 
         container = elem.closest('td.image');
@@ -217,8 +208,7 @@ NAILS_Admin_CMS_Sliders_Create_Edit = function()
 
     // --------------------------------------------------------------------------
 
-    base.setScheme = function(schemeType, scheme)
-    {
+    base.setScheme = function(schemeType, scheme) {
         switch (schemeType) {
 
             case 'serve':
@@ -240,8 +230,7 @@ NAILS_Admin_CMS_Sliders_Create_Edit = function()
 
     // --------------------------------------------------------------------------
 
-    base.setManagerUrl = function(url)
-    {
+    base.setManagerUrl = function(url) {
         base.managerUrl = url;
     };
 

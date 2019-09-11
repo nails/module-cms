@@ -12,10 +12,10 @@
 
 namespace Nails\Admin\Cms;
 
-use Nails\Factory;
-use Nails\Functions;
 use Nails\Admin\Helper;
 use Nails\Cms\Controller\BaseAdmin;
+use Nails\Factory;
+use Nails\Functions;
 
 class Slider extends BaseAdmin
 {
@@ -25,6 +25,7 @@ class Slider extends BaseAdmin
 
     /**
      * Announces this controller's navGroups
+     *
      * @return \Nails\Admin\Nav
      */
     public static function announce()
@@ -42,6 +43,7 @@ class Slider extends BaseAdmin
 
     /**
      * Returns an array of permissions which can be configured for the user
+     *
      * @return array
      */
     public static function permissions(): array
@@ -72,6 +74,7 @@ class Slider extends BaseAdmin
 
     /**
      * Browse CMS Sliders
+     *
      * @return void
      */
     public function index()
@@ -135,6 +138,7 @@ class Slider extends BaseAdmin
 
     /**
      * Create a new CMS Slider
+     *
      * @return void
      */
     public function create()
@@ -213,16 +217,6 @@ class Slider extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        //  Define the manager URL
-        $sCdnManagerUrl = cdnManagerUrl(
-            'cms-slider',
-            ['sliderEdit', 'setImgCallback'],
-            null,
-            Functions::isPageSecure()
-        );
-
-        // --------------------------------------------------------------------------
-
         //  Assets
         $oCdn   = Factory::service('Cdn', 'nails/module-cdn');
         $oAsset = Factory::service('Asset');
@@ -233,7 +227,6 @@ class Slider extends BaseAdmin
         $oAsset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
         $oAsset->inline('sliderEdit.setScheme("serve", "' . $oCdn->urlServeScheme() . '");', 'JS');
         $oAsset->inline('sliderEdit.setScheme("thumb", "' . $oCdn->urlCropScheme() . '");', 'JS');
-        $oAsset->inline('sliderEdit.setManagerUrl("' . $sCdnManagerUrl . '");', 'JS');
         $oAsset->inline('sliderEdit.addSlides(' . json_encode($aSlides) . ');', 'JS');
 
         // --------------------------------------------------------------------------
@@ -245,6 +238,7 @@ class Slider extends BaseAdmin
 
     /**
      * Edit a CMS Slider
+     *
      * @return void
      */
     public function edit()
@@ -335,16 +329,6 @@ class Slider extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        //  Define the manager URL
-        $sCdnManagerUrl = cdnManagerUrl(
-            'cms-slider',
-            ['sliderEdit', 'setImgCallback'],
-            null,
-            Functions::isPageSecure()
-        );
-
-        // --------------------------------------------------------------------------
-
         //  Assets
         $oCdn   = Factory::service('Cdn', 'nails/module-cdn');
         $oAsset = Factory::service('Asset');
@@ -356,7 +340,6 @@ class Slider extends BaseAdmin
         $oAsset->inline('sliderEdit.setScheme("serve", "' . $oCdn->urlServeScheme() . '");', 'JS');
         $oAsset->inline('sliderEdit.setScheme("thumb", "' . $oCdn->urlCropScheme() . '");', 'JS');
         $oAsset->inline('sliderEdit.setScheme("scale", "' . $oCdn->urlScaleScheme() . '");', 'JS');
-        $oAsset->inline('sliderEdit.setManagerUrl("' . $sCdnManagerUrl . '");', 'JS');
         $oAsset->inline('sliderEdit.addSlides(' . json_encode($aSlides) . ');', 'JS');
 
         // --------------------------------------------------------------------------
@@ -368,6 +351,7 @@ class Slider extends BaseAdmin
 
     /**
      * Delete a CMS Slider
+     *
      * @return void
      */
     public function delete()
