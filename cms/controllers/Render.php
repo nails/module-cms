@@ -11,6 +11,7 @@
  */
 
 use App\Controller\Base;
+use Nails\Auth;
 use Nails\Cms\Exception\RenderException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\Meta;
@@ -93,7 +94,7 @@ class Render extends Base
          */
 
         if ($oPage->id === $this->iHomepageId && uri_string() == $oData->slug) {
-            $oSession = Factory::service('Session', 'nails/module-auth');
+            $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
             $oSession->keepFlashData();
             redirect('', 'location', 301);
         }

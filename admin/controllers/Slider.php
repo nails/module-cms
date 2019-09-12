@@ -13,6 +13,7 @@
 namespace Nails\Admin\Cms;
 
 use Nails\Admin\Helper;
+use Nails\Auth;
 use Nails\Cms\Controller\BaseAdmin;
 use Nails\Factory;
 use Nails\Functions;
@@ -186,7 +187,7 @@ class Slider extends BaseAdmin
 
                 if ($this->oSliderModel->create($aSliderData)) {
 
-                    $oSession = Factory::service('Session', 'nails/module-auth');
+                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                     $oSession->setFlashData('success', 'Slider created successfully.');
                     redirect('admin/cms/slider');
 
@@ -254,7 +255,7 @@ class Slider extends BaseAdmin
         $this->data['slider'] = $oSlide;
 
         if (!$oSlide) {
-            $oSession = Factory::service('Session', 'nails/module-auth');
+            $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
             $oSession->setFlashData('error', 'Invalid slider ID.');
             redirect('admin/cms/slider');
         }
@@ -298,7 +299,7 @@ class Slider extends BaseAdmin
 
                 if ($this->oSliderModel->update($oSlide->id, $aSliderData)) {
 
-                    $oSession = Factory::service('Session', 'nails/module-auth');
+                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                     $oSession->setFlashData('success', 'Sldier updated successfully.');
                     redirect('admin/cms/slider');
 
@@ -368,7 +369,7 @@ class Slider extends BaseAdmin
         $oSlider   = $this->oSliderModel->getById($iSliderId);
 
         if (!$oSlider) {
-            $oSession = Factory::service('Session', 'nails/module-auth');
+            $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
             $oSession->setFlashData('error', 'No slider by that ID.');
             redirect('admin/cms/slider');
         }
@@ -383,7 +384,7 @@ class Slider extends BaseAdmin
             $sMessage = 'Failed to delete that slider. ' . $this->oSliderModel->lastError();
         }
 
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
         $oSession->setFlashData($sStatus, $sMessage);
         redirect('admin/cms/slider');
     }

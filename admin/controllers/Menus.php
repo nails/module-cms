@@ -13,6 +13,7 @@
 namespace Nails\Admin\Cms;
 
 use Nails\Admin\Helper;
+use Nails\Auth;
 use Nails\Cms\Controller\BaseAdmin;
 use Nails\Factory;
 
@@ -20,6 +21,7 @@ class Menus extends BaseAdmin
 {
     /**
      * Announces this controller's navGroups
+     *
      * @return \Nails\Admin\Nav
      */
     public static function announce()
@@ -37,6 +39,7 @@ class Menus extends BaseAdmin
 
     /**
      * Returns an array of permissions which can be configured for the user
+     *
      * @return array
      */
     public static function permissions(): array
@@ -56,6 +59,7 @@ class Menus extends BaseAdmin
 
     /**
      * Browse CMS Menus
+     *
      * @return void
      */
     public function index()
@@ -105,6 +109,7 @@ class Menus extends BaseAdmin
 
     /**
      * Create a new CMS Menu
+     *
      * @return void
      */
     public function create()
@@ -149,7 +154,7 @@ class Menus extends BaseAdmin
                 $oMenuModel = Factory::model('Menu', 'nails/module-cms');
                 if ($oMenuModel->create($aItemData)) {
 
-                    $oSession = Factory::service('Session', 'nails/module-auth');
+                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                     $oSession->setFlashData('success', 'Menu created successfully.');
                     redirect('admin/cms/menus');
 
@@ -219,6 +224,7 @@ class Menus extends BaseAdmin
 
     /**
      * Edit a CMS Menu
+     *
      * @return void
      */
     public function edit()
@@ -234,7 +240,7 @@ class Menus extends BaseAdmin
         $oMenu      = $oMenuModel->getById($oUri->segment(5));
 
         if (!$oMenu) {
-            $oSession = Factory::service('Session', 'nails/module-auth');
+            $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
             $oSession->setFlashData('error', 'Invalid menu ID.');
             redirect('admin/cms/menus');
         }
@@ -274,7 +280,7 @@ class Menus extends BaseAdmin
 
                 if ($oMenuModel->update($oMenu->id, $aItemData)) {
 
-                    $oSession = Factory::service('Session', 'nails/module-auth');
+                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                     $oSession->setFlashData('success', 'Menu updated successfully.');
                     redirect('admin/cms/menus');
 
@@ -344,6 +350,7 @@ class Menus extends BaseAdmin
 
     /**
      * Delete a CMS Menu
+     *
      * @return void
      */
     public function delete()
@@ -355,7 +362,7 @@ class Menus extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $oUri       = Factory::service('Uri');
-        $oSession   = Factory::service('Session', 'nails/module-auth');
+        $oSession   = Factory::service('Session', Auth\Constants::MODULE_SLUG);
         $oMenuModel = Factory::model('Menu', 'nails/module-cms');
         $oMenu      = $oMenuModel->getById($oUri->segment(5));
 

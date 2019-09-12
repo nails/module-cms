@@ -13,6 +13,7 @@
 namespace Nails\Admin\Cms;
 
 use Nails\Admin\Helper;
+use Nails\Auth;
 use Nails\Auth\Service\Session;
 use Nails\Cms\Controller\BaseAdmin;
 use Nails\Cms\Model\Page;
@@ -257,7 +258,7 @@ class Pages extends BaseAdmin
 
                         $sStatus  = 'success';
                         $sMessage = 'Page created successfully!';
-                        $oSession = Factory::service('Session', 'nails/module-auth');
+                        $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                         $oSession->setFlashData($sStatus, $sMessage);
                         redirect('admin/cms/pages/edit/' . $oNewPageId);
                     }
@@ -344,7 +345,7 @@ class Pages extends BaseAdmin
         $oPage = $this->oPageModel->getById($oUri->segment(5));
 
         if (!$oPage) {
-            $oSession = Factory::service('Session', 'nails/module-auth');
+            $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
             $oSession->setFlashData('error', 'No page found by that ID');
             redirect('admin/cms/pages');
         }
@@ -403,7 +404,7 @@ class Pages extends BaseAdmin
 
                         $sStatus  = 'success';
                         $sMessage = 'Page saved successfully!';
-                        $oSession = Factory::service('Session', 'nails/module-auth');
+                        $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                         $oSession->setFlashData($sStatus, $sMessage);
                         redirect('admin/cms/pages/edit/' . $oPage->id);
                     }
@@ -493,7 +494,7 @@ class Pages extends BaseAdmin
 
         $oUri       = Factory::service('Uri');
         $oInput     = Factory::service('Input');
-        $oSession   = Factory::service('Session', 'nails/module-auth');
+        $oSession   = Factory::service('Session', Auth\Constants::MODULE_SLUG);
         $iId        = $oUri->segment(5);
         $bIsEditing = (bool) $oInput->get('editing');
         $sReturnTo  = $oInput->get('return_to');
@@ -577,7 +578,7 @@ class Pages extends BaseAdmin
                 $oDb->trans_commit();
 
                 /** @var Session $oSession */
-                $oSession = Factory::service('Session', 'nails/module-auth');
+                $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                 $oSession->setFlashData('success', 'Page unpublished successfully');
 
                 redirect($oInput->post('return_to') ?: 'admin/cms/pages');
@@ -750,7 +751,7 @@ class Pages extends BaseAdmin
                 $oDb->trans_commit();
 
                 /** @var Session $oSession */
-                $oSession = Factory::service('Session', 'nails/module-auth');
+                $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                 $oSession->setFlashData('success', 'Page deleted successfully');
 
                 redirect($oInput->post('return_to') ?: 'admin/cms/pages');
@@ -799,7 +800,7 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $oUri     = Factory::service('Uri');
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
         $id       = $oUri->segment(5);
         $page     = $this->oPageModel->getById($id);
 

@@ -12,6 +12,7 @@
 
 namespace Nails\Admin\Cms;
 
+use Nails\Auth;
 use Nails\Factory;
 use Nails\Admin\Helper;
 use Nails\Cms\Controller\BaseAdmin;
@@ -185,7 +186,7 @@ class Area extends BaseAdmin
                     $sStatus  = 'success';
                     $sMessage = 'Area created successfully.';
 
-                    $oSession = Factory::service('Session', 'nails/module-auth');
+                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                     $oSession->setFlashData($sStatus, $sMessage);
                     redirect('admin/cms/area');
 
@@ -227,7 +228,7 @@ class Area extends BaseAdmin
         $this->data['area'] = $area;
 
         if (!$area) {
-            $oSession = Factory::service('Session', 'nails/module-auth');
+            $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
             $oSession->setFlashData('error', 'Invalid area ID.');
             redirect('admin/cms/area');
         }
@@ -270,7 +271,7 @@ class Area extends BaseAdmin
                     $sStatus  = 'success';
                     $sMessage = 'Area updated successfully.';
 
-                    $oSession = Factory::service('Session', 'nails/module-auth');
+                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                     $oSession->setFlashData($sStatus, $sMessage);
                     redirect('admin/cms/area');
 
@@ -313,7 +314,7 @@ class Area extends BaseAdmin
         $area = $this->oAreaModel->getById($oUri->segment(5));
 
         if (!$area) {
-            $oSession = Factory::service('Session', 'nails/module-auth');
+            $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
             $oSession->setFlashData('error', 'Invalid area ID.');
             redirect('admin/cms/area');
         }
@@ -332,7 +333,7 @@ class Area extends BaseAdmin
             $sMessage .= $this->oAreaModel->lastError();
         }
 
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
         $oSession->setFlashData($sStatus, $sMessage);
         redirect('admin/cms/area');
     }

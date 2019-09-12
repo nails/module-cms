@@ -13,6 +13,7 @@
 namespace Nails\Admin\Cms;
 
 use Nails\Admin\Helper;
+use Nails\Auth;
 use Nails\Cms\Controller\BaseAdmin;
 use Nails\Factory;
 
@@ -24,6 +25,7 @@ class Blocks extends BaseAdmin
 
     /**
      * Announces this controller's navGroups
+     *
      * @return \Nails\Admin\Nav
      */
     public static function announce()
@@ -43,6 +45,7 @@ class Blocks extends BaseAdmin
 
     /**
      * Returns an array of permissions which can be configured for the user
+     *
      * @return array
      */
     public static function permissions(): array
@@ -85,6 +88,7 @@ class Blocks extends BaseAdmin
 
     /**
      * Browse CMS Blocks
+     *
      * @return void
      */
     public function index()
@@ -180,6 +184,7 @@ class Blocks extends BaseAdmin
 
     /**
      * Edit a CMS Block
+     *
      * @return void
      */
     public function edit()
@@ -233,7 +238,7 @@ class Blocks extends BaseAdmin
 
                 if ($oModel->update($this->data['block']->id, ['value' => $oInput->post('value')])) {
 
-                    $oSession = Factory::service('Session', 'nails/module-auth');
+                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                     $oSession->setFlashData('success', 'Block updated successfully.');
                     redirect('admin/cms/blocks');
 
@@ -268,6 +273,7 @@ class Blocks extends BaseAdmin
 
     /**
      * Create a new CMS Block
+     *
      * @return void
      */
     public function create()
@@ -327,7 +333,7 @@ class Blocks extends BaseAdmin
                 $oModel = Factory::model('Block', 'nails/module-cms');
                 if ($oModel->create($aBlockData)) {
 
-                    $oSession = Factory::service('Session', 'nails/module-auth');
+                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                     $oSession->setFlashData('success', 'Block created successfully.');
                     redirect('admin/cms/blocks');
 
@@ -368,7 +374,7 @@ class Blocks extends BaseAdmin
 
         $oModel   = Factory::model('Block', 'nails/module-cms');
         $oUri     = Factory::service('Uri');
-        $oSession = Factory::service('Session', 'nails/module-auth');
+        $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
 
         $oBlock = $oModel->getById($oUri->segment(5));
 
@@ -397,7 +403,7 @@ class Blocks extends BaseAdmin
     /**
      * Form validation callback: Validates a block's slug
      *
-     * @param  string &$sSlug The slug to validate/sanitise
+     * @param string &$sSlug The slug to validate/sanitise
      *
      * @return boolean
      */
@@ -439,7 +445,7 @@ class Blocks extends BaseAdmin
     /**
      * Form Validation Callback: Validates a block's type
      *
-     * @param  string $sType The type to validate
+     * @param string $sType The type to validate
      *
      * @return boolean
      */
