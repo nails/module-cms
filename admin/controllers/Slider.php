@@ -14,6 +14,7 @@ namespace Nails\Admin\Cms;
 
 use Nails\Admin\Helper;
 use Nails\Auth;
+use Nails\Cdn;
 use Nails\Cms\Controller\BaseAdmin;
 use Nails\Factory;
 use Nails\Functions;
@@ -219,7 +220,7 @@ class Slider extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $oCdn   = Factory::service('Cdn', 'nails/module-cdn');
+        $oCdn   = Factory::service('Cdn', Cdn\Constants::MODULE_SLUG);
         $oAsset = Factory::service('Asset');
         $oAsset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
         $oAsset->library('MUSTACHE');
@@ -331,7 +332,7 @@ class Slider extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Assets
-        $oCdn   = Factory::service('Cdn', 'nails/module-cdn');
+        $oCdn   = Factory::service('Cdn', Cdn\Constants::MODULE_SLUG);
         $oAsset = Factory::service('Asset');
         $oAsset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
         $oAsset->library('MUSTACHE');
