@@ -14,10 +14,8 @@ namespace Nails\Admin\Cms;
 
 use Nails\Admin\Helper;
 use Nails\Auth;
-use Nails\Cdn;
 use Nails\Cms\Controller\BaseAdmin;
 use Nails\Factory;
-use Nails\Functions;
 
 class Slider extends BaseAdmin
 {
@@ -154,36 +152,26 @@ class Slider extends BaseAdmin
         $oInput = Factory::service('Input');
         if ($oInput->post()) {
 
-            //  Rebuild sliders
-            $aSlideIds  = $oInput->post('slideId') ?: [];
-            $aObjectIds = $oInput->post('objectId') ?: [];
-            $aCaptions  = $oInput->post('caption') ?: [];
-            $aUrls      = $oInput->post('url') ?: [];
-
-            $aSlides = [];
-            for ($i = 0; $i < count($aSlideIds); $i++) {
-                $aSlides[] = (object) [
-                    'id'        => !empty($aSlideIds[$i]) ? $aSlideIds[$i] : null,
-                    'object_id' => !empty($aObjectIds[$i]) ? $aObjectIds[$i] : null,
-                    'caption'   => !empty($aCaptions[$i]) ? $aCaptions[$i] : null,
-                    'url'       => !empty($aUrls[$i]) ? $aUrls[$i] : null,
-                ];
-            }
-
-            // --------------------------------------------------------------------------
-
             //  Validate form
             $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('label', '', 'trim|required');
-            $oFormValidation->set_rules('description', '', 'trim');
+            $oFormValidation->set_rules('label', '', 'required');
+            $oFormValidation->set_rules('description', '', '');
             $oFormValidation->set_message('required', lang('fv_required'));
 
             if ($oFormValidation->run()) {
 
                 $aSliderData = [
-                    'label'       => $oInput->post('label'),
-                    'description' => strip_tags($oInput->post('description')),
-                    'slides'      => $aSlides,
+                    'label'       => trim($oInput->post('label')),
+                    'description' => trim(strip_tags($oInput->post('description'))),
+                    'slides'      => array_map(function (array $aSlide) {
+                        return (object) [
+                            'id'        => getFromArray('id', $aSlide),
+                            'order'     => getFromArray('order', $aSlide),
+                            'object_id' => getFromArray('object_id', $aSlide),
+                            'caption'   => getFromArray('caption', $aSlide),
+                            'url'       => getFromArray('url', $aSlide),
+                        ];
+                    }, array_filter((array) $oInput->post('items'))),
                 ];
 
                 if ($this->oSliderModel->create($aSliderData)) {
@@ -201,35 +189,11 @@ class Slider extends BaseAdmin
                 $this->data['error'] = lang('fv_there_were_errors');
             }
 
-        } else {
-            $aSlides = [];
         }
 
         // --------------------------------------------------------------------------
 
         $this->data['page']->title = 'Create Slider';
-
-        // --------------------------------------------------------------------------
-
-        //  Prep the slides for the view
-        foreach ($aSlides as $oSlide) {
-            $oSlide->imgSourceUrl = !empty($oSlide->object_id) ? cdnServe($oSlide->object_id) : null;
-            $oSlide->imgThumbUrl  = !empty($oSlide->object_id) ? cdnScale($oSlide->object_id, 130, 130) : null;
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Assets
-        $oCdn   = Factory::service('Cdn', Cdn\Constants::MODULE_SLUG);
-        $oAsset = Factory::service('Asset');
-        $oAsset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
-        $oAsset->library('MUSTACHE');
-        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
-        $oAsset->load('admin.sliders.edit.js', 'nails/module-cms');
-        $oAsset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
-        $oAsset->inline('sliderEdit.setScheme("serve", "' . $oCdn->urlServeScheme() . '");', 'JS');
-        $oAsset->inline('sliderEdit.setScheme("thumb", "' . $oCdn->urlCropScheme() . '");', 'JS');
-        $oAsset->inline('sliderEdit.addSlides(' . json_encode($aSlides) . ');', 'JS');
 
         // --------------------------------------------------------------------------
 
@@ -266,36 +230,26 @@ class Slider extends BaseAdmin
         $oInput = Factory::service('Input');
         if ($oInput->post()) {
 
-            //  Rebuild sliders
-            $aSlideIds  = $oInput->post('slideId') ?: [];
-            $aObjectIds = $oInput->post('objectId') ?: [];
-            $aCaptions  = $oInput->post('caption') ?: [];
-            $aUrls      = $oInput->post('url') ?: [];
-
-            $aSlides = [];
-            for ($i = 0; $i < count($aSlideIds); $i++) {
-                $aSlides[] = (object) [
-                    'id'        => !empty($aSlideIds[$i]) ? $aSlideIds[$i] : null,
-                    'object_id' => !empty($aObjectIds[$i]) ? $aObjectIds[$i] : null,
-                    'caption'   => !empty($aCaptions[$i]) ? $aCaptions[$i] : null,
-                    'url'       => !empty($aUrls[$i]) ? $aUrls[$i] : null,
-                ];
-            }
-
-            // --------------------------------------------------------------------------
-
             //  Validate form
             $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('label', '', 'trim|required');
-            $oFormValidation->set_rules('description', '', 'trim');
+            $oFormValidation->set_rules('label', '', 'required');
+            $oFormValidation->set_rules('description', '', '');
             $oFormValidation->set_message('required', lang('fv_required'));
 
             if ($oFormValidation->run()) {
 
                 $aSliderData = [
-                    'label'       => $oInput->post('label'),
-                    'description' => strip_tags($oInput->post('description')),
-                    'slides'      => $aSlides,
+                    'label'       => trim($oInput->post('label')),
+                    'description' => trim(strip_tags($oInput->post('description'))),
+                    'slides'      => array_map(function (array $aSlide) {
+                        return (object) [
+                            'id'        => getFromArray('id', $aSlide),
+                            'order'     => getFromArray('order', $aSlide),
+                            'object_id' => getFromArray('object_id', $aSlide),
+                            'caption'   => getFromArray('caption', $aSlide),
+                            'url'       => getFromArray('url', $aSlide),
+                        ];
+                    }, array_filter((array) $oInput->post('items'))),
                 ];
 
                 if ($this->oSliderModel->update($oSlide->id, $aSliderData)) {
@@ -312,37 +266,11 @@ class Slider extends BaseAdmin
             } else {
                 $this->data['error'] = lang('fv_there_were_errors');
             }
-
-        } else {
-            $aSlides = $oSlide->slides;
         }
 
         // --------------------------------------------------------------------------
 
         $this->data['page']->title = 'Edit Slider &rsaquo; ' . $oSlide->label;
-
-        // --------------------------------------------------------------------------
-
-        //  Prep the slides for the view
-        foreach ($aSlides as $oSlide) {
-            $oSlide->imgSourceUrl = !empty($oSlide->object_id) ? cdnServe($oSlide->object_id) : null;
-            $oSlide->imgThumbUrl  = !empty($oSlide->object_id) ? cdnScale($oSlide->object_id, 130, 130) : null;
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Assets
-        $oCdn   = Factory::service('Cdn', Cdn\Constants::MODULE_SLUG);
-        $oAsset = Factory::service('Asset');
-        $oAsset->load('jquery-ui/jquery-ui.min.js', 'NAILS-BOWER');
-        $oAsset->library('MUSTACHE');
-        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
-        $oAsset->load('admin.sliders.edit.js', 'nails/module-cms');
-        $oAsset->inline('var sliderEdit = new NAILS_Admin_CMS_Sliders_Create_Edit();', 'JS');
-        $oAsset->inline('sliderEdit.setScheme("serve", "' . $oCdn->urlServeScheme() . '");', 'JS');
-        $oAsset->inline('sliderEdit.setScheme("thumb", "' . $oCdn->urlCropScheme() . '");', 'JS');
-        $oAsset->inline('sliderEdit.setScheme("scale", "' . $oCdn->urlScaleScheme() . '");', 'JS');
-        $oAsset->inline('sliderEdit.addSlides(' . json_encode($aSlides) . ');', 'JS');
 
         // --------------------------------------------------------------------------
 

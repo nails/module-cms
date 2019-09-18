@@ -4,84 +4,75 @@
         <legend>Slider Details</legend>
         <?php
 
+        $field                = [];
+        $field['key']         = 'label';
+        $field['label']       = 'Label';
+        $field['placeholder'] = 'Give the slider a title';
+        $_field['required']   = true;
+        $field['default']     = isset($slider->label) ? $slider->label : '';
 
-            $field                = array();
-            $field['key']         = 'label';
-            $field['label']       = 'Label';
-            $field['placeholder'] = 'Give the slider a title';
-            $_field['required']   = true;
-            $field['default']     = isset($slider->label) ? $slider->label : '';
+        echo form_field($field);
 
-            echo form_field($field);
+        // --------------------------------------------------------------------------
 
-            // --------------------------------------------------------------------------
+        $field                = [];
+        $field['key']         = 'description';
+        $field['label']       = 'Description';
+        $field['placeholder'] = 'Describe the purpose of the slider';
+        $field['default']     = isset($slider->description) ? $slider->description : '';
 
-            $field                = array();
-            $field['key']         = 'description';
-            $field['label']       = 'Description';
-            $field['placeholder'] = 'Describe the purpose of the slider';
-            $field['default']     = isset($slider->description) ? $slider->description : '';
-
-            echo form_field($field);
+        echo form_field($field);
 
         ?>
     </fieldset>
     <fieldset>
         <legend>Slides</legend>
-        <table id="slides">
+        <table class="js-admin-dynamic-table" data-data="<?=htmlspecialchars(json_encode(isset($slider) ? $slider->slides : []))?>">
             <thead>
                 <tr>
-                    <th class="order">Order</th>
-                    <th class="image">Image</th>
-                    <th class="caption">Caption</th>
-                    <th class="link">Link</th>
-                    <th class="remove">&nbsp;</th>
+                    <th width="35"></th>
+                    <th width="250">Image</th>
+                    <th>Caption</th>
+                    <th>URL</th>
+                    <th width="35"></th>
                 </tr>
             </thead>
+            <tbody class="js-admin-dynamic-table__template js-admin-sortable" data-handle=".handle">
+                <tr>
+                    <td class="text-center">
+                        <b class="fa fa-bars handle"></b>
+                        <input type="hidden" name="items[{{index}}][id]" value="{{id}}">
+                        <input type="hidden" name="items[{{index}}][order]" value="{{order}}" class="js-admin-sortable__order">
+                    </td>
+                    <td>
+                        <?=cdnObjectPicker('items[{{index}}][object_id]', 'gallery', '{{object_id}}')?>
+                    </td>
+                    <td>
+                        <input type="text" class="form-input" name="items[{{index}}][caption]" value="{{caption}}">
+                    </td>
+                    <td>
+                        <input type="text" class="form-input" name="items[{{index}}][url]" value="{{url}}">
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-xs btn-danger js-admin-dynamic-table__remove">
+                            &times;
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
             <tbody>
+                <tr>
+                    <td colspan="4">
+                        <button class="btn btn-xs btn-success js-admin-dynamic-table__add">
+                            &plus; Add Item
+                        </button>
+                    </td>
+                </tr>
             </tbody>
         </table>
-        <p>
-            <a href="#" class="btn btn-xs btn-warning" id="addSlide">
-                + Add Slide
-            </a>
-        </p>
     </fieldset>
     <p>
         <?=form_submit('submit', lang('action_save_changes'), 'class="btn btn-primary"');?>
     </p>
     <?=form_close();?>
 </div>
-<script type="text/template" id="templateSlideRow">
-<tr>
-    <td class="order sortHandle">
-        <b class="fa fa-bars fa-lg"></b>
-        <input type="hidden" style="width:20px;" name="slideId[]" value="{{id}}" />
-    </td>
-    <td class="image">
-        {{#object_id}}
-            <a href="{{imgSourceUrl}}" class="fancybox">
-                <img src="{{imgThumbUrl}}" />
-            </a>
-        {{/object_id}}
-        <a href="#" class="btnSetImg btn btn-xs btn-success">
-            Set Image
-        </a>
-        <a href="#" class="btnRemoveImg btn btn-xs btn-danger {{^object_id}}hidden{{/object_id}}">
-            Remove Image
-        </a>
-        <input type="hidden" name="objectId[]" value="{{object_id}}" />
-    </td>
-    <td class="caption">
-        <textarea name="caption[]">{{caption}}</textarea>
-    </td>
-    <td class="link">
-        <input type="text" name="url[]" value="{{url}}" />
-    </td>
-    <td class="remove">
-        <a href="#" class="btnRemoveSlide">
-            <b class="fa fa-lg fa-times-circle"></b>
-        </a>
-    </td>
-</tr>
-</script>
