@@ -25,7 +25,7 @@ class Area extends BaseAdmin
 
     /**
      * Announces this controller's navGroups
-     * @return \Nails\Admin\Nav
+     * @return \Nails\Admin\Factory\Nav
      */
     public static function announce()
     {
