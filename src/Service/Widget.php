@@ -13,6 +13,7 @@
 namespace Nails\Cms\Service;
 
 use Nails\Cms\Exception\Widget\NotFoundException;
+use Nails\Common\Helper\Directory;
 use Nails\Components;
 use Nails\Factory;
 
@@ -58,12 +59,16 @@ class Widget
         foreach ($aModules as $oModule) {
 
             $sWidgetDir = $oModule->path . 'cms/widgets/';
-            $aWidgets   = directoryMap($sWidgetDir, 1);
+            $aWidgets   = Directory::map($sWidgetDir, 2, false);
+
             if (!empty($aWidgets)) {
+
                 foreach ($aWidgets as $sWidgetName) {
-                    $sWidgetName       = trim($sWidgetName, DIRECTORY_SEPARATOR);
-                    $sWidgetDefinition = $sWidgetDir . $sWidgetName . '/widget.php';
+
+                    $sWidgetName       = preg_replace('#' . DIRECTORY_SEPARATOR . 'widget\.php$#', '', $sWidgetName);
+                    $sWidgetDefinition = $sWidgetDir . $sWidgetName . DIRECTORY_SEPARATOR . 'widget.php';
                     $sWidgetClass      = $oModule->namespace . 'Cms\Widget\\' . ucfirst($sWidgetName);
+
                     if (is_file($sWidgetDefinition)) {
 
                         require_once $sWidgetDefinition;

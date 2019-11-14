@@ -12,8 +12,9 @@
 
 namespace Nails\Cms\Service;
 
-use Nails\Components;
 use Nails\Cms\Exception\Template\NotFoundException;
+use Nails\Common\Helper\Directory;
+use Nails\Components;
 use Nails\Factory;
 
 class Template
@@ -54,7 +55,7 @@ class Template
     /**
      * Get all available templates to the system
      *
-     * @param  string $loadAssets Whether or not to load template's assets, and if so whether EDITOR or RENDER assets.
+     * @param string $loadAssets Whether or not to load template's assets, and if so whether EDITOR or RENDER assets.
      *
      * @throws NotFoundException
      * @return array
@@ -69,14 +70,20 @@ class Template
 
         foreach ($this->aTemplateDirs as $aDir) {
 
-            $aTemplates = directoryMap($aDir['path']);
+            $aTemplates = Directory::map($aDir['path'], 2);
+            $aTemplates = array_map(function ($sPath) {
+                return dirname($sPath) . DIRECTORY_SEPARATOR;
+            }, $aTemplates);
+            $aTemplates = array_unique($aTemplates);
+            $aTemplates = array_values($aTemplates);
 
-            foreach ($aTemplates as $sTemplateDir => $aTemplateFiles) {
-                if (is_file($aDir['path'] . $sTemplateDir . '/template.php')) {
+            foreach ($aTemplates as $sTemplateDir) {
+
+                if (is_file($sTemplateDir . 'template.php')) {
                     $aAvailableTemplates[] = [
                         'namespace' => $aDir['namespace'],
                         'path'      => $aDir['path'],
-                        'name'      => $sTemplateDir,
+                        'name'      => basename($sTemplateDir),
                     ];
                 }
             }
@@ -171,8 +178,8 @@ class Template
     /**
      * Get an individual template
      *
-     * @param  string  $sSlug       The template's slug
-     * @param  boolean $sLoadAssets Whether or not to load the template's assets, and if so whether EDITOR or RENDER assets.
+     * @param string  $sSlug       The template's slug
+     * @param boolean $sLoadAssets Whether or not to load the template's assets, and if so whether EDITOR or RENDER assets.
      *
      * @return mixed
      */
@@ -207,7 +214,7 @@ class Template
     /**
      * Load template assets
      *
-     * @param  array $aAssets An array of assets to load
+     * @param array $aAssets An array of assets to load
      *
      * @return void
      */
