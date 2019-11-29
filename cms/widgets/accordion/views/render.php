@@ -20,17 +20,17 @@ if (!empty($panels)) {
 } else {
 
     //  CMS Defined tabs
-    $aTitle  = !empty($title) ? $title : array();
-    $aBody   = !empty($body) ? $body : array();
-    $aPanels = array();
+    $aTitle  = !empty($title) ? $title : [];
+    $aBody   = !empty($body) ? $body : [];
+    $aPanels = [];
 
     for ($i = 0; $i < count($aTitle); $i++) {
 
-        $aPanels[] = array(
+        $aPanels[] = [
             'title'     => getFromArray($i, $aTitle),
             'body'      => getFromArray($i, $aBody),
-            'collapsed' => $i !== 0
-        );
+            'collapsed' => $i !== 0,
+        ];
     }
 }
 
