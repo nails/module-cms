@@ -1,8 +1,12 @@
 'use strict';
 
 import '../sass/admin.scss';
-
-require('expose-loader?WidgetEditor!./components/WidgetEditor.js');
+import WidgetEditor from './components/WidgetEditor.js';
 
 (function() {
+    window.NAILS.ADMIN.registerPlugin(
+        'nails/module-cms',
+        'WidgetEditor',
+        new WidgetEditor(window.NAILS.ADMIN)
+    );
 })();

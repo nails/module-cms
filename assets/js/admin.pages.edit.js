@@ -1,6 +1,6 @@
 /* globals console, _nails_api */
 var NAILS_Admin_CMS_Pages_CreateEdit;
-NAILS_Admin_CMS_Pages_CreateEdit = function(widgetEditor, templates) {
+NAILS_Admin_CMS_Pages_CreateEdit = function(templates) {
     /**
      * Avoid scope issues in callbacks and anonymous functions by referring to `this` as `base`
      * @type {Object}
@@ -13,7 +13,7 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(widgetEditor, templates) {
      * The widget editor instance
      * @type {Object}
      */
-    base.editor = widgetEditor;
+    base.editor = window.NAILS.ADMIN.instances['nails/module-cms'].WidgetEditor;
 
     // --------------------------------------------------------------------------
 

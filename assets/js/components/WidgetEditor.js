@@ -1,13 +1,41 @@
-/* global _nails, _nails_admin */
+/* global _nails, window._nails_admin */
 class WidgetEditor {
+
+    /**
+     * Construct WidgetEditor
+     */
+    constructor(adminController) {
+
+        this.log('Constructing');
+        this.adminController = adminController;
+        this.instantiated = false;
+        this.$btns = $('.field.cms-widgets .open-editor');
+
+        this.setupListeners();
+
+        //  @todo (Pablo - 2019-12-05) - Support re-initing?
+        this.adminController.onRefreshUi(() => {
+            if (!this.instantiated) {
+                this.init();
+            }
+        });
+    }
+
+    // --------------------------------------------------------------------------
 
     /**
      * Construct the CMS widget editor
      * @return {WidgetEditor} The object itself, for chaining
      */
-    construct() {
+    init() {
 
-        this.log('Constructing Widget Editor');
+        this.log('Initialising Widget Editor');
+
+        //  Only instantiate once
+        this.instantiated = true;
+
+        //  Disable all buttons until the widgeteditor is ready
+        this.$btns.prop('disabled', true);
 
         /**
          * Give other items a chance to check if the widget editor is ready or not
@@ -80,6 +108,14 @@ class WidgetEditor {
         // --------------------------------------------------------------------------
 
         /**
+         * The element which triggered the widgeteditor
+         * @type {null}
+         */
+        this.activeButton = null;
+
+        // --------------------------------------------------------------------------
+
+        /**
          * The name/slug of the default area
          * @type {String}
          */
@@ -117,7 +153,7 @@ class WidgetEditor {
          * Any callbacks to apply to widgets on initialisation
          * @type {Array}
          */
-        this.widgetElements = [];
+        this.widgetInitCallback = [];
 
         //  Inject markup
         this.generateMarkup();
@@ -134,34 +170,81 @@ class WidgetEditor {
 
         //  Default editor elements
         this
-            .addWidgetEditorElement(() => {
-                _nails.addStripes();
-            })
-            .addWidgetEditorElement((widgetDom) => {
-                _nails_admin.buildWysiwyg('basic', widgetDom);
-                _nails_admin.buildWysiwyg('default', widgetDom);
-            })
-            .addWidgetEditorElement(() => {
-                _nails_admin.initSelect2();
-            })
-            .addWidgetEditorElement(() => {
-                _nails_admin.initToggles();
-            })
-            .addWidgetEditorElement(() => {
-                _nails.initTipsy();
+            .addWidgetInitCallback((widgetDom) => {
+
+                //  @todo (Pablo - 2019-12-05) - Try and move these to admin components and use refreshUi event
+                window._nails.addStripes();
+                window._nails_admin.initSelect2();
+                window._nails_admin.initToggles();
+                window._nails.initTipsy();
+                window._nails_admin.buildWysiwyg('basic', widgetDom);
+                window._nails_admin.buildWysiwyg('default', widgetDom);
+
+                this.adminController.refreshUi();
             });
 
-        //  Look for any other globally defined items
-        if (window.WidgetEditor.widgetEditorElement) {
-            for (let i = 0, j = window.WidgetEditor.widgetEditorElement.length; i < j; i++) {
-                this
-                    .addWidgetEditorElement(
-                        window.WidgetEditor.widgetEditorElement[i]
-                    );
-            }
-        }
+        //  Populate the editor with existing areas
+        this.$btns
+            .each((index, element) => {
+
+                //  Look for the associated input
+                let key = $(element).data('key');
+                let input = $(element).siblings('textarea.widget-data');
+
+                if (input.length) {
+                    try {
+                        let widgetData = JSON.parse(input.val());
+                        this.setAreaData(key, widgetData);
+                    } catch (e) {
+                        this.warn('Failed to parse JSON data');
+                        this.warn(e.message);
+                    }
+                }
+            });
 
         return this;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Binds the listeners
+     * @return {void}
+     */
+    setupListeners() {
+
+        this.log('Setting up listeners');
+
+        this.$btns
+            .on('click', (e) => {
+                if (this.isReady()) {
+                    this.activeButton = $(e.currentTarget);
+                    let key = this.activeButton.data('key');
+                    this.log('Opening Editor for area: ' + key);
+                    this.show(key);
+                } else {
+                    this.warn('Widget editor not ready');
+                }
+                return false;
+            });
+
+        $(this)
+            .on('widgeteditor-ready', () => {
+                this.$btns.prop('disabled', false);
+            })
+            .on('widgeteditor-close', () => {
+                if (this.activeButton) {
+
+                    this.log('Editor Closing, getting area data and saving to input');
+                    let input = this.activeButton.siblings('textarea.widget-data');
+                    let data = this.getAreaData(this.activeButton.data('key'));
+                    let dataString = JSON.stringify(data);
+
+                    if (input.length) {
+                        input.val(dataString).trigger('change');
+                    }
+                }
+            });
     }
 
     // --------------------------------------------------------------------------
@@ -274,7 +357,7 @@ class WidgetEditor {
                 $('.widget-group-' + groupIndex, this.sections.widgets).toggleClass('hidden');
 
                 //  Save the state to localstorage
-                _nails_admin.localStorage
+                window._nails_admin.localStorage
                     .set(
                         'widgeteditor-group-' + groupIndex + '-hidden',
                         !isOpen
@@ -380,7 +463,7 @@ class WidgetEditor {
 
         deferred = $.Deferred();
 
-        _nails_api.call({
+        window._nails_api.call({
             'controller': 'cms/widgets',
             'method': 'index',
             'success': (response) => {
@@ -449,7 +532,7 @@ class WidgetEditor {
             container = $('<div>').addClass('widget-group').data('group', i).append(label).append(toggle);
 
             //  Hidden by default?
-            let hidden = _nails_admin.localStorage.get('widgeteditor-group-' + i + '-hidden');
+            let hidden = window._nails_admin.localStorage.get('widgeteditor-group-' + i + '-hidden');
             if (hidden === true || hidden === null) {
                 container.addClass('closed');
             }
@@ -634,7 +717,7 @@ class WidgetEditor {
             this.log('Setting up all widgets');
 
             //  Send request off for all widget editors
-            _nails_api.call({
+            window._nails_api.call({
                 'controller': 'cms/widgets',
                 'method': 'editors',
                 'action': 'POST',
@@ -787,8 +870,8 @@ class WidgetEditor {
                 ui.helper.removeClass('hidden search-show search-hide');
 
                 ui.placeholder.height(ui.helper.outerHeight());
-                _nails_admin.destroyWysiwyg('basic', ui.helper);
-                _nails_admin.destroyWysiwyg('default', ui.helper);
+                window._nails_admin.destroyWysiwyg('basic', ui.helper);
+                window._nails_admin.destroyWysiwyg('default', ui.helper);
             },
             receive: (e, ui) => {
                 let sourceWidget, targetWidget, widgetSlug;
@@ -808,8 +891,8 @@ class WidgetEditor {
             },
             stop: (e, ui) => {
 
-                _nails_admin.buildWysiwyg('basic', ui.helper);
-                _nails_admin.buildWysiwyg('default', ui.helper);
+                window._nails_admin.buildWysiwyg('basic', ui.helper);
+                window._nails_admin.buildWysiwyg('default', ui.helper);
             }
         });
 
@@ -944,8 +1027,13 @@ class WidgetEditor {
 
     // --------------------------------------------------------------------------
 
-    addWidgetEditorElement(callback) {
-        this.widgetElements.push(callback);
+    /**
+     * Adds a new callback to be fired when a widget is instatiated
+     * @param callback
+     * @returns {WidgetEditor}
+     */
+    addWidgetInitCallback(callback) {
+        this.widgetInitCallback.push(callback);
         return this;
     }
 
@@ -957,8 +1045,8 @@ class WidgetEditor {
      * @return {void}
      */
     initWidgetEditorElements(widgetDom) {
-        for (let i = 0, j = this.widgetElements.length; i < j; i++) {
-            this.widgetElements[i].call(widgetDom);
+        for (let i = 0, j = this.widgetInitCallback.length; i < j; i++) {
+            this.widgetInitCallback[i].call(widgetDom);
         }
     }
 
@@ -998,7 +1086,7 @@ class WidgetEditor {
 
         deferred = $.Deferred();
 
-        _nails_api.call({
+        window._nails_api.call({
             'controller': 'cms/widgets',
             'method': 'editor',
             'action': 'POST',
@@ -1048,7 +1136,13 @@ class WidgetEditor {
             this.widgetData[area] = this.getActiveData();
         }
 
-        return this.widgetData[area] || null;
+        let data = this.widgetData[area];
+
+        if (Array.isArray(data) && data.length === 0) {
+            data = null;
+        }
+
+        return data || null;
     }
 
     // --------------------------------------------------------------------------
@@ -1151,7 +1245,7 @@ class WidgetEditor {
      */
     log(message, payload) {
 
-        if (typeof(console.log) === 'function') {
+        if (typeof (console.log) === 'function') {
             if (payload !== undefined) {
                 console.log('CMS Widget Editor:', message, payload);
             } else {
@@ -1172,7 +1266,7 @@ class WidgetEditor {
      */
     warn(message, payload) {
 
-        if (typeof(console.warn) === 'function') {
+        if (typeof (console.warn) === 'function') {
             if (payload !== undefined) {
                 console.warn('CMS Widget Editor:', message, payload);
             } else {

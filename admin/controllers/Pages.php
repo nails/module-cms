@@ -12,6 +12,8 @@
 
 namespace Nails\Admin\Cms;
 
+use Nails\Admin\Factory\Nav;
+use Nails\Admin\Factory\Nav\Alert;
 use Nails\Admin\Helper;
 use Nails\Auth;
 use Nails\Auth\Service\Session;
@@ -26,19 +28,29 @@ use Nails\Common\Exception\ValidationException;
 use Nails\Common\Resource;
 use Nails\Common\Service\Asset;
 use Nails\Common\Service\Database;
+use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Uri;
 use Nails\Components;
 use Nails\Factory;
+use Nails\Redirect\Model\Redirect;
 
+/**
+ * Class Pages
+ *
+ * @package Nails\Admin\Cms
+ */
 class Pages extends BaseAdmin
 {
     /** @var Page */
     protected $oPageModel;
+
     /** @var Widget */
     protected $oWidgetService;
+
     /** @var Template */
     protected $oTemplateService;
+
     /** @var int */
     protected $iHomepageId;
 
@@ -55,16 +67,19 @@ class Pages extends BaseAdmin
 
             //  Alerts
             //  Draft pages
+            /** @var Database $oDb */
             $oDb = Factory::service('Database');
             $oDb->where('is_published', false);
             $oDb->where('is_deleted', false);
             $iNumDrafts = $oDb->count_all_results(NAILS_DB_PREFIX . 'cms_page');
 
+            /** @var Alert $oAlert */
             $oAlert = Factory::factory('NavAlert', 'nails/module-admin');
             $oAlert->setValue($iNumDrafts);
             $oAlert->setSeverity('danger');
             $oAlert->setLabel('Draft Pages');
 
+            /** @var Nav $oNavGroup */
             $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
             $oNavGroup->setLabel('CMS');
             $oNavGroup->setIcon('fa-file-text');
@@ -142,7 +157,7 @@ class Pages extends BaseAdmin
 
         $sTableAlias = $this->oPageModel->getTableAlias();
 
-        //  Get pagination and search/sort variables
+        /** @var Input $oInput */
         $oInput    = Factory::service('Input');
         $page      = $oInput->get('page') ? $oInput->get('page') : 0;
         $perPage   = $oInput->get('perPage') ? $oInput->get('perPage') : 50;
@@ -205,6 +220,7 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
+        /** @var Input $oInput */
         $oInput = Factory::service('Input');
         if ($oInput->post()) {
 
@@ -258,6 +274,7 @@ class Pages extends BaseAdmin
 
                         $sStatus  = 'success';
                         $sMessage = 'Page created successfully!';
+                        /** @var Session $oSession */
                         $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                         $oSession->setFlashData($sStatus, $sMessage);
                         redirect('admin/cms/pages/edit/' . $oNewPageId);
@@ -311,14 +328,10 @@ class Pages extends BaseAdmin
 
         /** @var Asset $oAsset */
         $oAsset = Factory::service('Asset');
-        $oAsset->library('CMSWIDGETEDITOR');
-        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
         $oAsset->load('admin.pages.edit.js', 'nails/module-cms');
         $oAsset->inline(implode("\n", [
-            'var widgetEditor = new window.WidgetEditor.default();',
-            'widgetEditor.construct();',
             'var templates = [' . implode(',', $aTemplatesJson) . ']',
-            'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);',
+            'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(templates);',
         ]), 'JS');
 
         // --------------------------------------------------------------------------
@@ -341,10 +354,12 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
+        /** @var Uri $oUri */
         $oUri  = Factory::service('Uri');
         $oPage = $this->oPageModel->getById($oUri->segment(5));
 
         if (!$oPage) {
+            /** @var Session $oSession */
             $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
             $oSession->setFlashData('error', 'No page found by that ID');
             redirect('admin/cms/pages');
@@ -352,9 +367,11 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
+        /** @var Input $oInput */
         $oInput = Factory::service('Input');
         if ($oInput->post()) {
 
+            /** @var FormValidation $oFormValidation */
             $oFormValidation = Factory::service('FormValidation');
             $oFormValidation->set_rules('title', '', '');
             $oFormValidation->set_rules('slug', '', 'alpha_dash');
@@ -404,8 +421,11 @@ class Pages extends BaseAdmin
 
                         $sStatus  = 'success';
                         $sMessage = 'Page saved successfully!';
+
+                        /** @var Session $oSession */
                         $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
                         $oSession->setFlashData($sStatus, $sMessage);
+
                         redirect('admin/cms/pages/edit/' . $oPage->id);
                     }
 
@@ -462,14 +482,10 @@ class Pages extends BaseAdmin
 
         /** @var Asset $oAsset */
         $oAsset = Factory::service('Asset');
-        $oAsset->library('CMSWIDGETEDITOR');
-        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
         $oAsset->load('admin.pages.edit.js', 'nails/module-cms');
         $oAsset->inline(implode("\n", [
-            'var widgetEditor = new window.WidgetEditor.default();',
-            'widgetEditor.construct();',
             'var templates = [' . implode(',', $aTemplatesJson) . ']',
-            'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(widgetEditor, templates);',
+            'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit( templates);',
         ]), 'JS');
 
         // --------------------------------------------------------------------------
@@ -492,9 +508,13 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oUri       = Factory::service('Uri');
-        $oInput     = Factory::service('Input');
-        $oSession   = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+
         $iId        = $oUri->segment(5);
         $bIsEditing = (bool) $oInput->get('editing');
         $sReturnTo  = $oInput->get('return_to');
@@ -691,6 +711,7 @@ class Pages extends BaseAdmin
             }
 
             if (!empty($sUrl)) {
+                /** @var Redirect $oModel */
                 $oModel = Factory::model('Redirect', 'nails/module-redirect');
                 $oModel->create([
                     'old_url' => $oPage->published->url,
@@ -799,10 +820,13 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oUri     = Factory::service('Uri');
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Session $oSession */
         $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
-        $id       = $oUri->segment(5);
-        $page     = $this->oPageModel->getById($id);
+
+        $id   = $oUri->segment(5);
+        $page = $this->oPageModel->getById($id);
 
         if ($page && $page->is_deleted) {
             if ($this->oPageModel->restore($id)) {
