@@ -4,12 +4,18 @@ namespace Nails\Cms\Console\Command\Widget;
 
 use Nails\Cms\Exception\Console\WidgetExistsException;
 use Nails\Common\Exception\NailsException;
+use Nails\Common\Exception\ValidationException;
 use Nails\Console\Command\BaseMaker;
 use Nails\Factory;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Class Create
+ *
+ * @package Nails\Cms\Console\Command\Widget
+ */
 class Create extends BaseMaker
 {
     const RESOURCE_PATH = NAILS_PATH . 'module-cms/resources/console/widget/';
@@ -32,6 +38,13 @@ class Create extends BaseMaker
                 'mode'        => InputArgument::OPTIONAL,
                 'description' => 'Define the name of the widget to create',
                 'required'    => true,
+                'validation'  => function (string $sValue) {
+                    if (preg_match('/^\d/', $sValue)) {
+                        throw new ValidationException(
+                            'Widget names cannot begin with a number'
+                        );
+                    }
+                },
             ],
             [
                 'name'        => 'description',
@@ -61,8 +74,8 @@ class Create extends BaseMaker
     /**
      * Executes the app
      *
-     * @param  InputInterface  $oInput  The Input Interface provided by Symfony
-     * @param  OutputInterface $oOutput The Output Interface provided by Symfony
+     * @param InputInterface  $oInput  The Input Interface provided by Symfony
+     * @param OutputInterface $oOutput The Output Interface provided by Symfony
      *
      * @return int
      */
@@ -182,7 +195,7 @@ class Create extends BaseMaker
     /**
      * Generate a class name safe slug
      *
-     * @param  string $sString The input string
+     * @param string $sString The input string
      *
      * @return string
      */
