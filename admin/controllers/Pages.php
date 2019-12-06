@@ -862,4 +862,36 @@ class Pages extends BaseAdmin
 
         redirect('admin/cms/pages');
     }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Duplicate a CMS page
+     *
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    public function copy()
+    {
+        if (!userHasPermission('admin:cms:pages:create')) {
+            unauthorised();
+        }
+
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+
+        $iId   = $oUri->segment(5);
+        $oPage = $this->oPageModel->getById($iId);
+        if (empty($oPage)) {
+            show404();
+        }
+
+        //  @todo (Pablo - 2019-12-06) - Get the row
+        //  @todo (Pablo - 2019-12-06) - Unset/null the published columns
+        //  @todo (Pablo - 2019-12-06) - Create a new row
+        //  @todo (Pablo - 2019-12-06) - Redirect to the edit page with a message
+        d($oPage);
+    }
 }
