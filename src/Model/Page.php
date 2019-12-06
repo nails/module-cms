@@ -19,6 +19,11 @@ use Nails\Common\Service\Database;
 use Nails\Common\Service\Routes;
 use Nails\Factory;
 
+/**
+ * Class Page
+ *
+ * @package Nails\Cms\Model
+ */
 class Page extends Base
 {
     protected $oDb;
@@ -27,7 +32,7 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Construct the model
+     * Page constructor.
      */
     public function __construct()
     {

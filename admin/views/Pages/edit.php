@@ -14,7 +14,7 @@ $oInput = \Nails\Factory::service('Input');
         ?>
         <p class="alert alert-warning">
             <strong>You have unpublished changes.</strong>
-            <br/>This version of the page is more recent than the version currently published on site. When
+            <br />This version of the page is more recent than the version currently published on site. When
             you're done make sure you click "Publish Changes" below.
         </p>
         <?php
@@ -202,7 +202,7 @@ $oInput = \Nails\Factory::service('Input');
         $sTemplateData = htmlentities($sTemplateData);
 
         ?>
-        <input type="hidden" name="template_data" id="template-data" value="<?=$sTemplateData?>"/>
+        <input type="hidden" name="template_data" id="template-data" value="<?=$sTemplateData?>" />
     </fieldset>
     <fieldset class="template-options">
         <legend>Template Options</legend>
@@ -304,7 +304,7 @@ $oInput = \Nails\Factory::service('Input');
         ?>
     </fieldset>
     <div class="admin-floating-controls">
-        <input type="hidden" name="action" value="" id="input-action"/>
+        <input type="hidden" name="action" value="" id="input-action" />
         <button id="action-save" class="btn btn-primary" rel="tipsy-top" title="Your changes will be saved so you can come back later, but won't be published on site.">
             Save <span class="hidden-xs">Changes</span>
         </button>
