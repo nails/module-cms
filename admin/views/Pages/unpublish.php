@@ -31,35 +31,29 @@
         }
         ?>
     </fieldset>
-    <?php
-    if ($bRedirects) {
-        ?>
-        <fieldset>
-            <legend>Redirects</legend>
-            <?php
-            echo form_field_dropdown([
-                'key'     => 'redirect_behaviour',
-                'label'   => 'Behaviour',
-                'class'   => 'select2',
-                'options' => [
-                    'NONE'               => 'Do not create any redirects',
-                    'Redirect to a URL'  => [
-                        'URL' => 'Redirect to a specific URL',
-                    ],
-                    'Redirect to a page' => $aOtherPages,
-                ],
-            ]);
-
-            echo form_field([
-                'key'   => 'redirect_url',
-                'label' => 'URL',
-            ])
-
-            ?>
-        </fieldset>
+    <fieldset>
+        <legend>Redirects</legend>
         <?php
-    }
-    ?>
+        echo form_field_dropdown([
+            'key'     => 'redirect_behaviour',
+            'label'   => 'Behaviour',
+            'class'   => 'select2',
+            'options' => [
+                'NONE'               => 'Do not create any redirects',
+                'Redirect to a URL'  => [
+                    'URL' => 'Redirect to a specific URL',
+                ],
+                'Redirect to a page' => $aOtherPages,
+            ],
+        ]);
+
+        echo form_field([
+            'key'   => 'redirect_url',
+            'label' => 'URL',
+        ])
+
+        ?>
+    </fieldset>
     <div class="admin-floating-controls">
         <button type="submit" class="btn btn-warning">
             Unpublish Page
