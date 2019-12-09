@@ -527,7 +527,7 @@ class Pages extends BaseAdmin
                 'Page was published successfully - ' .
                 anchor(
                     $oPage->published->url,
-                    'View Page <b class="fa fa-external-link"></b>',
+                    'View Page <b class="fa fa-external-link-alt"></b>',
                     'target="_blank"'
                 )
             );
