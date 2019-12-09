@@ -82,7 +82,7 @@ class Pages extends BaseAdmin
             /** @var Nav $oNavGroup */
             $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
             $oNavGroup->setLabel('CMS');
-            $oNavGroup->setIcon('fa-file-text');
+            $oNavGroup->setIcon('fa-file-alt');
             $oNavGroup->addAction('Manage Pages', 'index', [$oAlert]);
 
             return $oNavGroup;

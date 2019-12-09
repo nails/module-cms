@@ -29,7 +29,7 @@ class Menus extends BaseAdmin
         if (userHasPermission('admin:cms:menus:manage')) {
             $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
             $oNavGroup->setLabel('CMS');
-            $oNavGroup->setIcon('fa-file-text');
+            $oNavGroup->setIcon('fa-file-alt');
             $oNavGroup->addAction('Manage Menus');
             return $oNavGroup;
         }
