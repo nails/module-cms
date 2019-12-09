@@ -273,8 +273,8 @@ class WidgetEditor {
                 'widget': $('<div>').html(
                     '<i class="icon fa {{icon}}"></i>' +
                     '<span>{{label}}</span>' +
-                    '<a href="#" class="action action-remove fa fa-trash-o"></a>' +
-                    '<a href="#" class="action action-refresh-editor fa fa-refresh"></a>' +
+                    '<a href="#" class="action action-remove fa fa-trash"></a>' +
+                    '<a href="#" class="action action-refresh-editor fa fa-sync"></a>' +
                     '<div class="description">{{description}}</div>' +
                     '<div class="editor-target fieldset">Widget Loading...</div>'
                 ),
