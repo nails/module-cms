@@ -709,8 +709,8 @@ class Pages extends BaseAdmin
         }
 
         if (!empty($sUrl)) {
-            /** @var Redirect/Model/Redirect $oModel */
-            $oModel = Factory::model('Redirect', Redirect/Constants::MODULE_SLUG);
+            /** @var Redirect\Model\Redirect $oModel */
+            $oModel = Factory::model('Redirect', Redirect\Constants::MODULE_SLUG);
             $oModel->create([
                 'old_url' => $oPage->published->url,
                 'new_url' => $sUrl,
