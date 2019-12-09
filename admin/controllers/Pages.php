@@ -884,10 +884,20 @@ class Pages extends BaseAdmin
             show404();
         }
 
-        //  @todo (Pablo - 2019-12-06) - Get the row
-        //  @todo (Pablo - 2019-12-06) - Unset/null the published columns
-        //  @todo (Pablo - 2019-12-06) - Create a new row
-        //  @todo (Pablo - 2019-12-06) - Redirect to the edit page with a message
-        d($oPage);
+        try {
+
+            $iNewId = $this->oPageModel->copy($oPage->id);
+            if (empty($iNewId)) {
+                throw new \Exception($this->oPageModel->lastError());
+            }
+
+            $oSession->setFlashData('success', 'Page copied successfully.');
+            redirect('admin/cms/pages/edit/' . $iNewId);
+
+        } catch (\Exception $e) {
+            $oSession->setFlashData('error', 'Failed to copy item. ' . $e->getMessage());
+        }
+
+        redirect('admin/cms/pages');
     }
 }

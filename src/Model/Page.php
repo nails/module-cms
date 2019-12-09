@@ -13,6 +13,8 @@
 namespace Nails\Cms\Model;
 
 use Nails\Cms\Events;
+use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
@@ -1246,5 +1248,43 @@ class Page extends Base
 
             return false;
         }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Copies a CMS Page
+     *
+     * @param int  $iId           The ID of the page to copy
+     * @param bool $bReturnObject Whether to return the new ID, or the new object
+     *
+     * @return bool|mixed
+     * @throws NailsException
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    public function copy(int $iId, bool $bReturnObject = false)
+    {
+        $oPage = $this->getById($iId);
+        if (empty($oPage)) {
+            throw new NailsException('Cannot copy page. Invalid ID "' . $iId . '"');
+        }
+
+        /** @var \DateTime $oNow */
+        $oNow = Factory::factory('DateTime');
+
+        $aPageData = [
+            'title'            => $oPage->draft->title . sprintf(' (Copy %s)', toUserDatetime($oNow->format('Y-m-d H:i:s'))),
+            'slug'             => $oPage->draft->slug . sprintf('-copy-%s', url_title(toUserDatetime($oNow->format('Y-m-d H:i:s')))),
+            'parent_id'        => (int) $oPage->draft->parent_id,
+            'template'         => $oPage->draft->template,
+            'template_data'    => json_encode($oPage->draft->template_data),
+            'template_options' => json_encode($oPage->draft->template_options),
+            'seo_title'        => $oPage->draft->seo_title,
+            'seo_description'  => $oPage->draft->seo_description,
+            'seo_keywords'     => $oPage->draft->seo_keywords,
+        ];
+
+        return $this->create($aPageData, $bReturnObject);
     }
 }
