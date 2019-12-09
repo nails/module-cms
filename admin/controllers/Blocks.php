@@ -34,7 +34,7 @@ class Blocks extends BaseAdmin
 
             $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
             $oNavGroup->setLabel('CMS');
-            $oNavGroup->setIcon('fa-file-text');
+            $oNavGroup->setIcon('fa-file-alt');
             $oNavGroup->addAction('Manage Blocks');
 
             return $oNavGroup;

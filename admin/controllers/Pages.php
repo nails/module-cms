@@ -35,7 +35,7 @@ use Nails\Common\Service\Input;
 use Nails\Common\Service\Uri;
 use Nails\Components;
 use Nails\Factory;
-use Nails\Redirect\Model\Redirect;
+use Nails\Redirect;
 
 /**
  * Class Pages
@@ -84,7 +84,7 @@ class Pages extends BaseAdmin
             /** @var Nav $oNavGroup */
             $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
             $oNavGroup->setLabel('CMS');
-            $oNavGroup->setIcon('fa-file-text');
+            $oNavGroup->setIcon('fa-file-alt');
             $oNavGroup->addAction('Manage Pages', 'index', [$oAlert]);
 
             return $oNavGroup;
@@ -544,7 +544,7 @@ class Pages extends BaseAdmin
                 'Page was published successfully - ' .
                 anchor(
                     $oPage->published->url,
-                    'View Page <b class="fa fa-external-link"></b>',
+                    'View Page <b class="fa fa-external-link-alt"></b>',
                     'target="_blank"'
                 )
             );
@@ -628,7 +628,6 @@ class Pages extends BaseAdmin
         }
 
         $this->data['sReturnTo']   = $oInput->get('return_to') ?: $oInput->post('return_to');
-        $this->data['bRedirects']  = Components::exists('nails/module-redirect');
         $this->data['oPage']       = $oPage;
         $this->data['aChildren']   = $this->oPageModel->getIdsOfChildren($oPage->id);
         $this->data['page']->title = 'Unpublish "' . $oPage->published->title . '"';
@@ -694,48 +693,46 @@ class Pages extends BaseAdmin
      */
     protected function unpublishDeleteHandleRedirects(Resource $oPage, string $sBehaviour, string $sUrl): Pages
     {
-        if (Components::exists('nails/module-redirect')) {
-            switch ($sBehaviour) {
-                case 'NONE':
-                    $sUrl = null;
-                    break;
+        switch ($sBehaviour) {
+            case 'NONE':
+                $sUrl = null;
+                break;
 
-                case 'URL':
-                    $sUrl = prep_url($sUrl);
-                    break;
+            case 'URL':
+                $sUrl = prep_url($sUrl);
+                break;
 
-                default:
-                    if (!is_numeric($sBehaviour)) {
-                        throw new ValidationException(
-                            'Invalid redirect behaviour value.' . json_encode($_POST)
-                        );
-                    }
+            default:
+                if (!is_numeric($sBehaviour)) {
+                    throw new ValidationException(
+                        'Invalid redirect behaviour value.' . json_encode($_POST)
+                    );
+                }
 
-                    $oRedirectPage = $this->oPageModel->getById($sBehaviour);
-                    if (empty($oRedirectPage)) {
-                        throw new ValidationException(
-                            'Invalid redirect behaviour value. Page does not exist.'
-                        );
-                    }
+                $oRedirectPage = $this->oPageModel->getById($sBehaviour);
+                if (empty($oRedirectPage)) {
+                    throw new ValidationException(
+                        'Invalid redirect behaviour value. Page does not exist.'
+                    );
+                }
 
-                    if (!$oRedirectPage->is_published) {
-                        throw new ValidationException(
-                            'Invalid redirect behaviour value. Page is not published.'
-                        );
-                    }
+                if (!$oRedirectPage->is_published) {
+                    throw new ValidationException(
+                        'Invalid redirect behaviour value. Page is not published.'
+                    );
+                }
 
-                    $sUrl = $oRedirectPage->published->url;
-                    break;
-            }
+                $sUrl = $oRedirectPage->published->url;
+                break;
+        }
 
-            if (!empty($sUrl)) {
-                /** @var Redirect $oModel */
-                $oModel = Factory::model('Redirect', 'nails/module-redirect');
-                $oModel->create([
-                    'old_url' => $oPage->published->url,
-                    'new_url' => $sUrl,
-                ]);
-            }
+        if (!empty($sUrl)) {
+            /** @var Redirect\Model\Redirect $oModel */
+            $oModel = Factory::model('Redirect', Redirect\Constants::MODULE_SLUG);
+            $oModel->create([
+                'old_url' => $oPage->published->url,
+                'new_url' => $sUrl,
+            ]);
         }
 
         return $this;
@@ -804,7 +801,6 @@ class Pages extends BaseAdmin
         }
 
         $this->data['sReturnTo']   = $oInput->get('return_to') ?: $oInput->post('return_to');
-        $this->data['bRedirects']  = Components::exists('nails/module-redirect');
         $this->data['oPage']       = $oPage;
         $this->data['oPageData']   = $oPageData;
         $this->data['aChildren']   = $this->oPageModel->getIdsOfChildren($oPage->id);

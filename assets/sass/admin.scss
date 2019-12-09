@@ -66,7 +66,10 @@
                         left: 0;
                         bottom: 0;
                         width: $handle_width;
-                        cursor: url(../img/admin/cursors/openhand.cur), none !important;
+                        cursor: move; /* fallback if grab cursor is unsupported */
+                        cursor: grab;
+                        cursor: -moz-grab;
+                        cursor: -webkit-grab;
                     }
                     div.content {
                         padding: 0;
@@ -434,9 +437,15 @@
                 }
                 td {
                     &.sortHandle {
-                        cursor: url(../img/admin/cursors/openhand.cur), move !important;
+                        cursor: move; /* fallback if grab cursor is unsupported */
+                        cursor: grab;
+                        cursor: -moz-grab;
+                        cursor: -webkit-grab;
                         &:active {
-                            cursor: url(../img/admin/cursors/closedhand.cur), move !important;
+                            cursor: move !important; /* fallback if grab cursor is unsupported */
+                            cursor: grabbing !important;
+                            cursor: -moz-grabbing !important;
+                            cursor: -webkit-grabbing !important;
                         }
                     }
                     &.image {
