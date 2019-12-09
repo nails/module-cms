@@ -28,7 +28,8 @@
     "require":
     {
         "nails/module-cdn": "dev-develop",
-        "nails/module-console": "dev-develop"
+        "nails/module-console": "dev-develop",
+        "nails/module-redirect": "dev-develop"
     },
     "require-dev":
     {
