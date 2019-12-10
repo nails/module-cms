@@ -128,6 +128,14 @@
                                     }
                                 }
 
+                                if (userHasPermission('admin:cms:pages:create')) {
+                                    echo anchor(
+                                        'admin/cms/pages/copy/' . $oPage->id,
+                                        'Duplicate',
+                                        'class="btn btn-xs btn-default"'
+                                    );
+                                }
+
                                 if (userHasPermission('admin:cms:pages:delete')) {
                                     echo anchor(
                                         'admin/cms/pages/delete/' . $oPage->id . '?return_to=' . $sReturnTo,

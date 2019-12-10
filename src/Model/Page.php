@@ -13,33 +13,53 @@
 namespace Nails\Cms\Model;
 
 use Nails\Cms\Events;
+use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\Routes;
 use Nails\Factory;
 
+/**
+ * Class Page
+ *
+ * @package Nails\Cms\Model
+ */
 class Page extends Base
 {
-    protected $oDb;
-    protected $tablePreview;
+    /**
+     * The table this model represents
+     *
+     * @var string
+     */
+    const TABLE = NAILS_DB_PREFIX . 'cms_page';
+
+    /**
+     * Whether the model is a preview
+     *
+     * @var bool
+     */
+    const IS_PREVIEW = true;
+
+    /**
+     * Whether this model uses destructive delete or not
+     *
+     * @var bool
+     */
+    const DESTRUCTIVE_DELETE = false;
 
     // --------------------------------------------------------------------------
 
     /**
-     * Construct the model
+     * Page constructor.
      */
     public function __construct()
     {
         parent::__construct();
 
-        $this->table             = NAILS_DB_PREFIX . 'cms_page';
-        $this->tablePreview      = $this->table . '_preview';
-        $this->tableAlias        = 'p';
-        $this->destructiveDelete = false;
-        $this->defaultSortColumn = null;
-        $this->searchableFields  = ['draft_title', 'draft_template_data'];
-        $this->tableSlugColumn   = 'draft_slug';
+        $this->searchableFields = ['draft_title', 'draft_template_data'];
+        $this->tableSlugColumn  = 'draft_slug';
     }
 
     // --------------------------------------------------------------------------
@@ -146,7 +166,7 @@ class Page extends Base
 
             $oDb->select('draft_slug, draft_breadcrumbs');
             $oDb->where('id', $aUpdateData['draft_parent_id']);
-            $oParent = $oDb->get($this->table)->row();
+            $oParent = $oDb->get($this->getTableName())->row();
 
             if (!$oParent) {
 
@@ -160,12 +180,12 @@ class Page extends Base
         $sSlugPrefix = !empty($oParent) ? $oParent->draft_slug . '/' : '';
 
         //  Work out the slug
-        if (empty($aData['slug']) || $this->table === $this->tablePreview) {
+        if (empty($aData['slug']) || static::IS_PREVIEW) {
 
             $aUpdateData['draft_slug'] = $sSlugPrefix . $this->generateSlug(
-                $aUpdateData['draft_title'],
-                $oCurrent->id
-            );
+                    $aUpdateData['draft_title'],
+                    $oCurrent->id
+                );
 
         } else {
 
@@ -173,7 +193,7 @@ class Page extends Base
             $aUpdateData['draft_slug'] = $sSlugPrefix . $aData['slug'];
             $oDb->where('draft_slug', $aUpdateData['draft_slug']);
             $oDb->where('id !=', $oCurrent->id);
-            if ($oDb->count_all_results($this->table)) {
+            if ($oDb->count_all_results($this->getTableName())) {
 
                 $this->setError('Slug is already in use.');
                 $oDb->trans_rollback();
@@ -289,7 +309,7 @@ class Page extends Base
 
             //  Rewrite routes
             //  If routes are generated with the preview table selected then the routes file will _empty_
-            if ($this->table !== $this->tablePreview) {
+            if (!static::IS_PREVIEW) {
                 /** @var Routes $oRoutesService */
                 $oRoutesService = Factory::service('Routes');
                 $oRoutesService->update();
@@ -314,25 +334,6 @@ class Page extends Base
 
             return false;
         }
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Create a page as normal but do so in the preview table.
-     *
-     * @param array $aData The data to create the preview with
-     *
-     * @return object
-     */
-    public function createPreview($aData)
-    {
-        $sTableName  = $this->table;
-        $this->table = $this->tablePreview;
-        $oResult     = $this->create($aData);
-        $this->table = $sTableName;
-
-        return $oResult;
     }
 
     // --------------------------------------------------------------------------
@@ -421,7 +422,7 @@ class Page extends Base
 
         $oDb->where('id', $oPage->id);
 
-        if ($oDb->update($this->table)) {
+        if ($oDb->update($this->getTableName())) {
 
             //  Fetch the children, returning the data we need for the updates
             $aChildren = $this->getIdsOfChildren($oPage->id);
@@ -462,7 +463,7 @@ class Page extends Base
 
                     $oDb->where('id', $oChild->id);
 
-                    if (!$oDb->update($this->table)) {
+                    if (!$oDb->update($this->getTableName())) {
 
                         $this->setError('Failed to update a child page\'s data.');
                         $oDb->trans_rollback();
@@ -528,7 +529,7 @@ class Page extends Base
         $oDb->set('modified_by', activeUser('id') ?: null);
         $oDb->where('id', $iId);
 
-        if (!$oDb->update($this->table)) {
+        if (!$oDb->update($this->getTableName())) {
             $this->setError('Failed to');
             return false;
         }
@@ -570,37 +571,37 @@ class Page extends Base
             $data['select'] = [
 
                 //  Main Table
-                $this->tableAlias . '.id',
-                $this->tableAlias . '.published_hash',
-                $this->tableAlias . '.published_slug',
-                $this->tableAlias . '.published_slug_end',
-                $this->tableAlias . '.published_parent_id',
-                $this->tableAlias . '.published_template',
-                $this->tableAlias . '.published_template_data',
-                $this->tableAlias . '.published_template_options',
-                $this->tableAlias . '.published_title',
-                $this->tableAlias . '.published_breadcrumbs',
-                $this->tableAlias . '.published_seo_title',
-                $this->tableAlias . '.published_seo_description',
-                $this->tableAlias . '.published_seo_keywords',
-                $this->tableAlias . '.draft_hash',
-                $this->tableAlias . '.draft_slug',
-                $this->tableAlias . '.draft_slug_end',
-                $this->tableAlias . '.draft_parent_id',
-                $this->tableAlias . '.draft_template',
-                $this->tableAlias . '.draft_template_data',
-                $this->tableAlias . '.draft_template_options',
-                $this->tableAlias . '.draft_title',
-                $this->tableAlias . '.draft_breadcrumbs',
-                $this->tableAlias . '.draft_seo_title',
-                $this->tableAlias . '.draft_seo_description',
-                $this->tableAlias . '.draft_seo_keywords',
-                $this->tableAlias . '.is_published',
-                $this->tableAlias . '.is_deleted',
-                $this->tableAlias . '.created',
-                $this->tableAlias . '.created_by',
-                $this->tableAlias . '.modified',
-                $this->tableAlias . '.modified_by',
+                $this->getTableAlias() . '.id',
+                $this->getTableAlias() . '.published_hash',
+                $this->getTableAlias() . '.published_slug',
+                $this->getTableAlias() . '.published_slug_end',
+                $this->getTableAlias() . '.published_parent_id',
+                $this->getTableAlias() . '.published_template',
+                $this->getTableAlias() . '.published_template_data',
+                $this->getTableAlias() . '.published_template_options',
+                $this->getTableAlias() . '.published_title',
+                $this->getTableAlias() . '.published_breadcrumbs',
+                $this->getTableAlias() . '.published_seo_title',
+                $this->getTableAlias() . '.published_seo_description',
+                $this->getTableAlias() . '.published_seo_keywords',
+                $this->getTableAlias() . '.draft_hash',
+                $this->getTableAlias() . '.draft_slug',
+                $this->getTableAlias() . '.draft_slug_end',
+                $this->getTableAlias() . '.draft_parent_id',
+                $this->getTableAlias() . '.draft_template',
+                $this->getTableAlias() . '.draft_template_data',
+                $this->getTableAlias() . '.draft_template_options',
+                $this->getTableAlias() . '.draft_title',
+                $this->getTableAlias() . '.draft_breadcrumbs',
+                $this->getTableAlias() . '.draft_seo_title',
+                $this->getTableAlias() . '.draft_seo_description',
+                $this->getTableAlias() . '.draft_seo_keywords',
+                $this->getTableAlias() . '.is_published',
+                $this->getTableAlias() . '.is_deleted',
+                $this->getTableAlias() . '.created',
+                $this->getTableAlias() . '.created_by',
+                $this->getTableAlias() . '.modified',
+                $this->getTableAlias() . '.modified_by',
 
                 //  Join table
                 'ue.email',
@@ -612,12 +613,12 @@ class Page extends Base
         }
 
         $oDb = Factory::service('Database');
-        $oDb->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->tableAlias . '.modified_by', 'LEFT');
+        $oDb->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->getTableAlias() . '.modified_by', 'LEFT');
         $oDb->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
 
         if (empty($data['sort'])) {
 
-            $data['sort'] = [$this->tableAlias . '.draft_slug', 'asc'];
+            $data['sort'] = [$this->getTableAlias() . '.draft_slug', 'asc'];
         }
 
         if (!empty($data['keywords'])) {
@@ -628,11 +629,11 @@ class Page extends Base
             }
 
             $data['or_like'][] = [
-                'column' => $this->tableAlias . '.draft_title',
+                'column' => $this->getTableAlias() . '.draft_title',
                 'value'  => $data['keywords'],
             ];
             $data['or_like'][] = [
-                'column' => $this->tableAlias . '.draft_template_data',
+                'column' => $this->getTableAlias() . '.draft_template_data',
                 'value'  => $data['keywords'],
             ];
         }
@@ -1108,7 +1109,7 @@ class Page extends Base
                 $oDb->set('modified_by', activeUser('id'));
             }
 
-            if (!$oDb->update($this->table)) {
+            if (!$oDb->update($this->getTableName())) {
                 throw new NailsException('Failed to delete item');
             }
 
@@ -1125,7 +1126,7 @@ class Page extends Base
                     $oDb->set('modified_by', activeUser('id'));
                 }
 
-                if (!$oDb->update($this->table)) {
+                if (!$oDb->update($this->getTableName())) {
                     throw new NailsException('Unable to delete children pages');
                 }
 
@@ -1178,35 +1179,6 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Get's a preview page by it's ID
-     *
-     * @param integer $iPreviewId The Id of the preview to get
-     *
-     * @return mixed                 stdClass on success, false on failure
-     */
-    public function getPreviewById($iPreviewId)
-    {
-        $oDb = Factory::service('Database');
-        $oDb->where('id', $iPreviewId);
-        $oResult = $oDb->get($this->tablePreview)->row();
-
-        // --------------------------------------------------------------------------
-
-        if (!$oResult) {
-
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
-        $this->formatObject($oResult);
-
-        return $oResult;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
      * Returns the URL of a page
      *
      * @param integer $iPageId      The ID of the page to look up
@@ -1226,5 +1198,43 @@ class Page extends Base
 
             return false;
         }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Copies a CMS Page
+     *
+     * @param int  $iId           The ID of the page to copy
+     * @param bool $bReturnObject Whether to return the new ID, or the new object
+     *
+     * @return bool|mixed
+     * @throws NailsException
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    public function copy(int $iId, bool $bReturnObject = false)
+    {
+        $oPage = $this->getById($iId);
+        if (empty($oPage)) {
+            throw new NailsException('Cannot copy page. Invalid ID "' . $iId . '"');
+        }
+
+        /** @var \DateTime $oNow */
+        $oNow = Factory::factory('DateTime');
+
+        $aPageData = [
+            'title'            => $oPage->draft->title . sprintf(' (Copy %s)', toUserDatetime($oNow->format('Y-m-d H:i:s'))),
+            'slug'             => $oPage->draft->slug . sprintf('-copy-%s', url_title(toUserDatetime($oNow->format('Y-m-d H:i:s')))),
+            'parent_id'        => (int) $oPage->draft->parent_id,
+            'template'         => $oPage->draft->template,
+            'template_data'    => json_encode($oPage->draft->template_data),
+            'template_options' => json_encode($oPage->draft->template_options),
+            'seo_title'        => $oPage->draft->seo_title,
+            'seo_description'  => $oPage->draft->seo_description,
+            'seo_keywords'     => $oPage->draft->seo_keywords,
+        ];
+
+        return $this->create($aPageData, $bReturnObject);
     }
 }

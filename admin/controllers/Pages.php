@@ -18,9 +18,11 @@ use Nails\Admin\Helper;
 use Nails\Auth;
 use Nails\Auth\Service\Session;
 use Nails\Cms\Controller\BaseAdmin;
+use Nails\Cms\Exception\Template\NotFoundException;
 use Nails\Cms\Model\Page;
 use Nails\Cms\Service\Template;
 use Nails\Cms\Service\Widget;
+use Nails\Common\Exception\AssetException;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
@@ -114,7 +116,9 @@ class Pages extends BaseAdmin
     // --------------------------------------------------------------------------
 
     /**
-     * Construct the controller
+     * Pages constructor.
+     *
+     * @throws FactoryException
      */
     public function __construct()
     {
@@ -141,6 +145,8 @@ class Pages extends BaseAdmin
      * Browse CMS Pages
      *
      * @return void
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function index()
     {
@@ -211,6 +217,10 @@ class Pages extends BaseAdmin
      * Create a new CMS Page
      *
      * @return void
+     * @throws FactoryException
+     * @throws ModelException
+     * @throws NotFoundException
+     * @throws AssetException
      */
     public function create()
     {
@@ -345,6 +355,11 @@ class Pages extends BaseAdmin
      * Edit a CMS Page
      *
      * @return void
+     * @throws FactoryException
+     * @throws ModelException
+     * @throws NailsException
+     * @throws NotFoundException
+     * @throws AssetException
      */
     public function edit()
     {
@@ -499,6 +514,8 @@ class Pages extends BaseAdmin
      * Publish a CMS Page
      *
      * @return void
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function publish()
     {
@@ -550,6 +567,7 @@ class Pages extends BaseAdmin
     /**
      * Safely unpublishes a page
      *
+     * @throws AssetException
      * @throws FactoryException
      * @throws ModelException
      */
@@ -723,9 +741,11 @@ class Pages extends BaseAdmin
     // --------------------------------------------------------------------------
 
     /**
-     * Delete a CMS Page
+     * Deletes a CMS page
      *
-     * @return void
+     * @throws AssetException
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function delete()
     {
@@ -807,6 +827,8 @@ class Pages extends BaseAdmin
      * Restore a CMS Page
      *
      * @return void
+     * @throws FactoryException
+     * @throws ModelException
      */
     public function restore()
     {
@@ -821,17 +843,59 @@ class Pages extends BaseAdmin
         /** @var Session $oSession */
         $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
 
-        $id   = $oUri->segment(5);
-        $page = $this->oPageModel->getById($id);
+        $iId   = $oUri->segment(5);
+        $oPage = $this->oPageModel->getById($iId);
 
-        if ($page && $page->is_deleted) {
-            if ($this->oPageModel->restore($id)) {
+        if ($oPage && $oPage->is_deleted) {
+            if ($this->oPageModel->restore($iId)) {
                 $oSession->setFlashData('success', 'Page was restored successfully. ');
             } else {
                 $oSession->setFlashData('error', 'Could not restore page. ' . $this->oPageModel->lastError());
             }
         } else {
             $oSession->setFlashData('error', 'Invalid page ID.');
+        }
+
+        redirect('admin/cms/pages');
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Duplicate a CMS page
+     *
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    public function copy()
+    {
+        if (!userHasPermission('admin:cms:pages:create')) {
+            unauthorised();
+        }
+
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+
+        $iId   = $oUri->segment(5);
+        $oPage = $this->oPageModel->getById($iId);
+        if (empty($oPage)) {
+            show404();
+        }
+
+        try {
+
+            $iNewId = $this->oPageModel->copy($oPage->id);
+            if (empty($iNewId)) {
+                throw new \Exception($this->oPageModel->lastError());
+            }
+
+            $oSession->setFlashData('success', 'Page copied successfully.');
+            redirect('admin/cms/pages/edit/' . $iNewId);
+
+        } catch (\Exception $e) {
+            $oSession->setFlashData('error', 'Failed to copy item. ' . $e->getMessage());
         }
 
         redirect('admin/cms/pages');

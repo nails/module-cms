@@ -13,8 +13,17 @@
 namespace Nails\Cms\Api\Controller;
 
 use Nails\Api\Controller\Base;
+use Nails\Api\Factory\ApiResponse;
+use Nails\Cms\Model\Page\Preview;
+use Nails\Common\Service\HttpCodes;
+use Nails\Common\Service\Input;
 use Nails\Factory;
 
+/**
+ * Class Pages
+ *
+ * @package Nails\Cms\Api\Controller
+ */
 class Pages extends Base
 {
     /**
@@ -34,6 +43,8 @@ class Pages extends Base
     public function __construct($oApiRouter)
     {
         parent::__construct($oApiRouter);
+
+        /** @var HttpCodes $oHttpCodes */
         $oHttpCodes = Factory::service('HttpCodes');
         if (!isAdmin()) {
             throw new ApiException(
@@ -47,13 +58,17 @@ class Pages extends Base
 
     /**
      * Returns the URL for a page preview
-     * @return array
+     *
+     * @return ApiResponse
      */
     public function postPreview()
     {
-        $oInput     = Factory::service('Input');
-        $oPageModel = Factory::model('Page', 'nails/module-cms');
-        $aPageData  = [
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        /** @var Preview $oPagePreviewModel */
+        $oPagePreviewModel = Factory::model('PagePreview', 'nails/module-cms');
+
+        $aPageData = [
             'title'            => $oInput->post('title'),
             'slug'             => $oInput->post('slug'),
             'parent_id'        => (int) $oInput->post('parent_id') ?: null,
@@ -72,14 +87,14 @@ class Pages extends Base
             $aPageData['template_options'] = null;
         }
 
-        $iPreviewId = $oPageModel->createPreview($aPageData);
+        $iPreviewId = $oPagePreviewModel->create($aPageData);
         if ($iPreviewId) {
             $aOut = ['url' => siteUrl('cms/render/preview/' . $iPreviewId)];
         } else {
-            $aOut = ['status' => 500, 'error' => $oPageModel->lastError()];
+            $aOut = ['status' => 500, 'error' => $oPagePreviewModel->lastError()];
         }
 
         return Factory::factory('ApiResponse', 'nails/module-api')
-                      ->setData($aOut);
+            ->setData($aOut);
     }
 }

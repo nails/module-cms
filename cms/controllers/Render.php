@@ -17,12 +17,34 @@ use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\Meta;
 use Nails\Factory;
 
+/**
+ * Class Render
+ */
 class Render extends Base
 {
+    /**
+     * @var int
+     */
     protected $iPageId;
+
+    /**
+     * @var bool
+     */
     protected $bIsPreview;
+
+    /**
+     * @var bool
+     */
     protected $bIsHomepage;
+
+    /**
+     * @var \Nails\Cms\Model\Page
+     */
     protected $oPageModel;
+
+    /**
+     * @var int
+     */
     protected $iHomepageId;
 
     // --------------------------------------------------------------------------
@@ -36,12 +58,13 @@ class Render extends Base
 
         // --------------------------------------------------------------------------
 
+        /** @var \Nails\Cms\Model\Page oPageModel */
         $this->oPageModel = Factory::model('Page', 'nails/module-cms');
+        /** @var \Nails\Common\Service\Uri $oUri */
+        $oUri = Factory::service('Uri');
+
         get_instance()->lang->load('cms');
 
-        // --------------------------------------------------------------------------
-
-        $oUri              = Factory::service('Uri');
         $this->iPageId     = $oUri->rsegment(3);
         $this->bIsPreview  = false;
         $this->bIsHomepage = false;
@@ -59,7 +82,9 @@ class Render extends Base
     public function page()
     {
         if ($this->bIsPreview) {
-            $oPage = $this->oPageModel->getPreviewById($this->iPageId);
+            /** @var \Nails\Cms\Model\Page\Preview $oPagePreviewModel */
+            $oPagePreviewModel = Factory::model('PagePreview', 'nails/module-cms');
+            $oPage             = $oPagePreviewModel->getById($this->iPageId);
         } else {
             $oPage = $this->oPageModel->getById($this->iPageId);
         }
@@ -94,6 +119,8 @@ class Render extends Base
          */
 
         if ($oPage->id === $this->iHomepageId && uri_string() == $oData->slug) {
+
+            /** @var Auth\Service\Session $oSession */
             $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
             $oSession->keepFlashData();
             redirect('', 'location', 301);
@@ -128,7 +155,7 @@ class Render extends Base
 
         foreach ($aProperties as $aProperty) {
 
-            list($sTagProperty, $sProperty, $sValue) = $aProperty;
+            [$sTagProperty, $sProperty, $sValue] = $aProperty;
 
             if (!empty($sValue)) {
                 $oMeta
@@ -168,6 +195,7 @@ class Render extends Base
         $sRenderedHtml = $this->oPageModel->render($oData->template, $oData->template_data, $oData->template_options);
         if ($sRenderedHtml !== false) {
 
+            /** @var \Nails\Common\Service\Output $oOutput */
             $oOutput = Factory::service('Output');
             $oOutput->set_output($sRenderedHtml);
 
@@ -224,6 +252,7 @@ class Render extends Base
     public function legacy_slug()
     {
         //  Get the page and attempt to 301 redirect
+        /** @var \Nails\Common\Service\Uri $oUri */
         $oUri = Factory::service('Uri');
         $iId  = (int) $oUri->rsegment(3);
 
