@@ -18,35 +18,42 @@ return [
         },
     ],
     'models'    => [
-        'Area'   => function () {
+        'Area'        => function () {
             if (class_exists('\App\Cms\Model\Area')) {
                 return new \App\Cms\Model\Area();
             } else {
                 return new \Nails\Cms\Model\Area();
             }
         },
-        'Block'  => function () {
+        'Block'       => function () {
             if (class_exists('\App\Cms\Model\Block')) {
                 return new \App\Cms\Model\Block();
             } else {
                 return new \Nails\Cms\Model\Block();
             }
         },
-        'Menu'   => function () {
+        'Menu'        => function () {
             if (class_exists('\App\Cms\Model\Menu')) {
                 return new \App\Cms\Model\Menu();
             } else {
                 return new \Nails\Cms\Model\Menu();
             }
         },
-        'Page'   => function () {
+        'Page'        => function () {
             if (class_exists('\App\Cms\Model\Page')) {
                 return new \App\Cms\Model\Page();
             } else {
                 return new \Nails\Cms\Model\Page();
             }
         },
-        'Slider' => function () {
+        'PagePreview' => function () {
+            if (class_exists('\App\Cms\Model\Page\Preview')) {
+                return new \App\Cms\Model\Page\Preview();
+            } else {
+                return new \Nails\Cms\Model\Page\Preview();
+            }
+        },
+        'Slider'      => function () {
             if (class_exists('\App\Cms\Model\Slider')) {
                 return new \App\Cms\Model\Slider();
             } else {

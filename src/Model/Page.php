@@ -36,11 +36,11 @@ class Page extends Base
     const TABLE = NAILS_DB_PREFIX . 'cms_page';
 
     /**
-     * The table to use for previewing
+     * Whether the model is a preview
      *
-     * @var string
+     * @var bool
      */
-    const TABLE_PREVIEW = NAILS_DB_PREFIX . 'cms_page_preview';
+    const IS_PREVIEW = true;
 
     /**
      * Whether this model uses destructive delete or not
@@ -180,7 +180,7 @@ class Page extends Base
         $sSlugPrefix = !empty($oParent) ? $oParent->draft_slug . '/' : '';
 
         //  Work out the slug
-        if (empty($aData['slug']) || $this->getTableName() === static::TABLE_PREVIEW) {
+        if (empty($aData['slug']) || static::IS_PREVIEW) {
 
             $aUpdateData['draft_slug'] = $sSlugPrefix . $this->generateSlug(
                     $aUpdateData['draft_title'],
@@ -309,7 +309,7 @@ class Page extends Base
 
             //  Rewrite routes
             //  If routes are generated with the preview table selected then the routes file will _empty_
-            if ($this->getTableName() !== static::TABLE_PREVIEW) {
+            if (!static::IS_PREVIEW) {
                 /** @var Routes $oRoutesService */
                 $oRoutesService = Factory::service('Routes');
                 $oRoutesService->update();
@@ -334,27 +334,6 @@ class Page extends Base
 
             return false;
         }
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Create a page as normal but do so in the preview table.
-     *
-     * @param array $aData The data to create the preview with
-     *
-     * @return object
-     */
-    public function createPreview($aData)
-    {
-        //  @todo (Pablo - 2019-12-06) - Resolve this, potentially use a different model which extends this one?
-
-        //        $sTableName  = $this->getTableName();
-        //        $this->getTableName() = static::TABLE_PREVIEW;
-        //        $oResult     = $this->create($aData);
-        //        $this->getTableName() = $sTableName;
-
-        return $oResult;
     }
 
     // --------------------------------------------------------------------------
@@ -1195,35 +1174,6 @@ class Page extends Base
         $this->setError('It is not possible to destroy pages using this system.');
 
         return false;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Get's a preview page by it's ID
-     *
-     * @param integer $iPreviewId The Id of the preview to get
-     *
-     * @return mixed                 stdClass on success, false on failure
-     */
-    public function getPreviewById($iPreviewId)
-    {
-        $oDb = Factory::service('Database');
-        $oDb->where('id', $iPreviewId);
-        $oResult = $oDb->get(static::TABLE_PREVIEW)->row();
-
-        // --------------------------------------------------------------------------
-
-        if (!$oResult) {
-
-            return false;
-        }
-
-        // --------------------------------------------------------------------------
-
-        $this->formatObject($oResult);
-
-        return $oResult;
     }
 
     // --------------------------------------------------------------------------
