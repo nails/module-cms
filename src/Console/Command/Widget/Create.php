@@ -39,11 +39,7 @@ class Create extends BaseMaker
                 'description' => 'Define the name of the widget to create',
                 'required'    => true,
                 'validation'  => function (string $sValue) {
-                    if (preg_match('/^\d/', $sValue)) {
-                        throw new ValidationException(
-                            'Widget names cannot begin with a number'
-                        );
-                    }
+                    $this->validateClassName($sValue);
                 },
             ],
             [

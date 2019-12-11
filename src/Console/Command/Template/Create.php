@@ -38,11 +38,7 @@ class Create extends BaseMaker
                 'description' => 'Define the name of the template to create',
                 'required'    => true,
                 'validation'  => function (string $sValue) {
-                    if (preg_match('/^\d/', $sValue)) {
-                        throw new ValidationException(
-                            'Template names cannot begin with a number'
-                        );
-                    }
+                    $this->validateClassName($sValue);
                 },
             ],
             [
