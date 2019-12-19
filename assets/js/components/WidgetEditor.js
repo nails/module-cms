@@ -1211,26 +1211,33 @@ class WidgetEditor {
 
         let deferred = $.Deferred();
 
-        $('<div>')
-            .text(message)
-            .dialog({
-                'title': title,
-                'resizable': false,
-                'draggable': false,
-                'modal': true,
-                'dialogClass': 'group-cms widgeteditor-alert',
-                'buttons': {
+        /**
+         * Hack: setTimeout used due to layout issue which caused the modal to
+         * appear off screen. Potentially a race condition for the noscroll class.
+         * Delaying by a fraction of a sec allows the UI to settle.
+         */
+        setTimeout(function() {
+            $('<div>')
+                .text(message)
+                .dialog({
+                    'title': title,
+                    'resizable': false,
+                    'draggable': false,
+                    'modal': true,
+                    'dialogClass': 'group-cms widgeteditor-alert',
+                    'buttons': {
 
-                    'OK': function() {
-                        $(this).dialog('close');
-                        deferred.resolve();
-                    },
-                    'Cancel': function() {
-                        $(this).dialog('close');
-                        deferred.reject();
+                        'OK': function() {
+                            $(this).dialog('close');
+                            deferred.resolve();
+                        },
+                        'Cancel': function() {
+                            $(this).dialog('close');
+                            deferred.reject();
+                        }
                     }
-                }
-            });
+                });
+        }, 10);
 
         return deferred.promise();
     }
