@@ -47,7 +47,10 @@
             "type": "module",
             "namespace": "Nails\\Cms\\",
             "autoload": {
-                "helpers": ["cms"]
+                "helpers": [
+                    "cms",
+                    "form"
+                ]
             },
             "data": {
                 "nails/module-admin": {
