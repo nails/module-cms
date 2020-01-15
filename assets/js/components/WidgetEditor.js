@@ -9,7 +9,7 @@ class WidgetEditor {
         this.log('Constructing');
         this.adminController = adminController;
         this.instantiated = false;
-        this.$btns = $('.field.cms-widgets .open-editor');
+        this.$btns = $('.open-editor');
 
         this.setupListeners();
 
@@ -175,10 +175,7 @@ class WidgetEditor {
                 //  @todo (Pablo - 2019-12-05) - Try and move these to admin components and use refreshUi event
                 window._nails.addStripes();
                 window._nails_admin.initSelect2();
-                window._nails_admin.initToggles();
                 window._nails.initTipsy();
-                window._nails_admin.buildWysiwyg('basic', widgetDom);
-                window._nails_admin.buildWysiwyg('default', widgetDom);
 
                 this.adminController.refreshUi();
             });
@@ -870,8 +867,9 @@ class WidgetEditor {
                 ui.helper.removeClass('hidden search-show search-hide');
 
                 ui.placeholder.height(ui.helper.outerHeight());
-                window._nails_admin.destroyWysiwyg('basic', ui.helper);
-                window._nails_admin.destroyWysiwyg('default', ui.helper);
+
+                //  Destroy wysiwygs within the helper, they break when sorted
+                this.adminController.instances["nails/module-admin"].Wysiwyg.destroy()
             },
             receive: (e, ui) => {
                 let sourceWidget, targetWidget, widgetSlug;
@@ -890,9 +888,7 @@ class WidgetEditor {
                 targetWidget.removeAttr('style');
             },
             stop: (e, ui) => {
-
-                window._nails_admin.buildWysiwyg('basic', ui.helper);
-                window._nails_admin.buildWysiwyg('default', ui.helper);
+                this.adminController.refreshUi();
             }
         });
 

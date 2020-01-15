@@ -27,7 +27,7 @@ function addTab(title, body) {
 function switchToTab(index) {
 
     //  Destroy WYSIWYG
-    _nails_admin.destroyWysiwyg('default', domElement);
+    window.NAILS.ADMIN.instances['nails/module-admin'].Wysiwyg.destroy(domElement);
 
     //  Swap tabs
     $('ol.nails-cms-widget-editor-tabs li.selected', domElement).removeClass('selected');
@@ -38,7 +38,7 @@ function switchToTab(index) {
     var newFields = $('section.nails-cms-widget-editor-tabs > .fieldset[data-index=' + index + ']', domElement).removeClass('hidden');
 
     //  Build WYSIWYG
-    _nails_admin.buildWysiwyg('default', newFields);
+    window.NAILS.ADMIN.refreshUi();
 
     _nails.addStripes();
 }

@@ -27,7 +27,7 @@ function addPanel(title, body) {
 function switchToPanel(index) {
 
     //  Destroy WYSIWYG
-    _nails_admin.destroyWysiwyg('default', domElement);
+    window.NAILS.ADMIN.instances['nails/module-admin'].Wysiwyg.destroy(domElement);
 
     //  Swap panels
     $('ol.nails-cms-widget-editor-accordion li.selected', domElement).removeClass('selected');
@@ -38,7 +38,7 @@ function switchToPanel(index) {
     var newFields = $('section.nails-cms-widget-editor-accordion > .fieldset[data-index=' + index + ']', domElement).removeClass('hidden');
 
     //  Build WYSIWYG
-    _nails_admin.buildWysiwyg('default', newFields);
+    window.NAILS.ADMIN.refreshUi();
 
     _nails.addStripes();
 }
