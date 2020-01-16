@@ -39,8 +39,6 @@ function switchToTab(index) {
 
     //  Build WYSIWYG
     window.NAILS.ADMIN.refreshUi();
-
-    _nails.addStripes();
 }
 
 function removeTab(index) {

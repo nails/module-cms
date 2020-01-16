@@ -173,7 +173,6 @@ class WidgetEditor {
             .addWidgetInitCallback((widgetDom) => {
 
                 //  @todo (Pablo - 2019-12-05) - Try and move these to admin components and use refreshUi event
-                window._nails.addStripes();
                 window._nails_admin.initSelect2();
                 window._nails.initTipsy();
 
