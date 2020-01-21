@@ -7,6 +7,8 @@ import WidgetEditor from './components/WidgetEditor.js';
     window.NAILS.ADMIN.registerPlugin(
         'nails/module-cms',
         'WidgetEditor',
-        new WidgetEditor(window.NAILS.ADMIN)
+        function(controller) {
+            return new WidgetEditor(controller);
+        }
     );
 })();

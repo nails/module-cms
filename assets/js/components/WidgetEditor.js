@@ -6,8 +6,8 @@ class WidgetEditor {
      */
     constructor(adminController) {
 
-        WidgetEditor.log('Constructing');
         this.adminController = adminController;
+        this.adminController.log('Constructing');
         this.instantiated = false;
         this.$btns = $('.open-editor');
 
@@ -29,7 +29,7 @@ class WidgetEditor {
      */
     init() {
 
-        WidgetEditor.log('Initialising Widget Editor');
+        this.adminController.log('Initialising Widget Editor');
 
         //  Only instantiate once
         this.instantiated = true;
@@ -164,7 +164,7 @@ class WidgetEditor {
             .done(() => {
                 this.renderSidebarWidgets();
                 this.isEditorReady = true;
-                WidgetEditor.log('Widget Editor ready');
+                this.adminController.log('Widget Editor ready');
                 $(this).trigger('widgeteditor-ready');
             });
 
@@ -192,8 +192,8 @@ class WidgetEditor {
                         let widgetData = JSON.parse(input.val());
                         this.setAreaData(key, widgetData);
                     } catch (e) {
-                        WidgetEditor.warn('Failed to parse JSON data');
-                        WidgetEditor.warn(e.message);
+                        this.adminController.warn('Failed to parse JSON data');
+                        this.adminController.warn(e.message);
                     }
                 }
             });
@@ -209,17 +209,17 @@ class WidgetEditor {
      */
     setupListeners() {
 
-        WidgetEditor.log('Setting up listeners');
+        this.adminController.log('Setting up listeners');
 
         this.$btns
             .on('click', (e) => {
                 if (this.isReady()) {
                     this.activeButton = $(e.currentTarget);
                     let key = this.activeButton.data('key');
-                    WidgetEditor.log('Opening Editor for area: ' + key);
+                    this.adminController.log('Opening Editor for area: ' + key);
                     this.show(key);
                 } else {
-                    WidgetEditor.warn('Widget editor not ready');
+                    this.adminController.warn('Widget editor not ready');
                 }
                 return false;
             });
@@ -231,7 +231,7 @@ class WidgetEditor {
             .on('widgeteditor-close', () => {
                 if (this.activeButton) {
 
-                    WidgetEditor.log('Editor Closing, getting area data and saving to input');
+                    this.adminController.log('Editor Closing, getting area data and saving to input');
                     let input = this.activeButton.siblings('textarea.widget-data');
                     let data = this.getAreaData(this.activeButton.data('key'));
                     let dataString = JSON.stringify(data);
@@ -255,7 +255,7 @@ class WidgetEditor {
 
         if (this.container === null) {
 
-            WidgetEditor.log('Injecting editor markup');
+            this.adminController.log('Injecting editor markup');
 
             this.container = $('<div>').addClass('group-cms widgeteditor');
             this.sections = {
@@ -299,7 +299,7 @@ class WidgetEditor {
             this.renderActions();
 
         } else {
-            WidgetEditor.warn('Editor already generated');
+            this.adminController.warn('Editor already generated');
         }
 
         return this;
@@ -320,14 +320,14 @@ class WidgetEditor {
 
             let $el = $(e.currentTarget);
             actionIndex = $el.data('action-index');
-            WidgetEditor.log('Action clicked', actionIndex);
+            this.adminController.log('Action clicked', actionIndex);
 
             if (this.actions[actionIndex]) {
                 if (typeof this.actions[actionIndex].callback === 'function') {
                     this.actions[actionIndex].callback.call(this);
                 }
             } else {
-                WidgetEditor.warn('"' + actionIndex + '" is not a valid action.');
+                this.adminController.warn('"' + actionIndex + '" is not a valid action.');
             }
             return false;
         });
@@ -337,7 +337,7 @@ class WidgetEditor {
             .on('click', '.widget-group', (e) => {
 
                 let $el = $(e.currentTarget);
-                WidgetEditor.log('Toggling visibility of group\'s widgets.');
+                this.adminController.log('Toggling visibility of group\'s widgets.');
 
                 let isOpen;
 
@@ -411,7 +411,7 @@ class WidgetEditor {
 
             this.confirm('Are you sure you wish to remove this "' + widget.label + '" widget from the interface?')
                 .done(() => {
-                    WidgetEditor.log('Removing Widget');
+                    this.adminController.log('Removing Widget');
                     domElement.remove();
                     widget.callbacks.removed.call(this, domElement);
                 });
@@ -455,7 +455,7 @@ class WidgetEditor {
 
         let deferred, i, x, key, assetsCss, assetsJs;
 
-        WidgetEditor.log('Fetching available CMS widgets');
+        this.adminController.log('Fetching available CMS widgets');
 
         deferred = $.Deferred();
 
@@ -464,7 +464,7 @@ class WidgetEditor {
             'method': 'index',
             'success': (response) => {
 
-                WidgetEditor.log('Succesfully fetched widgets from the server.');
+                this.adminController.log('Succesfully fetched widgets from the server.');
                 this.widgets = response.data.widgets;
 
                 //  Make the callbacks on each widget callable
@@ -500,7 +500,7 @@ class WidgetEditor {
                 deferred.resolve();
             },
             'error': () => {
-                WidgetEditor.warn('Failed to load widgets from the server.');
+                this.adminController.warn('Failed to load widgets from the server.');
                 deferred.reject();
             }
         });
@@ -576,7 +576,7 @@ class WidgetEditor {
 
         if (term.length > 0) {
 
-            WidgetEditor.log('Filtering widgets by term "' + term + '"');
+            this.adminController.log('Filtering widgets by term "' + term + '"');
 
             //  Hide widgets which do not match the search term
             this.sections.widgets.find('.widget').each((index, element) => {
@@ -615,7 +615,7 @@ class WidgetEditor {
 
         } else {
 
-            WidgetEditor.log('Restoring widgets');
+            this.adminController.log('Restoring widgets');
             this.sections.widgets.find('.widget, .widget-group').removeClass('search-show search-hide');
         }
     }
@@ -631,7 +631,7 @@ class WidgetEditor {
      */
     addAction(label, type, callback) {
 
-        WidgetEditor.log('Adding action "' + label + '"');
+        this.adminController.log('Adding action "' + label + '"');
         this.actions.push({
             'label': label,
             'type': type,
@@ -676,7 +676,7 @@ class WidgetEditor {
 
         area = area || this.defaultArea;
 
-        WidgetEditor.log('Showing Editor for "' + area + '"');
+        this.adminController.log('Showing Editor for "' + area + '"');
 
         this.activeArea = area;
 
@@ -685,7 +685,7 @@ class WidgetEditor {
 
         if (this.widgetData[area] && this.widgetData[area].length) {
 
-            WidgetEditor.log('Adding previous widgets');
+            this.adminController.log('Adding previous widgets');
             let requestDom = [];
             let requestData = [];
 
@@ -710,7 +710,7 @@ class WidgetEditor {
                 }
             }
 
-            WidgetEditor.log('Setting up all widgets');
+            this.adminController.log('Setting up all widgets');
 
             //  Send request off for all widget editors
             window._nails_api.call({
@@ -724,7 +724,7 @@ class WidgetEditor {
 
                     let i, widget;
 
-                    WidgetEditor.log('Succesfully fetched widget editors from the server.');
+                    this.adminController.log('Succesfully fetched widget editors from the server.');
                     for (i = 0; i < response.data.length; i++) {
 
                         if (!response.data[i].error) {
@@ -769,7 +769,7 @@ class WidgetEditor {
                             'error': 'An unknown error occurred.'
                         };
                     }
-                    WidgetEditor.warn('Failed to load widget editors from the server with error: ', _data.error);
+                    this.adminController.warn('Failed to load widget editors from the server with error: ', _data.error);
                     //  @todo show an alert/dialog
                 }
             });
@@ -798,7 +798,7 @@ class WidgetEditor {
      */
     close() {
 
-        WidgetEditor.log('Closing Editor');
+        this.adminController.log('Closing Editor');
         this.container.removeClass('active');
         this.isEditorOpen = false;
         this.activeArea = '';
@@ -929,7 +929,7 @@ class WidgetEditor {
 
         if (widget) {
 
-            WidgetEditor.log('Adding Widget "' + widget.slug + '" with data:', data);
+            this.adminController.log('Adding Widget "' + widget.slug + '" with data:', data);
 
             //  Populate the dom element with the widget template
             $(widgetDom)
@@ -944,7 +944,7 @@ class WidgetEditor {
             }
 
         } else {
-            WidgetEditor.warn('Attempted to add an invalid widget');
+            this.adminController.warn('Attempted to add an invalid widget');
 
             //  Show user feedback
             let $error = $('<p>')
@@ -974,7 +974,7 @@ class WidgetEditor {
         this.getWidgetEditor(slug, data)
             .done((data) => {
 
-                WidgetEditor.log('Editor Received');
+                this.adminController.log('Editor Received');
                 this.setupWidgetEditorOk(widgetDom, data);
 
                 //  Now the markup is in place we need to ensure that things look the part
@@ -1090,7 +1090,7 @@ class WidgetEditor {
                 'data': data
             },
             'success': (response) => {
-                WidgetEditor.log('Successfully fetched widget editor from the server.');
+                this.adminController.log('Successfully fetched widget editor from the server.');
                 deferred.resolve(response.data.editor);
             },
             'error': (data) => {
@@ -1105,7 +1105,7 @@ class WidgetEditor {
                         'error': 'An unknown error occurred.'
                     };
                 }
-                WidgetEditor.warn('Failed to load widget editor from the server with error: ', _data.error);
+                this.adminController.warn('Failed to load widget editor from the server with error: ', _data.error);
                 deferred.reject(_data);
             }
         });
@@ -1123,11 +1123,11 @@ class WidgetEditor {
     getAreaData(area) {
 
         area = area || this.defaultArea;
-        WidgetEditor.log('Getting editor data for area "' + area + '"');
+        this.adminController.log('Getting editor data for area "' + area + '"');
 
         //  If the editor is open then refresh the area
         if (this.isOpen() && area === this.activeArea) {
-            WidgetEditor.log('Editor is open with selected area, refreshing data');
+            this.adminController.log('Editor is open with selected area, refreshing data');
             this.widgetData[area] = this.getActiveData();
         }
 
@@ -1151,7 +1151,7 @@ class WidgetEditor {
     setAreaData(area, data) {
 
         area = area || this.defaultArea;
-        WidgetEditor.log('Setting editor data for area "' + area + '"', data);
+        this.adminController.log('Setting editor data for area "' + area + '"', data);
         this.widgetData[area] = data;
 
         return this;
@@ -1167,7 +1167,7 @@ class WidgetEditor {
 
         let widgets, out = [];
 
-        WidgetEditor.log('Getting active editor\'s data');
+        this.adminController.log('Getting active editor\'s data');
 
         widgets = this.sections.body.find('> ul > .widget');
         widgets.each((index, element) => {
@@ -1236,30 +1236,6 @@ class WidgetEditor {
 
         return deferred.promise();
     }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Write a log to the console
-     * @return {void}
-     */
-    static log() {
-        if (typeof (console.log) === 'function') {
-            console.log("\x1b[33m[CMS WidgetEditor]\x1b[0m", ...arguments);
-        }
-    };
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Write a warning to the console
-     * @return {void}
-     */
-    static warn() {
-        if (typeof (console.warn) === 'function') {
-            console.warn("\x1b[33m[CMS WidgetEditor]\x1b[0m", ...arguments);
-        }
-    };
 
     // --------------------------------------------------------------------------
 
