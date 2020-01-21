@@ -37,7 +37,8 @@
                     <th width="35"></th>
                 </tr>
             </thead>
-            <tbody class="js-admin-dynamic-table__template js-admin-sortable" data-handle=".handle">
+            <tbody class="js-admin-dynamic-table__body js-admin-sortable" data-handle=".handle"></tbody>
+            <script type="text/x-template" class="js-admin-dynamic-table__template">
                 <tr>
                     <td class="text-center">
                         <b class="fa fa-bars handle"></b>
@@ -59,7 +60,7 @@
                         </button>
                     </td>
                 </tr>
-            </tbody>
+            </script>
             <tbody>
                 <tr>
                     <td colspan="4">
