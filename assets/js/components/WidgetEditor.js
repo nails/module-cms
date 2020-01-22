@@ -171,11 +171,6 @@ class WidgetEditor {
         //  Default editor elements
         this
             .addWidgetInitCallback((widgetDom) => {
-
-                //  @todo (Pablo - 2019-12-05) - Try and move these to admin components and use refreshUi event
-                window._nails_admin.initSelect2();
-                window._nails.initTipsy();
-
                 this.adminController.refreshUi();
             });
 
@@ -868,7 +863,7 @@ class WidgetEditor {
                 ui.placeholder.height(ui.helper.outerHeight());
 
                 //  Destroy wysiwygs within the helper, they break when sorted
-                this.adminController.instances["nails/module-admin"].Wysiwyg.destroy()
+                this.adminController.getInstance('Wysiwyg').destroy()
             },
             receive: (e, ui) => {
                 let sourceWidget, targetWidget, widgetSlug;
