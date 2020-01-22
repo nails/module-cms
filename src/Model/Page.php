@@ -18,6 +18,7 @@ use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
+use Nails\Common\Service\Event;
 use Nails\Common\Service\Routes;
 use Nails\Factory;
 
@@ -310,9 +311,7 @@ class Page extends Base
             //  Rewrite routes
             //  If routes are generated with the preview table selected then the routes file will _empty_
             if (!static::IS_PREVIEW) {
-                /** @var Routes $oRoutesService */
-                $oRoutesService = Factory::service('Routes');
-                $oRoutesService->update();
+                $this->rewriteRoutes();
             }
 
             // --------------------------------------------------------------------------
@@ -493,9 +492,7 @@ class Page extends Base
 
             // --------------------------------------------------------------------------
 
-            /** @var Routes $oRoutesService */
-            $oRoutesService = Factory::service('Routes');
-            $oRoutesService->update();
+            $this->rewriteRoutes();
 
             //  @TODO: Kill caches for this page and all children
             return true;
@@ -543,9 +540,7 @@ class Page extends Base
 
         // --------------------------------------------------------------------------
 
-        /** @var Routes $oRoutesService */
-        $oRoutesService = Factory::service('Routes');
-        $oRoutesService->update();
+        $this->rewriteRoutes();
 
         // --------------------------------------------------------------------------
 
@@ -1142,9 +1137,7 @@ class Page extends Base
 
         // --------------------------------------------------------------------------
 
-        /** @var Routes $oRoutesService */
-        $oRoutesService = Factory::service('Routes');
-        $oRoutesService->update();
+        $this->rewriteRoutes();
 
         // --------------------------------------------------------------------------
 
@@ -1236,5 +1229,19 @@ class Page extends Base
         ];
 
         return $this->create($aPageData, $bReturnObject);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Triggers the ROUTES:REWRITE event
+     *
+     * @throws FactoryException
+     */
+    protected function rewriteRoutes(): void
+    {
+        /** @var Event $oEventService */
+        $oEventService = Factory::service('Event');
+        $oEventService->trigger(\Nails\Common\Events::ROUTES_UPDATE);
     }
 }
