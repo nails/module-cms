@@ -26,7 +26,7 @@ class Form
             $sDefault = json_encode($sDefault) ?? '[]';
         }
 
-        $sDefault = set_value($sKey, $sDefault, false);
+        $sDefault = htmlspecialchars(set_value($sKey, $sDefault, false));
 
         return <<<EOT
         <textarea class="widget-data hidden" name="$sKey" $sId>$sDefault</textarea>
