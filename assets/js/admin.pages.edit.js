@@ -1,4 +1,4 @@
-/* globals console, _nails_api */
+/* globals console */
 var NAILS_Admin_CMS_Pages_CreateEdit;
 NAILS_Admin_CMS_Pages_CreateEdit = function(templates) {
     /**
@@ -236,26 +236,26 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(templates) {
 
         preview.find('.iframe, .iframe > div').css('height', newHeight);
 
-        _nails_api.call({
-            'controller': 'cms/pages',
-            'method': 'preview',
-            'action': 'POST',
-            'data': $('#main-form').serialize(),
-            'success': function(response) {
+        $.ajax({
+            'url': window.SITE_URL + 'api/cms/pages/preview',
+            'method': 'POST',
+            'data': $('#main-form').serialize()
+        })
+            .done(function(response) {
                 $('#page-preview iframe').attr('src', response.data.url);
-            },
-            'error': function(response) {
+            })
+            .fail(function(response) {
 
-                var _data;
+                var data;
+
                 try {
-                    _data = JSON.parse(response.responseText);
+                    data = JSON.parse(response.responseText);
                 } catch (e) {
-                    _data = {
+                    data = {
                         'status': 500,
                         'error': 'An unknown error occurred.'
                     };
                 }
-
                 base.warn('Failed to generate a preview.', _data);
                 $('<div>')
                     .text('Failed to generate preview. ' + _data.error)
@@ -272,8 +272,7 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(templates) {
                             }
                         }
                     });
-            }
-        });
+            });
 
         return base;
     };
@@ -324,7 +323,6 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(templates) {
 
         template = template || base.activeTemplate;
         $('#template-area-' + template + ' .btn').each(function() {
-
             area = $(this).data('area');
             data[area] = base.editor.getAreaData(area);
         });
@@ -343,7 +341,6 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(templates) {
      * @return {Void}
      */
     base.log = function(message, payload) {
-
         if (typeof(console.log) === 'function') {
             if (payload !== undefined) {
                 console.log('CMS Pages:', message, payload);
@@ -362,7 +359,6 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(templates) {
      * @return {Void}
      */
     base.warn = function(message, payload) {
-
         if (typeof(console.warn) === 'function') {
             if (payload !== undefined) {
                 console.warn('CMS Pages:', message, payload);

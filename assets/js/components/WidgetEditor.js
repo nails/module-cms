@@ -454,11 +454,10 @@ class WidgetEditor {
 
         deferred = $.Deferred();
 
-        window._nails_api.call({
-            'controller': 'cms/widgets',
-            'method': 'index',
-            'success': (response) => {
-
+        $.ajax({
+            'url': window.SITE_URL + 'api/cms/widgets/index'
+        })
+            .done((response) => {
                 this.adminController.log('Succesfully fetched widgets from the server.');
                 this.widgets = response.data.widgets;
 
@@ -493,12 +492,11 @@ class WidgetEditor {
                 $('body').append(assetsJs);
 
                 deferred.resolve();
-            },
-            'error': () => {
+            })
+            .fail(() => {
                 this.adminController.warn('Failed to load widgets from the server.');
                 deferred.reject();
-            }
-        });
+            });
 
         return deferred;
     }
@@ -708,29 +706,23 @@ class WidgetEditor {
             this.adminController.log('Setting up all widgets');
 
             //  Send request off for all widget editors
-            window._nails_api.call({
-                'controller': 'cms/widgets',
-                'method': 'editors',
-                'action': 'POST',
+            $.ajax({
+                'url': window.SITE_URL + 'api/cms/widgets/editors',
+                'method': 'POST',
                 'data': {
                     'data': JSON.stringify(requestData)
-                },
-                'success': (response) => {
-
+                }
+            })
+                .done((response) => {
                     let i, widget;
-
                     this.adminController.log('Succesfully fetched widget editors from the server.');
                     for (i = 0; i < response.data.length; i++) {
-
                         if (!response.data[i].error) {
-
                             this.setupWidgetEditorOk(
                                 requestDom[i],
                                 response.data[i].editor
                             );
-
                         } else {
-
                             this.setupWidgetEditorFail(
                                 requestDom[i],
                                 response.data[i].editor
@@ -743,32 +735,24 @@ class WidgetEditor {
 
                     //  Finally, call the "dropped" callback on each widget
                     for (i = 0; i < response.data.length; i++) {
-
                         widget = this.getWidget(response.data[i].slug);
                         widget.callbacks.dropped.call(this, requestDom[i]);
                     }
+                })
+                .fail((response) => {
 
-                },
-                'error': (data) => {
-
-                    let _data;
+                    let data;
 
                     try {
-
-                        _data = JSON.parse(data.responseText);
-
+                        data = JSON.parse(response.responseText);
                     } catch (e) {
-
-                        _data = {
+                        data = {
                             'status': 500,
                             'error': 'An unknown error occurred.'
                         };
                     }
-                    this.adminController.warn('Failed to load widget editors from the server with error: ', _data.error);
-                    //  @todo show an alert/dialog
-                }
-            });
-
+                    this.adminController.warn('Failed to load widget editors from the server with error: ', data.error);
+                });
         }
 
         //  Make things draggable and sortable
@@ -1076,34 +1060,33 @@ class WidgetEditor {
 
         deferred = $.Deferred();
 
-        window._nails_api.call({
-            'controller': 'cms/widgets',
-            'method': 'editor',
-            'action': 'POST',
+        $.ajax({
+            'url': window.SITE_URL + 'api/cms/widgets/editor',
+            'method': 'POST',
             'data': {
                 'slug': slug,
                 'data': data
-            },
-            'success': (response) => {
+            }
+        })
+            .done((response) => {
                 this.adminController.log('Successfully fetched widget editor from the server.');
                 deferred.resolve(response.data.editor);
-            },
-            'error': (data) => {
+            })
+            .fail((response) => {
 
-                let _data;
+                let data;
 
                 try {
-                    _data = JSON.parse(data.responseText);
+                    data = JSON.parse(response.responseText);
                 } catch (e) {
-                    _data = {
+                    data = {
                         'status': 500,
                         'error': 'An unknown error occurred.'
                     };
                 }
-                this.adminController.warn('Failed to load widget editor from the server with error: ', _data.error);
-                deferred.reject(_data);
-            }
-        });
+                this.adminController.warn('Failed to load widget editor from the server with error: ', data.error);
+                deferred.reject(data);
+            });
 
         return deferred.promise();
     }
