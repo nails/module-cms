@@ -27,7 +27,7 @@ function addPanel(title, body) {
 function switchToPanel(index) {
 
     //  Destroy WYSIWYG
-    window.NAILS.ADMIN.instances['nails/module-admin'].Wysiwyg.destroy(domElement);
+    window.NAILS.ADMIN.getInstance('Wysiwyg').destroy(domElement);
 
     //  Swap panels
     $('ol.nails-cms-widget-editor-accordion li.selected', domElement).removeClass('selected');

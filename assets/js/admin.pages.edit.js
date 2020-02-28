@@ -13,7 +13,7 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(templates) {
      * The widget editor instance
      * @type {Object}
      */
-    base.editor = window.NAILS.ADMIN.instances['nails/module-cms'].WidgetEditor;
+    base.editor = window.NAILS.ADMIN.getInstance('WidgetEditor', 'nails/module-cms');
 
     // --------------------------------------------------------------------------
 
