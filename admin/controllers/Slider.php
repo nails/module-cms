@@ -13,10 +13,16 @@
 namespace Nails\Admin\Cms;
 
 use Nails\Admin\Helper;
-use Nails\Auth;
 use Nails\Cms\Controller\BaseAdmin;
+use Nails\Common\Service\Session;
+use Nails\Common\Service\Uri;
 use Nails\Factory;
 
+/**
+ * Class Slider
+ *
+ * @package Nails\Admin\Cms
+ */
 class Slider extends BaseAdmin
 {
     protected $oSliderModel;
@@ -176,7 +182,8 @@ class Slider extends BaseAdmin
 
                 if ($this->oSliderModel->create($aSliderData)) {
 
-                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+                    /** @var Session $oSession */
+                    $oSession = Factory::service('Session');
                     $oSession->setFlashData('success', 'Slider created successfully.');
                     redirect('admin/cms/slider');
 
@@ -220,7 +227,8 @@ class Slider extends BaseAdmin
         $this->data['slider'] = $oSlide;
 
         if (!$oSlide) {
-            $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+            /** @var Session $oSession */
+            $oSession = Factory::service('Session');
             $oSession->setFlashData('error', 'Invalid slider ID.');
             redirect('admin/cms/slider');
         }
@@ -254,7 +262,8 @@ class Slider extends BaseAdmin
 
                 if ($this->oSliderModel->update($oSlide->id, $aSliderData)) {
 
-                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+                    /** @var Session $oSession */
+                    $oSession = Factory::service('Session');
                     $oSession->setFlashData('success', 'Sldier updated successfully.');
                     redirect('admin/cms/slider');
 
@@ -293,12 +302,15 @@ class Slider extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Fetch and check post
-        $oUri      = Factory::service('Uri');
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session');
+
         $iSliderId = $oUri->segment(5);
         $oSlider   = $this->oSliderModel->getById($iSliderId);
 
         if (!$oSlider) {
-            $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
             $oSession->setFlashData('error', 'No slider by that ID.');
             redirect('admin/cms/slider');
         }
@@ -313,7 +325,6 @@ class Slider extends BaseAdmin
             $sMessage = 'Failed to delete that slider. ' . $this->oSliderModel->lastError();
         }
 
-        $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
         $oSession->setFlashData($sStatus, $sMessage);
         redirect('admin/cms/slider');
     }

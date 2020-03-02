@@ -13,10 +13,17 @@
 namespace Nails\Admin\Cms;
 
 use Nails\Admin\Helper;
-use Nails\Auth;
 use Nails\Cms\Controller\BaseAdmin;
+use Nails\Cms\Model\Menu;
+use Nails\Common\Service\Session;
+use Nails\Common\Service\Uri;
 use Nails\Factory;
 
+/**
+ * Class Menus
+ *
+ * @package Nails\Admin\Cms
+ */
 class Menus extends BaseAdmin
 {
     /**
@@ -154,7 +161,8 @@ class Menus extends BaseAdmin
                 $oMenuModel = Factory::model('Menu', 'nails/module-cms');
                 if ($oMenuModel->create($aItemData)) {
 
-                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+                    /** @var Session $oSession */
+                    $oSession = Factory::service('Session');
                     $oSession->setFlashData('success', 'Menu created successfully.');
                     redirect('admin/cms/menus');
 
@@ -240,7 +248,8 @@ class Menus extends BaseAdmin
         $oMenu      = $oMenuModel->getById($oUri->segment(5));
 
         if (!$oMenu) {
-            $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+            /** @var Session $oSession */
+            $oSession = Factory::service('Session');
             $oSession->setFlashData('error', 'Invalid menu ID.');
             redirect('admin/cms/menus');
         }
@@ -280,7 +289,8 @@ class Menus extends BaseAdmin
 
                 if ($oMenuModel->update($oMenu->id, $aItemData)) {
 
-                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+                    /** @var Session $oSession */
+                    $oSession = Factory::service('Session');
                     $oSession->setFlashData('success', 'Menu updated successfully.');
                     redirect('admin/cms/menus');
 
@@ -361,10 +371,14 @@ class Menus extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oUri       = Factory::service('Uri');
-        $oSession   = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session');
+        /** @var Menu $oMenuModel */
         $oMenuModel = Factory::model('Menu', 'nails/module-cms');
-        $oMenu      = $oMenuModel->getById($oUri->segment(5));
+
+        $oMenu = $oMenuModel->getById($oUri->segment(5));
 
         if (!$oMenu) {
             $oSession->setFlashData('error', 'Invalid menu ID.');

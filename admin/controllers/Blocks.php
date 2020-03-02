@@ -13,10 +13,17 @@
 namespace Nails\Admin\Cms;
 
 use Nails\Admin\Helper;
-use Nails\Auth;
 use Nails\Cms\Controller\BaseAdmin;
+use Nails\Cms\Model\Block;
+use Nails\Common\Service\Session;
+use Nails\Common\Service\Uri;
 use Nails\Factory;
 
+/**
+ * Class Blocks
+ *
+ * @package Nails\Admin\Cms
+ */
 class Blocks extends BaseAdmin
 {
     protected $oBlockModel;
@@ -238,7 +245,8 @@ class Blocks extends BaseAdmin
 
                 if ($oModel->update($this->data['block']->id, ['value' => $oInput->post('value')])) {
 
-                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+                    /** @var Session $oSession */
+                    $oSession = Factory::service('Session');
                     $oSession->setFlashData('success', 'Block updated successfully.');
                     redirect('admin/cms/blocks');
 
@@ -333,7 +341,8 @@ class Blocks extends BaseAdmin
                 $oModel = Factory::model('Block', 'nails/module-cms');
                 if ($oModel->create($aBlockData)) {
 
-                    $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+                    /** @var Session $oSession */
+                    $oSession = Factory::service('Session');
                     $oSession->setFlashData('success', 'Block created successfully.');
                     redirect('admin/cms/blocks');
 
@@ -372,9 +381,12 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oModel   = Factory::model('Block', 'nails/module-cms');
-        $oUri     = Factory::service('Uri');
-        $oSession = Factory::service('Session', Auth\Constants::MODULE_SLUG);
+        /** @var Block $oModel */
+        $oModel = Factory::model('Block', 'nails/module-cms');
+        /** @var Uri $oUri */
+        $oUri = Factory::service('Uri');
+        /** @var Session $oSession */
+        $oSession = Factory::service('Session');
 
         $oBlock = $oModel->getById($oUri->segment(5));
 
