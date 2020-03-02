@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Widget;
 
+use Nails\Common\Service\FileCache;
 use Nails\Factory;
 
 /**
@@ -110,16 +111,23 @@ abstract class WidgetBase
 
         //  Detect the screenshot
         $aFiles = ['screenshot.png', 'screenshot.jpg', 'screenshot.gif'];
+
+        /** @var FileCache $oFileCache */
+        $oFileCache = Factory::service('FileCache');
+        $sCacheDir  = $oFileCache->public()->getDir();
+        $sCacheUrl  = $oFileCache->public()->getUrl() . '/';
+
         foreach ($aFiles as $sFile) {
             $sPath = static::getFilePath($sFile);
             if (!empty($sPath)) {
                 $sCachePath = md5($sPath) . '-widget-' . basename($this->path) . '-' . basename($sPath);
-                if (file_exists(CACHE_PUBLIC_PATH . $sCachePath)) {
-                    $this->screenshot = CACHE_PUBLIC_URL . $sCachePath;
+
+                if (file_exists($sCacheDir . $sCachePath)) {
+                    $this->screenshot = $sCacheUrl . $sCachePath;
                 } else {
                     //  Attempt to copy the file and serve the cached version
-                    if (copy($sPath, CACHE_PUBLIC_PATH . $sCachePath)) {
-                        $this->screenshot = CACHE_PUBLIC_URL . $sCachePath;
+                    if (copy($sPath, $sCacheDir . $sCachePath)) {
+                        $this->screenshot = $sCacheUrl . $sCachePath;
                     } else {
                         $this->screenshot = 'data:image/jpg;base64,' . base64_encode(file_get_contents($sPath));
                     }
