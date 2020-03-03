@@ -73,7 +73,7 @@ class Pages extends BaseAdmin
             $oDb = Factory::service('Database');
             $oDb->where('is_published', false);
             $oDb->where('is_deleted', false);
-            $iNumDrafts = $oDb->count_all_results(Config::Get('NAILS_DB_PREFIX') . 'cms_page');
+            $iNumDrafts = $oDb->count_all_results(Config::get('NAILS_DB_PREFIX') . 'cms_page');
 
             /** @var Alert $oAlert */
             $oAlert = Factory::factory('NavAlert', 'nails/module-admin');
