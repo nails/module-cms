@@ -11,6 +11,7 @@
  */
 
 use App\Controller\Base;
+use Nails\Cms\Constants;
 use Nails\Cms\Exception\RenderException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Service\Meta;
@@ -59,7 +60,7 @@ class Render extends Base
         // --------------------------------------------------------------------------
 
         /** @var \Nails\Cms\Model\Page oPageModel */
-        $this->oPageModel = Factory::model('Page', 'nails/module-cms');
+        $this->oPageModel = Factory::model('Page', Constants::MODULE_SLUG);
         /** @var \Nails\Common\Service\Uri $oUri */
         $oUri = Factory::service('Uri');
 
@@ -83,7 +84,7 @@ class Render extends Base
     {
         if ($this->bIsPreview) {
             /** @var \Nails\Cms\Model\Page\Preview $oPagePreviewModel */
-            $oPagePreviewModel = Factory::model('PagePreview', 'nails/module-cms');
+            $oPagePreviewModel = Factory::model('PagePreview', Constants::MODULE_SLUG);
             $oPage             = $oPagePreviewModel->getById($this->iPageId);
         } else {
             $oPage = $this->oPageModel->getById($this->iPageId);

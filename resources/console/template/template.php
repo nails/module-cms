@@ -5,6 +5,8 @@
  * Used by the console command when creating templates.
  */
 
+use Nails\Cms\Constants;
+
 return <<<'EOD'
 <?php
 
@@ -14,8 +16,9 @@ return <<<'EOD'
 
 namespace App\Cms\Template;
 
-use Nails\Factory;
+use Nails\Cms\Constants;
 use Nails\Cms\Template\TemplateBase;
+use Nails\Factory;
 
 class {{SLUG}} extends TemplateBase
 {
@@ -33,7 +36,7 @@ class {{SLUG}} extends TemplateBase
         //  Define template widget areas
         $this->widget_areas = [
             //  The template's body
-            'sBody' => Factory::factory('TemplateArea', 'nails/module-cms')
+            'sBody' => Factory::factory('TemplateArea', Constants::MODULE_SLUG)
                 ->setTitle('Body')
         ];
     }

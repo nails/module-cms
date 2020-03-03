@@ -14,6 +14,7 @@ namespace Nails\Cms\Api\Controller;
 
 use Nails\Api\Controller\Base;
 use Nails\Api\Exception\ApiException;
+use Nails\Cms\Constants;
 use Nails\Common\Exception\NailsException;
 use Nails\Factory;
 
@@ -61,7 +62,7 @@ class Widgets extends Base
      */
     public function getIndex()
     {
-        $oWidgetService = Factory::service('Widget', 'nails/module-cms');
+        $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
         $oAsset         = Factory::service('Asset');
         $aWidgets       = [];
         $aWidgetGroups  = $oWidgetService->getAvailable();
@@ -112,7 +113,7 @@ class Widgets extends Base
         $oInput         = Factory::service('Input');
         $sWidgetSlug    = $oInput->post('slug');
         $aWidgetData    = $oInput->post('data') ?: [];
-        $oWidgetService = Factory::service('Widget', 'nails/module-cms');
+        $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
         $oWidget        = $oWidgetService->getBySlug($sWidgetSlug);
 
         if (!$oWidget) {
@@ -136,7 +137,7 @@ class Widgets extends Base
     {
         $oInput         = Factory::service('Input');
         $aWidgetData    = json_decode($oInput->post('data')) ?: [];
-        $oWidgetService = Factory::service('Widget', 'nails/module-cms');
+        $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
         $aOut           = [];
 
         foreach ($aWidgetData as $oData) {

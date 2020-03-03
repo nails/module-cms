@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Cms\Template;
 
+use Nails\Cms\Constants;
 use Nails\Cms\Template\TemplateBase;
 use Nails\Factory;
 
@@ -40,7 +41,7 @@ class Fullwidth extends TemplateBase
          * variable to the view
          */
 
-        $this->widget_areas['mainbody'] = Factory::factory('TemplateArea', 'nails/module-cms');
+        $this->widget_areas['mainbody'] = Factory::factory('TemplateArea', Constants::MODULE_SLUG);
         $this->widget_areas['mainbody']->setTitle('Main Body');
     }
 }

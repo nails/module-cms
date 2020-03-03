@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Model;
 
+use Nails\Cms\Constants;
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
 use Nails\Config;
@@ -186,7 +187,7 @@ class Menu extends Base
 
         //  If the menu is tied to a page then fetch that page's URL
         if ($oObj->page_id) {
-            $oPageModel    = Factory::model('Page', 'nails/module-cms');
+            $oPageModel    = Factory::model('Page', Constants::MODULE_SLUG);
             $oObj->pageUrl = $oPageModel->getUrl($oObj->page_id);
         } else {
             $oObj->pageUrl = null;

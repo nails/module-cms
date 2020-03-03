@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Service;
 
+use Nails\Cms\Constants;
 use Nails\Cms\Exception\Template\NotFoundException;
 use Nails\Common\Helper\Directory;
 use Nails\Components;
@@ -141,7 +142,7 @@ class Template
 
                 if (!isset($aOut[$sKey])) {
 
-                    $aOut[$sKey] = Factory::factory('TemplateGroup', 'nails/module-cms');
+                    $aOut[$sKey] = Factory::factory('TemplateGroup', Constants::MODULE_SLUG);
                     $aOut[$sKey]->setLabel($sTemplateGrouping);
                 }
 
@@ -153,7 +154,7 @@ class Template
 
                 if (!isset($aGeneric[$sKey])) {
 
-                    $aGeneric[$sKey] = Factory::factory('TemplateGroup', 'nails/module-cms');
+                    $aGeneric[$sKey] = Factory::factory('TemplateGroup', Constants::MODULE_SLUG);
                     $aGeneric[$sKey]->setLabel($sGenericLabel);
                 }
 

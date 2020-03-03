@@ -15,6 +15,7 @@ namespace Nails\Admin\Cms;
 use Nails\Admin\Factory\Nav;
 use Nails\Admin\Factory\Nav\Alert;
 use Nails\Admin\Helper;
+use Nails\Cms\Constants;
 use Nails\Cms\Controller\BaseAdmin;
 use Nails\Cms\Exception\Template\NotFoundException;
 use Nails\Cms\Model\Page;
@@ -128,14 +129,14 @@ class Pages extends BaseAdmin
 
         //  Load common items
         /** @var Page oPageModel */
-        $this->oPageModel = Factory::model('Page', 'nails/module-cms');
+        $this->oPageModel = Factory::model('Page', Constants::MODULE_SLUG);
         /** @var Widget oWidgetService */
-        $this->oWidgetService = Factory::service('Widget', 'nails/module-cms');
+        $this->oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
         /** @var Template oTemplateService */
-        $this->oTemplateService = Factory::service('Template', 'nails/module-cms');
+        $this->oTemplateService = Factory::service('Template', Constants::MODULE_SLUG);
 
         //  Note the ID of the homepage
-        $this->iHomepageId         = appSetting('homepage', 'nails/module-cms');
+        $this->iHomepageId         = appSetting('homepage', Constants::MODULE_SLUG);
         $this->data['iHomepageId'] = $this->iHomepageId;
     }
 
@@ -338,7 +339,7 @@ class Pages extends BaseAdmin
 
         /** @var Asset $oAsset */
         $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.pages.edit.js', 'nails/module-cms');
+        $oAsset->load('admin.pages.edit.js', Constants::MODULE_SLUG);
         $oAsset->inline(implode("\n", [
             'var templates = [' . implode(',', $aTemplatesJson) . ']',
             'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(templates);',
@@ -497,7 +498,7 @@ class Pages extends BaseAdmin
 
         /** @var Asset $oAsset */
         $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.pages.edit.js', 'nails/module-cms');
+        $oAsset->load('admin.pages.edit.js', Constants::MODULE_SLUG);
         $oAsset->inline(implode("\n", [
             'var templates = [' . implode(',', $aTemplatesJson) . ']',
             'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit( templates);',
@@ -638,7 +639,7 @@ class Pages extends BaseAdmin
         /** @var Asset $oAsset */
         $oAsset = Factory::service('Asset');
         //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
-        $oAsset->load('admin.pages.unpublish.js', 'nails/module-cms');
+        $oAsset->load('admin.pages.unpublish.js', Constants::MODULE_SLUG);
         $oAsset->inline(
             'var pageUnpublish = new NAILS_Admin_CMS_Pages_Unpublish();',
             'JS'
@@ -812,7 +813,7 @@ class Pages extends BaseAdmin
         /** @var Asset $oAsset */
         $oAsset = Factory::service('Asset');
         //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
-        $oAsset->load('admin.pages.unpublish.js', 'nails/module-cms');
+        $oAsset->load('admin.pages.unpublish.js', Constants::MODULE_SLUG);
         $oAsset->inline(
             'var pageUnpublish = new NAILS_Admin_CMS_Pages_Unpublish();',
             'JS'

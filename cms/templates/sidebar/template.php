@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Cms\Template;
 
+use Nails\Cms\Constants;
 use Nails\Cms\Template\TemplateBase;
 use Nails\Factory;
 
@@ -32,13 +33,13 @@ class Sidebar extends TemplateBase
          * variable to the view
          */
 
-        $this->widget_areas['mainbody'] = Factory::factory('TemplateArea', 'nails/module-cms');
+        $this->widget_areas['mainbody'] = Factory::factory('TemplateArea', Constants::MODULE_SLUG);
         $this->widget_areas['mainbody']->setTitle('Main Body');
 
-        $this->widget_areas['sidebar'] = Factory::factory('TemplateArea', 'nails/module-cms');
+        $this->widget_areas['sidebar'] = Factory::factory('TemplateArea', Constants::MODULE_SLUG);
         $this->widget_areas['sidebar']->setTitle('Sidebar');
 
-        $this->additional_fields[0] = Factory::factory('TemplateOption', 'nails/module-cms');
+        $this->additional_fields[0] = Factory::factory('TemplateOption', Constants::MODULE_SLUG);
         $this->additional_fields[0]->setType('dropdown');
         $this->additional_fields[0]->setKey('sidebarWidth');
         $this->additional_fields[0]->setLabel('Sidebar Width');
@@ -55,7 +56,7 @@ class Sidebar extends TemplateBase
             ]
         );
 
-        $this->additional_fields[1] = Factory::factory('TemplateOption', 'nails/module-cms');
+        $this->additional_fields[1] = Factory::factory('TemplateOption', Constants::MODULE_SLUG);
         $this->additional_fields[1]->setType('dropdown');
         $this->additional_fields[1]->setKey('sidebarSide');
         $this->additional_fields[1]->setLabel('Sidebar Side');

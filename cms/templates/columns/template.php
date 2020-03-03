@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Cms\Template;
 
+use Nails\Cms\Constants;
 use Nails\Cms\Template\TemplateBase;
 use Nails\Factory;
 
@@ -32,22 +33,22 @@ class Columns extends TemplateBase
          * variable to the view.
          */
 
-        $this->widget_areas['col1'] = Factory::factory('TemplateArea', 'nails/module-cms');
+        $this->widget_areas['col1'] = Factory::factory('TemplateArea', Constants::MODULE_SLUG);
         $this->widget_areas['col1']->setTitle('First Column');
 
-        $this->widget_areas['col2'] = Factory::factory('TemplateArea', 'nails/module-cms');
+        $this->widget_areas['col2'] = Factory::factory('TemplateArea', Constants::MODULE_SLUG);
         $this->widget_areas['col2']->setTitle('Second Column');
 
-        $this->widget_areas['col3'] = Factory::factory('TemplateArea', 'nails/module-cms');
+        $this->widget_areas['col3'] = Factory::factory('TemplateArea', Constants::MODULE_SLUG);
         $this->widget_areas['col3']->setTitle('Third Column');
 
-        $this->widget_areas['col4'] = Factory::factory('TemplateArea', 'nails/module-cms');
+        $this->widget_areas['col4'] = Factory::factory('TemplateArea', Constants::MODULE_SLUG);
         $this->widget_areas['col4']->setTitle('Fourth Column');
 
         /**
          * Widget additional fields.
          */
-        $this->additional_fields[0] = Factory::factory('TemplateOption', 'nails/module-cms');
+        $this->additional_fields[0] = Factory::factory('TemplateOption', Constants::MODULE_SLUG);
         $this->additional_fields[0]->setType('dropdown');
         $this->additional_fields[0]->setKey('numColumns');
         $this->additional_fields[0]->setLabel('No. of columns');
@@ -61,7 +62,7 @@ class Columns extends TemplateBase
             )
         );
 
-        $this->additional_fields[1] = Factory::factory('TemplateOption', 'nails/module-cms');
+        $this->additional_fields[1] = Factory::factory('TemplateOption', Constants::MODULE_SLUG);
         $this->additional_fields[1]->setType('dropdown');
         $this->additional_fields[1]->setKey('breakpoint');
         $this->additional_fields[1]->setLabel('Breakpoint');

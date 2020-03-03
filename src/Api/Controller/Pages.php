@@ -14,6 +14,7 @@ namespace Nails\Cms\Api\Controller;
 
 use Nails\Api\Controller\Base;
 use Nails\Api\Factory\ApiResponse;
+use Nails\Cms\Constants;
 use Nails\Cms\Model\Page\Preview;
 use Nails\Common\Service\HttpCodes;
 use Nails\Common\Service\Input;
@@ -66,7 +67,7 @@ class Pages extends Base
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
         /** @var Preview $oPagePreviewModel */
-        $oPagePreviewModel = Factory::model('PagePreview', 'nails/module-cms');
+        $oPagePreviewModel = Factory::model('PagePreview', Constants::MODULE_SLUG);
 
         $aPageData = [
             'title'            => $oInput->post('title'),

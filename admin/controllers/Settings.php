@@ -14,6 +14,7 @@ namespace Nails\Admin\Cms;
 
 use Nails\Factory;
 use Nails\Admin\Helper;
+use Nails\Cms\Constants;
 use Nails\Cms\Controller\BaseAdmin;
 
 class Settings extends BaseAdmin
@@ -89,7 +90,7 @@ class Settings extends BaseAdmin
                 $oAppSettingService = Factory::service('AppSetting');
 
                 //  Normal settings
-                if (!$oAppSettingService->set($aSettings, 'nails/module-cms')) {
+                if (!$oAppSettingService->set($aSettings, Constants::MODULE_SLUG)) {
 
                     $sError    = $oAppSettingService->lastError();
                     $bRollback = true;
@@ -115,10 +116,10 @@ class Settings extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get data
-        $this->data['settings'] = appSetting(null, 'nails/module-cms', true);
+        $this->data['settings'] = appSetting(null, Constants::MODULE_SLUG, null, true);
 
         //  Get Published pages
-        $oPagesModel                  = Factory::model('Page', 'nails/module-cms');
+        $oPagesModel                  = Factory::model('Page', Constants::MODULE_SLUG);
         $this->data['publishedPages'] = $oPagesModel->getAllFlat(
             null,
             null,

@@ -13,6 +13,7 @@
 namespace Nails\Admin\Cms;
 
 use Nails\Admin\Helper;
+use Nails\Cms\Constants;
 use Nails\Cms\Controller\BaseAdmin;
 use Nails\Cms\Model\Block;
 use Nails\Common\Service\Session;
@@ -111,7 +112,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oModel      = Factory::model('Block', 'nails/module-cms');
+        $oModel      = Factory::model('Block', Constants::MODULE_SLUG);
         $oInput      = Factory::service('Input');
         $sTableAlias = $oModel->getTableAlias();
 
@@ -202,7 +203,7 @@ class Blocks extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $oModel = Factory::model('Block', 'nails/module-cms');
+        $oModel = Factory::model('Block', Constants::MODULE_SLUG);
         $oInput = Factory::service('Input');
         $oUri   = Factory::service('Uri');
 
@@ -338,7 +339,7 @@ class Blocks extends BaseAdmin
                     'value'       => $oInput->post('value_' . $oInput->post('type')),
                 ];
 
-                $oModel = Factory::model('Block', 'nails/module-cms');
+                $oModel = Factory::model('Block', Constants::MODULE_SLUG);
                 if ($oModel->create($aBlockData)) {
 
                     /** @var Session $oSession */
@@ -364,7 +365,7 @@ class Blocks extends BaseAdmin
 
         $oAsset = Factory::service('Asset');
         //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
-        $oAsset->load('admin.blocks.create.js', 'nails/module-cms');
+        $oAsset->load('admin.blocks.create.js', Constants::MODULE_SLUG);
 
         // --------------------------------------------------------------------------
 
@@ -382,7 +383,7 @@ class Blocks extends BaseAdmin
         // --------------------------------------------------------------------------
 
         /** @var Block $oModel */
-        $oModel = Factory::model('Block', 'nails/module-cms');
+        $oModel = Factory::model('Block', Constants::MODULE_SLUG);
         /** @var Uri $oUri */
         $oUri = Factory::service('Uri');
         /** @var Session $oSession */
@@ -425,7 +426,7 @@ class Blocks extends BaseAdmin
         $sSlug = strtolower($sSlug);
 
         $oFormValidation = Factory::service('FormValidation');
-        $oModel          = Factory::model('Block', 'nails/module-cms');
+        $oModel          = Factory::model('Block', Constants::MODULE_SLUG);
 
         //  Check slug's characters are ok
         if (!preg_match('/[^a-z0-9\-\_]/', $sSlug)) {

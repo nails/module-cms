@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Model;
 
+use Nails\Cms\Constants;
 use Nails\Cms\Events;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
@@ -349,7 +350,7 @@ class Page extends Base
      */
     public function render($sTemplate, $oTemplateData = [], $oTemplateOptions = [])
     {
-        $oTemplateService = Factory::service('Template', 'nails/module-cms');
+        $oTemplateService = Factory::service('Template', Constants::MODULE_SLUG);
         $oTemplate        = $oTemplateService->getBySlug($sTemplate, 'RENDER');
 
         if (!$oTemplate) {
@@ -951,7 +952,7 @@ class Page extends Base
      */
     public function getHomepageId()
     {
-        return appSetting('homepage', 'nails/module-cms');
+        return appSetting('homepage', Constants::MODULE_SLUG);
     }
 
     // --------------------------------------------------------------------------

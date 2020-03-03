@@ -12,6 +12,7 @@
 
 namespace Nails\Admin\Cms;
 
+use Nails\Cms\Constants;
 use Nails\Common\Service\Session;
 use Nails\Factory;
 use Nails\Admin\Helper;
@@ -72,7 +73,7 @@ class Area extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        $this->oAreaModel = Factory::model('Area', 'nails/module-cms');
+        $this->oAreaModel = Factory::model('Area', Constants::MODULE_SLUG);
     }
 
     // --------------------------------------------------------------------------

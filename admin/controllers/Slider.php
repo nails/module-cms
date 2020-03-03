@@ -13,6 +13,7 @@
 namespace Nails\Admin\Cms;
 
 use Nails\Admin\Helper;
+use Nails\Cms\Constants;
 use Nails\Cms\Controller\BaseAdmin;
 use Nails\Common\Service\Session;
 use Nails\Common\Service\Uri;
@@ -73,7 +74,7 @@ class Slider extends BaseAdmin
     public function __construct()
     {
         parent::__construct();
-        $this->oSliderModel = Factory::model('Slider', 'nails/module-cms');
+        $this->oSliderModel = Factory::model('Slider', Constants::MODULE_SLUG);
     }
 
     // --------------------------------------------------------------------------

@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Service;
 
+use Nails\Cms\Constants;
 use Nails\Cms\Exception\Widget\NotFoundException;
 use Nails\Common\Helper\Directory;
 use Nails\Components;
@@ -127,7 +128,7 @@ class Widget
                 $sKey = md5($sWidgetGrouping);
 
                 if (!isset($aOut[$sKey])) {
-                    $aOut[$sKey] = Factory::factory('WidgetGroup', 'nails/module-cms');
+                    $aOut[$sKey] = Factory::factory('WidgetGroup', Constants::MODULE_SLUG);
                     $aOut[$sKey]->setLabel($sWidgetGrouping);
                 }
 
@@ -138,7 +139,7 @@ class Widget
                 $sKey = md5($sGenericLabel);
 
                 if (!isset($aGeneric[$sKey])) {
-                    $aGeneric[$sKey] = Factory::factory('WidgetGroup', 'nails/module-cms');
+                    $aGeneric[$sKey] = Factory::factory('WidgetGroup', Constants::MODULE_SLUG);
                     $aGeneric[$sKey]->setLabel($sGenericLabel);
                 }
 

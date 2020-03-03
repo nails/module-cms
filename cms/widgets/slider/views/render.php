@@ -10,13 +10,14 @@
  * @link
  */
 
+use Nails\Cms\Constants;
 use Nails\Factory;
 
 $iSliderId = !empty($sliderId) ? (int) $sliderId: null;
 
 if (!empty($iSliderId)) {
 
-    $oSliderModel = Factory::model('Slider', 'nails/module-cms');
+    $oSliderModel = Factory::model('Slider', Constants::MODULE_SLUG);
     $oSlider      = $oSliderModel->getById($iSliderId);
 
     ?>

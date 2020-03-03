@@ -13,6 +13,7 @@
 namespace Nails\Admin\Cms;
 
 use Nails\Admin\Helper;
+use Nails\Cms\Constants;
 use Nails\Cms\Controller\BaseAdmin;
 use Nails\Cms\Model\Menu;
 use Nails\Common\Service\Session;
@@ -76,7 +77,7 @@ class Menus extends BaseAdmin
         }
 
         $oInput     = Factory::service('Input');
-        $oMenuModel = Factory::model('Menu', 'nails/module-cms');
+        $oMenuModel = Factory::model('Menu', Constants::MODULE_SLUG);
 
         $sTableAlias  = $oMenuModel->getTableAlias();
         $iPage        = (int) $oInput->get('page') ?: 0;
@@ -158,7 +159,7 @@ class Menus extends BaseAdmin
                     ];
                 }
 
-                $oMenuModel = Factory::model('Menu', 'nails/module-cms');
+                $oMenuModel = Factory::model('Menu', Constants::MODULE_SLUG);
                 if ($oMenuModel->create($aItemData)) {
 
                     /** @var Session $oSession */
@@ -209,7 +210,7 @@ class Menus extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the CMS Pages
-        $oPageModel          = Factory::model('Page', 'nails/module-cms');
+        $oPageModel          = Factory::model('Page', Constants::MODULE_SLUG);
         $aPages              = $oPageModel->getAllNestedFlat();
         $this->data['pages'] = ['' => 'Select a CMS Page'] + $aPages;
 
@@ -220,7 +221,7 @@ class Menus extends BaseAdmin
         $oAsset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
         $oAsset->library('MUSTACHE');
         //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
-        $oAsset->load('admin.menus.edit.js', 'nails/module-cms');
+        $oAsset->load('admin.menus.edit.js', Constants::MODULE_SLUG);
         $oAsset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
 
         // --------------------------------------------------------------------------
@@ -244,7 +245,7 @@ class Menus extends BaseAdmin
         // --------------------------------------------------------------------------
 
         $oUri       = Factory::service('Uri');
-        $oMenuModel = Factory::model('Menu', 'nails/module-cms');
+        $oMenuModel = Factory::model('Menu', Constants::MODULE_SLUG);
         $oMenu      = $oMenuModel->getById($oUri->segment(5));
 
         if (!$oMenu) {
@@ -332,7 +333,7 @@ class Menus extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Get the CMS Pages
-        $oPageModel = Factory::model('Page', 'nails/module-cms');
+        $oPageModel = Factory::model('Page', Constants::MODULE_SLUG);
         $aPages     = $oPageModel->getAllNestedFlat(null, false);
 
         // --------------------------------------------------------------------------
@@ -342,7 +343,7 @@ class Menus extends BaseAdmin
         $oAsset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
         $oAsset->library('MUSTACHE');
         //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
-        $oAsset->load('admin.menus.edit.js', 'nails/module-cms');
+        $oAsset->load('admin.menus.edit.js', Constants::MODULE_SLUG);
         $oAsset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
 
         // --------------------------------------------------------------------------
@@ -376,7 +377,7 @@ class Menus extends BaseAdmin
         /** @var Session $oSession */
         $oSession = Factory::service('Session');
         /** @var Menu $oMenuModel */
-        $oMenuModel = Factory::model('Menu', 'nails/module-cms');
+        $oMenuModel = Factory::model('Menu', Constants::MODULE_SLUG);
 
         $oMenu = $oMenuModel->getById($oUri->segment(5));
 

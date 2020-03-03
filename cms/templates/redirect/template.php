@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Cms\Template;
 
+use Nails\Cms\Constants;
 use Nails\Cms\Template\TemplateBase;
 use Nails\Factory;
 
@@ -28,7 +29,7 @@ class Redirect extends TemplateBase
     {
         parent::__construct();
 
-        $this->oPageModel = Factory::model('Page', 'nails/module-cms');
+        $this->oPageModel = Factory::model('Page', Constants::MODULE_SLUG);
 
         $this->label       = 'Redirect';
         $this->description = 'Redirects to another URL.';
@@ -36,7 +37,7 @@ class Redirect extends TemplateBase
         // --------------------------------------------------------------------------
 
         //  Additional fields
-        $this->additional_fields[0] = Factory::factory('TemplateOption', 'nails/module-cms');
+        $this->additional_fields[0] = Factory::factory('TemplateOption', Constants::MODULE_SLUG);
         $this->additional_fields[0]->setType('dropdown');
         $this->additional_fields[0]->setKey('redirect_page_id');
         $this->additional_fields[0]->setLabel('Redirect To Page');
@@ -45,7 +46,7 @@ class Redirect extends TemplateBase
             ['None'] + $this->oPageModel->getAllNestedFlat()
         );
 
-        $this->additional_fields[1] = Factory::factory('TemplateOption', 'nails/module-cms');
+        $this->additional_fields[1] = Factory::factory('TemplateOption', Constants::MODULE_SLUG);
         $this->additional_fields[1]->setType('text');
         $this->additional_fields[1]->setKey('redirect_url');
         $this->additional_fields[1]->setLabel('Redirect To URL');
@@ -56,7 +57,7 @@ class Redirect extends TemplateBase
             'URLs which do not begin with http(s):// will automatically be prefixed with ' . siteUrl()
         );
 
-        $this->additional_fields[2] = Factory::factory('TemplateOption', 'nails/module-cms');
+        $this->additional_fields[2] = Factory::factory('TemplateOption', Constants::MODULE_SLUG);
         $this->additional_fields[2]->setType('dropdown');
         $this->additional_fields[2]->setKey('redirect_code');
         $this->additional_fields[2]->setLabel('Redirect Type');

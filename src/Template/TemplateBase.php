@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Template;
 
+use Nails\Cms\Constants;
 use Nails\Config;
 use Nails\Factory;
 use Nails\Functions;
@@ -352,7 +353,7 @@ abstract class TemplateBase
         //  Process each widget area and render the HTML
         $aWidgetAreas  = $this->getWidgetAreas();
         $aRenderedData = [];
-        $oWidgetService  = Factory::service('Widget', 'nails/module-cms');
+        $oWidgetService  = Factory::service('Widget', Constants::MODULE_SLUG);
 
         foreach ($aWidgetAreas as $sAreaSlug => $oWidgetArea) {
 
@@ -401,7 +402,7 @@ abstract class TemplateBase
             if ($aMatches[0]) {
 
                 //  Get all the blocks which were found
-                $oBlockModel = Factory::model('Block', 'nails/module-cms');
+                $oBlockModel = Factory::model('Block', Constants::MODULE_SLUG);
                 $aBlocks     = $oBlockModel->getBySlugs($aMatches[1]);
 
                 //  Swap them in

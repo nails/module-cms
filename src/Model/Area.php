@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Model;
 
+use Nails\Cms\Constants;
 use Nails\Cms\Exception\Widget\NotFoundException;
 use Nails\Common\Model\Base;
 use Nails\Environment;
@@ -124,7 +125,7 @@ class Area extends Base
                 }
             }
 
-            $oWidgetService = Factory::service('Widget', 'nails/module-cms');
+            $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
 
             foreach ($aWidgetData as $oWidgetData) {
                 $sSlug   = $oWidgetData->slug ?? '';

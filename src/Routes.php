@@ -12,6 +12,7 @@
 
 namespace Nails\Cms;
 
+use Nails\Cms\Constants;
 use Nails\Common\Interfaces\RouteGenerator;
 use Nails\Config;
 use Nails\Factory;
@@ -26,7 +27,7 @@ class Routes implements RouteGenerator
     public static function generate()
     {
         $oDb        = Factory::service('PDODatabase');
-        $oPageModel = Factory::model('Page', 'nails/module-cms');
+        $oPageModel = Factory::model('Page', Constants::MODULE_SLUG);
         $aRoutes    = [];
 
         $oPages = $oDb->query(

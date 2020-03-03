@@ -1,5 +1,6 @@
 <?php
 
+use Nails\Cms\Constants;
 use Nails\Factory;
 
 /**
@@ -23,7 +24,7 @@ if (!function_exists('cmsBlock')) {
      */
     function cmsBlock($sSlug)
     {
-        $oBlockModel = Factory::model('Block', 'nails/module-cms');
+        $oBlockModel = Factory::model('Block', Constants::MODULE_SLUG);
         $oBlock      = $oBlockModel->getBySlug($sSlug);
 
         if (!$oBlock) {
@@ -48,7 +49,7 @@ if (!function_exists('cmsSlider')) {
      */
     function cmsSlider($sIdSlug)
     {
-        $oSliderModel = Factory::model('Slider', 'nails/module-cms');
+        $oSliderModel = Factory::model('Slider', Constants::MODULE_SLUG);
         return $oSliderModel->getByIdOrSlug($sIdSlug);
     }
 }
@@ -66,7 +67,7 @@ if (!function_exists('cmsMenu')) {
      */
     function cmsMenu($mIdSlug)
     {
-        $oMenuModel = Factory::model('Menu', 'nails/module-cms');
+        $oMenuModel = Factory::model('Menu', Constants::MODULE_SLUG);
         return $oMenuModel->getByIdOrSlug($mIdSlug);
     }
 }
@@ -84,7 +85,7 @@ if (!function_exists('cmsMenuNested')) {
      */
     function cmsMenuNested($mIdSlug)
     {
-        $oMenuModel = Factory::model('Block', 'nails/module-cms');
+        $oMenuModel = Factory::model('Block', Constants::MODULE_SLUG);
         $aData      = ['nestItems' => true];
         return $oMenuModel->getByIdOrSlug($mIdSlug, $aData);
     }
@@ -103,7 +104,7 @@ if (!function_exists('cmsPage')) {
      */
     function cmsPage($mIdSlug)
     {
-        $oPageModel = Factory::model('Page', 'nails/module-cms');
+        $oPageModel = Factory::model('Page', Constants::MODULE_SLUG);
         return $oPageModel->getByIdOrSlug($mIdSlug);
     }
 }
@@ -121,7 +122,7 @@ if (!function_exists('cmsArea')) {
      */
     function cmsArea($mIdSlug)
     {
-        $oAreaModel = Factory::model('Area', 'nails/module-cms');
+        $oAreaModel = Factory::model('Area', Constants::MODULE_SLUG);
         return $oAreaModel->render($mIdSlug);
     }
 }
@@ -139,7 +140,7 @@ if (!function_exists('cmsAreaWithData')) {
      */
     function cmsAreaWithData($aData)
     {
-        $oAreaModel = Factory::model('Area', 'nails/module-cms');
+        $oAreaModel = Factory::model('Area', Constants::MODULE_SLUG);
         return $oAreaModel->renderWithData($aData);
     }
 }
@@ -158,7 +159,7 @@ if (!function_exists('cmsWidget')) {
      */
     function cmsWidget($sSlug, $aData = [])
     {
-        $oWidgetService = Factory::service('Widget', 'nails/module-cms');
+        $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
         $oWidget        = $oWidgetService->getBySlug($sSlug);
 
         if ($oWidget) {

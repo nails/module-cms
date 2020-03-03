@@ -10,9 +10,10 @@
  * @link
  */
 
+use Nails\Cms\Constants;
 use Nails\Factory;
 
-$oSliderModel = Factory::model('Slider', 'nails/module-cms');
+$oSliderModel = Factory::model('Slider', Constants::MODULE_SLUG);
 $aSlidersFlat = $oSliderModel->getAllFlat();
 
 if (empty($aSlidersFlat)) {
