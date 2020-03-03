@@ -41,45 +41,52 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(templates) {
 
         base.log('Constructing Pages Editor');
         base.bindEvents();
-        base.populateEditor();
+        $(base.editor)
+            .on('widgeteditor-ready', function() {
 
-        //  Add the preview, save and publish actions to the widget editor
-        base.editor.addAction(
-            'Preview',
-            'default',
-            function() {
-                base.showPreview();
-            }
-        );
+                base.populateEditor();
 
-        base.editor.addAction(
-            'Publish Changes',
-            'success',
-            function() {
-                base.submitForm('PUBLISH');
-            }
-        );
+                $('button.launch-editor')
+                    .removeClass('disabled');
 
-        base.editor.addAction(
-            'Save Changes',
-            'primary',
-            function() {
-                base.submitForm('SAVE');
-            }
-        );
+                //  Add the preview, save and publish actions to the widget editor
+                base.editor.addAction(
+                    'Preview',
+                    'default',
+                    function() {
+                        base.showPreview();
+                    }
+                );
 
-        /**
-         * Prepare the preview window
-         * - Move the preview element to the foot of the page
-         * - Match the zindex of the widgeteditor
-         */
-        var preview = $('#page-preview');
+                base.editor.addAction(
+                    'Publish Changes',
+                    'success',
+                    function() {
+                        base.submitForm('PUBLISH');
+                    }
+                );
 
-        $('body').append(preview);
-        preview.css('zIndex', base.editor.container.css('zIndex'));
+                base.editor.addAction(
+                    'Save Changes',
+                    'primary',
+                    function() {
+                        base.submitForm('SAVE');
+                    }
+                );
 
-        //  Organise the interface for the selected template
-        $('.template.selected input').click();
+                /**
+                 * Prepare the preview window
+                 * - Move the preview element to the foot of the page
+                 * - Match the zindex of the widgeteditor
+                 */
+                var preview = $('#page-preview');
+
+                $('body').append(preview);
+                preview.css('zIndex', base.editor.container.css('zIndex'));
+
+                //  Organise the interface for the selected template
+                $('.template.selected input').click();
+            });
     };
 
     // --------------------------------------------------------------------------
@@ -104,11 +111,6 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(templates) {
             base.log('Launching editor for area "' + area + '"');
             base.editor.show(area);
             return false;
-        });
-
-        $(base.editor).on('widgeteditor-ready', function() {
-            $('button.launch-editor')
-                .removeClass('disabled');
         });
 
         $('#action-preview').on('click', function() {
@@ -341,7 +343,7 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(templates) {
      * @return {Void}
      */
     base.log = function(message, payload) {
-        if (typeof(console.log) === 'function') {
+        if (typeof (console.log) === 'function') {
             if (payload !== undefined) {
                 console.log('CMS Pages:', message, payload);
             } else {
@@ -359,7 +361,7 @@ NAILS_Admin_CMS_Pages_CreateEdit = function(templates) {
      * @return {Void}
      */
     base.warn = function(message, payload) {
-        if (typeof(console.warn) === 'function') {
+        if (typeof (console.warn) === 'function') {
             if (payload !== undefined) {
                 console.warn('CMS Pages:', message, payload);
             } else {
