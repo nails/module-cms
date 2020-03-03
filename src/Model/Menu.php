@@ -137,7 +137,7 @@ class Menu extends Base
 
         // --------------------------------------------------------------------------
 
-        $bNestMenuItems = !empty($aData['nestItems']) ? true : false;
+        $bNestMenuItems = !empty($aData['nestItems']);
         $oObj->items    = $this->getMenuItems($oObj->id, $bNestMenuItems);
     }
 
