@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Template;
 
+use Nails\Config;
 use Nails\Factory;
 use Nails\Functions;
 
@@ -152,19 +153,19 @@ abstract class TemplateBase
 
             if (is_file($sIconPath)) {
 
-                if (preg_match('#^' . preg_quote(NAILS_PATH, '#') . '#', $sIconPath)) {
+                if (preg_match('#^' . preg_quote(Config::get('NAILS_PATH'), '#') . '#', $sIconPath)) {
 
                     //  Nails asset
-                    $this->icon = preg_replace('#^' . preg_quote(NAILS_PATH, '#') . '#', NAILS_URL, $sIconPath);
+                    $this->icon = preg_replace('#^' . preg_quote(Config::get('NAILS_PATH'), '#') . '#', Config::get('NAILS_URL'), $sIconPath);
 
-                } elseif (preg_match('#^' . preg_quote(NAILS_APP_PATH . 'application/', '#') . '#', $sIconPath)) {
+                } elseif (preg_match('#^' . preg_quote(Config::get('NAILS_APP_PATH') . 'application/', '#') . '#', $sIconPath)) {
 
                     if (Functions::isPageSecure()) {
-                        $sPattern   = '#^' . preg_quote(NAILS_APP_PATH . 'application/', '#') . '#';
-                        $this->icon = preg_replace($sPattern, SECURE_BASE_URL . NAILS_APP_PATH . 'application/', $sIconPath);
+                        $sPattern   = '#^' . preg_quote(Config::get('NAILS_APP_PATH') . 'application/', '#') . '#';
+                        $this->icon = preg_replace($sPattern, Config::get('SECURE_BASE_URL') . Config::get('NAILS_APP_PATH') . 'application/', $sIconPath);
                     } else {
-                        $sPattern   = '#^' . preg_quote(NAILS_APP_PATH . 'application/', '#') . '#';
-                        $this->icon = preg_replace($sPattern, BASE_URL . NAILS_APP_PATH . 'application/', $sIconPath);
+                        $sPattern   = '#^' . preg_quote(Config::get('NAILS_APP_PATH') . 'application/', '#') . '#';
+                        $this->icon = preg_replace($sPattern, Config::get('BASE_URL') . Config::get('NAILS_APP_PATH') . 'application/', $sIconPath);
                     }
                 }
                 break;
