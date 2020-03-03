@@ -13,6 +13,7 @@
 namespace Nails\Cms;
 
 use Nails\Common\Interfaces\RouteGenerator;
+use Nails\Config;
 use Nails\Factory;
 use PDO;
 
@@ -49,8 +50,8 @@ class Routes implements RouteGenerator
 
         $oSlugs = $oDb->query('
             SELECT sh.slug, sh.page_id
-            FROM ' . NAILS_DB_PREFIX . 'cms_page_slug_history sh
-            JOIN ' . NAILS_DB_PREFIX . 'cms_page p ON p.id = sh.page_id
+            FROM ' . Config::get('NAILS_DB_PREFIX') . 'cms_page_slug_history sh
+            JOIN ' . Config::get('NAILS_DB_PREFIX') . 'cms_page p ON p.id = sh.page_id
             WHERE
             p.is_deleted = 0
             AND p.is_published = 1

@@ -33,6 +33,7 @@ use Nails\Common\Service\Input;
 use Nails\Common\Service\Session;
 use Nails\Common\Service\Uri;
 use Nails\Components;
+use Nails\Config;
 use Nails\Factory;
 use Nails\Redirect;
 
@@ -72,7 +73,7 @@ class Pages extends BaseAdmin
             $oDb = Factory::service('Database');
             $oDb->where('is_published', false);
             $oDb->where('is_deleted', false);
-            $iNumDrafts = $oDb->count_all_results(NAILS_DB_PREFIX . 'cms_page');
+            $iNumDrafts = $oDb->count_all_results(Config::Get('NAILS_DB_PREFIX') . 'cms_page');
 
             /** @var Alert $oAlert */
             $oAlert = Factory::factory('NavAlert', 'nails/module-admin');

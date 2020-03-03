@@ -13,6 +13,7 @@
 namespace Nails\Cms\Model;
 
 use Nails\Common\Model\Base;
+use Nails\Config;
 use Nails\Factory;
 
 class Slider extends Base
@@ -34,9 +35,9 @@ class Slider extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->table             = NAILS_DB_PREFIX . 'cms_slider';
+        $this->table             = Config::get('NAILS_DB_PREFIX') . 'cms_slider';
         $this->tableAlias        = 's';
-        $this->table_item        = NAILS_DB_PREFIX . 'cms_slider_item';
+        $this->table_item        = Config::get('NAILS_DB_PREFIX') . 'cms_slider_item';
         $this->table_item_prefix = 'si';
     }
 
@@ -54,12 +55,12 @@ class Slider extends Base
     {
         $this->oDb->select($this->tableAlias . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
         $this->oDb->join(
-            NAILS_DB_PREFIX . 'user u',
+            Config::get('NAILS_DB_PREFIX') . 'user u',
             $this->tableAlias . '.modified_by = u.id',
             'LEFT'
         );
         $this->oDb->join(
-            NAILS_DB_PREFIX . 'user_email ue',
+            Config::get('NAILS_DB_PREFIX') . 'user_email ue',
             $this->tableAlias . '.modified_by = ue.user_id AND ue.is_primary = 1',
             'LEFT'
         );

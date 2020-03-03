@@ -14,6 +14,7 @@ namespace Nails\Cms\Model;
 
 use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
+use Nails\Config;
 use Nails\Factory;
 
 class Menu extends Base
@@ -40,9 +41,9 @@ class Menu extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->table             = NAILS_DB_PREFIX . 'cms_menu';
+        $this->table             = Config::get('NAILS_DB_PREFIX') . 'cms_menu';
         $this->tableAlias        = 'm';
-        $this->table_item        = NAILS_DB_PREFIX . 'cms_menu_item';
+        $this->table_item        = Config::get('NAILS_DB_PREFIX') . 'cms_menu_item';
         $this->table_item_prefix = 'mi';
     }
 
@@ -60,12 +61,12 @@ class Menu extends Base
     {
         $this->oDb->select($this->tableAlias . '.*,u.first_name,u.last_name,u.profile_img,u.gender,ue.email');
         $this->oDb->join(
-            NAILS_DB_PREFIX . 'user u',
+            Config::get('NAILS_DB_PREFIX') . 'user u',
             $this->tableAlias . '.modified_by = u.id',
             'LEFT'
         );
         $this->oDb->join(
-            NAILS_DB_PREFIX . 'user_email ue',
+            Config::get('NAILS_DB_PREFIX') . 'user_email ue',
             $this->tableAlias . '.modified_by = ue.user_id AND ue.is_primary = 1',
             'LEFT'
         );

@@ -20,6 +20,7 @@ use Nails\Common\Model\Base;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\Event;
 use Nails\Common\Service\Routes;
+use Nails\Config;
 use Nails\Factory;
 
 /**
@@ -478,7 +479,7 @@ class Page extends Base
                 $oDb->set('slug', $item['slug']);
                 $oDb->set('page_id', $item['page_id']);
                 $oDb->set('created', 'NOW()', false);
-                $oDb->replace(NAILS_DB_PREFIX . 'cms_page_slug_history');
+                $oDb->replace(Config::get('NAILS_DB_PREFIX') . 'cms_page_slug_history');
             }
 
             $oDb->trans_commit();
@@ -608,8 +609,8 @@ class Page extends Base
         }
 
         $oDb = Factory::service('Database');
-        $oDb->join(NAILS_DB_PREFIX . 'user u', 'u.id = ' . $this->getTableAlias() . '.modified_by', 'LEFT');
-        $oDb->join(NAILS_DB_PREFIX . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
+        $oDb->join(Config::get('NAILS_DB_PREFIX') . 'user u', 'u.id = ' . $this->getTableAlias() . '.modified_by', 'LEFT');
+        $oDb->join(Config::get('NAILS_DB_PREFIX') . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
 
         if (empty($data['sort'])) {
 
@@ -799,7 +800,7 @@ class Page extends Base
 
         $oDb->select('id,draft_slug,draft_title,is_published');
         $oDb->where('draft_parent_id', $iPageId);
-        $aChildren = $oDb->get(NAILS_DB_PREFIX . 'cms_page')->result();
+        $aChildren = $oDb->get(Config::get('NAILS_DB_PREFIX') . 'cms_page')->result();
 
         if ($aChildren) {
 
