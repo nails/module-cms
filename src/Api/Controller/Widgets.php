@@ -12,8 +12,7 @@
 
 namespace Nails\Cms\Api\Controller;
 
-use Nails\Api\Controller\Base;
-use Nails\Api\Exception\ApiException;
+use Nails\Api;
 use Nails\Cms\Constants;
 use Nails\Common\Exception\NailsException;
 use Nails\Factory;
@@ -23,7 +22,7 @@ use Nails\Factory;
  *
  * @package Nails\Cms\Api\Controller
  */
-class Widgets extends Base
+class Widgets extends Api\Controller\Base
 {
     /**
      * Require the user be authenticated to use any endpoint
@@ -39,14 +38,14 @@ class Widgets extends Base
      *
      * @param $oApiRouter
      *
-     * @throws ApiException
+     * @throws Api\Exception\ApiException
      */
     public function __construct($oApiRouter)
     {
         parent::__construct($oApiRouter);
         $oHttpCodes = Factory::service('HttpCodes');
         if (!isAdmin()) {
-            throw new ApiException(
+            throw new Api\Exception\ApiException(
                 'You do not have permission to access this resource.',
                 $oHttpCodes::STATUS_UNAUTHORIZED
             );
@@ -91,7 +90,7 @@ class Widgets extends Base
         arraySortMulti($aWidgets, 'label');
         $aWidgets = array_values($aWidgets);
 
-        return Factory::factory('ApiResponse', 'nails/module-api')
+        return Factory::factory('ApiResponse', Api\Constants::MODULE_SLUG)
             ->setData([
                 'assets'  => [
                     'css' => $oAsset->output('CSS', false),
@@ -120,7 +119,7 @@ class Widgets extends Base
             throw new NailsException('"' . $sWidgetSlug . '" is not a valid widget.', 400);
         }
 
-        return Factory::factory('ApiResponse', 'nails/module-api')
+        return Factory::factory('ApiResponse', Api\Constants::MODULE_SLUG)
             ->setData([
                 'editor' => $oWidget->getEditor($aWidgetData),
             ]);
@@ -171,7 +170,7 @@ class Widgets extends Base
             }
         }
 
-        return Factory::factory('ApiResponse', 'nails/module-api')
+        return Factory::factory('ApiResponse', Api\Constants::MODULE_SLUG)
             ->setData($aOut);
     }
 }

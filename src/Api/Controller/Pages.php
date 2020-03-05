@@ -12,8 +12,7 @@
 
 namespace Nails\Cms\Api\Controller;
 
-use Nails\Api\Controller\Base;
-use Nails\Api\Factory\ApiResponse;
+use Nails\Api;
 use Nails\Cms\Constants;
 use Nails\Cms\Model\Page\Preview;
 use Nails\Common\Service\HttpCodes;
@@ -25,7 +24,7 @@ use Nails\Factory;
  *
  * @package Nails\Cms\Api\Controller
  */
-class Pages extends Base
+class Pages extends Api\Controller\Base
 {
     /**
      * Require the user be authenticated to use any endpoint
@@ -60,7 +59,7 @@ class Pages extends Base
     /**
      * Returns the URL for a page preview
      *
-     * @return ApiResponse
+     * @return Api\Factory\ApiResponse
      */
     public function postPreview()
     {
@@ -95,7 +94,7 @@ class Pages extends Base
             $aOut = ['status' => 500, 'error' => $oPagePreviewModel->lastError()];
         }
 
-        return Factory::factory('ApiResponse', 'nails/module-api')
+        return Factory::factory('ApiResponse', Api\Constants::MODULE_SLUG)
             ->setData($aOut);
     }
 }
