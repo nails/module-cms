@@ -57,8 +57,6 @@
                     "autoload": {
                         "assets": {
                             "js": [
-                                ["mustache.js/mustache.js", "NAILS-BOWER"],
-                                ["jquery-serialize-object/dist/jquery.serialize-object.min.js", "NAILS-BOWER"],
                                 "admin.min.js"
                             ],
                             "css": [
