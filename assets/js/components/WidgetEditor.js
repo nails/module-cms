@@ -9,14 +9,15 @@ class WidgetEditor {
         this.adminController = adminController;
         this.adminController.log('Constructing');
         this.instantiated = false;
-        this.$btns = $('.open-editor');
+        this.$btns = $('.open-editor').addClass('processed');
 
         this.setupListeners();
 
-        //  @todo (Pablo - 2019-12-05) - Support re-initing?
-        this.adminController.onRefreshUi(() => {
+        this.adminController.onRefreshUi((e, domElement) => {
             if (!this.instantiated) {
                 this.init();
+            } else {
+                this.initNewButtons(domElement);
             }
         });
     }
@@ -175,25 +176,28 @@ class WidgetEditor {
             });
 
         //  Populate the editor with existing areas
-        this.$btns
-            .each((index, element) => {
-
-                //  Look for the associated input
-                let key = $(element).data('key');
-                let input = $(element).siblings('textarea.widget-data');
-
-                if (input.length) {
-                    try {
-                        let widgetData = JSON.parse(input.val());
-                        this.setAreaData(key, widgetData);
-                    } catch (e) {
-                        this.adminController.warn('Failed to parse JSON data');
-                        this.adminController.warn(e.message);
-                    }
-                }
-            });
+        this.populateWidgetDataFromButtons(this.$btns);
 
         return this;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Initialises new buttons
+     * @param domElement
+     */
+    initNewButtons(domElement) {
+        let $btns = $('.open-editor:not(.processed)', domElement).addClass('processed');
+        if ($btns.length) {
+            this.adminController.log(`Found ${$btns.length} new buttons`);
+            this
+                .setupButtonListeners($btns)
+                .populateWidgetDataFromButtons($btns)
+            for (let i = 0; i < $btns.length; i++) {
+                this.$btns.push($btns[i]);
+            }
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -203,22 +207,18 @@ class WidgetEditor {
      * @return {void}
      */
     setupListeners() {
-
         this.adminController.log('Setting up listeners');
+        this.setupButtonListeners(this.$btns);
+        this.setupGlobalListeners();
+    }
 
-        this.$btns
-            .on('click', (e) => {
-                if (this.isReady()) {
-                    this.activeButton = $(e.currentTarget);
-                    let key = this.activeButton.data('key');
-                    this.adminController.log('Opening Editor for area: ' + key);
-                    this.show(key);
-                } else {
-                    this.adminController.warn('Widget editor not ready');
-                }
-                return false;
-            });
+    // --------------------------------------------------------------------------
 
+    /**
+     * Binds the global listeners
+     * @returns {WidgetEditor}
+     */
+    setupGlobalListeners() {
         $(this)
             .on('widgeteditor-ready', () => {
                 this.$btns.prop('disabled', false);
@@ -236,6 +236,32 @@ class WidgetEditor {
                     }
                 }
             });
+
+        return this;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Binds listeners to specific buttons
+     * @param $btns
+     * @returns {WidgetEditor}
+     */
+    setupButtonListeners($btns) {
+        $btns
+            .on('click', (e) => {
+                if (this.isReady()) {
+                    this.activeButton = $(e.currentTarget);
+                    let key = this.activeButton.data('key');
+                    this.adminController.log('Opening Editor for area: ' + key);
+                    this.show(key);
+                } else {
+                    this.adminController.warn('Widget editor not ready');
+                }
+                return false;
+            });
+
+        return this;
     }
 
     // --------------------------------------------------------------------------
@@ -499,6 +525,35 @@ class WidgetEditor {
             });
 
         return deferred;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Populates the widget data areas from an array of buttons
+     * @param $btns
+     * @returns {WidgetEditor}
+     */
+    populateWidgetDataFromButtons($btns) {
+        $btns
+            .each((index, element) => {
+
+                //  Look for the associated input
+                let key = $(element).data('key');
+                let input = $(element).siblings('textarea.widget-data');
+
+                if (input.length) {
+                    try {
+                        let widgetData = JSON.parse(input.val());
+                        this.setAreaData(key, widgetData);
+                    } catch (e) {
+                        this.adminController.warn('Failed to parse JSON data');
+                        this.adminController.warn(e.message);
+                    }
+                }
+            });
+
+        return this;
     }
 
     // --------------------------------------------------------------------------
