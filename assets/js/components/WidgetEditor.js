@@ -446,6 +446,8 @@ class WidgetEditor {
             let data = widget.find(':input').serializeObject();
 
             widget
+                .data('original-data', data)
+                .data('loaded', false)
                 .addClass('editor-loading')
                 .find('.editor-target')
                 .removeClass('alert alert-danger')
@@ -968,6 +970,8 @@ class WidgetEditor {
             //  Populate the dom element with the widget template
             $(widgetDom)
                 .empty()
+                .data('original-data', data)
+                .data('loaded', false)
                 .data('slug', widget.slug)
                 .addClass('editor-loading')
                 .html(Mustache.render(this.sections.widget.html(), widget));
@@ -1033,6 +1037,7 @@ class WidgetEditor {
      */
     setupWidgetEditorOk(widgetDom, editorData) {
         widgetDom
+            .data('loaded', true)
             .removeClass('editor-loading')
             .find('.editor-target')
             .html(editorData);
@@ -1048,6 +1053,7 @@ class WidgetEditor {
      */
     setupWidgetEditorFail(widgetDom, error) {
         widgetDom
+            .data('loaded', false)
             .removeClass('editor-loading')
             .find('.editor-target')
             .addClass('alert alert-danger')
@@ -1204,10 +1210,22 @@ class WidgetEditor {
 
         widgets = this.sections.body.find('> ul > .widget');
         widgets.each((index, element) => {
-            out.push({
-                'slug': $(element).data('slug'),
-                'data': $(element).find(':input').serializeObject()
-            });
+
+            let $widget = $(element);
+
+            this.adminController.log('Serialising: ' + $(element).data('slug'));
+            if (!$widget.data('loaded')) {
+                this.adminController.log('Widget not in a ready-state, using cached data');
+                out.push({
+                    'slug': $widget.data('slug'),
+                    'data': $widget.data('original-data')
+                });
+            } else {
+                out.push({
+                    'slug': $widget.data('slug'),
+                    'data': $widget.find(':input').serializeObject()
+                });
+            }
         });
 
         return out;
