@@ -16,6 +16,13 @@ use Nails\Factory;
 
 class Form
 {
+    /**
+     * The following constants represent the various field types available.
+     */
+    const FIELD_WIDGETS = 'cms_widgets';
+
+    // --------------------------------------------------------------------------
+
     public static function cms_widgets_button(array $aConfig)
     {
         $sKey        = ArrayHelper::getFromArray('key', $aConfig, []);
