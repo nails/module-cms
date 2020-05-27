@@ -129,45 +129,10 @@ class Render extends Base
 
         // --------------------------------------------------------------------------
 
-        //  Set some page level data
-        $this->data['page']->id          = $oPage->id;
-        $this->data['page']->title       = $oData->title;
-        $this->data['page']->seo         = (object) [
-            'title'       => $oData->seo_title,
-            'description' => $oData->seo_description,
-            'keywords'    => $oData->seo_keywords,
-        ];
-        $this->data['page']->is_preview  = $this->bIsPreview;
-        $this->data['page']->is_homepage = $this->bIsHomepage;
-        $this->data['page']->breadcrumbs = $oData->breadcrumbs;
-
-        //  Set some meta tags for the header, avoid duplicates by removing existing tags
-        /** @var Meta $oMeta */
-        $oMeta       = Factory::service('Meta');
-        $aProperties = [
-            //  Descriptions
-            ['name', 'description', $oData->seo_description],
-            ['property', 'og:description', $oData->seo_description],
-            ['property', 'twitter:description', $oData->seo_description],
-
-            //  Keywords
-            ['name', 'keywords', $oData->seo_keywords],
-        ];
-
-        foreach ($aProperties as $aProperty) {
-
-            [$sTagProperty, $sProperty, $sValue] = $aProperty;
-
-            if (!empty($sValue)) {
-                $oMeta
-                    ->removeByPropertyPattern(
-                        array_filter([
-                            [$sTagProperty => '^' . $sProperty . '$'],
-                        ])
-                    )
-                    ->add($sProperty, $sValue);
-            }
-        }
+        $this->oMetaData
+            ->setTitles([$oData->seo_title ?: $oData->title])
+            ->setDescription($oData->seo_description)
+            ->setKeywords(explode(',', $oData->seo_keywords));
 
         // --------------------------------------------------------------------------
 
