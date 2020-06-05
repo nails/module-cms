@@ -110,6 +110,10 @@ class Render extends Base
             $oData = $oPage->published;
         }
 
+        $this->data['oCmsPage']     =& $oPage;
+        $this->data['oCmsPageData'] =& $oData;
+
+        //  @todo (Pablo - 2020-06-05) - kept for backwards compatability
         $this->data['page_data'] =& $oData;
 
         // --------------------------------------------------------------------------
