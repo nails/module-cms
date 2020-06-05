@@ -44,7 +44,6 @@
 
                 $field            = array();
                 $field['key']     = 'value';
-                $field['bucket']  = 'cms-block-' . $block->slug;
                 $field['default'] = $block->value;
 
                 echo form_field_cdn_object_picker($field);
@@ -54,7 +53,6 @@
 
                 $field            = array();
                 $field['key']     = 'value';
-                $field['bucket']  = 'cms-block-' . $block->slug;
                 $field['default'] = $block->value;
 
                 echo form_field_cdn_object_picker($field);
