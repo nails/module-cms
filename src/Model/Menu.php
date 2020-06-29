@@ -217,7 +217,7 @@ class Menu extends Base
             unset($aData['items']);
         }
 
-        $aData['slug'] = $this->generateSlug($aData['label']);
+        $aData['slug'] = $this->generateSlug($aData);
 
         $result = parent::create($aData, $bReturnObject);
 
@@ -337,7 +337,7 @@ class Menu extends Base
             unset($aData['items']);
         }
 
-        $aData['slug'] = $this->generateSlug($aData['label'], $id);
+        $aData['slug'] = $this->generateSlug($aData, $id);
 
         $result = parent::update($id, $aData);
 

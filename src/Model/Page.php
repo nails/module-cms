@@ -186,7 +186,7 @@ class Page extends Base
         if (empty($aData['slug']) || static::IS_PREVIEW) {
 
             $aUpdateData['draft_slug'] = $sSlugPrefix . $this->generateSlug(
-                    $aUpdateData['draft_title'],
+                    $aUpdateData,
                     $oCurrent->id
                 );
 
@@ -335,6 +335,21 @@ class Page extends Base
 
             return false;
         }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the slug's base, compiled from the label
+     *
+     * @param string $sLabel The item's label
+     * @param string $sKey   The key to use from the supplied data array
+     *
+     * @return string
+     */
+    protected function generateSlugBase(array $aData, string $sKey = null): string
+    {
+        return parent::generateSlugBase($aData, $sKey ?? 'draft_title');
     }
 
     // --------------------------------------------------------------------------

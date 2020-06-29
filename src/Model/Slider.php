@@ -198,7 +198,7 @@ class Slider extends Base
             unset($data['slides']);
         }
 
-        $data['slug'] = $this->generateSlug($data['label']);
+        $data['slug'] = $this->generateSlug($data);
 
         $result = parent::create($data, $returnObject);
 
@@ -282,7 +282,7 @@ class Slider extends Base
             unset($data['slides']);
         }
 
-        $data['slug'] = $this->generateSlug($data['label'], $id);
+        $data['slug'] = $this->generateSlug($data, $id);
 
         $result = parent::update($id, $data);
 
