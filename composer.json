@@ -71,7 +71,8 @@
                 "nails/module-cdn": {
                     "permitted-image-dimensions": [
                         "50x50",
-                        "130x130"
+                        "130x130",
+                        "1200x630"
                     ]
                 }
             }
