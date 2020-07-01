@@ -286,7 +286,7 @@ $oInput = \Nails\Factory::service('Input');
             'key'     => 'seo_image_id',
             'label'   => 'SEO Image',
             'default' => $cmspage->draft->seo_image_id ?? null,
-            'tip'     => 'Landscape images with focus at the center of the image work best.',
+            'tip'     => 'Will be cropped to 1200x630px',
         ]);
 
         ?>
