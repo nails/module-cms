@@ -133,12 +133,17 @@ class Render extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->setMeta(
-            $oData->seo_title ?: $oData->title,
-            $oData->seo_description,
-            $oData->seo_image_id,
-            $oData->seo_keywords
-        );
+        $this->oMetaData
+            ->setTitles([$oData->seo_title ?: $oData->title])
+            ->setDescription($oData->seo_description)
+            ->setKeywords(explode(',', $oData->seo_keywords));
+
+        if ($oData->seo_image_id) {
+            $this->oMetaData
+                ->setImageUrl(cdnCrop($oData->seo_image_id, 1200, 630))
+                ->setImageWidth(1200)
+                ->setImageHeight(630);
+        }
 
         // --------------------------------------------------------------------------
 
