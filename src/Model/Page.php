@@ -142,6 +142,7 @@ class Page extends Base
             'draft_seo_title'        => !empty($aData['seo_title']) ? trim($aData['seo_title']) : '',
             'draft_seo_description'  => !empty($aData['seo_description']) ? trim($aData['seo_description']) : '',
             'draft_seo_keywords'     => !empty($aData['seo_keywords']) ? trim($aData['seo_keywords']) : '',
+            'draft_seo_image_id'     => !empty($aData['seo_image_id']) ? (int) $aData['seo_image_id'] : null,
             'draft_template'         => !empty($aData['template']) ? trim($aData['template']) : null,
             'draft_template_data'    => !empty($aData['template_data']) ? trim($aData['template_data']) : null,
             'draft_template_options' => !empty($aData['template_options']) ? trim($aData['template_options']) : null,
@@ -429,6 +430,7 @@ class Page extends Base
         $oDb->set('published_seo_title', 'draft_seo_title', false);
         $oDb->set('published_seo_description', 'draft_seo_description', false);
         $oDb->set('published_seo_keywords', 'draft_seo_keywords', false);
+        $oDb->set('published_seo_image_id', 'draft_seo_image_id', false);
         $oDb->set('is_published', true);
         $oDb->set('modified', $oDate->format('Y-m-d H:i:s'));
 
@@ -596,6 +598,7 @@ class Page extends Base
                 $this->getTableAlias() . '.published_seo_title',
                 $this->getTableAlias() . '.published_seo_description',
                 $this->getTableAlias() . '.published_seo_keywords',
+                $this->getTableAlias() . '.published_seo_image_id',
                 $this->getTableAlias() . '.draft_hash',
                 $this->getTableAlias() . '.draft_slug',
                 $this->getTableAlias() . '.draft_slug_end',
@@ -608,6 +611,7 @@ class Page extends Base
                 $this->getTableAlias() . '.draft_seo_title',
                 $this->getTableAlias() . '.draft_seo_description',
                 $this->getTableAlias() . '.draft_seo_keywords',
+                $this->getTableAlias() . '.draft_seo_image_id',
                 $this->getTableAlias() . '.is_published',
                 $this->getTableAlias() . '.is_deleted',
                 $this->getTableAlias() . '.created',
@@ -1243,6 +1247,7 @@ class Page extends Base
             'seo_title'        => $oPage->draft->seo_title,
             'seo_description'  => $oPage->draft->seo_description,
             'seo_keywords'     => $oPage->draft->seo_keywords,
+            'seo_image_id'     => $oPage->draft->seo_image_id,
         ];
 
         return $this->create($aPageData, $bReturnObject);

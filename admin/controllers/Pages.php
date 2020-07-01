@@ -245,6 +245,7 @@ class Pages extends BaseAdmin
             $oFormValidation->set_rules('seo_title', '', 'trim|max_length[150]');
             $oFormValidation->set_rules('seo_description', '', 'trim|max_length[300]');
             $oFormValidation->set_rules('seo_keywords', '', 'trim|max_length[150]');
+            $oFormValidation->set_rules('seo_image_id', '', 'is_natural');
             $oFormValidation->set_rules('action', '', 'required');
 
             $oFormValidation->set_message('alpha_dash', lang('fv_alpha_dash'));
@@ -256,16 +257,15 @@ class Pages extends BaseAdmin
                 $aPageData = [
                     'title'            => $oInput->post('title'),
                     'slug'             => $oInput->post('slug'),
-                    'parent_id'        => (int) $oInput->post('parent_id'),
+                    'parent_id'        => (int) $oInput->post('parent_id') ?: null,
                     'template'         => $oInput->post('template'),
                     'template_data'    => $oInput->post('template_data'),
                     'template_options' => $oInput->post('template_options'),
                     'seo_title'        => $oInput->post('seo_title'),
                     'seo_description'  => $oInput->post('seo_description'),
                     'seo_keywords'     => $oInput->post('seo_keywords'),
+                    'seo_image_id'     => (int) $oInput->post('seo_keywords') ?: null,
                 ];
-
-                $aPageData['parent_id'] = !empty($aPageData['parent_id']) ? $aPageData['parent_id'] : null;
 
                 if (!empty($aPageData['template_options'][$aPageData['template']])) {
                     $aPageData['template_options'] = $aPageData['template_options'][$aPageData['template']];
@@ -398,6 +398,7 @@ class Pages extends BaseAdmin
             $oFormValidation->set_rules('seo_title', '', 'trim|max_length[150]');
             $oFormValidation->set_rules('seo_description', '', 'trim|max_length[300]');
             $oFormValidation->set_rules('seo_keywords', '', 'trim|max_length[150]');
+            $oFormValidation->set_rules('seo_image_id', '', 'is_natural');
             $oFormValidation->set_rules('action', '', 'required');
 
             $oFormValidation->set_message('alpha_dash', lang('fv_alpha_dash'));
@@ -409,16 +410,15 @@ class Pages extends BaseAdmin
                 $aPageData = [
                     'title'            => $oInput->post('title'),
                     'slug'             => $oInput->post('slug'),
-                    'parent_id'        => (int) $oInput->post('parent_id'),
+                    'parent_id'        => (int) $oInput->post('parent_id') ?: null,
                     'template'         => $oInput->post('template'),
                     'template_data'    => $oInput->post('template_data'),
                     'template_options' => $oInput->post('template_options'),
                     'seo_title'        => $oInput->post('seo_title'),
                     'seo_description'  => $oInput->post('seo_description'),
                     'seo_keywords'     => $oInput->post('seo_keywords'),
+                    'seo_image_id'     => (int) $oInput->post('seo_image_id') ?: null,
                 ];
-
-                $aPageData['parent_id'] = !empty($aPageData['parent_id']) ? $aPageData['parent_id'] : null;
 
                 if (!empty($aPageData['template_options'][$aPageData['template']])) {
                     $aPageData['template_options'] = $aPageData['template_options'][$aPageData['template']];

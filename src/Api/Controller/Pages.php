@@ -78,6 +78,7 @@ class Pages extends Api\Controller\Base
             'seo_title'        => $oInput->post('seo_title'),
             'seo_description'  => $oInput->post('seo_description'),
             'seo_keywords'     => $oInput->post('seo_keywords'),
+            'seo_image_id'     => (int) $oInput->post('seo_image_id') ?: null,
         ];
 
         if (!empty($aPageData['template_options'][$aPageData['template']])) {

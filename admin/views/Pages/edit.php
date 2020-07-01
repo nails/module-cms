@@ -7,10 +7,9 @@ $oInput = \Nails\Factory::service('Input');
     echo form_open(null, 'id="main-form"');
 
     $bIssetCmsPage = isset($cmspage);
-    $bHashMatch    = $bIssetCmsPage && $cmspage->published->hash !== $cmspage->draft->hash;
+    $bHashMismatch = $bIssetCmsPage && $cmspage->published->hash !== $cmspage->draft->hash;
 
-    if ($bIssetCmsPage && $cmspage->is_published && $bHashMatch) {
-
+    if ($bIssetCmsPage && $cmspage->is_published && $bHashMismatch) {
         ?>
         <p class="alert alert-warning">
             <strong>You have unpublished changes.</strong>
@@ -25,33 +24,28 @@ $oInput = \Nails\Factory::service('Input');
         <legend>Page Data</legend>
         <?php
 
-        $aField                = [];
-        $aField['key']         = 'title';
-        $aField['label']       = 'Title';
-        $aField['default']     = isset($cmspage->draft->title) ? html_entity_decode($cmspage->draft->title, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
-        $aField['placeholder'] = 'The title of the page';
+        echo form_field([
+            'key'         => 'title',
+            'label'       => 'Title',
+            'default'     => html_entity_decode($cmspage->draft->title ?? '', ENT_COMPAT | ENT_HTML5, 'UTF-8'),
+            'placeholder' => 'The title of the page',
+        ]);
 
-        echo form_field($aField);
+        echo form_field([
+            'key'         => 'slug',
+            'label'       => 'Slug',
+            'default'     => $cmspage->draft->slug_end ?? '',
+            'placeholder' => 'The page\'s slug, leave blank to auto-generate',
+        ]);
 
-        // --------------------------------------------------------------------------
-
-        $aField                = [];
-        $aField['key']         = 'slug';
-        $aField['label']       = 'Slug';
-        $aField['default']     = isset($cmspage->draft->slug_end) ? $cmspage->draft->slug_end : '';
-        $aField['placeholder'] = 'The page\'s slug, leave blank to auto-generate';
-
-        echo form_field($aField);
-
-        // --------------------------------------------------------------------------
-
-        $aField                     = [];
-        $aField['key']              = 'parent_id';
-        $aField['label']            = 'Parent Page';
-        $aField['placeholder']      = 'The Page\'s parent.';
-        $aField['class']            = 'select2';
-        $aField['default']          = isset($cmspage->draft->parent_id) ? $cmspage->draft->parent_id : '';
-        $aField['disabled_options'] = isset($page_children) ? $page_children : [];
+        $aField = [
+            'key'              => 'parent_id',
+            'label'            => 'Parent Page',
+            'placeholder'      => 'The Page\'s parent.',
+            'class'            => 'select2',
+            'default'          => $cmspage->draft->parent_id ?? null,
+            'disabled_options' => $page_children ?? [],
+        ];
 
         /**
          * Remove this page from the available options; INFINITE LOOP
@@ -81,10 +75,10 @@ $oInput = \Nails\Factory::service('Input');
         <ul class="templates">
             <?php
 
-            $numTemplateGroups = count($templates);
+            $iNumTemplateGroups = count($templates);
             foreach ($templates as $oTemplateGroup) {
 
-                if ($numTemplateGroups > 1) {
+                if ($iNumTemplateGroups > 1) {
                     ?>
                     <li class="template-group-label">
                         <?=$oTemplateGroup->getLabel()?>
@@ -98,9 +92,10 @@ $oInput = \Nails\Factory::service('Input');
                     $bIsSelected = $defaultTemplate == $oTemplate->getSlug();
 
                     //  Define attributes
-                    $aAttr              = [];
-                    $aAttr['class']     = $bIsSelected ? 'template selected' : 'template';
-                    $aAttr['data-slug'] = $oTemplate->getSlug();
+                    $aAttr = [
+                        'class'     => $bIsSelected ? 'template selected' : 'template',
+                        'data-slug' => $oTemplate->getSlug(),
+                    ];
 
                     //  Glue together
                     $sAttrStr = '';
@@ -194,7 +189,6 @@ $oInput = \Nails\Factory::service('Input');
             $sTemplateData = $cmspage->draft->template_data;
 
         } else {
-
             $sTemplateData = null;
         }
 
@@ -262,44 +256,38 @@ $oInput = \Nails\Factory::service('Input');
         <legend>Search Engine Optimisation</legend>
         <?php
 
-        //  SEO Title
-        $aField                = [];
-        $aField['key']         = 'seo_title';
-        $aField['label']       = 'SEO Title';
-        $aField['default']     = isset($cmspage->draft->seo_title) ? html_entity_decode($cmspage->draft->seo_title, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
-        $aField['placeholder'] = 'The page\'s SEO title, keep this short and concise. If not set, this will ';
-        $aField['placeholder'] .= 'fallback to the page title.';
+        echo form_field([
+            'key'         => 'seo_title',
+            'label'       => 'SEO Title',
+            'default'     => html_entity_decode($cmspage->draft->seo_title ?? '', ENT_COMPAT | ENT_HTML5, 'UTF-8'),
+            'placeholder' => 'The page\'s SEO title, keep this short and concise. If not set, this will fallback to the page title.',
+            'max_length'  => 150,
+        ]);
 
-        echo form_field($aField);
+        echo form_field([
+            'key'         => 'seo_description',
+            'label'       => 'SEO Description',
+            'default'     => html_entity_decode($cmspage->draft->seo_description ?? '', ENT_COMPAT | ENT_HTML5, 'UTF-8'),
+            'placeholder' => 'The page\'s SEO description, keep this short and concise. Recommended to keep below 150 characters.',
+            'tip'         => 'This should be kept short (< 300 characters) and concise. It\'ll be shown in search result listings and search engines will use it to help determine the page\'s content.',
+            'max_length'  => 300,
+        ]);
 
-        // --------------------------------------------------------------------------
+        echo form_field([
+            'key'         => 'seo_keywords',
+            'label'       => 'SEO Keywords',
+            'default'     => html_entity_decode($cmspage->draft->seo_keywords ?? '', ENT_COMPAT | ENT_HTML5, 'UTF-8'),
+            'placeholder' => 'Comma separated keywords relating to the content of the page. A maximum of 10 keywords is recommended.',
+            'tip'         => 'SEO good practice recommend keeping the number of keyword phrases below 10 and less than 150 characters in total.',
+            'max_length'  => 150,
+        ]);
 
-        //  SEO Description
-        $aField                = [];
-        $aField['key']         = 'seo_description';
-        $aField['label']       = 'SEO Description';
-        $aField['default']     = isset($cmspage->draft->seo_description) ? html_entity_decode($cmspage->draft->seo_description, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
-        $aField['placeholder'] = 'The page\'s SEO description, keep this short and concise. Recommended to keep below ';
-        $aField['placeholder'] .= '150 characters.';
-        $aField['tip']         = 'This should be kept short (< 300 characters) and concise. It\'ll be shown in ';
-        $aField['tip']         .= 'search result listings and search engines will use it to help determine the ';
-        $aField['tip']         .= 'page\'s content.';
-
-        echo form_field($aField);
-
-        // --------------------------------------------------------------------------
-
-        //  SEO Keywords
-        $aField                = [];
-        $aField['key']         = 'seo_keywords';
-        $aField['label']       = 'SEO Keywords';
-        $aField['default']     = isset($cmspage->draft->seo_keywords) ? html_entity_decode($cmspage->draft->seo_keywords, ENT_COMPAT | ENT_HTML5, 'UTF-8') : '';
-        $aField['placeholder'] = 'Comma separated keywords relating to the content of the page. A maximum of 10 ';
-        $aField['placeholder'] .= 'keywords is recommended.';
-        $aField['tip']         = 'SEO good practice recommend keeping the number of keyword phrases below 10 and ';
-        $aField['tip']         .= 'less than 150 characters in total.';
-
-        echo form_field($aField);
+        echo form_field_cdn_object_picker([
+            'key'     => 'seo_image_id',
+            'label'   => 'SEO Image',
+            'default' => $cmspage->draft->seo_image_id ?? null,
+            'tip'     => 'Landscape images with focus at the center of the image work best.',
+        ]);
 
         ?>
     </fieldset>
