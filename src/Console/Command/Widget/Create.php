@@ -202,6 +202,6 @@ class Create extends BaseMaker
         $aSlug = explode('-', url_title($sString, '-', false));
         $aSlug = array_map('ucfirst', $aSlug);
 
-        return implode($aSlug, '');
+        return implode('', $aSlug);
     }
 }
