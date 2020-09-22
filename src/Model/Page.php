@@ -43,7 +43,7 @@ class Page extends Base
      *
      * @var bool
      */
-    const IS_PREVIEW = true;
+    const IS_PREVIEW = false;
 
     /**
      * Whether this model uses destructive delete or not
