@@ -55,15 +55,21 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Page constructor.
+     * The name of the "slug" column
+     *
+     * @var string
      */
-    public function __construct()
-    {
-        parent::__construct();
+    protected $tableSlugColumn = 'draft_slug';
 
-        $this->searchableFields = ['draft_title', 'draft_template_data'];
-        $this->tableSlugColumn  = 'draft_slug';
-    }
+    /**
+     * The columns which should be included when searching by keyword
+     *
+     * @var array
+     */
+    protected $searchableFields = [
+        'draft_title',
+        'draft_template_data'
+    ];
 
     // --------------------------------------------------------------------------
 
