@@ -77,13 +77,13 @@ class Pages extends BaseAdmin
             $iNumDrafts = $oDb->count_all_results(Config::get('NAILS_DB_PREFIX') . 'cms_page');
 
             /** @var Alert $oAlert */
-            $oAlert = Factory::factory('NavAlert', 'nails/module-admin');
+            $oAlert = Factory::factory('NavAlert', \Nails\Admin\Constants::MODULE_SLUG);
             $oAlert->setValue($iNumDrafts);
             $oAlert->setSeverity('danger');
             $oAlert->setLabel('Draft Pages');
 
             /** @var Nav $oNavGroup */
-            $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
+            $oNavGroup = Factory::factory('Nav', \Nails\Admin\Constants::MODULE_SLUG);
             $oNavGroup->setLabel('CMS');
             $oNavGroup->setIcon('fa-file-alt');
             $oNavGroup->addAction('Manage Pages', 'index', [$oAlert]);

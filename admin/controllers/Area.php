@@ -36,7 +36,7 @@ class Area extends BaseAdmin
     public static function announce()
     {
         if (userHasPermission('admin:cms:area:manage')) {
-            $oNavGroup = Factory::factory('Nav', 'nails/module-admin');
+            $oNavGroup = Factory::factory('Nav', \Nails\Admin\Constants::MODULE_SLUG);
             $oNavGroup->setLabel('CMS');
             $oNavGroup->setIcon('fa-file-alt');
             $oNavGroup->addAction('Manage Areas');
