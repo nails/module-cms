@@ -174,7 +174,7 @@ class Render extends Base
 
             /** @var \Nails\Common\Service\Output $oOutput */
             $oOutput = Factory::service('Output');
-            $oOutput->set_output($sRenderedHtml);
+            $oOutput->setOutput($sRenderedHtml);
 
         } else {
             throw new RenderException('Failed to render CMS Page: ' . $this->oPageModel->lastError(), 1);
