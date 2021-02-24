@@ -1,7 +1,6 @@
 /* globals Mustache */
 var NAILS_Admin_CMS_Menus_Create_Edit;
-NAILS_Admin_CMS_Menus_Create_Edit = function(items)
-{
+NAILS_Admin_CMS_Menus_Create_Edit = function(items) {
     /**
      * Avoid scope issues in callbacks and anonymous functions by referring to `this` as `base`
      * @type {Object}
@@ -29,14 +28,12 @@ NAILS_Admin_CMS_Menus_Create_Edit = function(items)
      * @param  {array} items The menu items
      * @return {void}
      */
-    base.__construct = function(items)
-    {
+    base.__construct = function(items) {
         base.itemTemplate = $('#template-item').html();
 
         //  Init NestedSortable
-        $('div.nested-sortable').each(function()
-        {
-            var sortable,container,html,target;
+        $('div.nested-sortable').each(function() {
+            var sortable, container, html, target;
 
             //  Get the sortable item
             sortable = $(this);
@@ -81,8 +78,7 @@ NAILS_Admin_CMS_Menus_Create_Edit = function(items)
                 'handle': 'div.handle',
                 'items': 'li',
                 'toleranceElement': '> div',
-                'stop': function()
-                {
+                'stop': function() {
                     //  Update parents
                     base.updateParentIds(container);
                 }
@@ -91,8 +87,7 @@ NAILS_Admin_CMS_Menus_Create_Edit = function(items)
             // --------------------------------------------------------------------------
 
             //  Bind to add button
-            sortable.find('a.add-item').on('click', function()
-            {
+            sortable.find('a.add-item').on('click', function() {
                 var _data = {
                     id: base.generateId()
                 };
@@ -108,33 +103,30 @@ NAILS_Admin_CMS_Menus_Create_Edit = function(items)
         // --------------------------------------------------------------------------
 
         //  Bind to remove buttons
-        $(document).on('click', 'a.item-remove', function()
-        {
+        $(document).on('click', 'a.item-remove', function() {
             var _obj = $(this);
 
             $('<div>')
-            .html('<p>This will remove this menu item (and any children) from the interface.</p><p>You will still need to "Save Changes" to commit the removal</p>')
-            .dialog(
-            {
-                title: 'Are you sure?',
-                resizable: false,
-                draggable: false,
-                modal: true,
-                dialogClass: "no-close",
-                buttons:
-                {
-                    OK: function()
+                .html('<p>This will remove this menu item (and any children) from the interface.</p><p>You will still need to "Save Changes" to commit the removal</p>')
+                .dialog(
                     {
-                        _obj.closest('li.target').remove();
-                        $(this).dialog("close");
-                    },
-                    Cancel: function()
-                    {
-                        $(this).dialog("close");
-                    }
-                }
-            })
-            .show();
+                        title: 'Are you sure?',
+                        resizable: false,
+                        draggable: false,
+                        modal: true,
+                        dialogClass: "no-close",
+                        buttons:
+                            {
+                                OK: function() {
+                                    _obj.closest('li.target').remove();
+                                    $(this).dialog("close");
+                                },
+                                Cancel: function() {
+                                    $(this).dialog("close");
+                                }
+                            }
+                    })
+                .show();
 
             return false;
         });
@@ -147,10 +139,8 @@ NAILS_Admin_CMS_Menus_Create_Edit = function(items)
      * @param  {Object} container The container object to restrict to
      * @return {void}
      */
-    base.updateParentIds = function(container)
-    {
-        $('input.input-parent_id', container).each(function()
-        {
+    base.updateParentIds = function(container) {
+        $('input.input-parent_id', container).each(function() {
             var parentId = $(this).closest('ol').closest('li').data('id');
             $(this).val(parentId);
         });
@@ -162,8 +152,7 @@ NAILS_Admin_CMS_Menus_Create_Edit = function(items)
      * Generates a unique ID for the page
      * @return {String}
      */
-    base.generateId = function()
-    {
+    base.generateId = function() {
         var chars, idStr;
 
         chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

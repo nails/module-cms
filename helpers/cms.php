@@ -61,32 +61,13 @@ if (!function_exists('cmsMenu')) {
     /**
      * Returns a CMS menu
      *
-     * @param  string|integer $mIdSlug The menu's ID or slug
+     * @param  string|int $mIdSlug The menu's ID or slug
      *
      * @return mixed
      */
-    function cmsMenu($mIdSlug)
+    function cmsMenu($mIdSlug, array $aData = [])
     {
         $oMenuModel = Factory::model('Menu', Constants::MODULE_SLUG);
-        return $oMenuModel->getByIdOrSlug($mIdSlug);
-    }
-}
-
-// --------------------------------------------------------------------------
-
-if (!function_exists('cmsMenuNested')) {
-
-    /**
-     * Returns a CMS menu
-     *
-     * @param  string|integer $mIdSlug The menu's ID or slug
-     *
-     * @return mixed
-     */
-    function cmsMenuNested($mIdSlug)
-    {
-        $oMenuModel = Factory::model('Block', Constants::MODULE_SLUG);
-        $aData      = ['nestItems' => true];
         return $oMenuModel->getByIdOrSlug($mIdSlug, $aData);
     }
 }

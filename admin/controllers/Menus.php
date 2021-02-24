@@ -1,401 +1,232 @@
 <?php
 
 /**
- * This class provides CMS Menu management functionality
+ * The Menu Admin controller
  *
- * @package     Nails
- * @subpackage  module-cms
- * @category    AdminController
- * @author      Nails Dev Team
- * @link
+ * @package  nails/module-cms
+ * @category controller
  */
 
 namespace Nails\Admin\Cms;
 
-use Nails\Admin\Helper;
+use Nails\Admin\Controller\DefaultController;
 use Nails\Cms\Constants;
-use Nails\Cms\Controller\BaseAdmin;
-use Nails\Cms\Model\Menu;
-use Nails\Common\Service\Session;
-use Nails\Common\Service\Uri;
+use Nails\Cms\Model\Page;
+use Nails\Cms\Resource\Menu\Item;
+use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\ModelException;
+use Nails\Common\Exception\NailsException;
+use Nails\Common\Exception\ValidationException;
+use Nails\Common\Resource;
+use Nails\Common\Service\Asset;
+use Nails\Common\Service\FormValidation;
+use Nails\Common\Service\Input;
 use Nails\Factory;
 
 /**
- * Class Menus
+ * Class Menu
  *
  * @package Nails\Admin\Cms
  */
-class Menus extends BaseAdmin
+class Menu extends DefaultController
 {
+    const CONFIG_MODEL_NAME     = 'Menu';
+    const CONFIG_MODEL_PROVIDER = Constants::MODULE_SLUG;
+    const CONFIG_PERMISSION     = 'cms:menus';
+    const CONFIG_SIDEBAR_GROUP  = 'CMS';
+    const CONFIG_SIDEBAR_ICON   = 'fa-file-alt';
+
+    // --------------------------------------------------------------------------
+
     /**
-     * Announces this controller's navGroups
+     * Menu constructor.
      *
-     * @return \Nails\Admin\Factory\Nav
+     * @throws NailsException
      */
-    public static function announce()
+    public function __construct()
     {
-        if (userHasPermission('admin:cms:menus:manage')) {
-            $oNavGroup = Factory::factory('Nav', \Nails\Admin\Constants::MODULE_SLUG);
-            $oNavGroup->setLabel('CMS');
-            $oNavGroup->setIcon('fa-file-alt');
-            $oNavGroup->addAction('Manage Menus');
-            return $oNavGroup;
-        }
+        parent::__construct();
+        $this->aConfig['INDEX_FIELDS']['Label'] = function (\Nails\Cms\Resource\Menu $oMenu) {
+            return sprintf(
+                '%s<small>%s</small>',
+                $oMenu->label,
+                $oMenu->description
+            );
+        };
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * Returns an array of permissions which can be configured for the user
-     *
-     * @return array
+     * @inheritDoc
      */
-    public static function permissions(): array
+    protected function loadEditViewData(Resource $oMenu = null): void
     {
-        $aPermissions = parent::permissions();
+        parent::loadEditViewData($oMenu);
 
-        $aPermissions['manage']  = 'Can manage menus';
-        $aPermissions['create']  = 'Can create a new menu';
-        $aPermissions['edit']    = 'Can edit an existing menu';
-        $aPermissions['delete']  = 'Can delete an existing menu';
-        $aPermissions['restore'] = 'Can restore a deleted menu';
-
-        return $aPermissions;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Browse CMS Menus
-     *
-     * @return void
-     */
-    public function index()
-    {
-        if (!userHasPermission('admin:cms:menus:manage')) {
-            unauthorised();
-        }
-
-        $oInput     = Factory::service('Input');
-        $oMenuModel = Factory::model('Menu', Constants::MODULE_SLUG);
-
-        $sTableAlias  = $oMenuModel->getTableAlias();
-        $iPage        = (int) $oInput->get('page') ?: 0;
-        $iPerPage     = (int) $oInput->get('perPage') ?: 50;
-        $sSortOn      = $oInput->get('sortOn') ?: $sTableAlias . '.label';
-        $sSortOrder   = $oInput->get('sortOrder') ?: 'asc';
-        $sKeywords    = $oInput->get('keywords') ?: '';
-        $aSortColumns = [
-            $sTableAlias . '.label'    => 'Label',
-            $sTableAlias . '.modified' => 'Modified',
-        ];
-        $aData        = [
-            'sort'     => [
-                [$sSortOn, $sSortOrder],
-            ],
-            'keywords' => $sKeywords,
-        ];
-
-        //  Get the items for the page
-        $iTotalRows          = $oMenuModel->countAll($aData);
-        $this->data['menus'] = $oMenuModel->getAll($iPage, $iPerPage, $aData);
-
-        //  Set Search and Pagination objects for the view
-        $this->data['page']->title = 'Manage Menus';
-        $this->data['search']      = Helper::searchObject(true, $aSortColumns, $sSortOn, $sSortOrder, $iPerPage, $sKeywords);
-        $this->data['pagination']  = Helper::paginationObject($iPage, $iPerPage, $iTotalRows);
-
-        //  Add a header button
-        if (userHasPermission('admin:cms:menus:create')) {
-            Helper::addHeaderButton('admin/cms/menus/create', 'Create Menu');
-        }
-
-        Helper::loadView('index');
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Create a new CMS Menu
-     *
-     * @return void
-     */
-    public function create()
-    {
-        if (!userHasPermission('admin:cms:menus:create')) {
-            unauthorised();
-        }
-
-        // --------------------------------------------------------------------------
-
+        /** @var Input $oInput */
         $oInput = Factory::service('Input');
-        if ($oInput->post()) {
-
-            //  Validate form
-            $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('label', '', 'trim|required');
-            $oFormValidation->set_rules('description', '', 'trim');
-            $oFormValidation->set_message('required', lang('fv_required'));
-
-            if ($oFormValidation->run()) {
-
-                //  Prepare the create data
-                $aItemData                = [];
-                $aItemData['label']       = $oInput->post('label');
-                $aItemData['description'] = strip_tags($oInput->post('description'));
-                $aItemData['items']       = [];
-
-                //  Prepare the menu items
-                $aMenuItems = $oInput->post('menuItem');
-                $iNumItems  = isset($aMenuItems['id']) ? count($aMenuItems['id']) : 0;
-
-                for ($i = 0; $i < $iNumItems; $i++) {
-                    $aItemData['items'][] = [
-                        'id'        => isset($aMenuItems['id'][$i]) ? $aMenuItems['id'][$i] : null,
-                        'parent_id' => isset($aMenuItems['parent_id'][$i]) ? $aMenuItems['parent_id'][$i] : null,
-                        'label'     => isset($aMenuItems['label'][$i]) ? $aMenuItems['label'][$i] : null,
-                        'url'       => isset($aMenuItems['url'][$i]) ? $aMenuItems['url'][$i] : null,
-                        'page_id'   => isset($aMenuItems['page_id'][$i]) ? $aMenuItems['page_id'][$i] : null,
-                    ];
-                }
-
-                $oMenuModel = Factory::model('Menu', Constants::MODULE_SLUG);
-                if ($oMenuModel->create($aItemData)) {
-
-                    /** @var Session $oSession */
-                    $oSession = Factory::service('Session');
-                    $oSession->setFlashData('success', 'Menu created successfully.');
-                    redirect('admin/cms/menus');
-
-                } else {
-                    $this->data['error'] = 'Failed to create menu. ';
-                    $this->data['error'] .= $oMenuModel->lastError();
-                }
-
-            } else {
-                $this->data['error'] = lang('fv_there_were_errors');
-            }
-
-        } else {
-            $aItems = [];
-        }
-
-        // --------------------------------------------------------------------------
-
-        $this->data['page']->title = 'Create Menu';
-
-        // --------------------------------------------------------------------------
-
-        //  Prepare the menu items
-        if ($oInput->post()) {
-
-            $aMenuItems     = [];
-            $aPostMenuItems = $oInput->post('menuItem');
-            $iNumItems      = !empty($aPostMenuItems['id']) ? count($aPostMenuItems['id']) : 0;
-
-            for ($i = 0; $i < $iNumItems; $i++) {
-                $aMenuItems[] = [
-                    'id'        => isset($aPostMenuItems['id'][$i]) ? $aPostMenuItems['id'][$i] : null,
-                    'parent_id' => isset($aPostMenuItems['parent_id'][$i]) ? $aPostMenuItems['parent_id'][$i] : null,
-                    'label'     => isset($aPostMenuItems['label'][$i]) ? $aPostMenuItems['label'][$i] : null,
-                    'url'       => isset($aPostMenuItems['url'][$i]) ? $aPostMenuItems['url'][$i] : null,
-                    'page_id'   => isset($aPostMenuItems['page_id'][$i]) ? $aPostMenuItems['page_id'][$i] : null,
-                ];
-            }
-
-        } else {
-            $aMenuItems = $aItems;
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Get the CMS Pages
-        $oPageModel          = Factory::model('Page', Constants::MODULE_SLUG);
-        $aPages              = $oPageModel->getAllNestedFlat();
-        $this->data['pages'] = ['' => 'Select a CMS Page'] + $aPages;
-
-        // --------------------------------------------------------------------------
-
-        //  Assets
+        /** @var Asset $oAsset */
         $oAsset = Factory::service('Asset');
-        $oAsset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
-        $oAsset->library('MUSTACHE');
-        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
-        $oAsset->load('admin.menus.edit.js', Constants::MODULE_SLUG);
-        $oAsset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
-
-        // --------------------------------------------------------------------------
-
-        Helper::loadView('edit');
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Edit a CMS Menu
-     *
-     * @return void
-     */
-    public function edit()
-    {
-        if (!userHasPermission('admin:cms:menus:edit')) {
-            unauthorised();
-        }
-
-        // --------------------------------------------------------------------------
-
-        $oUri       = Factory::service('Uri');
-        $oMenuModel = Factory::model('Menu', Constants::MODULE_SLUG);
-        $oMenu      = $oMenuModel->getById($oUri->segment(5));
-
-        if (!$oMenu) {
-            /** @var Session $oSession */
-            $oSession = Factory::service('Session');
-            $oSession->setFlashData('error', 'Invalid menu ID.');
-            redirect('admin/cms/menus');
-        }
-
-        // --------------------------------------------------------------------------
-
-        $oInput = Factory::service('Input');
-        if ($oInput->post()) {
-
-            //  Validate form
-            $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('label', '', 'trim|required');
-            $oFormValidation->set_rules('description', '', 'trim');
-            $oFormValidation->set_message('required', lang('fv_required'));
-
-            if ($oFormValidation->run()) {
-
-                //  Prepare the create data
-                $aItemData                = [];
-                $aItemData['label']       = $oInput->post('label');
-                $aItemData['description'] = strip_tags($oInput->post('description'));
-                $aItemData['items']       = [];
-
-                //  Prepare the menu items
-                $aMenuItems = $oInput->post('menuItem');
-                $iNumItems  = isset($aMenuItems['id']) ? count($aMenuItems['id']) : 0;
-
-                for ($i = 0; $i < $iNumItems; $i++) {
-
-                    $aItemData['items'][$i]              = [];
-                    $aItemData['items'][$i]['id']        = isset($aMenuItems['id'][$i]) ? $aMenuItems['id'][$i] : null;
-                    $aItemData['items'][$i]['parent_id'] = isset($aMenuItems['parent_id'][$i]) ? $aMenuItems['parent_id'][$i] : null;
-                    $aItemData['items'][$i]['label']     = isset($aMenuItems['label'][$i]) ? $aMenuItems['label'][$i] : null;
-                    $aItemData['items'][$i]['url']       = isset($aMenuItems['url'][$i]) ? $aMenuItems['url'][$i] : null;
-                    $aItemData['items'][$i]['page_id']   = isset($aMenuItems['page_id'][$i]) ? $aMenuItems['page_id'][$i] : null;
-                }
-
-                if ($oMenuModel->update($oMenu->id, $aItemData)) {
-
-                    /** @var Session $oSession */
-                    $oSession = Factory::service('Session');
-                    $oSession->setFlashData('success', 'Menu updated successfully.');
-                    redirect('admin/cms/menus');
-
-                } else {
-                    $this->data['error'] = 'Failed to update menu. ';
-                    $this->data['error'] .= $oMenuModel->lastError();
-                }
-
-            } else {
-                $this->data['error'] = lang('fv_there_were_errors');
-            }
-
-        } else {
-            $aItems = $oMenu->items;
-        }
-
-        // --------------------------------------------------------------------------
-
-        if ($oInput->post()) {
-
-            $aMenuItems     = [];
-            $aPostMenuItems = $oInput->post('menuItem');
-            $iNumItems      = !empty($aPostMenuItems['id']) ? count($aPostMenuItems['id']) : 0;
-
-            for ($i = 0; $i < $iNumItems; $i++) {
-                $aMenuItems[] = [
-                    'id'        => isset($aPostMenuItems['id'][$i]) ? $aPostMenuItems['id'][$i] : null,
-                    'parent_id' => isset($aPostMenuItems['parent_id'][$i]) ? $aPostMenuItems['parent_id'][$i] : null,
-                    'label'     => isset($aPostMenuItems['label'][$i]) ? $aPostMenuItems['label'][$i] : null,
-                    'url'       => isset($aPostMenuItems['url'][$i]) ? $aPostMenuItems['url'][$i] : null,
-                    'page_id'   => isset($aPostMenuItems['page_id'][$i]) ? $aPostMenuItems['page_id'][$i] : null,
-                ];
-            }
-
-        } else {
-            $aMenuItems = $aItems;
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Get the CMS Pages
+        /** @var Page $oPageModel */
         $oPageModel = Factory::model('Page', Constants::MODULE_SLUG);
-        $aPages     = $oPageModel->getAllNestedFlat(null, false);
 
-        // --------------------------------------------------------------------------
+        $this->data['aPages'] = ['Select a CMS Page'] + $oPageModel->getAllNestedFlat(null, false);
 
-        //  Assets
-        $oAsset = Factory::service('Asset');
-        $oAsset->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER');
-        $oAsset->library('MUSTACHE');
-        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
-        $oAsset->load('admin.menus.edit.js', Constants::MODULE_SLUG);
-        $oAsset->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
+        $aMenuItems = $oInput->post()
+            ? $this->compileItemsFromPost()
+            : $this->compileItemsFromMenu($oMenu);
 
-        // --------------------------------------------------------------------------
-
-        $this->data['menu']        = $oMenu;
-        $this->data['page']->title = 'Edit Menu &rsaquo; ' . $oMenu->label;
-        $this->data['pages']       = ['' => 'Select a CMS Page'] + $aPages;
-
-        // --------------------------------------------------------------------------
-
-        Helper::loadView('edit');
+        $oAsset
+            ->load('admin.min.css', Constants::MODULE_SLUG)
+            ->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER')
+            //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
+            ->load('admin.menus.edit.js', Constants::MODULE_SLUG)
+            ->library('MUSTACHE')
+            ->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * Delete a CMS Menu
-     *
-     * @return void
+     * @inheritDoc
      */
-    public function delete()
+    protected function runFormValidation(string $sMode, array $aOverrides = []): void
     {
-        if (!userHasPermission('admin:cms:menus:delete')) {
-            unauthorised();
+        parent::runFormValidation($sMode, $aOverrides);
+
+        $aErrors = [];
+        foreach ($this->compileItemsFromPost() as $iIndex => $oItem) {
+            if (empty($oItem->label)) {
+                $aErrors[] = sprintf(
+                    'Menu item at position %s requires a label',
+                    $iIndex + 1
+                );
+
+            }
+
+            if ((empty($oItem->page_id) && empty($oItem->url)) || (!empty($oItem->page_id) && !empty($oItem->url))) {
+                $aErrors[] = sprintf(
+                    'Menu item %s must define one of: URL, CMS page',
+                    empty($oItem->label)
+                        ? 'at position ' . ($iIndex + 1)
+                        : '"' . $oItem->label . '"'
+                );
+            }
         }
 
-        // --------------------------------------------------------------------------
+        if (!empty($aErrors)) {
+            throw new ValidationException(
+                implode('<br>', $aErrors)
+            );
+        }
+    }
 
-        /** @var Uri $oUri */
-        $oUri = Factory::service('Uri');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
-        /** @var Menu $oMenuModel */
-        $oMenuModel = Factory::model('Menu', Constants::MODULE_SLUG);
+    // --------------------------------------------------------------------------
 
-        $oMenu = $oMenuModel->getById($oUri->segment(5));
+    /**
+     * @inheritDoc
+     */
+    protected function afterCreateAndEdit($sMode, Resource $oNewItem, Resource $oOldItem = null): void
+    {
+        parent::afterCreateAndEdit($sMode, $oNewItem, $oOldItem);
 
-        if (!$oMenu) {
-            $oSession->setFlashData('error', 'Invalid menu ID.');
-            redirect('admin/cms/menus');
+        /** @var \Nails\Cms\Model\Menu\Item $oItemModel */
+        $oItemModel = Factory::model('MenuItem', Constants::MODULE_SLUG);
+
+        $aItems   = $this->compileItemsFromPost();
+        $aIdMap   = [];
+        $iCounter = 0;
+
+        foreach ($aItems as $oItem) {
+
+            $oItem->menu_id = $oNewItem->id;
+            $oItem->order   = $iCounter++;
+
+            if (is_numeric($oItem->id)) {
+
+                $aIdMap[$oItem->id] = $oItem->id;
+
+                $oItem->parent_id = $aIdMap[$oItem->parent_id] ?? null;
+                $oItem->page_id   = (int) $oItem->page_id ?: null;
+
+                $oItemModel->update($oItem->id, (array) $oItem);
+
+            } else {
+
+                $oItem->parent_id = $aIdMap[$oItem->parent_id] ?? null;
+                $oItem->page_id   = (int) $oItem->page_id ?: null;
+
+                $aIdMap[$oItem->id] = $oItemModel->create((array) $oItem);
+            }
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Compile the menu items array from POST data
+     *
+     * @return \stdClass[]
+     * @throws FactoryException
+     */
+    protected function compileItemsFromPost(): array
+    {
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
+        $aItems = (array) $oInput->post('items');
+
+        $aOut = [];
+        foreach ($aItems as $sProperty => $aItem) {
+            foreach ($aItem as $iIndex => $sValue) {
+
+                if (!array_key_exists($iIndex, $aOut)) {
+                    $aOut[$iIndex] = (object) [];
+                }
+
+                $aOut[$iIndex]->{$sProperty} = $sValue;
+            }
         }
 
-        if ($oMenuModel->delete($oMenu->id)) {
-            $sStatus  = 'success';
-            $sMessage = 'Menu was deleted successfully.';
-        } else {
-            $sStatus  = 'error';
-            $sMessage = 'Failed to delete menu. ';
-            $sMessage .= $oMenuModel->lastError();
+        return $aOut;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Compile the menu items array from Menu data
+     *
+     * @param \Nails\Cms\Resource\Menu|null $oMenu The Menu being edited
+     *
+     * @return Item[]
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    protected function compileItemsFromMenu(?\Nails\Cms\Resource\Menu $oMenu): array
+    {
+        if (empty($oMenu)) {
+            return [];
         }
 
-        $oSession->setFlashData($sStatus, $sMessage);
-        redirect('admin/cms/menus');
+        /** @var \Nails\Cms\Model\Menu\Item $oItemModel */
+        $oItemModel = Factory::model('MenuItem', Constants::MODULE_SLUG);
+
+        $aItems = $oItemModel->getAll([
+            'where' => [
+                ['parent_id', null],
+                ['menu_id', $oMenu->id],
+            ],
+        ]);
+
+        $aMenuItems = [];
+        foreach ($aItems as $oItem) {
+            $aMenuItems = array_merge(
+                $aMenuItems,
+                [$oItem],
+                $oItemModel->flattenTree($oItemModel->getChildren($oItem->id, true))
+            );
+        }
+
+        return $aMenuItems;
     }
 }

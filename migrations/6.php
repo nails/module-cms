@@ -15,6 +15,11 @@ namespace Nails\Database\Migration\Nails\ModuleCms;
 
 use Nails\Common\Console\Migrate\Base;
 
+/**
+ * Class Migration6
+ *
+ * @package Nails\Database\Migration\Nails\ModuleCms
+ */
 class Migration6 extends Base
 {
     /**

@@ -39,6 +39,20 @@ class Page extends Base
     const TABLE = NAILS_DB_PREFIX . 'cms_page';
 
     /**
+     * The name of the resource to use (as passed to \Nails\Factory::resource())
+     *
+     * @var string
+     */
+    const RESOURCE_NAME = 'Page';
+
+    /**
+     * The provider of the resource to use (as passed to \Nails\Factory::resource())
+     *
+     * @var string
+     */
+    const RESOURCE_PROVIDER = Constants::MODULE_SLUG;
+
+    /**
      * Whether the model is a preview
      *
      * @var bool
@@ -68,7 +82,7 @@ class Page extends Base
      */
     protected $searchableFields = [
         'draft_title',
-        'draft_template_data'
+        'draft_template_data',
     ];
 
     // --------------------------------------------------------------------------
