@@ -17,13 +17,16 @@ use Nails\Config;
 
 class Block extends Base
 {
+    const TABLE = NAILS_DB_PREFIX . 'cms_block';
+
+    // --------------------------------------------------------------------------
+
     /**
      * Model constructor
      **/
     public function __construct()
     {
         parent::__construct();
-        $this->table            = Config::get('NAILS_DB_PREFIX') . 'cms_block';
         $this->searchableFields = ['label', 'value', 'located', 'description'];
     }
 }

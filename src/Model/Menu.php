@@ -42,10 +42,11 @@ class Menu extends Base
 
         // --------------------------------------------------------------------------
 
-        $this->table             = Config::get('NAILS_DB_PREFIX') . 'cms_menu';
-        $this->tableAlias        = 'm';
-        $this->table_item        = Config::get('NAILS_DB_PREFIX') . 'cms_menu_item';
-        $this->table_item_prefix = 'mi';
+        //  @todo (Pablo - 2021-02-24) - Refactor this to use expandable fields rather than table switching
+        $this->table           = Config::get('NAILS_DB_PREFIX') . 'cms_menu';
+        $this->tableAlias      = 'm';
+        $this->tableItem       = Config::get('NAILS_DB_PREFIX') . 'cms_menu_item';
+        $this->tableItemPrefix = 'mi';
     }
 
     // --------------------------------------------------------------------------
@@ -155,7 +156,7 @@ class Menu extends Base
     {
         $this->oDb->where('menu_id', $iMenuId);
         $this->oDb->order_by('order');
-        $aItems = $this->oDb->get($this->table_item)->result();
+        $aItems = $this->oDb->get($this->tableItem)->result();
 
         foreach ($aItems as &$oItem) {
             $this->formatObjectItem($oItem);
@@ -237,8 +238,8 @@ class Menu extends Base
             $table      = $this->table;
             $tableAlias = $this->tableAlias;
 
-            $this->table      = $this->table_item;
-            $this->tableAlias = $this->table_item_prefix;
+            $this->table      = $this->tableItem;
+            $this->tableAlias = $this->tableItemPrefix;
 
             $newIds   = [];
             $iCounter = 0;
@@ -351,8 +352,8 @@ class Menu extends Base
             $table      = $this->table;
             $tableAlias = $this->tableAlias;
 
-            $this->table      = $this->table_item;
-            $this->tableAlias = $this->table_item_prefix;
+            $this->table      = $this->tableItem;
+            $this->tableAlias = $this->tableItemPrefix;
 
             $aIdsUpdated = [];
             $newIds      = [];

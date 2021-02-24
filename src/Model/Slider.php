@@ -35,6 +35,7 @@ class Slider extends Base
 
         // --------------------------------------------------------------------------
 
+        //  @todo (Pablo - 2021-02-24) - Refactor this to use expandable fields rather than table switching
         $this->table             = Config::get('NAILS_DB_PREFIX') . 'cms_slider';
         $this->tableAlias        = 's';
         $this->table_item        = Config::get('NAILS_DB_PREFIX') . 'cms_slider_item';
