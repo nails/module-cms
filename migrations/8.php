@@ -28,8 +28,6 @@ class Migration8 extends Base
      */
     public function execute()
     {
-        $this->query('ALTER TABLE `{{NAILS_DB_PREFIX}}cms_menu_item` CHANGE `menu_id` `menu_id` INT UNSIGNED NULL;');
-        $this->query('UPDATE `{{NAILS_DB_PREFIX}}cms_menu_item` SET `menu_id` = NULL WHERE `parent_id` IS NOT NULL;');
         $this->query('ALTER TABLE `{{NAILS_DB_PREFIX}}cms_menu_item` CHANGE `order` `order` INT(11) UNSIGNED NOT NULL;');
     }
 }
