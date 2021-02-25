@@ -1,6 +1,10 @@
 <?php
 
+use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\ModelException;
 use Nails\Cms\Constants;
+use Nails\Cms\Model;
+use Nails\Cms\Resource;
 use Nails\Factory;
 
 /**
@@ -10,7 +14,6 @@ use Nails\Factory;
  * @subpackage  module-cms
  * @category    Helper
  * @author      Nails Dev Team
- * @link
  */
 
 if (!function_exists('cmsBlock')) {
@@ -18,21 +21,19 @@ if (!function_exists('cmsBlock')) {
     /**
      * Returns a block's value
      *
-     * @param  string $sSlug The block's slug
+     * @param int|string|null $mIdSlug The block's ID or slug
      *
      * @return string
+     * @throws FactoryException
+     * @throws ModelException
      */
-    function cmsBlock($sSlug)
+    function cmsBlock($mIdSlug)
     {
-        $oBlockModel = Factory::model('Block', Constants::MODULE_SLUG);
-        $oBlock      = $oBlockModel->getBySlug($sSlug);
+        /** @var Model\Block $oModel */
+        $oModel = Factory::model('Block', Constants::MODULE_SLUG);
+        $oBlock = $oModel->getByIdOrSlug($mIdSlug);
 
-        if (!$oBlock) {
-
-            return '';
-        }
-
-        return $oBlock->value;
+        return $oBlock->value ?? '';
     }
 }
 
@@ -43,14 +44,15 @@ if (!function_exists('cmsSlider')) {
     /**
      * Returns a CMS slider
      *
-     * @param  string $sIdSlug The slider's ID or slug
+     * @param int|string|null $sIdSlug The slider's ID or slug
      *
      * @return mixed
      */
-    function cmsSlider($sIdSlug)
+    function cmsSlider(?string $sIdSlug)
     {
-        $oSliderModel = Factory::model('Slider', Constants::MODULE_SLUG);
-        return $oSliderModel->getByIdOrSlug($sIdSlug);
+        /** @var Model\Slider $oModel */
+        $oModel = Factory::model('Slider', Constants::MODULE_SLUG);
+        return $oModel->getByIdOrSlug($sIdSlug);
     }
 }
 
@@ -61,14 +63,17 @@ if (!function_exists('cmsMenu')) {
     /**
      * Returns a CMS menu
      *
-     * @param  string|int $mIdSlug The menu's ID or slug
+     * @param int|string|null $mIdSlug The menu's ID or slug
+     * @param array           $aData
      *
-     * @return mixed
+     * @return Resource\Menu
+     * @throws FactoryException
      */
-    function cmsMenu($mIdSlug, array $aData = [])
+    function cmsMenu($mIdSlug, array $aData = []): ?Resource\Menu
     {
-        $oMenuModel = Factory::model('Menu', Constants::MODULE_SLUG);
-        return $oMenuModel->getByIdOrSlug($mIdSlug, $aData);
+        /** @var Model\Menu $oModel */
+        $oModel = Factory::model('Menu', Constants::MODULE_SLUG);
+        return $oModel->getByIdOrSlug($mIdSlug, $aData);
     }
 }
 
@@ -79,14 +84,15 @@ if (!function_exists('cmsPage')) {
     /**
      * Returns a CMS page
      *
-     * @param  string $mIdSlug The page's ID or slug
+     * @param int|string|null $mIdSlug The page's ID or slug
      *
      * @return mixed
      */
     function cmsPage($mIdSlug)
     {
-        $oPageModel = Factory::model('Page', Constants::MODULE_SLUG);
-        return $oPageModel->getByIdOrSlug($mIdSlug);
+        /** @var Model\Page $oModel */
+        $oModel = Factory::model('Page', Constants::MODULE_SLUG);
+        return $oModel->getByIdOrSlug($mIdSlug);
     }
 }
 
@@ -97,14 +103,15 @@ if (!function_exists('cmsArea')) {
     /**
      * Returns a rendered CMS area
      *
-     * @param  string $mIdSlug The area's ID or slug
+     * @param int|string|null $mIdSlug The area's ID or slug
      *
      * @return string
      */
-    function cmsArea($mIdSlug)
+    function cmsArea($mIdSlug): string
     {
-        $oAreaModel = Factory::model('Area', Constants::MODULE_SLUG);
-        return $oAreaModel->render($mIdSlug);
+        /** @var Model\Area $oModel */
+        $oModel = Factory::model('Area', Constants::MODULE_SLUG);
+        return $oModel->render($mIdSlug);
     }
 }
 
@@ -115,14 +122,14 @@ if (!function_exists('cmsAreaWithData')) {
     /**
      * Returns a rendered CMS area using the supplied data
      *
-     * @param  array $aData The widget data to use
+     * @param string|array $mWidgetData The widget data to use
      *
      * @return string
      */
-    function cmsAreaWithData($aData)
+    function cmsAreaWithData($mWidgetData): string
     {
         $oAreaModel = Factory::model('Area', Constants::MODULE_SLUG);
-        return $oAreaModel->renderWithData($aData);
+        return $oAreaModel->renderWithData($mWidgetData);
     }
 }
 
@@ -133,23 +140,22 @@ if (!function_exists('cmsWidget')) {
     /**
      * Returns a rendered CMS widget
      *
-     * @param  string $sSlug The widget's slug
-     * @param  array  $aData Data to pass to the widget's render function
+     * @param string $sSlug The widget's slug
+     * @param array  $aData Data to pass to the widget's render function
      *
      * @return string
      */
-    function cmsWidget($sSlug, $aData = [])
+    function cmsWidget($sSlug, $aData = []): string
     {
+        /** @var \Nails\Cms\Service\Widget $oWidgetService */
         $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
-        $oWidget        = $oWidgetService->getBySlug($sSlug);
+        /** @var \Nails\Cms\Widget\WidgetBase $oWidget */
+        $oWidget = $oWidgetService->getBySlug($sSlug);
 
         if ($oWidget) {
-
             return $oWidget->render($aData);
-
-        } else {
-
-            return '';
         }
+
+        return '';
     }
 }

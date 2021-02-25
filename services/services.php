@@ -73,6 +73,13 @@ return [
         },
     ],
     'resources' => [
+        'Area'     => function ($mObj): Resource\Area {
+            if (class_exists('\App\Invoice\Resource\Area')) {
+                return new \App\Invoice\Resource\Area($mObj);
+            } else {
+                return new Resource\Area($mObj);
+            }
+        },
         'Menu'     => function ($mObj): Resource\Menu {
             if (class_exists('\App\Invoice\Resource\Menu')) {
                 return new \App\Invoice\Resource\Menu($mObj);

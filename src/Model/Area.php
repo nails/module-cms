@@ -14,6 +14,8 @@ namespace Nails\Cms\Model;
 
 use Nails\Cms\Constants;
 use Nails\Cms\Exception\Widget\NotFoundException;
+use Nails\Cms\Helper\Form;
+use Nails\Cms\Service\Widget;
 use Nails\Common\Model\Base;
 use Nails\Environment;
 use Nails\Factory;
@@ -31,6 +33,20 @@ class Area extends Base
      * @var string
      */
     const TABLE = NAILS_DB_PREFIX . 'cms_area';
+
+    /**
+     * The name of the resource to use (as passed to \Nails\Factory::resource())
+     *
+     * @var string
+     */
+    const RESOURCE_NAME = 'Area';
+
+    /**
+     * The provider of the resource to use (as passed to \Nails\Factory::resource())
+     *
+     * @var string
+     */
+    const RESOURCE_PROVIDER = Constants::MODULE_SLUG;
 
     /**
      * Whether to automatically set slugs or not
@@ -54,30 +70,16 @@ class Area extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Formats a single object
-     *
-     * The getAll() method iterates over each returned item with this method so as to
-     * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
-     *
-     * @param object $oObj      A reference to the object being formatted.
-     * @param array  $aData     The same data array which is passed to getCountCommon, for reference if needed
-     * @param array  $aIntegers Fields which should be cast as integers if numerical and not null
-     * @param array  $aBools    Fields which should be cast as booleans if not null
-     * @param array  $aFloats   Fields which should be cast as floats if not null
-     *
-     * @return void
+     * @inheritDoc
      */
-    protected function formatObject(
-        &$oObj,
-        array $aData = [],
-        array $aIntegers = [],
-        array $aBools = [],
-        array $aFloats = []
-    ) {
+    public function describeFields($sTable = null)
+    {
+        $aFields = parent::describeFields($sTable);
 
-        parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
+        $aFields['widget_data']->label = 'Widgets';
+        $aFields['widget_data']->type  = Form::FIELD_WIDGETS;
 
-        $oObj->widget_data = json_decode($oObj->widget_data);
+        return $aFields;
     }
 
     // --------------------------------------------------------------------------
@@ -88,17 +90,13 @@ class Area extends Base
      * @param mixed $mAreaIdSlug The area's ID or slug
      *
      * @return string
+     * @deprecated
      */
-    public function render($mAreaIdSlug)
+    public function render($mAreaIdSlug): string
     {
-        $sOut  = '';
+        /** @var \Nails\Cms\Resource\Area $oArea */
         $oArea = $this->getByIdOrSlug($mAreaIdSlug);
-
-        if ($oArea) {
-            $sOut = $this->renderWithData($oArea->widget_data);
-        }
-
-        return $sOut;
+        return $oArea->render();
     }
 
     // --------------------------------------------------------------------------
@@ -106,38 +104,15 @@ class Area extends Base
     /**
      * Render an array of widget data
      *
-     * @param array $aWidgetData The array of data to render
+     * @param string|array $mWidgetData The array of data to render, or a JSON string of data
      *
      * @return string
      * @throws NotFoundException
      */
-    public function renderWithData($aWidgetData)
+    public function renderWithData($mWidgetData): string
     {
-        $sOut = '';
-
-        if (!empty($aWidgetData)) {
-
-            //  If a string is passed, assume it's a JSON encoded array
-            if (is_string($aWidgetData)) {
-                $aWidgetData = json_decode($aWidgetData);
-                if (empty($aWidgetData)) {
-                    return $sOut;
-                }
-            }
-
-            $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
-
-            foreach ($aWidgetData as $oWidgetData) {
-                $sSlug   = $oWidgetData->slug ?? '';
-                $oWidget = $oWidgetService->getBySlug($sSlug);
-                if (!empty($oWidget)) {
-                    $sOut .= $oWidget->render((array) $oWidgetData->data);
-                } elseif (Environment::not(Environment::ENV_PROD)) {
-                    throw new NotFoundException('"' . $sSlug . '" is not a valid widget');
-                }
-            }
-        }
-
-        return $sOut;
+        /** @var \Nails\Cms\Resource\Area $oArea */
+        $oArea = Factory::resource('Area', Constants::MODULE_SLUG, ['widget_data' => $mWidgetData]);
+        return $oArea->render();
     }
 }
