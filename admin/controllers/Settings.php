@@ -84,7 +84,7 @@ class Settings extends BaseAdmin
 
                 $oDb = Factory::service('Database');
 
-                $oDb->trans_begin();
+                $oDb->transaction()->start();
 
                 $bRollback          = false;
                 $oAppSettingService = Factory::service('AppSetting');
@@ -98,12 +98,12 @@ class Settings extends BaseAdmin
 
                 if (empty($bRollback)) {
 
-                    $oDb->trans_commit();
+                    $oDb->transaction()->commit();
                     $this->data['success'] = 'CMS settings were saved.';
 
                 } else {
 
-                    $oDb->trans_rollback();
+                    $oDb->transaction()->rollback();
                     $this->data['error'] = 'There was a problem saving settings. ' . $sError;
                 }
 

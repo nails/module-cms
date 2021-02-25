@@ -98,24 +98,24 @@ class Page extends Base
     public function create(array $aData = [], $bReturnObject = false)
     {
         $oDb = Factory::service('Database');
-        $oDb->trans_begin();
+        $oDb->transaction()->start();
 
         //  Create a new blank row to work with
         $iId = parent::create();
 
         if (!$iId) {
             $this->setError('Unable to create base page object. ' . $this->lastError());
-            $oDb->trans_rollback();
+            $oDb->transaction()->rollback();
             return false;
         }
 
         //  Try and update it depending on how the update went, commit & update or rollback
         if ($this->update($iId, $aData)) {
-            $oDb->trans_commit();
+            $oDb->transaction()->commit();
             return $bReturnObject ? $this->getById($iId) : $iId;
 
         } else {
-            $oDb->trans_rollback();
+            $oDb->transaction()->rollback();
             return false;
         }
     }
@@ -151,7 +151,7 @@ class Page extends Base
 
         //  Start the transaction
         $oDb = Factory::service('Database');
-        $oDb->trans_begin();
+        $oDb->transaction()->start();
 
         // --------------------------------------------------------------------------
 
@@ -195,7 +195,7 @@ class Page extends Base
             if (!$oParent) {
 
                 $this->setError('Invalid Parent ID.');
-                $oDb->trans_rollback();
+                $oDb->transaction()->rollback();
 
                 return false;
             }
@@ -220,7 +220,7 @@ class Page extends Base
             if ($oDb->count_all_results($this->getTableName())) {
 
                 $this->setError('Slug is already in use.');
-                $oDb->trans_rollback();
+                $oDb->transaction()->rollback();
 
                 return false;
             }
@@ -316,7 +316,7 @@ class Page extends Base
                         if (!parent::update($iId, $aData)) {
 
                             $this->setError('Failed to update child page\'s slug and breadcrumbs');
-                            $oDb->trans_rollback();
+                            $oDb->transaction()->rollback();
 
                             return false;
                         }
@@ -327,7 +327,7 @@ class Page extends Base
             // --------------------------------------------------------------------------
 
             //  Finish up.
-            $oDb->trans_commit();
+            $oDb->transaction()->commit();
 
             // --------------------------------------------------------------------------
 
@@ -352,7 +352,7 @@ class Page extends Base
         } else {
 
             $this->setError('Failed to update page object.');
-            $oDb->trans_rollback();
+            $oDb->transaction()->rollback();
 
             return false;
         }
@@ -422,7 +422,7 @@ class Page extends Base
 
         //  Start the transaction
         $oDb = Factory::service('Database');
-        $oDb->trans_begin();
+        $oDb->transaction()->start();
 
         // --------------------------------------------------------------------------
 
@@ -504,7 +504,7 @@ class Page extends Base
                     if (!$oDb->update($this->getTableName())) {
 
                         $this->setError('Failed to update a child page\'s data.');
-                        $oDb->trans_rollback();
+                        $oDb->transaction()->rollback();
 
                         return false;
                     }
@@ -520,7 +520,7 @@ class Page extends Base
                 $oDb->replace(Config::get('NAILS_DB_PREFIX') . 'cms_page_slug_history');
             }
 
-            $oDb->trans_commit();
+            $oDb->transaction()->commit();
 
             // --------------------------------------------------------------------------
 
@@ -537,7 +537,7 @@ class Page extends Base
             return true;
 
         } else {
-            $oDb->trans_rollback();
+            $oDb->transaction()->rollback();
             return false;
         }
     }
@@ -1133,7 +1133,7 @@ class Page extends Base
 
         /** @var Database $oDb */
         $oDb = Factory::service('Database');
-        $oDb->trans_begin();
+        $oDb->transaction()->start();
 
         try {
 
@@ -1168,10 +1168,10 @@ class Page extends Base
 
             }
 
-            $oDb->trans_commit();
+            $oDb->transaction()->commit();
 
         } catch (\Exception $e) {
-            $oDb->trans_rollback();
+            $oDb->transaction()->rollback();
             $this->setError($e->getMessage());
             return false;
         }

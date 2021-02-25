@@ -191,7 +191,7 @@ class Slider extends Base
      */
     public function create(array $data = [], $returnObject = false)
     {
-        $this->oDb->trans_begin();
+        $this->oDb->transaction()->start();
 
         if (isset($data['slides'])) {
 
@@ -238,7 +238,7 @@ class Slider extends Base
                 if (!$result) {
 
                     $this->setError('Failed to create slide #' . ($i + 1));
-                    $this->oDb->trans_rollback();
+                    $this->oDb->transaction()->rollback();
                     return false;
 
                 }
@@ -249,15 +249,15 @@ class Slider extends Base
             $this->tableAlias = $tableAlias;
 
             //  Commit the transaction
-            $this->oDb->trans_commit();
+            $this->oDb->transaction()->commit();
 
         } elseif ($result) {
 
-            $this->oDb->trans_commit();
+            $this->oDb->transaction()->commit();
 
         } else {
 
-            $this->oDb->trans_rollback();
+            $this->oDb->transaction()->rollback();
         }
 
         return $result;
@@ -275,7 +275,7 @@ class Slider extends Base
      */
     public function update($id, array $data = []): bool
     {
-        $this->oDb->trans_begin();
+        $this->oDb->transaction()->start();
 
         if (isset($data['slides'])) {
 
@@ -317,7 +317,7 @@ class Slider extends Base
                     if (!$result) {
 
                         $this->setError('Failed to update slide #' . ($i + 1));
-                        $this->oDb->trans_rollback();
+                        $this->oDb->transaction()->rollback();
                         return false;
 
                     } else {
@@ -333,7 +333,7 @@ class Slider extends Base
                     if (!$result) {
 
                         $this->setError('Failed to create slide #' . ($i + 1));
-                        $this->oDb->trans_rollback();
+                        $this->oDb->transaction()->rollback();
                         return false;
 
                     } else {
@@ -359,15 +359,15 @@ class Slider extends Base
             $this->tableAlias = $tableAlias;
 
             //  Commit the transaction
-            $this->oDb->trans_commit();
+            $this->oDb->transaction()->commit();
 
         } elseif ($result) {
 
-            $this->oDb->trans_commit();
+            $this->oDb->transaction()->commit();
 
         } else {
 
-            $this->oDb->trans_rollback();
+            $this->oDb->transaction()->rollback();
         }
 
         return $result;

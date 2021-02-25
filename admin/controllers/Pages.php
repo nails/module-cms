@@ -596,7 +596,7 @@ class Pages extends BaseAdmin
 
             try {
 
-                $oDb->trans_begin();
+                $oDb->transaction()->start();
 
                 //  Unpublish the parent page
                 if (!$this->oPageModel->unpublish($oPage->id)) {
@@ -614,7 +614,7 @@ class Pages extends BaseAdmin
                         $oInput->post('redirect_url')
                     );
 
-                $oDb->trans_commit();
+                $oDb->transaction()->commit();
 
                 /** @var Session $oSession */
                 $oSession = Factory::service('Session');
@@ -623,7 +623,7 @@ class Pages extends BaseAdmin
                 redirect($oInput->post('return_to') ?: 'admin/cms/pages');
 
             } catch (NailsException $e) {
-                $oDb->trans_rollback();
+                $oDb->transaction()->rollback();
                 $this->data['error'] = $e->getMessage();
             }
         }
@@ -773,7 +773,7 @@ class Pages extends BaseAdmin
 
             try {
 
-                $oDb->trans_begin();
+                $oDb->transaction()->start();
 
                 //  Delete the parent page
                 if (!$this->oPageModel->delete($oPage->id)) {
@@ -787,7 +787,7 @@ class Pages extends BaseAdmin
                         $oInput->post('redirect_url')
                     );
 
-                $oDb->trans_commit();
+                $oDb->transaction()->commit();
 
                 /** @var Session $oSession */
                 $oSession = Factory::service('Session');
@@ -796,7 +796,7 @@ class Pages extends BaseAdmin
                 redirect($oInput->post('return_to') ?: 'admin/cms/pages');
 
             } catch (NailsException $e) {
-                $oDb->trans_rollback();
+                $oDb->transaction()->rollback();
                 $this->data['error'] = $e->getMessage();
             }
         }
