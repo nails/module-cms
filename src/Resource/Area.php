@@ -29,6 +29,9 @@ class Area extends Entity
     public $label;
 
     /** @var string */
+    public $slug;
+
+    /** @var string */
     public $description;
 
     /** @var string|array|null */
