@@ -3,11 +3,10 @@
 /**
  * This model handle CMS Blocks
  *
- * @package     Nails
- * @subpackage  module-cms
- * @category    Model
- * @author      Nails Dev Team
- * @link
+ * @package    Nails
+ * @subpackage module-cms
+ * @category   Model
+ * @author     Nails Dev Team
  */
 
 namespace Nails\Cms\Model;

@@ -64,13 +64,6 @@ return [
                 return new Model\Page\Preview();
             }
         },
-        'Slider'      => function (): Model\Slider {
-            if (class_exists('\App\Cms\Model\Slider')) {
-                return new \App\Cms\Model\Slider();
-            } else {
-                return new Model\Slider();
-            }
-        },
     ],
     'resources' => [
         'Area'     => function ($mObj): Resource\Area {

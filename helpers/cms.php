@@ -39,25 +39,6 @@ if (!function_exists('cmsBlock')) {
 
 // --------------------------------------------------------------------------
 
-if (!function_exists('cmsSlider')) {
-
-    /**
-     * Returns a CMS slider
-     *
-     * @param int|string|null $sIdSlug The slider's ID or slug
-     *
-     * @return mixed
-     */
-    function cmsSlider(?string $sIdSlug)
-    {
-        /** @var Model\Slider $oModel */
-        $oModel = Factory::model('Slider', Constants::MODULE_SLUG);
-        return $oModel->getByIdOrSlug($sIdSlug);
-    }
-}
-
-// --------------------------------------------------------------------------
-
 if (!function_exists('cmsMenu')) {
 
     /**
