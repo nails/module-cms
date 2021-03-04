@@ -27,10 +27,11 @@ if (!function_exists('cmsBlock')) {
      * @throws FactoryException
      * @throws ModelException
      */
-    function cmsBlock($mIdSlug)
+    function cmsBlock($mIdSlug): string
     {
         /** @var Model\Block $oModel */
         $oModel = Factory::model('Block', Constants::MODULE_SLUG);
+        /** @var Resource\Block $oBlock */
         $oBlock = $oModel->getByIdOrSlug($mIdSlug);
 
         return $oBlock->value ?? '';
@@ -69,7 +70,7 @@ if (!function_exists('cmsPage')) {
      *
      * @return mixed
      */
-    function cmsPage($mIdSlug)
+    function cmsPage($mIdSlug): ?Resource\Page
     {
         /** @var Model\Page $oModel */
         $oModel = Factory::model('Page', Constants::MODULE_SLUG);

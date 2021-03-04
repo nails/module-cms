@@ -73,6 +73,13 @@ return [
                 return new Resource\Area($mObj);
             }
         },
+        'Block'    => function ($mObj): Resource\Block {
+            if (class_exists('\App\Invoice\Resource\Block')) {
+                return new \App\Invoice\Resource\Block($mObj);
+            } else {
+                return new Resource\Block($mObj);
+            }
+        },
         'Menu'     => function ($mObj): Resource\Menu {
             if (class_exists('\App\Invoice\Resource\Menu')) {
                 return new \App\Invoice\Resource\Menu($mObj);

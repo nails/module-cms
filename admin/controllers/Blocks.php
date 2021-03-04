@@ -12,473 +12,148 @@
 
 namespace Nails\Admin\Cms;
 
-use Nails\Admin\Helper;
+use Nails\Common\Exception\NailsException;
+use Nails\Admin\Controller\DefaultController;
 use Nails\Cms\Constants;
-use Nails\Cms\Controller\BaseAdmin;
-use Nails\Cms\Model\Block;
-use Nails\Common\Service\Session;
+use Nails\Common\Exception\ValidationException;
+use Nails\Common\Resource;
+use Nails\Common\Service\Input;
 use Nails\Common\Service\Uri;
 use Nails\Factory;
 
 /**
- * Class Blocks
+ * Class Block
  *
  * @package Nails\Admin\Cms
  */
-class Blocks extends BaseAdmin
+class Block extends DefaultController
 {
-    protected $oBlockModel;
+    const CONFIG_MODEL_NAME           = 'Block';
+    const CONFIG_MODEL_PROVIDER       = Constants::MODULE_SLUG;
+    const CONFIG_PERMISSION           = 'cms:blocks';
+    const CONFIG_SIDEBAR_GROUP        = 'CMS';
+    const CONFIG_SIDEBAR_ICON         = 'fa-file-alt';
+    const CONFIG_INDEX_FIELDS         = [
+        'Label'    => null,
+        'Located'  => 'located',
+        'Type'     => null,
+        'Value'    => null,
+        'Modified' => 'modified',
+    ];
+    const CONFIG_EDIT_READONLY_FIELDS = [
+        'type',
+    ];
+    const CONFIG_CREATE_READONLY_FIELDS = [
+        'value',
+    ];
 
     // --------------------------------------------------------------------------
 
     /**
-     * Announces this controller's navGroups
+     * Block constructor.
      *
-     * @return \Nails\Admin\Factory\Nav
-     */
-    public static function announce()
-    {
-        if (userHasPermission('admin:cms:blocks:manage')) {
-
-            $oNavGroup = Factory::factory('Nav', \Nails\Admin\Constants::MODULE_SLUG);
-            $oNavGroup->setLabel('CMS');
-            $oNavGroup->setIcon('fa-file-alt');
-            $oNavGroup->addAction('Manage Blocks');
-
-            return $oNavGroup;
-        }
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Returns an array of permissions which can be configured for the user
-     *
-     * @return array
-     */
-    public static function permissions(): array
-    {
-        $aPermissions = parent::permissions();
-
-        $aPermissions['manage']  = 'Can manage blocks';
-        $aPermissions['create']  = 'Can create a new block';
-        $aPermissions['edit']    = 'Can edit an existing block';
-        $aPermissions['delete']  = 'Can delete an existing block';
-        $aPermissions['restore'] = 'Can restore a deleted block';
-
-        return $aPermissions;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Construct the controller
+     * @throws NailsException
      */
     public function __construct()
     {
         parent::__construct();
 
-        // --------------------------------------------------------------------------
+        /** @var \Nails\Cms\Model\Block $oModel */
+        $oModel = static::getModel();
 
-        //  Define block types; block types allow for proper validation
-        $this->data['blockTypes'] = [
-            'plaintext' => 'Plain Text',
-            'richtext'  => 'Rich Text',
-            'image'     => 'Image (*.jpg, *.png, *.gif)',
-            'file'      => 'File (*.*)',
-            'number'    => 'Number',
-            'url'       => 'URL',
-            'email'     => 'Email',
-        ];
-    }
+        $this->aConfig['INDEX_FIELDS']['Label'] = function (\Nails\Cms\Resource\Block $oBlock) {
+            return sprintf(
+                '%s (<code>%s</code>)<small>%s</small>',
+                $oBlock->label,
+                $oBlock->slug,
+                $oBlock->description
+            );
+        };
 
-    // --------------------------------------------------------------------------
+        $this->aConfig['INDEX_FIELDS']['Type'] = function (\Nails\Cms\Resource\Block $oBlock) use ($oModel) {
+            return $oModel->getTypes()[$oBlock->type] ?? $oBlock->type;
+        };
 
-    /**
-     * Browse CMS Blocks
-     *
-     * @return void
-     */
-    public function index()
-    {
-        if (!userHasPermission('admin:cms:blocks:manage')) {
-            unauthorised();
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Set method info
-        $this->data['page']->title = 'Manage Blocks';
-
-        // --------------------------------------------------------------------------
-
-        $oModel      = Factory::model('Block', Constants::MODULE_SLUG);
-        $oInput      = Factory::service('Input');
-        $sTableAlias = $oModel->getTableAlias();
-
-        // --------------------------------------------------------------------------
-
-        //  Get pagination and search/sort variables
-        $iPage      = $oInput->get('page') ? $oInput->get('page') : 0;
-        $iPerPage   = $oInput->get('perPage') ? $oInput->get('perPage') : 50;
-        $sSortOn    = $oInput->get('sortOn') ? $oInput->get('sortOn') : $sTableAlias . '.label';
-        $sSortOrder = $oInput->get('sortOrder') ? $oInput->get('sortOrder') : 'desc';
-        $sKeywords  = $oInput->get('keywords') ? $oInput->get('keywords') : '';
-
-        // --------------------------------------------------------------------------
-
-        //  Define the sortable columns
-        $sortColumns = [
-            $sTableAlias . '.label'    => 'Label',
-            $sTableAlias . '.located'  => 'Location',
-            $sTableAlias . '.type'     => 'Type',
-            $sTableAlias . '.created'  => 'Created',
-            $sTableAlias . '.modified' => 'Modified',
-        ];
-
-        // --------------------------------------------------------------------------
-
-        //  Checkbox filters
-        $aCbFilters = [
-            Helper::searchFilterObject(
-                $sTableAlias . '.type',
-                'Type',
-                []
-            ),
-        ];
-
-        foreach ($this->data['blockTypes'] as $sSlug => $sLabel) {
-            $aCbFilters[0]->addOption($sLabel, $sSlug, true);
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Define the $aData variable for the queries
-        $aData = [
-            'sort'      => [
-                [$sSortOn, $sSortOrder],
-            ],
-            'keywords'  => $sKeywords,
-            'cbFilters' => $aCbFilters,
-        ];
-
-        //  Get the items for the page
-        $iTotalRows           = $oModel->countAll($aData);
-        $this->data['blocks'] = $oModel->getAll($iPage, $iPerPage, $aData);
-
-        //  Set Search and Pagination objects for the view
-        $this->data['pagination'] = Helper::paginationObject($iPage, $iPerPage, $iTotalRows);
-        $this->data['search']     = Helper::searchObject(
-            true,
-            $sortColumns,
-            $sSortOn,
-            $sSortOrder,
-            $iPerPage,
-            $sKeywords,
-            $aCbFilters
-        );
-
-        //  Add a header button
-        if (userHasPermission('admin:cms:blocks:create')) {
-            Helper::addHeaderButton('admin/cms/blocks/create', 'Create Block');
-        }
-
-        // --------------------------------------------------------------------------
-
-        Helper::loadView('index');
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Edit a CMS Block
-     *
-     * @return void
-     */
-    public function edit()
-    {
-        if (!userHasPermission('admin:cms:blocks:edit')) {
-            unauthorised();
-        }
-
-        // --------------------------------------------------------------------------
-
-        $oModel = Factory::model('Block', Constants::MODULE_SLUG);
-        $oInput = Factory::service('Input');
-        $oUri   = Factory::service('Uri');
-
-        $this->data['block'] = $oModel->getById($oUri->segment(5));
-
-        if (!$this->data['block']) {
-            show404();
-        }
-
-        // --------------------------------------------------------------------------
-
-        if ($oInput->post()) {
-
-            //  Form Validation
-            $oFormValidation = Factory::service('FormValidation');
-
-            switch ($this->data['block']->type) {
-                case 'email':
-                    $oFormValidation->set_rules('value', '', 'trim|valid_email');
+        $this->aConfig['INDEX_FIELDS']['Value'] = function (\Nails\Cms\Resource\Block $oBlock) use ($oModel) {
+            switch ($oBlock->type) {
+                case $oModel::TYPE_IMAGE:
+                    return img(cdnCrop($oBlock->value, 50, 50));
                     break;
 
-                case 'url':
-                    $oFormValidation->set_rules('value', '', 'trim|valid_url');
-                    break;
-
-                case 'file':
-                case 'image':
-                case 'number':
-                    $oFormValidation->set_rules('value', '', 'numeric');
+                case $oModel::TYPE_FILE:
+                    return anchor(cdnServe($oBlock->value, true), 'Download', 'class="btn btn-xs btn-default"');
                     break;
 
                 default:
-                    $oFormValidation->set_rules('value', '', 'trim');
+                    return character_limiter(strip_tags($oBlock->value), 100);
                     break;
             }
-
-            $oFormValidation->set_message('required', lang('fv_required'));
-
-            if ($oFormValidation->run()) {
-
-                if ($oModel->update($this->data['block']->id, ['value' => $oInput->post('value')])) {
-
-                    /** @var Session $oSession */
-                    $oSession = Factory::service('Session');
-                    $oSession->setFlashData('success', 'Block updated successfully.');
-                    redirect('admin/cms/blocks');
-
-                } else {
-                    $this->data['error'] = 'There was a problem updating the new block.';
-                }
-
-            } else {
-                $this->data['error'] = lang('fv_there_were_errors');
-            }
-        }
-
-        // --------------------------------------------------------------------------
-
-        //  Set method info
-        $this->data['page']->title = 'Edit Block &rsaquo; ' . $this->data['block']->label;
-
-        // --------------------------------------------------------------------------
-
-        //  Fetch data
-        $oLanguageService = Factory::service('Language');
-
-        $this->data['languages']    = $oLanguageService->getAllEnabledFlat();
-        $this->data['default_code'] = $oLanguageService->getDefaultCode();
-
-        // --------------------------------------------------------------------------
-
-        Helper::loadView('edit');
+        };
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * Create a new CMS Block
-     *
-     * @return void
+     * @inheritDoc
      */
-    public function create()
+    protected function loadEditViewData(Resource $oItem = null): void
     {
-        if (!userHasPermission('admin:cms:blocks:create')) {
-            unauthorised();
-        }
+        parent::loadEditViewData($oItem);
+        $this->data['aTypes'] = static::getModel()->getTypes();
+    }
 
-        // --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
-        $oInput = Factory::service('Input');
+    protected function runFormValidation(string $sMode, array $aOverrides = []): void
+    {
+        if ($sMode === static::EDIT_MODE_EDIT) {
 
-        if ($oInput->post()) {
-
-            //  Form Validation
-            $oFormValidation = Factory::service('FormValidation');
-
-            $oFormValidation->set_rules('slug', '', 'required|callback_callbackBlockSlug');
-            $oFormValidation->set_rules('label', '', 'required');
-            $oFormValidation->set_rules('description', '', '');
-            $oFormValidation->set_rules('located', '', '');
-            $oFormValidation->set_rules('type', '', 'required|callback_callbackBlockType');
+            /** @var Input $oInput */
+            $oInput = Factory::service('Input');
+            /** @var \Nails\Cms\Model\Block $oModel */
+            $oModel = static::getModel();
 
             switch ($oInput->post('type')) {
-                case 'email':
-                    $oFormValidation->set_rules('value', '', 'valid_email');
+                case $oModel::TYPE_EMAIL:
+                    if (!valid_email($oInput->post('value'))) {
+                        throw new ValidationException('Block must contain a valid email address.');
+                    }
                     break;
 
-                case 'url':
-                    $oFormValidation->set_rules('value', '', 'valid_url');
+                case $oModel::TYPE_URL:
+                    if (!filter_var($oInput->post('value'), FILTER_VALIDATE_URL)) {
+                        throw new ValidationException('Block must contain a valid URL.');
+                    }
                     break;
 
-                case 'file':
-                case 'image':
-                case 'number':
-                    $oFormValidation->set_rules('value', '', 'numeric');
+                case $oModel::TYPE_FILE:
+                case $oModel::TYPE_IMAGE:
+                case $oModel::TYPE_NUMBER:
+                    if (!is_numeric($oInput->post('value'))) {
+                        throw new ValidationException('Block must be a numeric.');
+                    }
                     break;
 
                 default:
-                    $oFormValidation->set_rules('value', '', '');
                     break;
             }
 
-            $oFormValidation->set_message('required', lang('fv_required'));
-
-            if ($oFormValidation->run($this)) {
-
-                $aBlockData = [
-                    'type'        => $oInput->post('type'),
-                    'slug'        => $oInput->post('slug'),
-                    'label'       => $oInput->post('label'),
-                    'description' => $oInput->post('description'),
-                    'located'     => $oInput->post('located'),
-                    'value'       => $oInput->post('value_' . $oInput->post('type')),
-                ];
-
-                $oModel = Factory::model('Block', Constants::MODULE_SLUG);
-                if ($oModel->create($aBlockData)) {
-
-                    /** @var Session $oSession */
-                    $oSession = Factory::service('Session');
-                    $oSession->setFlashData('success', 'Block created successfully.');
-                    redirect('admin/cms/blocks');
-
-                } else {
-                    $this->data['error'] = 'There was a problem creating the new block. ';
-                    $this->data['error'] .= $oModel->lastError();
-                }
-
-            } else {
-                $this->data['error'] = lang('fv_there_were_errors');
-            }
+        } else {
+            parent::runFormValidation($sMode, $aOverrides);
         }
-
-        // --------------------------------------------------------------------------
-
-        $this->data['page']->title = 'Create Block';
-
-        // --------------------------------------------------------------------------
-
-        $oAsset = Factory::service('Asset');
-        //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
-        $oAsset->load('admin.blocks.create.js', Constants::MODULE_SLUG);
-
-        // --------------------------------------------------------------------------
-
-        Helper::loadView('create');
     }
 
     // --------------------------------------------------------------------------
 
-    public function delete()
+    protected function getPostObject(): array
     {
-        if (!userHasPermission('admin:cms:blocks:delete')) {
-            unauthorised();
-        }
-
-        // --------------------------------------------------------------------------
-
-        /** @var Block $oModel */
-        $oModel = Factory::model('Block', Constants::MODULE_SLUG);
         /** @var Uri $oUri */
         $oUri = Factory::service('Uri');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
 
-        $oBlock = $oModel->getById($oUri->segment(5));
-
-        if (!$oBlock) {
-            $oSession->setFlashData('error', 'Invalid block ID.');
-            redirect('admin/cms/blocks');
-        }
-
-        // --------------------------------------------------------------------------
-
-        if ($oModel->delete($oBlock->id)) {
-            $sStatus = 'success';
-            $sMsg    = 'Block was deleted successfully.';
-        } else {
-            $sStatus = 'error';
-            $sMsg    = 'Failed to delete block. ';
-            $sMsg    .= $oModel->lastError();
-        }
-
-        $oSession->setFlashData($sStatus, $sMsg);
-        redirect('admin/cms/blocks');
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Form validation callback: Validates a block's slug
-     *
-     * @param string &$sSlug The slug to validate/sanitise
-     *
-     * @return boolean
-     */
-    public function callbackBlockSlug(&$sSlug)
-    {
-        $sSlug = trim($sSlug);
-        $sSlug = strtolower($sSlug);
-
-        $oFormValidation = Factory::service('FormValidation');
-        $oModel          = Factory::model('Block', Constants::MODULE_SLUG);
-
-        //  Check slug's characters are ok
-        if (!preg_match('/[^a-z0-9\-\_]/', $sSlug)) {
-
-            $oBlock = $oModel->getBySlug($sSlug);
-
-            if (!$oBlock) {
-                $bResult = true;
-            } else {
-                $oFormValidation->set_message(
-                    'callbackBlockSlug',
-                    'Must be unique'
-                );
-                $bResult = false;
-            }
-
-        } else {
-            $oFormValidation->set_message(
-                'callbackBlockSlug',
-                'Invalid characters: a-z, 0-9, - and _ only, no spaces.'
-            );
-            $bResult = false;
-        }
-        return $bResult;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Form Validation Callback: Validates a block's type
-     *
-     * @param string $sType The type to validate
-     *
-     * @return boolean
-     */
-    public function callbackBlockType($sType)
-    {
-        $sType           = trim($sType);
-        $oFormValidation = Factory::service('FormValidation');
-
-        if ($sType) {
-
-            if (isset($this->data['blockTypes'][$sType])) {
-                return true;
-            } else {
-                $oFormValidation->set_message('callbackBlockType', 'Block type not supported.');
-                return false;
-            }
-
-        } else {
-            $oFormValidation->set_message('callbackBlockType', lang('fv_required'));
-            return false;
-        }
+        return $oInput->post('mode') === 'edit'
+            ? ['value' => $oInput->post('value')]
+            : parent::getPostObject();
     }
 }
