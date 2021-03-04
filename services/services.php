@@ -67,36 +67,36 @@ return [
     ],
     'resources' => [
         'Area'     => function ($mObj): Resource\Area {
-            if (class_exists('\App\Invoice\Resource\Area')) {
-                return new \App\Invoice\Resource\Area($mObj);
+            if (class_exists('\App\Cms\Resource\Area')) {
+                return new \App\Cms\Resource\Area($mObj);
             } else {
                 return new Resource\Area($mObj);
             }
         },
         'Block'    => function ($mObj): Resource\Block {
-            if (class_exists('\App\Invoice\Resource\Block')) {
-                return new \App\Invoice\Resource\Block($mObj);
+            if (class_exists('\App\Cms\Resource\Block')) {
+                return new \App\Cms\Resource\Block($mObj);
             } else {
                 return new Resource\Block($mObj);
             }
         },
         'Menu'     => function ($mObj): Resource\Menu {
-            if (class_exists('\App\Invoice\Resource\Menu')) {
-                return new \App\Invoice\Resource\Menu($mObj);
+            if (class_exists('\App\Cms\Resource\Menu')) {
+                return new \App\Cms\Resource\Menu($mObj);
             } else {
                 return new Resource\Menu($mObj);
             }
         },
         'MenuItem' => function ($mObj): Resource\Menu\Item {
-            if (class_exists('\App\Invoice\Resource\Menu\Item')) {
-                return new \App\Invoice\Resource\Menu\Item($mObj);
+            if (class_exists('\App\Cms\Resource\Menu\Item')) {
+                return new \App\Cms\Resource\Menu\Item($mObj);
             } else {
                 return new Resource\Menu\Item($mObj);
             }
         },
         'Page'     => function ($mObj): Resource\Page {
-            if (class_exists('\App\Invoice\Resource\Page')) {
-                return new \App\Invoice\Resource\Page($mObj);
+            if (class_exists('\App\Cms\Resource\Page')) {
+                return new \App\Cms\Resource\Page($mObj);
             } else {
                 return new Resource\Page($mObj);
             }

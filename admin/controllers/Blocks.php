@@ -18,7 +18,6 @@ use Nails\Cms\Constants;
 use Nails\Common\Exception\ValidationException;
 use Nails\Common\Resource;
 use Nails\Common\Service\Input;
-use Nails\Common\Service\Uri;
 use Nails\Factory;
 
 /**
@@ -77,11 +76,11 @@ class Block extends DefaultController
         $this->aConfig['INDEX_FIELDS']['Value'] = function (\Nails\Cms\Resource\Block $oBlock) use ($oModel) {
             switch ($oBlock->type) {
                 case $oModel::TYPE_IMAGE:
-                    return img(cdnCrop($oBlock->value, 50, 50));
+                    return img(cdnCrop((int) $oBlock->value ?: null, 50, 50));
                     break;
 
                 case $oModel::TYPE_FILE:
-                    return anchor(cdnServe($oBlock->value, true), 'Download', 'class="btn btn-xs btn-default"');
+                    return anchor(cdnServe((int) $oBlock->value ?: null, true), 'Download', 'class="btn btn-xs btn-default"');
                     break;
 
                 default:
@@ -147,8 +146,6 @@ class Block extends DefaultController
 
     protected function getPostObject(): array
     {
-        /** @var Uri $oUri */
-        $oUri = Factory::service('Uri');
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
 
