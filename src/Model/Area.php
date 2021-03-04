@@ -96,7 +96,9 @@ class Area extends Base
     {
         /** @var \Nails\Cms\Resource\Area $oArea */
         $oArea = $this->getByIdOrSlug($mAreaIdSlug);
-        return $oArea->render();
+        return !empty($oArea)
+            ? $oArea->render()
+            : '';
     }
 
     // --------------------------------------------------------------------------
