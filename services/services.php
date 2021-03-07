@@ -101,6 +101,20 @@ return [
                 return new Resource\Page($mObj);
             }
         },
+        'PageData' => function ($mObj): Resource\Page\Data {
+            if (class_exists('\App\Cms\Resource\Page\Data')) {
+                return new \App\Cms\Resource\Page\Data($mObj);
+            } else {
+                return new Resource\Page\Data($mObj);
+            }
+        },
+        'PageDataBreadcrumb' => function ($mObj): Resource\Page\Data\Breadcrumb {
+            if (class_exists('\App\Cms\Resource\Page\Data\Breadcrumb')) {
+                return new \App\Cms\Resource\Page\Data\Breadcrumb($mObj);
+            } else {
+                return new Resource\Page\Data\Breadcrumb($mObj);
+            }
+        },
     ],
     'factories' => [
         'TemplateGroup'  => function () {

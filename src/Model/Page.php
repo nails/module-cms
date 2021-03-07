@@ -13,6 +13,7 @@ namespace Nails\Cms\Model;
 
 use Nails\Cms\Constants;
 use Nails\Cms\Events;
+use Nails\Cms\Service\Template;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
@@ -65,6 +66,20 @@ class Page extends Base
      */
     const DESTRUCTIVE_DELETE = false;
 
+    /**
+     * The default column to sort on
+     *
+     * @var string|null
+     */
+    const DEFAULT_SORT_COLUMN = 'draft_slug';
+
+    /**
+     * The default sort order
+     *
+     * @var string
+     */
+    const DEFAULT_SORT_ORDER = self::SORT_ASC;
+
     // --------------------------------------------------------------------------
 
     /**
@@ -87,15 +102,30 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
+     * Page constructor.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->searchableFields[] = 'draft_title';
+        $this->searchableFields[] = 'draft_template_data';
+        $this->searchableFields[] = 'published_title';
+        $this->searchableFields[] = 'published_template_data';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Creates a new CMS Page
      *
      * @param array $aData         The data to create the page with
      * @param bool  $bReturnObject Whether to return the ID or the object
      *
-     * @return bool|mixed
+     * @return bool|int|\Nails\Cms\Resource\Page
      */
     public function create(array $aData = [], $bReturnObject = false)
     {
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->transaction()->start();
 
@@ -124,7 +154,7 @@ class Page extends Base
     /**
      * Update a CMS Page
      *
-     * @param array|int $mIds
+     * @param int[]|int $mIds
      * @param array     $aData
      *
      * @return bool
@@ -134,9 +164,9 @@ class Page extends Base
     {
         if (is_array($mIds)) {
             throw new NailsException('This model does not support updating multiple items at once');
-        } else {
-            $iId = $mIds;
         }
+
+        $iId = $mIds;
 
         //  Fetch the current version of this page, for reference.
         $oCurrent = $this->getById($iId);
@@ -148,7 +178,7 @@ class Page extends Base
 
         // --------------------------------------------------------------------------
 
-        //  Start the transaction
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->transaction()->start();
 
@@ -349,12 +379,11 @@ class Page extends Base
             return true;
 
         } else {
-
             $this->setError('Failed to update page object.');
             $oDb->transaction()->rollback();
-
-            return false;
         }
+
+        return false;
     }
 
     // --------------------------------------------------------------------------
@@ -375,31 +404,6 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Render a template with the provided widgets and additional data
-     *
-     * @param string $sTemplate        The template to render
-     * @param array  $oTemplateData    The template data (i.e. areas and widgets)
-     * @param array  $oTemplateOptions The template options
-     *
-     * @return mixed                    String (the rendered template) on success, false on failure
-     */
-    public function render($sTemplate, $oTemplateData = [], $oTemplateOptions = [])
-    {
-        $oTemplateService = Factory::service('Template', Constants::MODULE_SLUG);
-        $oTemplate        = $oTemplateService->getBySlug($sTemplate, 'RENDER');
-
-        if (!$oTemplate) {
-            $this->setError('"' . $sTemplate . '" is not a valid template.');
-
-            return false;
-        }
-
-        return $oTemplate->render((array) $oTemplateData, (array) $oTemplateOptions);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
      * Publish a page
      *
      * @param int $iId The ID of the page to publish
@@ -410,6 +414,7 @@ class Page extends Base
     {
         //  Check the page is valid
         $oPage = $this->getById($iId);
+        /** @var \DateTime $oDate */
         $oDate = Factory::factory('DateTime');
 
         if (!$oPage) {
@@ -588,97 +593,6 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Applies common conditionals
-     *
-     * This method applies the conditionals which are common across the get_*()
-     * methods and the count() method.
-     *
-     * @param array $data Data passed from the calling method
-     *
-     * @return void
-     **/
-    public function getCountCommon(array $data = []): void
-    {
-        if (empty($data['select'])) {
-
-            $data['select'] = [
-
-                //  Main Table
-                $this->getTableAlias() . '.id',
-                $this->getTableAlias() . '.published_hash',
-                $this->getTableAlias() . '.published_slug',
-                $this->getTableAlias() . '.published_slug_end',
-                $this->getTableAlias() . '.published_parent_id',
-                $this->getTableAlias() . '.published_template',
-                $this->getTableAlias() . '.published_template_data',
-                $this->getTableAlias() . '.published_template_options',
-                $this->getTableAlias() . '.published_title',
-                $this->getTableAlias() . '.published_breadcrumbs',
-                $this->getTableAlias() . '.published_seo_title',
-                $this->getTableAlias() . '.published_seo_description',
-                $this->getTableAlias() . '.published_seo_keywords',
-                $this->getTableAlias() . '.published_seo_image_id',
-                $this->getTableAlias() . '.draft_hash',
-                $this->getTableAlias() . '.draft_slug',
-                $this->getTableAlias() . '.draft_slug_end',
-                $this->getTableAlias() . '.draft_parent_id',
-                $this->getTableAlias() . '.draft_template',
-                $this->getTableAlias() . '.draft_template_data',
-                $this->getTableAlias() . '.draft_template_options',
-                $this->getTableAlias() . '.draft_title',
-                $this->getTableAlias() . '.draft_breadcrumbs',
-                $this->getTableAlias() . '.draft_seo_title',
-                $this->getTableAlias() . '.draft_seo_description',
-                $this->getTableAlias() . '.draft_seo_keywords',
-                $this->getTableAlias() . '.draft_seo_image_id',
-                $this->getTableAlias() . '.is_published',
-                $this->getTableAlias() . '.is_deleted',
-                $this->getTableAlias() . '.created',
-                $this->getTableAlias() . '.created_by',
-                $this->getTableAlias() . '.modified',
-                $this->getTableAlias() . '.modified_by',
-
-                //  Join table
-                'ue.email',
-                'u.first_name',
-                'u.last_name',
-                'u.profile_img',
-                'u.gender',
-            ];
-        }
-
-        $oDb = Factory::service('Database');
-        $oDb->join(Config::get('NAILS_DB_PREFIX') . 'user u', 'u.id = ' . $this->getTableAlias() . '.modified_by', 'LEFT');
-        $oDb->join(Config::get('NAILS_DB_PREFIX') . 'user_email ue', 'ue.user_id = u.id AND ue.is_primary = 1', 'LEFT');
-
-        if (empty($data['sort'])) {
-
-            $data['sort'] = [$this->getTableAlias() . '.draft_slug', 'asc'];
-        }
-
-        if (!empty($data['keywords'])) {
-
-            if (empty($data['or_like'])) {
-
-                $data['or_like'] = [];
-            }
-
-            $data['or_like'][] = [
-                'column' => $this->getTableAlias() . '.draft_title',
-                'value'  => $data['keywords'],
-            ];
-            $data['or_like'][] = [
-                'column' => $this->getTableAlias() . '.draft_template_data',
-                'value'  => $data['keywords'],
-            ];
-        }
-
-        parent::getCountCommon($data);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
      * Gets all pages, nested
      *
      * @param boolean $useDraft Whether to use the published or draft version of pages
@@ -835,7 +749,8 @@ class Page extends Base
     public function getIdsOfChildren($iPageId, $sFormat = 'ID')
     {
         $aOut = [];
-        $oDb  = Factory::service('Database');
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
 
         $oDb->select('id,draft_slug,draft_title,is_published');
         $oDb->where('draft_parent_id', $iPageId);
@@ -931,16 +846,13 @@ class Page extends Base
     public function getTopLevel($page = null, $perPage = null, $data = [], $includeDeleted = false)
     {
         if (empty($data['where'])) {
-
             $data['were'] = [];
         }
 
         if (!empty($data['useDraft'])) {
-
             $data['where'][] = ['draft_parent_id', null];
 
         } else {
-
             $data['where'][] = ['published_parent_id', null];
         }
 
@@ -1016,98 +928,6 @@ class Page extends Base
         }
 
         return $oPage;
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Formats a single object
-     *
-     * The getAll() method iterates over each returned item with this method so as to
-     * correctly format the output. Use this to cast integers and booleans and/or organise data into objects.
-     *
-     * @param object $oObj      A reference to the object being formatted.
-     * @param array  $aData     The same data array which is passed to _getcount_common, for reference if needed
-     * @param array  $aIntegers Fields which should be cast as integers if numerical and not null
-     * @param array  $aBools    Fields which should be cast as booleans if not null
-     * @param array  $aFloats   Fields which should be cast as floats if not null
-     *
-     * @return void
-     */
-    protected function formatObject(
-        &$oObj,
-        array $aData = [],
-        array $aIntegers = [],
-        array $aBools = [],
-        array $aFloats = []
-    ) {
-
-        parent::formatObject($oObj, $aData, $aIntegers, $aBools, $aFloats);
-
-        //  Loop properties and sort into published data and draft data
-        $oObj->published = new \stdClass();
-        $oObj->draft     = new \stdClass();
-
-        foreach ($oObj as $property => $value) {
-
-            preg_match('/^(published|draft)_(.*)$/', $property, $match);
-
-            if (!empty($match[1]) && !empty($match[2]) && $match[1] == 'published') {
-
-                $oObj->published->{$match[2]} = $value;
-                unset($oObj->{$property});
-
-            } elseif (!empty($match[1]) && !empty($match[2]) && $match[1] == 'draft') {
-
-                $oObj->draft->{$match[2]} = $value;
-                unset($oObj->{$property});
-            }
-        }
-
-        //  Other data
-        $oObj->published->depth = count(explode('/', $oObj->published->slug)) - 1;
-        $oObj->published->url   = siteUrl($oObj->published->slug);
-        $oObj->draft->depth     = count(explode('/', $oObj->draft->slug)) - 1;
-        $oObj->draft->url       = siteUrl($oObj->draft->slug);
-
-        //  Decode JSON
-        $oObj->published->template_data    = json_decode($oObj->published->template_data);
-        $oObj->draft->template_data        = json_decode($oObj->draft->template_data);
-        $oObj->published->template_options = json_decode($oObj->published->template_options);
-        $oObj->draft->template_options     = json_decode($oObj->draft->template_options);
-        $oObj->published->breadcrumbs      = json_decode($oObj->published->breadcrumbs) ?: [];
-        $oObj->draft->breadcrumbs          = json_decode($oObj->draft->breadcrumbs) ?: [];
-
-        //  Unpublished changes?
-        $oObj->has_unpublished_changes = $oObj->is_published && $oObj->draft->hash != $oObj->published->hash;
-
-        // --------------------------------------------------------------------------
-
-        //  Owner
-        $modifiedBy = (int) (is_object($oObj->modified_by) ? $oObj->modified_by->id : $oObj->modified_by);
-
-        $oObj->modified_by              = new \stdClass();
-        $oObj->modified_by->id          = $modifiedBy;
-        $oObj->modified_by->first_name  = isset($oObj->first_name) ? $oObj->first_name : '';
-        $oObj->modified_by->last_name   = isset($oObj->last_name) ? $oObj->last_name : '';
-        $oObj->modified_by->email       = isset($oObj->email) ? $oObj->email : '';
-        $oObj->modified_by->profile_img = isset($oObj->profile_img) ? $oObj->profile_img : '';
-        $oObj->modified_by->gender      = isset($oObj->gender) ? $oObj->gender : '';
-
-        unset($oObj->first_name);
-        unset($oObj->last_name);
-        unset($oObj->email);
-        unset($oObj->profile_img);
-        unset($oObj->gender);
-        unset($oObj->template_data);
-        unset($oObj->template_options);
-
-        // --------------------------------------------------------------------------
-
-        //  SEO Title; If not set then fallback to the page title
-        if (empty($oObj->seo_title) && !empty($oObj->title)) {
-            $oObj->seo_title = $oObj->title;
-        }
     }
 
     // --------------------------------------------------------------------------
@@ -1224,11 +1044,9 @@ class Page extends Base
         $page = $this->getById($iPageId);
 
         if ($page) {
-
             return $usePublished ? $page->published->url : $page->draft->url;
 
         } else {
-
             return false;
         }
     }

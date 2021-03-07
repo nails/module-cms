@@ -44,6 +44,11 @@ class Render extends Base
     protected $oPageModel;
 
     /**
+     * @var \Nails\Cms\Model\Page\Preview
+     */
+    protected $oPagePreviewModel;
+
+    /**
      * @var int
      */
     protected $iHomepageId;
@@ -59,10 +64,12 @@ class Render extends Base
 
         // --------------------------------------------------------------------------
 
-        /** @var \Nails\Cms\Model\Page oPageModel */
-        $this->oPageModel = Factory::model('Page', Constants::MODULE_SLUG);
         /** @var \Nails\Common\Service\Uri $oUri */
         $oUri = Factory::service('Uri');
+        /** @var \Nails\Cms\Model\Page oPageModel */
+        $this->oPageModel = Factory::model('Page', Constants::MODULE_SLUG);
+        /** @var \Nails\Cms\Model\Page\Preview $oPagePreviewModel */
+        $this->oPagePreviewModel = Factory::model('PagePreview', Constants::MODULE_SLUG);
 
         get_instance()->lang->load('cms');
 
@@ -82,33 +89,26 @@ class Render extends Base
      */
     public function page()
     {
-        if ($this->bIsPreview) {
-            /** @var \Nails\Cms\Model\Page\Preview $oPagePreviewModel */
-            $oPagePreviewModel = Factory::model('PagePreview', Constants::MODULE_SLUG);
-            $oPage             = $oPagePreviewModel->getById($this->iPageId);
-        } else {
-            $oPage = $this->oPageModel->getById($this->iPageId);
-        }
-
-        if (!$oPage || $oPage->is_deleted) {
-            show404();
-        }
+        /** @var \Nails\Cms\Resource\Page $oPage */
+        $oPage = $this->bIsPreview
+            ? $this->oPagePreviewModel->getById($this->iPageId)
+            : $this->oPageModel->getById($this->iPageId);
 
         // --------------------------------------------------------------------------
 
-        //  If a page is not published and not being previewed, show404()
-        if (!$oPage->is_published && !$this->bIsPreview) {
+        if (!$oPage || $oPage->is_deleted) {
+            show404();
+
+        } elseif (!$oPage->is_published && !$this->bIsPreview) {
             show404();
         }
 
         // --------------------------------------------------------------------------
 
         //  Determine which data to use
-        if ($this->bIsPreview) {
-            $oData = $oPage->draft;
-        } else {
-            $oData = $oPage->published;
-        }
+        $oData = $this->bIsPreview
+            ? $oPage->draft
+            : $oPage->published;
 
         $this->data['oCmsPage']     =& $oPage;
         $this->data['oCmsPageData'] =& $oData;
@@ -168,17 +168,12 @@ class Render extends Base
 
         // --------------------------------------------------------------------------
 
-        //  Actually render
-        $sRenderedHtml = $this->oPageModel->render($oData->template, $oData->template_data, $oData->template_options);
-        if ($sRenderedHtml !== false) {
-
-            /** @var \Nails\Common\Service\Output $oOutput */
-            $oOutput = Factory::service('Output');
-            $oOutput->setOutput($sRenderedHtml);
-
-        } else {
-            throw new RenderException('Failed to render CMS Page: ' . $this->oPageModel->lastError(), 1);
-        }
+        /** @var \Nails\Common\Service\Output $oOutput */
+        $oOutput = Factory::service('Output');
+        $oOutput
+            ->setOutput(
+                $oPage->render(!$this->bIsPreview)
+            );
     }
 
     // --------------------------------------------------------------------------
