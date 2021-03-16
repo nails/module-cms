@@ -32,7 +32,7 @@ class Menu extends DefaultController
 {
     const CONFIG_MODEL_NAME     = 'Menu';
     const CONFIG_MODEL_PROVIDER = Constants::MODULE_SLUG;
-    const CONFIG_PERMISSION     = 'cms:menus';
+    const CONFIG_PERMISSION     = 'cms:menu';
     const CONFIG_SIDEBAR_GROUP  = 'CMS';
     const CONFIG_SIDEBAR_ICON   = 'fa-file-alt';
 

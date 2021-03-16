@@ -29,7 +29,7 @@ class Block extends DefaultController
 {
     const CONFIG_MODEL_NAME           = 'Block';
     const CONFIG_MODEL_PROVIDER       = Constants::MODULE_SLUG;
-    const CONFIG_PERMISSION           = 'cms:blocks';
+    const CONFIG_PERMISSION           = 'cms:block';
     const CONFIG_SIDEBAR_GROUP        = 'CMS';
     const CONFIG_SIDEBAR_ICON         = 'fa-file-alt';
     const CONFIG_INDEX_FIELDS         = [
