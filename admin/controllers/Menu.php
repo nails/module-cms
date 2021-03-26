@@ -79,7 +79,7 @@ class Menu extends DefaultController
 
         $oAsset
             ->load('admin.min.css', Constants::MODULE_SLUG)
-            ->load('nestedSortable/jquery.ui.nestedSortable.js', 'NAILS-BOWER')
+            ->load('https://cdnjs.cloudflare.com/ajax/libs/nestedSortable/1.3.4/jquery.ui.nestedSortable.min.js')
             //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
             ->load('admin.menus.edit.js', Constants::MODULE_SLUG)
             ->library('MUSTACHE')
