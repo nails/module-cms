@@ -1,4 +1,4 @@
-/* global domElement, Mustache, _nails, _nails_admin */
+/* global domElement, Mustache */
 var tplPanel     = $('.tpl-panel', domElement).first().html();
 var tplField     = $('.tpl-fieldset', domElement).first().html();
 var targetPanels = $('ol.nails-cms-widget-editor-accordion li', domElement).last();

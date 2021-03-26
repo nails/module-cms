@@ -1,4 +1,4 @@
-/* global domElement, Mustache, _nails, _nails_admin */
+/* global domElement, Mustache */
 var tplTab       = $('.tpl-tab', domElement).first().html();
 var tplField     = $('.tpl-fieldset', domElement).first().html();
 var targetTabs   = $('ol.nails-cms-widget-editor-tabs li', domElement).last();
