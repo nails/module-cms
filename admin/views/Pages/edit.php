@@ -293,7 +293,7 @@ $oInput = \Nails\Factory::service('Input');
     </fieldset>
     <div class="admin-floating-controls">
         <input type="hidden" name="action" value="" id="input-action" />
-        <button id="action-save" class="btn btn-primary hint--top" aria-label="Your changes will be saved so you can come back later, but won't be published on site.">
+        <button id="action-save" class="btn btn-primary hint--top-right" aria-label="Your changes will be saved so you can come back later, but won't be published on site.">
             Save <span class="hidden-xs">Changes</span>
         </button>
         <button id="action-publish" class="btn btn-success hint--top" aria-label="Your changes will be published on site and will take hold immediately.">

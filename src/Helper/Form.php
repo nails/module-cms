@@ -42,7 +42,7 @@ class Form
         <button type="button" class="btn btn-primary btn-sm open-editor" data-key="$sKey">
         <span class="fa $sButtonIcon">&nbsp;</span> $sButtonText
         </button>
-EOT;
+        EOT;
     }
 
     // --------------------------------------------------------------------------
