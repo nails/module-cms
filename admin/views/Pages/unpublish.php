@@ -54,13 +54,18 @@
 
         ?>
     </fieldset>
-    <div class="admin-floating-controls">
-        <button type="submit" class="btn btn-warning">
-            Unpublish Page
-        </button>
-        <a href="<?=$sReturnTo?>" class="btn btn-default pull-right">
-            Cancel
-        </a>
-    </div>
-    <?=form_close()?>
+    <?php
+
+    echo \Nails\Admin\Helper::floatingControls([
+        'save' => [
+            'text'  => 'Unpublish Page',
+            'class' => 'btn btn-warning',
+        ],
+        'html' => [
+            'center' => anchor($sReturnTo, 'Cancel', 'class="btn btn-default pull-right"'),
+        ],
+    ]);
+    echo form_close();
+
+    ?>
 </div>

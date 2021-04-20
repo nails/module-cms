@@ -45,13 +45,18 @@
 
         ?>
     </fieldset>
-    <div class="admin-floating-controls">
-        <button type="submit" class="btn btn-danger">
-            Delete Page
-        </button>
-        <a href="<?=$sReturnTo?>" class="btn btn-default pull-right">
-            Cancel
-        </a>
-    </div>
-    <?=form_close()?>
+    <?php
+
+    echo \Nails\Admin\Helper::floatingControls([
+        'save' => [
+            'text'  => 'Delete Page',
+            'class' => 'btn btn-danger',
+        ],
+        'html' => [
+            'center' => anchor($sReturnTo, 'Cancel', 'class="btn btn-default pull-right"'),
+        ],
+    ]);
+    echo form_close();
+
+    ?>
 </div>
