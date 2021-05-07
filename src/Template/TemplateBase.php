@@ -17,6 +17,11 @@ use Nails\Config;
 use Nails\Factory;
 use Nails\Functions;
 
+/**
+ * Class TemplateBase
+ *
+ * @package Nails\Cms\Template
+ */
 abstract class TemplateBase
 {
     /**
@@ -353,6 +358,8 @@ abstract class TemplateBase
         //  Process each widget area and render the HTML
         $aWidgetAreas  = $this->getWidgetAreas();
         $aRenderedData = [];
+
+        /** @var \Nails\Cms\Service\Widget $oWidgetService */
         $oWidgetService  = Factory::service('Widget', Constants::MODULE_SLUG);
 
         foreach ($aWidgetAreas as $sAreaSlug => $oWidgetArea) {
@@ -386,9 +393,9 @@ abstract class TemplateBase
      * @param array  $aTplOptions The selected template options
      * @param array  $aTplData    The data to render the view with
      *
-     * @return mixed|string
+     * @return string
      */
-    protected function loadView($sView, array $aTplOptions, array $aTplData)
+    protected function loadView($sView, array $aTplOptions, array $aTplData): string
     {
         $sPath = static::getFilePath($sView . '.php');
         if (!empty($sPath)) {

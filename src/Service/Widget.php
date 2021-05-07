@@ -14,6 +14,7 @@ namespace Nails\Cms\Service;
 
 use Nails\Cms\Constants;
 use Nails\Cms\Exception\Widget\NotFoundException;
+use Nails\Cms\Widget\WidgetBase;
 use Nails\Common\Helper\Directory;
 use Nails\Components;
 use Nails\Factory;
@@ -28,7 +29,7 @@ class Widget
     /**
      * The loaded widgets
      *
-     * @var array
+     * @var \Nails\Cms\Widget\WidgetGroup[]
      */
     protected $aLoadedWidgets;
 
@@ -40,7 +41,7 @@ class Widget
      * @param bool $bLoadAssets Whether or not to load widget's assets, and if so whether EDITOR or RENDER assets.
      *
      * @throws NotFoundException
-     * @return array
+     * @return \Nails\Cms\Widget\WidgetGroup[]
      */
     public function getAvailable($bLoadAssets = false, $bIncludeHidden = false)
     {
@@ -164,9 +165,9 @@ class Widget
      * @param string $sSlug       The widget's slug
      * @param string $sLoadAssets Whether or not to load the widget's assets, and if so whether EDITOR or RENDER assets.
      *
-     * @return mixed
+     * @return WidgetBase|null
      */
-    public function getBySlug($sSlug, $sLoadAssets = false)
+    public function getBySlug($sSlug, $sLoadAssets = false): ?WidgetBase
     {
         $aWidgetGroups = $this->getAvailable(false, true);
 
@@ -187,7 +188,7 @@ class Widget
             }
         }
 
-        return false;
+        return null;
     }
 
     // --------------------------------------------------------------------------
@@ -201,16 +202,15 @@ class Widget
      */
     protected function loadAssets($aAssets = [])
     {
+        /** @var \Nails\Common\Service\Asset $oAsset */
         $oAsset = Factory::service('Asset');
-        foreach ($aAssets as $aAsset) {
 
+        foreach ($aAssets as $aAsset) {
             if (is_array($aAsset)) {
 
-                if (!empty($aAsset[1])) {
-                    $bIsNails = $aAsset[1];
-                } else {
-                    $bIsNails = false;
-                }
+                $bIsNails = !empty($aAsset[1])
+                    ? $aAsset[1]
+                    : false;
 
                 $oAsset->load($aAsset[0], $bIsNails);
 

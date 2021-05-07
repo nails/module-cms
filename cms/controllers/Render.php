@@ -170,10 +170,9 @@ class Render extends Base
 
         /** @var \Nails\Common\Service\Output $oOutput */
         $oOutput = Factory::service('Output');
-        $oOutput
-            ->setOutput(
-                $oPage->render(!$this->bIsPreview)
-            );
+        $oOutput->setOutput(
+            $oPage->render(!$this->bIsPreview)
+        );
     }
 
     // --------------------------------------------------------------------------

@@ -14,19 +14,28 @@ namespace Nails\Cms\Service;
 
 use Nails\Cms\Constants;
 use Nails\Cms\Exception\Template\NotFoundException;
+use Nails\Cms\Template\TemplateBase;
 use Nails\Common\Helper\Directory;
 use Nails\Components;
 use Nails\Factory;
 
+/**
+ * Class Template
+ *
+ * @package Nails\Cms\Service
+ */
 class Template
 {
+    /** @var \Nails\Cms\Template\TemplateGroup[] */
     protected $aLoadedTemplates;
+
+    /** @var array[] */
     protected $aTemplateDirs;
 
     // --------------------------------------------------------------------------
 
     /**
-     * Construct the model
+     * Template constructor.
      */
     public function __construct()
     {
@@ -44,7 +53,6 @@ class Template
          * Load App templates afterwards so that they may override the module
          * supplied ones.
          */
-
         $this->aTemplateDirs[] = [
             'namespace' => 'App\\',
             'path'      => NAILS_APP_PATH . 'application/modules/cms/templates/',
@@ -59,7 +67,7 @@ class Template
      * @param string $loadAssets Whether or not to load template's assets, and if so whether EDITOR or RENDER assets.
      *
      * @throws NotFoundException
-     * @return array
+     * @return \Nails\Cms\Template\TemplateGroup[]
      */
     public function getAvailable($loadAssets = '')
     {
@@ -182,9 +190,9 @@ class Template
      * @param string  $sSlug       The template's slug
      * @param boolean $sLoadAssets Whether or not to load the template's assets, and if so whether EDITOR or RENDER assets.
      *
-     * @return mixed
+     * @return TemplateBase|null
      */
-    public function getBySlug($sSlug, $sLoadAssets = false)
+    public function getBySlug($sSlug, $sLoadAssets = false): ?TemplateBase
     {
         $oTemplateGroups = $this->getAvailable();
 
@@ -207,7 +215,7 @@ class Template
             }
         }
 
-        return false;
+        return null;
     }
 
     // --------------------------------------------------------------------------
@@ -221,24 +229,19 @@ class Template
      */
     protected function loadAssets($aAssets = [])
     {
+        /** @var \Nails\Common\Service\Asset $oAsset */
         $oAsset = Factory::service('Asset');
-        foreach ($aAssets as $aAsset) {
 
+        foreach ($aAssets as $aAsset) {
             if (is_array($aAsset)) {
 
-                if (!empty($aAsset[1])) {
-
-                    $bIsNails = $aAsset[1];
-
-                } else {
-
-                    $bIsNails = false;
-                }
+                $bIsNails = !empty($aAsset[1])
+                    ? $aAsset[1]
+                    : false;
 
                 $oAsset->load($aAsset[0], $bIsNails);
 
             } elseif (is_string($aAsset)) {
-
                 $oAsset->load($aAsset);
             }
         }
