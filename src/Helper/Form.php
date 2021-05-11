@@ -25,11 +25,11 @@ class Form
 
     public static function cms_widgets_button(array $aConfig)
     {
-        $sKey        = ArrayHelper::getFromArray('key', $aConfig, []);
-        $sId         = ArrayHelper::getFromArray('id', $aConfig, '');
-        $sDefault    = ArrayHelper::getFromArray('default', $aConfig, []);
-        $sButtonIcon = ArrayHelper::getFromArray('button_text', $aConfig, 'fa-cogs');
-        $sButtonText = ArrayHelper::getFromArray('button_text', $aConfig, 'Open Widget Editor');
+        $sKey        = ArrayHelper::get('key', $aConfig, []);
+        $sId         = ArrayHelper::get('id', $aConfig, '');
+        $sDefault    = ArrayHelper::get('default', $aConfig, []);
+        $sButtonIcon = ArrayHelper::get('button_text', $aConfig, 'fa-cogs');
+        $sButtonText = ArrayHelper::get('button_text', $aConfig, 'Open Widget Editor');
 
         if (!is_string($sDefault)) {
             $sDefault = json_encode($sDefault) ?? '[]';
