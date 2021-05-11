@@ -68,12 +68,18 @@ class Block extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Block constructor.
+     * Returns the searchable columns for this module
+     *
+     * @return string[]
      */
-    public function __construct()
+    public function getSearchableColumns(): array
     {
-        parent::__construct();
-        $this->searchableFields = ['label', 'value', 'located', 'description'];
+        return [
+            'label',
+            'value',
+            'located',
+            'description',
+        ];
     }
 
     // --------------------------------------------------------------------------

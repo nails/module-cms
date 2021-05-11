@@ -57,13 +57,18 @@ class Area extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Area constructor.
+     * Returns the searchable columns for this module
+     *
+     * @return string[]
      */
-    public function __construct()
+    public function getSearchableColumns(): array
     {
-        parent::__construct();
-        $this->searchableFields[] = 'slug';
-        $this->searchableFields[] = 'description';
+        return [
+            'id',
+            'label',
+            'slug',
+            'description'
+        ];
     }
 
     // --------------------------------------------------------------------------

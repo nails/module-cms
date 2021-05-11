@@ -89,28 +89,23 @@ class Page extends Base
      */
     protected $tableSlugColumn = 'draft_slug';
 
-    /**
-     * The columns which should be included when searching by keyword
-     *
-     * @var array
-     */
-    protected $searchableFields = [
-        'draft_title',
-        'draft_template_data',
-    ];
-
     // --------------------------------------------------------------------------
 
     /**
-     * Page constructor.
+     * Returns the searchable columns for this module
+     *
+     * @return string[]
      */
-    public function __construct()
+    public function getSearchableColumns(): array
     {
-        parent::__construct();
-        $this->searchableFields[] = 'draft_title';
-        $this->searchableFields[] = 'draft_template_data';
-        $this->searchableFields[] = 'published_title';
-        $this->searchableFields[] = 'published_template_data';
+        return [
+            'id',
+            'label',
+            'draft_title',
+            'draft_template_data',
+            'published_title',
+            'published_template_data',
+        ];
     }
 
     // --------------------------------------------------------------------------
