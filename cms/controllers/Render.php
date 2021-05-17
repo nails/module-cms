@@ -140,7 +140,7 @@ class Render extends Base
         }
 
         if ($oData->seo_keywords) {
-            $this->oMetaData->setKeywords(explode(',', $oData->seo_keywords));
+            $this->oMetaData->setKeywords(preg_split('/[,; ]/', $oData->seo_keywords));
         }
 
         if ($oData->seo_image_id) {
