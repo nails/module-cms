@@ -189,12 +189,12 @@ class Render extends Base
      */
     public function preview()
     {
-        if (userHasPermission('admin:cms:pages:edit')) {
-            $this->bIsPreview = true;
-            $this->page();
-        } else {
+        if (!userHasPermission('admin:cms:pages:edit')) {
             show404();
         }
+
+        $this->bIsPreview = true;
+        $this->page();
     }
 
     // --------------------------------------------------------------------------
