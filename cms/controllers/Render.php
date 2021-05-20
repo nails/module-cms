@@ -214,7 +214,7 @@ class Render extends Base
             $this->iPageId     = $oHomepage->id;
             $this->page();
         } else {
-            throw new NailsException('No homepage has been defined.');
+            throw new RenderException\HomepageNotDefinedException('No homepage has been defined.');
         }
     }
 
