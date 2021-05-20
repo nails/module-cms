@@ -18,6 +18,7 @@ use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Model\Base;
+use Nails\Cms\Resource;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\Event;
 use Nails\Common\Service\Routes;
@@ -92,15 +93,12 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Returns the searchable columns for this module
-     *
+     * @inheritDoc
      * @return string[]
      */
     public function getSearchableColumns(): array
     {
         return [
-            'id',
-            'label',
             'draft_title',
             'draft_template_data',
             'published_title',
@@ -116,7 +114,7 @@ class Page extends Base
      * @param array $aData         The data to create the page with
      * @param bool  $bReturnObject Whether to return the ID or the object
      *
-     * @return bool|int|\Nails\Cms\Resource\Page
+     * @return bool|int|Resource\Page
      */
     public function create(array $aData = [], $bReturnObject = false)
     {
@@ -403,9 +401,9 @@ class Page extends Base
      *
      * @param int $iId The ID of the page to publish
      *
-     * @return boolean
+     * @return bool
      */
-    public function publish($iId)
+    public function publish(int $iId): bool
     {
         //  Check the page is valid
         $oPage = $this->getById($iId);
@@ -543,7 +541,16 @@ class Page extends Base
 
     // --------------------------------------------------------------------------
 
-    public function unpublish(int $iId)
+    /**
+     * Unpublish a page
+     *
+     * @param int $iId The page to unpublish
+     *
+     * @return bool
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    public function unpublish(int $iId): bool
     {
         /** @var Database $oDb */
         $oDb = Factory::service('Database');
@@ -590,13 +597,13 @@ class Page extends Base
     /**
      * Gets all pages, nested
      *
-     * @param boolean $useDraft Whether to use the published or draft version of pages
+     * @param bool $bUseDraft Whether to use the published or draft version of pages
      *
      * @return array
      */
-    public function getAllNested($useDraft = true)
+    public function getAllNested(bool $bUseDraft = true): array
     {
-        return $this->nestPages($this->getAll(), null, $useDraft);
+        return $this->nestPages($this->getAll(), null, $bUseDraft);
     }
 
     // --------------------------------------------------------------------------
@@ -604,8 +611,8 @@ class Page extends Base
     /**
      * Get all pages nested, but as a flat array
      *
-     * @param string  $sSeparator               The separator to use between pages
-     * @param boolean $bMurderParentsOfChildren Whether to include parents in the result
+     * @param string $sSeparator               The separator to use between pages
+     * @param bool   $bMurderParentsOfChildren Whether to include parents in the result
      *
      * @return array
      */
@@ -654,28 +661,27 @@ class Page extends Base
      * Nests pages
      * Hat tip to Timur; http://stackoverflow.com/a/9224696/789224
      *
-     * @param array   &$list     The pages to nest
-     * @param int      $parentId The parent ID of the page
-     * @param boolean  $useDraft Whether to use published data or draft data
+     * @param array   &$aList     The pages to nest
+     * @param int|null $iParentId The parent ID of the page
+     * @param bool     $bUseDraft Whether to use published data or draft data
      *
      * @return array
      */
-    protected function nestPages(&$list, $parentId = null, $useDraft = true)
+    protected function nestPages(array &$aList, int $iParentId = null, bool $bUseDraft = true): array
     {
-        $result = [];
+        $aResult = [];
 
-        for ($i = 0, $c = count($list); $i < $c; $i++) {
+        for ($i = 0, $c = count($aList); $i < $c; $i++) {
 
-            $curParentId = $useDraft ? $list[$i]->draft->parent_id : $list[$i]->published->parent_id;
+            $iCurParentId = $bUseDraft ? $aList[$i]->draft->parent_id : $aList[$i]->published->parent_id;
 
-            if ($curParentId == $parentId) {
-
-                $list[$i]->children = $this->nestPages($list, $list[$i]->id, $useDraft);
-                $result[]           = $list[$i];
+            if ($iCurParentId == $iParentId) {
+                $aList[$i]->children = $this->nestPages($aList, $aList[$i]->id, $bUseDraft);
+                $aResult[]           = $aList[$i];
             }
         }
 
-        return $result;
+        return $aResult;
     }
 
     // --------------------------------------------------------------------------
@@ -683,15 +689,15 @@ class Page extends Base
     /**
      * Find the parents of a page
      *
-     * @param int        $parentId   The page to find parents for
-     * @param \stdClass &$source     The source page
-     * @param string     $sSeparator The separator to use
+     * @param int    $iParentId  The page to find parents for
+     * @param array &$aSources   The source pages
+     * @param string $sSeparator The separator to use
      *
      * @return string
      */
-    protected function findParents($parentId, &$source, $sSeparator)
+    protected function findParents(int $iParentId, array &$aSources, string $sSeparator): string
     {
-        if (!$parentId) {
+        if (!$iParentId) {
 
             //  No parent ID, end of the line señor!
             return '';
@@ -699,32 +705,28 @@ class Page extends Base
         } else {
 
             //  There is a parent, look for it
-            foreach ($source as $src) {
-
-                if ($src->id == $parentId) {
-
-                    $parent = $src;
+            foreach ($aSources as $oSource) {
+                if ($oSource->id == $iParentId) {
+                    $oParent = $oSource;
                 }
             }
 
-            if (isset($parent) && $parent) {
+            if (!empty($oParent)) {
 
                 //  Parent was found, does it have any parents?
-                if ($parent->draft->parent_id) {
+                if ($oParent->draft->parent_id) {
 
                     //  Yes it does, repeat!
-                    $return = $this->findParents($parent->draft->parent_id, $source, $sSeparator);
+                    $sReturn = $this->findParents($oParent->draft->parent_id, $aSources, $sSeparator);
 
-                    return $return ? $return . $parent->draft->title . $sSeparator : $parent->draft->title;
+                    return $sReturn ? $sReturn . $oParent->draft->title . $sSeparator : $oParent->draft->title;
 
                 } else {
-
                     //  Nope, end of the line mademoiselle
-                    return $parent->draft->title . $sSeparator;
+                    return $oParent->draft->title . $sSeparator;
                 }
 
             } else {
-
                 //  Did not find parent, give up.
                 return '';
             }
@@ -741,7 +743,7 @@ class Page extends Base
      *
      * @return array
      */
-    public function getIdsOfChildren($iPageId, $sFormat = 'ID')
+    public function getIdsOfChildren(int $iPageId, string $sFormat = 'ID'): array
     {
         $aOut = [];
         /** @var Database $oDb */
@@ -792,7 +794,6 @@ class Page extends Base
             return $aOut;
 
         } else {
-
             return $aOut;
         }
     }
@@ -807,9 +808,9 @@ class Page extends Base
      * @param mixed $aData           Any data to pass to getCountCommon()
      * @param bool  $bIncludeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
      *
-     * @return array
+     * @return string[]
      */
-    public function getAllFlat($iPage = null, $iPerPage = null, array $aData = [], $bIncludeDeleted = false)
+    public function getAllFlat($iPage = null, $iPerPage = null, array $aData = [], $bIncludeDeleted = false):
     {
         $aOut   = [];
         $aPages = $this->getAll($iPage, $iPerPage, $aData, $bIncludeDeleted);
@@ -830,28 +831,24 @@ class Page extends Base
     /**
      * Get the top level pages, i.e., those without a parent
      *
-     * @param int   $page           The page number of the results, if null then no pagination
-     * @param int   $perPage        How many items per page of paginated results
-     * @param mixed $data           Any data to pass to getCountCommon()
-     * @param bool  $includeDeleted If non-destructive delete is enabled then this flag allows you to include deleted
-     *                              items
+     * @param int   $iPage           The page number of the results, if null then no pagination
+     * @param int   $iPerPage        How many items per page of paginated results
+     * @param array $aData           Any data to pass to getCountCommon()
+     * @param bool  $bIncludeDeleted If non-destructive delete is enabled then this flag allows you to include deleted items
      *
-     * @return array
+     * @return Resource\Page[]
      */
-    public function getTopLevel($page = null, $perPage = null, $data = [], $includeDeleted = false)
+    public function getTopLevel($iPage = null, $iPerPage = null, $aData = [], $bIncludeDeleted = false): array
     {
-        if (empty($data['where'])) {
-            $data['were'] = [];
+        if (empty($aData['where'])) {
+            $aData['were'] = [];
         }
 
-        if (!empty($data['useDraft'])) {
-            $data['where'][] = ['draft_parent_id', null];
+        $aData['where'][] = !empty($aData['useDraft'])
+            ? ['draft_parent_id', null]
+            : ['published_parent_id', null];
 
-        } else {
-            $data['where'][] = ['published_parent_id', null];
-        }
-
-        return $this->getAll($page, $perPage, $data, $includeDeleted);
+        return $this->getAll($iPage, $iPerPage, $aData, $bIncludeDeleted);
     }
 
     // --------------------------------------------------------------------------
@@ -859,33 +856,27 @@ class Page extends Base
     /**
      * Get the siblings of a page, i.e those with the same parent
      *
-     * @param int     $id       The page whose siblings to fetch
-     * @param boolean $useDraft Whether to use published data, or draft data
+     * @param int  $iId       The page whose siblings to fetch
+     * @param bool $bUseDraft Whether to use published data, or draft data
      *
-     * @return array
+     * @return Resource\Page[]
      */
-    public function getSiblings($id, $useDraft = true)
+    public function getSiblings(int $iId, bool $bUseDraft = true): array
     {
-        $page = $this->getById($id);
+        /** @var Resource\Page|null $oPage */
+        $oPage = $this->getById($iId);
 
-        if (!$page) {
+        if (!$oPage) {
             return [];
         }
 
-        if (empty($data['where'])) {
-            $data['were'] = [];
-        }
-
-        if ($useDraft) {
-
-            $data['where'][] = ['draft_parent_id', $page->draft->parent_id];
-
-        } else {
-
-            $data['where'][] = ['published_parent_id', $page->published->parent_id];
-        }
-
-        return $this->getAll(null, null, $data);
+        return $this->getAll([
+            'where' => [
+                $bUseDraft
+                    ? ['draft_parent_id', $oPage->draft->parent_id]
+                    : ['published_parent_id', $oPage->published->parent_id],
+            ],
+        ]);
     }
 
     // --------------------------------------------------------------------------
@@ -893,11 +884,11 @@ class Page extends Base
     /**
      * Get the ID of the configured homepage
      *
-     * @return integer
+     * @return int
      */
-    public function getHomepageId()
+    public function getHomepageId(): ?int
     {
-        return appSetting('homepage', Constants::MODULE_SLUG);
+        return (int) appSetting('homepage', Constants::MODULE_SLUG) ?: null;
     }
 
     // --------------------------------------------------------------------------
@@ -905,9 +896,10 @@ class Page extends Base
     /**
      * Get the page marked as the homepage
      *
-     * @return mixed stdClass on success, false on failure
+     * @return Resource\Page|null
+     * @throws ModelException
      */
-    public function getHomepage()
+    public function getHomepage(): ?Resource\Page
     {
         $iHomepageId = $this->getHomepageId();
 
@@ -915,13 +907,8 @@ class Page extends Base
             return false;
         }
 
+        /** @var Resource\Page|null $oPage */
         $oPage = $this->getById($iHomepageId);
-
-        if (!$oPage) {
-
-            return false;
-        }
-
         return $oPage;
     }
 
@@ -932,7 +919,7 @@ class Page extends Base
      *
      * @param int $iId The ID of the page to delete
      *
-     * @return boolean
+     * @return bool
      */
     public function delete($iId): bool
     {
@@ -1012,11 +999,11 @@ class Page extends Base
     /**
      * Permanently delete a page and it's children
      *
-     * @param int $id The ID of the page to destroy
+     * @param int $iId The ID of the page to destroy
      *
-     * @return boolean
+     * @return bool
      */
-    public function destroy($id): bool
+    public function destroy($iId): bool
     {
         //  @TODO: implement this?
         $this->setError('It is not possible to destroy pages using this system.');
@@ -1029,21 +1016,22 @@ class Page extends Base
     /**
      * Returns the URL of a page
      *
-     * @param integer $iPageId      The ID of the page to look up
-     * @param boolean $usePublished Whether to use the `published` data, or the `draft` data
+     * @param int  $iPageId       The ID of the page to look up
+     * @param bool $bUsePublished Whether to use the `published` data, or the `draft` data
      *
-     * @return mixed                 String on success, false on failure
+     * @return string|null
      */
-    public function getUrl($iPageId, $usePublished = true)
+    public function getUrl(int $iPageId, bool $bUsePublished = true): ?string
     {
-        $page = $this->getById($iPageId);
-
-        if ($page) {
-            return $usePublished ? $page->published->url : $page->draft->url;
-
-        } else {
-            return false;
+        /** @var Resource\Page|null $oPage */
+        $oPage = $this->getById($iPageId);
+        if (!$oPage) {
+            return null;
         }
+
+        return $bUsePublished
+            ? $oPage->published->url
+            : $oPage->draft->url;
     }
 
     // --------------------------------------------------------------------------

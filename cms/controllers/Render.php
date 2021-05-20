@@ -3,11 +3,10 @@
 /**
  * This class renders CMS pages
  *
- * @package     Nails
- * @subpackage  module-cms
- * @category    Controller
- * @author      Nails Dev Team
- * @link
+ * @package    Nails
+ * @subpackage module-cms
+ * @category   Controller
+ * @author     Nails Dev Team
  */
 
 use App\Controller\Base;
