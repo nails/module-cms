@@ -695,7 +695,7 @@ class Page extends Base
      *
      * @return string
      */
-    protected function findParents(int $iParentId, array &$aSources, string $sSeparator): string
+    protected function findParents(?int $iParentId, array &$aSources, string $sSeparator): string
     {
         if (!$iParentId) {
 
@@ -810,7 +810,7 @@ class Page extends Base
      *
      * @return string[]
      */
-    public function getAllFlat($iPage = null, $iPerPage = null, array $aData = [], $bIncludeDeleted = false):
+    public function getAllFlat($iPage = null, $iPerPage = null, array $aData = [], $bIncludeDeleted = false): array
     {
         $aOut   = [];
         $aPages = $this->getAll($iPage, $iPerPage, $aData, $bIncludeDeleted);
