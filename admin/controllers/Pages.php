@@ -31,7 +31,7 @@ use Nails\Common\Service\Asset;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
-use Nails\Common\Service\Session;
+use Nails\Common\Service\UserFeedback;
 use Nails\Common\Service\Uri;
 use Nails\Components;
 use Nails\Config;
@@ -283,11 +283,9 @@ class Pages extends BaseAdmin
 
                     } else {
 
-                        $sStatus  = 'success';
-                        $sMessage = 'Page created successfully!';
-                        /** @var Session $oSession */
-                        $oSession = Factory::service('Session');
-                        $oSession->setFlashData($sStatus, $sMessage);
+                        /** @var UserFeedback $oUserFeedback */
+                        $oUserFeedback = Factory::service('UserFeedback');
+                        $oUserFeedback->success('Page created successfully!');
                         redirect('admin/cms/pages/edit/' . $oNewPageId);
                     }
 
@@ -375,9 +373,9 @@ class Pages extends BaseAdmin
         $oPage = $this->oPageModel->getById($oUri->segment(5));
 
         if (!$oPage) {
-            /** @var Session $oSession */
-            $oSession = Factory::service('Session');
-            $oSession->setFlashData('error', 'No page found by that ID');
+            /** @var UserFeedback $oUserFeedback */
+            $oUserFeedback = Factory::service('UserFeedback');
+            $oUserFeedback->error('No page found by that ID');
             redirect('admin/cms/pages');
         }
 
@@ -435,12 +433,9 @@ class Pages extends BaseAdmin
 
                     } else {
 
-                        $sStatus  = 'success';
-                        $sMessage = 'Page saved successfully!';
-
-                        /** @var Session $oSession */
-                        $oSession = Factory::service('Session');
-                        $oSession->setFlashData($sStatus, $sMessage);
+                        /** @var UserFeedback $oUserFeedback */
+                        $oUserFeedback = Factory::service('UserFeedback');
+                        $oUserFeedback->success('Page saved successfully!');
 
                         redirect('admin/cms/pages/edit/' . $oPage->id);
                     }
@@ -530,8 +525,8 @@ class Pages extends BaseAdmin
         $oUri = Factory::service('Uri');
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
 
         $iId        = $oUri->segment(5);
         $bIsEditing = (bool) $oInput->get('editing');
@@ -540,18 +535,17 @@ class Pages extends BaseAdmin
         if ($this->oPageModel->publish($iId)) {
 
             $oPage = $this->oPageModel->getById($iId);
-            $oSession->setFlashData(
-                'success',
-                'Page was published successfully - ' .
+            $oUserFeedback->success(sprintf(
+                'Page was published successfully - %s',
                 anchor(
                     $oPage->published->url,
                     'View Page <b class="fa fa-external-link-alt"></b>',
                     'target="_blank"'
                 )
-            );
+            ));
 
         } else {
-            $oSession->setFlashData('error', 'Could not publish page. ' . $this->oPageModel->lastError());
+            $oUserFeedback->error('Could not publish page. ' . $this->oPageModel->lastError());
         }
 
         if (!empty($sReturnTo)) {
@@ -616,9 +610,9 @@ class Pages extends BaseAdmin
 
                 $oDb->transaction()->commit();
 
-                /** @var Session $oSession */
-                $oSession = Factory::service('Session');
-                $oSession->setFlashData('success', 'Page unpublished successfully');
+                /** @var UserFeedback $oUserFeedback */
+                $oUserFeedback = Factory::service('UserFeedback');
+                $oUserFeedback->success('Page unpublished successfully');
 
                 redirect($oInput->post('return_to') ?: 'admin/cms/pages');
 
@@ -789,9 +783,9 @@ class Pages extends BaseAdmin
 
                 $oDb->transaction()->commit();
 
-                /** @var Session $oSession */
-                $oSession = Factory::service('Session');
-                $oSession->setFlashData('success', 'Page deleted successfully');
+                /** @var UserFeedback $oUserFeedback */
+                $oUserFeedback = Factory::service('UserFeedback');
+                $oUserFeedback->success('Page deleted successfully');
 
                 redirect($oInput->post('return_to') ?: 'admin/cms/pages');
 
@@ -841,20 +835,20 @@ class Pages extends BaseAdmin
 
         /** @var Uri $oUri */
         $oUri = Factory::service('Uri');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
 
         $iId   = $oUri->segment(5);
         $oPage = $this->oPageModel->getById($iId);
 
         if ($oPage && $oPage->is_deleted) {
             if ($this->oPageModel->restore($iId)) {
-                $oSession->setFlashData('success', 'Page was restored successfully. ');
+                $oUserFeedback->success('Page was restored successfully. ');
             } else {
-                $oSession->setFlashData('error', 'Could not restore page. ' . $this->oPageModel->lastError());
+                $oUserFeedback->error('Could not restore page. ' . $this->oPageModel->lastError());
             }
         } else {
-            $oSession->setFlashData('error', 'Invalid page ID.');
+            $oUserFeedback->error('Invalid page ID.');
         }
 
         redirect('admin/cms/pages');
@@ -876,8 +870,8 @@ class Pages extends BaseAdmin
 
         /** @var Uri $oUri */
         $oUri = Factory::service('Uri');
-        /** @var Session $oSession */
-        $oSession = Factory::service('Session');
+        /** @var UserFeedback $oUserFeedback */
+        $oUserFeedback = Factory::service('UserFeedback');
 
         $iId   = $oUri->segment(5);
         $oPage = $this->oPageModel->getById($iId);
@@ -892,11 +886,11 @@ class Pages extends BaseAdmin
                 throw new \Exception($this->oPageModel->lastError());
             }
 
-            $oSession->setFlashData('success', 'Page copied successfully.');
+            $oUserFeedback->success('Page copied successfully.');
             redirect('admin/cms/pages/edit/' . $iNewId);
 
         } catch (\Exception $e) {
-            $oSession->setFlashData('error', 'Failed to copy item. ' . $e->getMessage());
+            $oUserFeedback->error('Failed to copy item. ' . $e->getMessage());
         }
 
         redirect('admin/cms/pages');
