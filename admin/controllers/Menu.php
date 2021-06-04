@@ -160,6 +160,12 @@ class Menu extends DefaultController
                 $aIdMap[$oItem->id] = $oItemModel->create((array) $oItem);
             }
         }
+
+        //  Delete removed items
+        $oItemModel->deleteWhere(array_filter([
+            ['menu_id', $oNewItem->id],
+            $aIdMap ? '`id` NOT IN (' . implode(',', $aIdMap) . ')' : null,
+        ]));
     }
 
     // --------------------------------------------------------------------------
