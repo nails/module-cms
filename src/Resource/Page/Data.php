@@ -75,7 +75,7 @@ class Data extends Resource
         $mObj->url   = siteUrl($mObj->slug);
 
         //  Decode JSON
-        $mObj->template_data    = json_decode($mObj->template_data);
+        $mObj->template_data    = json_decode($mObj->template_data ?? 'null');
         $mObj->template_options = json_decode($mObj->template_options);
         $mObj->breadcrumbs      = json_decode($mObj->breadcrumbs) ?: [];
 

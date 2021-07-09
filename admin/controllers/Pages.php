@@ -165,17 +165,17 @@ class Pages extends BaseAdmin
         $sTableAlias = $this->oPageModel->getTableAlias();
 
         /** @var Input $oInput */
-        $oInput    = Factory::service('Input');
-        $page      = $oInput->get('page') ? $oInput->get('page') : 0;
-        $perPage   = $oInput->get('perPage') ? $oInput->get('perPage') : 50;
-        $sortOn    = $oInput->get('sortOn') ? $oInput->get('sortOn') : $sTableAlias . '.draft_slug';
-        $sortOrder = $oInput->get('sortOrder') ? $oInput->get('sortOrder') : 'asc';
-        $keywords  = $oInput->get('keywords') ? $oInput->get('keywords') : '';
+        $oInput     = Factory::service('Input');
+        $iPage      = $oInput->get('page') ? $oInput->get('page') : 0;
+        $iPerPage   = $oInput->get('perPage') ? $oInput->get('perPage') : 50;
+        $sSortOn    = $oInput->get('sortOn') ? $oInput->get('sortOn') : $sTableAlias . '.draft_slug';
+        $sSortOrder = $oInput->get('sortOrder') ? $oInput->get('sortOrder') : 'asc';
+        $sKeywords  = $oInput->get('keywords') ? $oInput->get('keywords') : '';
 
         // --------------------------------------------------------------------------
 
         //  Define the sortable columns
-        $sortColumns = [
+        $aSortColumns = [
             $sTableAlias . '.draft_slug'  => 'Hierarchy',
             $sTableAlias . '.draft_title' => 'Label',
             $sTableAlias . '.modified'    => 'Modified',
@@ -183,21 +183,25 @@ class Pages extends BaseAdmin
 
         // --------------------------------------------------------------------------
 
-        //  Define the $data variable for the queries
-        $data = [
+        //  Define the $aData variable for the queries
+        $aData = [
+            //  All fields except body (might be very long)
+            'select'   => array_filter(array_keys($this->oPageModel->describeFields()), function (string $sField) {
+                return !in_array($sField, ['published_template_data', 'draft_template_data']);
+            }),
             'sort'     => [
-                [$sortOn, $sortOrder],
+                [$sSortOn, $sSortOrder],
             ],
-            'keywords' => $keywords,
+            'keywords' => $sKeywords,
         ];
 
         //  Get the items for the page
-        $totalRows           = $this->oPageModel->countAll($data);
-        $this->data['pages'] = $this->oPageModel->getAll($page, $perPage, $data);
+        $totalRows           = $this->oPageModel->countAll($aData);
+        $this->data['pages'] = $this->oPageModel->getAll($iPage, $iPerPage, $aData);
 
         //  Set Search and Pagination objects for the view
-        $this->data['search']     = Helper::searchObject(true, $sortColumns, $sortOn, $sortOrder, $perPage, $keywords);
-        $this->data['pagination'] = Helper::paginationObject($page, $perPage, $totalRows);
+        $this->data['search']     = Helper::searchObject(true, $aSortColumns, $sSortOn, $sSortOrder, $iPerPage, $sKeywords);
+        $this->data['pagination'] = Helper::paginationObject($iPage, $iPerPage, $totalRows);
         $this->data['sReturnTo']  = urlencode($oInput->server('REQUEST_URI'));
 
         // --------------------------------------------------------------------------
