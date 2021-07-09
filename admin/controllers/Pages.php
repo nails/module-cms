@@ -186,9 +186,7 @@ class Pages extends BaseAdmin
         //  Define the $aData variable for the queries
         $aData = [
             //  All fields except body (might be very long)
-            'select'   => array_filter(array_keys($this->oPageModel->describeFields()), function (string $sField) {
-                return !in_array($sField, ['published_template_data', 'draft_template_data']);
-            }),
+            'select'   => $this->oPageModel->describeFieldsExcludingData(),
             'sort'     => [
                 [$sSortOn, $sSortOrder],
             ],

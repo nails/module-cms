@@ -17,6 +17,7 @@ use Nails\Cms\Service\Template;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Exception\NailsException;
+use Nails\Common\Factory\Model\Field;
 use Nails\Common\Model\Base;
 use Nails\Cms\Resource;
 use Nails\Common\Service\Database;
@@ -603,7 +604,13 @@ class Page extends Base
      */
     public function getAllNested(bool $bUseDraft = true): array
     {
-        return $this->nestPages($this->getAll(), null, $bUseDraft);
+        return $this->nestPages(
+            $this->getAll([
+                'select' => $this->describeFieldsExcludingData(),
+            ]),
+            null,
+            $bUseDraft
+        );
     }
 
     // --------------------------------------------------------------------------
@@ -620,7 +627,9 @@ class Page extends Base
     {
         $sSeparator = $sSeparator ?: ' &rsaquo; ';
         $aOut       = [];
-        $aPages     = $this->getAll();
+        $aPages     = $this->getAll([
+            'select' => $this->describeFieldsExcludingData(),
+        ]);
 
         foreach ($aPages as $oPage) {
             $aOut[$oPage->id] = $this->findParents($oPage->draft->parent_id, $aPages, $sSeparator) . $oPage->draft->title;
@@ -1085,5 +1094,19 @@ class Page extends Base
         /** @var Event $oEventService */
         $oEventService = Factory::service('Event');
         $oEventService->trigger(\Nails\Common\Events::ROUTES_UPDATE);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Describes the fields excluding the data fields (which can be very big and cause memory issues)
+     *
+     * @return Field[]
+     */
+    public function describeFieldsExcludingData()
+    {
+        return array_filter(array_keys($this->describeFields()), function (string $sField) {
+            return !in_array($sField, ['published_template_data', 'draft_template_data']);
+        });
     }
 }
