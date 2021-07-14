@@ -15,7 +15,7 @@ use Nails\Admin\Controller\Base;
 use Nails\Cms\Constants;
 use Nails\Factory;
 
-class BaseAdmin extends Base
+abstract class BaseAdmin extends Base
 {
     public function __construct()
     {
