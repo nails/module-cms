@@ -12,22 +12,28 @@
 
 namespace Nails\Cms\Widget;
 
+use Nails\Cms\Interfaces;
+
 class WidgetGroup
 {
+    /** @var string */
     protected $sLabel;
+
+    /** @var Interfaces\Widget[] */
     protected $aWidgets;
 
     // --------------------------------------------------------------------------
 
     /**
      * Construct a new widget group
-     * @param string $sLabel The label to give the group
-     * @param array $aWidgets An array of widgets to add to the group
+     *
+     * @param string $sLabel   The label to give the group
+     * @param array  $aWidgets An array of widgets to add to the group
      */
-    public function __construct($sLabel = '', $aWidgets = array())
+    public function __construct($sLabel = '', $aWidgets = [])
     {
         $this->setLabel($sLabel);
-        $this->aWidgets = array();
+        $this->aWidgets = [];
 
         if (!empty($aWidgets)) {
             foreach ($aWidgets as $oWidget) {
@@ -40,6 +46,7 @@ class WidgetGroup
 
     /**
      * Get the group's label
+     *
      * @return string
      */
     public function getLabel()
@@ -51,7 +58,9 @@ class WidgetGroup
 
     /**
      * Set the group's label
+     *
      * @param string $sLabel The label to give the group
+     *
      * @return $this
      */
     public function setLabel($sLabel)
@@ -64,7 +73,9 @@ class WidgetGroup
 
     /**
      * Add a widget to the group
+     *
      * @param object $oWidget The widget to add
+     *
      * @return $this
      */
     public function add($oWidget)
@@ -77,13 +88,15 @@ class WidgetGroup
 
     /**
      * Remove a widget from the group
+     *
      * @param object $oWidget The widget to remove
+     *
      * @return $this
      */
     public function remove($oWidget)
     {
         $this->aWidgets[$oWidget->getSlug()] = null;
-        $this->aWidgets = array_filter($this->aWidgets);
+        $this->aWidgets                      = array_filter($this->aWidgets);
         return $this;
     }
 
@@ -98,9 +111,9 @@ class WidgetGroup
 
     public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
     {
-        $oObj = new \stdClass();
-        $oObj->label = $this->getLabel();
-        $oObj->widgets = array();
+        $oObj          = new \stdClass();
+        $oObj->label   = $this->getLabel();
+        $oObj->widgets = [];
 
         $aWidgets = $this->getWidgets();
 
@@ -115,8 +128,8 @@ class WidgetGroup
 
     public function getWidgetsAsJson($iJsonOptions = 0, $iJsonDepth = 512)
     {
-        $aWidgetsJson = array();
-        $aWidgets = $this->getWidgets();
+        $aWidgetsJson = [];
+        $aWidgets     = $this->getWidgets();
 
         foreach ($aWidgets as $oWidget) {
             $aWidgetsJson[] = $oWidget->toJson($iJsonOptions, $iJsonDepth);

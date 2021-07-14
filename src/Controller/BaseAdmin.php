@@ -3,11 +3,10 @@
 /**
  * This class provides some common CMS controller functionality in admin
  *
- * @package     Nails
- * @subpackage  module-cms
- * @category    Controller
- * @author      Nails Dev Team
- * @link
+ * @package    Nails
+ * @subpackage module-cms
+ * @category   Controller
+ * @author     Nails Dev Team
  */
 
 namespace Nails\Cms\Controller;
