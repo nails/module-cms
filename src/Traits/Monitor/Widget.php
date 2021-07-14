@@ -3,10 +3,11 @@
 namespace Nails\Cms\Traits\Monitor;
 
 use Nails\Cms\Constants;
-use Nails\Cms\Interfaces;
 use Nails\Cms\Factory\Monitor\Detail;
-use Nails\Factory;
+use Nails\Cms\Interfaces;
 use Nails\Common\Exception\FactoryException;
+use Nails\Common\Service\Database;
+use Nails\Factory;
 
 /**
  * Trait Widget
@@ -76,7 +77,7 @@ trait Widget
      */
     public function countUsages(Interfaces\Widget $oWidget): int
     {
-        /** @var \Nails\Common\Service\Database $oDb */
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $this->compileQuery($oWidget);
         return $oDb->count_all_results();
@@ -94,7 +95,7 @@ trait Widget
      */
     public function getUsages(Interfaces\Widget $oWidget): array
     {
-        /** @var \Nails\Common\Service\Database $oDb */
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->select($this->getQueryColumns());
         $this->compileQuery($oWidget);
@@ -117,7 +118,7 @@ trait Widget
      */
     private function compileQuery(Interfaces\Widget $oWidget): void
     {
-        /** @var \Nails\Common\Service\Database $oDb */
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
 
         $oDb->from($this->getTableName());
@@ -125,7 +126,7 @@ trait Widget
         $aSql = [];
         foreach ($this->getDataColumns() as $sColumn) {
             $aSql[] = sprintf(
-                'JSON_CONTAINS(JSON_EXTRACT(%s, "%s"), \'"%s"\', \'$\')',
+                'JSON_CONTAINS(JSON_EXTRACT(%s, "%s"), \'"%s"\', "$"")',
                 $sColumn,
                 $this->getJsonPath(),
                 $oWidget->getSlug()

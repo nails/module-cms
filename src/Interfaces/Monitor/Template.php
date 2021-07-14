@@ -3,7 +3,7 @@
 namespace Nails\Cms\Interfaces\Monitor;
 
 use Nails\Cms\Interfaces;
-use Nails\Cms\Factory\Monitor\Item\Usage;
+use Nails\Cms\Factory\Monitor\Detail\Usage;
 
 /**
  * Interface Template

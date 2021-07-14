@@ -3,10 +3,11 @@
 namespace Nails\Cms\Traits\Monitor;
 
 use Nails\Cms\Constants;
-use Nails\Cms\Interfaces;
 use Nails\Cms\Factory\Monitor\Detail;
-use Nails\Factory;
+use Nails\Cms\Interfaces;
 use Nails\Common\Exception\FactoryException;
+use Nails\Common\Service\Database;
+use Nails\Factory;
 
 /**
  * Trait Template
@@ -64,7 +65,7 @@ trait Template
      */
     public function countUsages(Interfaces\Template $oTemplate): int
     {
-        /** @var \Nails\Common\Service\Database $oDb */
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $this->compileQuery($oTemplate);
         return $oDb->count_all_results();
@@ -82,7 +83,7 @@ trait Template
      */
     public function getUsages(Interfaces\Template $oTemplate): array
     {
-        /** @var \Nails\Common\Service\Database $oDb */
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
         $oDb->select($this->getQueryColumns());
         $this->compileQuery($oTemplate);
@@ -105,7 +106,7 @@ trait Template
      */
     private function compileQuery(Interfaces\Template $oTemplate): void
     {
-        /** @var \Nails\Common\Service\Database $oDb */
+        /** @var Database $oDb */
         $oDb = Factory::service('Database');
 
         $oDb->from($this->getTableName());

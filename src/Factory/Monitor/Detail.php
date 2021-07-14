@@ -2,7 +2,7 @@
 
 namespace Nails\Cms\Factory\Monitor;
 
-use Nails\Cms\Factory\Monitor\Item\Usage;
+use Nails\Cms\Factory\Monitor\Detail\Usage;
 
 /**
  * Class Detail
@@ -22,7 +22,8 @@ class Detail
     /**
      * Detail constructor.
      *
-     * @param string $sSlug
+     * @param string  $sSlug
+     * @param Usage[] $aUsages
      */
     public function __construct(string $sLabel, array $aUsages)
     {

@@ -52,10 +52,10 @@ class Area implements Interfaces\Monitor\Widget
         $oUsage = Factory::factory(
             'MonitorDetailUsage',
             Constants::MODULE_SLUG,
-            $oArea->label,
+            $oRow->label,
             null,
             userHasPermission('admin:cms:area:edit')
-                ? siteUrl('admin/cms/area/edit/' . $oArea->id)
+                ? siteUrl('admin/cms/area/edit/' . $oRow->id)
                 : null
         );
 

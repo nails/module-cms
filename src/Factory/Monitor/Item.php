@@ -2,8 +2,6 @@
 
 namespace Nails\Cms\Factory\Monitor;
 
-use Nails\Cms\Factory\Monitor\Item\Usage;
-
 /**
  * Class Item
  *
