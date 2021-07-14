@@ -26,7 +26,7 @@ class Detail
      */
     public function __construct(string $sLabel, array $aUsages)
     {
-        $this->label   = $sLabel;
+        $this->label  = $sLabel;
         $this->usages = $aUsages;
     }
 }

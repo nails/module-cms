@@ -4,6 +4,7 @@ namespace Nails\Cms\Cms\Monitor\Template;
 
 use Nails\Cms\Constants;
 use Nails\Cms\Interfaces;
+use Nails\Cms\Traits;
 use Nails\Factory;
 
 /**
@@ -13,6 +14,10 @@ use Nails\Factory;
  */
 class Page implements Interfaces\Monitor\Template
 {
+    use Traits\Monitor\Template;
+
+    // --------------------------------------------------------------------------
+
     public function getLabel(): string
     {
         return 'CMS: Pages';
@@ -20,55 +25,40 @@ class Page implements Interfaces\Monitor\Template
 
     // --------------------------------------------------------------------------
 
-    public function countUsages(Interfaces\Template $oTemplate): int
+    protected function getTableName(): string
     {
-        /** @var \Nails\Common\Service\Database $oDb */
-        $oDb = Factory::service('Database');
-        $this->compileQuery($oTemplate);
-        return $oDb->count_all_results();
+        return Factory::model('Page', Constants::MODULE_SLUG)->getTableName();
     }
 
     // --------------------------------------------------------------------------
 
-    public function getUsages(Interfaces\Template $oTemplate): array
+    private function getDataColumns(): array
     {
-        /** @var \Nails\Common\Service\Database $oDb */
-        $oDb = Factory::service('Database');
-        /** @var \Nails\Cms\Model\Page $oModel */
-        $oModel = Factory::model('Page', Constants::MODULE_SLUG);
-
-        $oDb->select('id, published_title, published_slug, draft_title, draft_slug');
-        $this->compileQuery($oTemplate);
-
-        return array_map(function (\stdClass $oPage) use ($oModel) {
-
-            /** @var \Nails\Cms\Factory\Monitor\Detail\Usage $oUsage */
-            $oUsage = Factory::factory(
-                'MonitorDetailUsage',
-                Constants::MODULE_SLUG,
-                $oPage->published_title ?: $oPage->draft_title,
-                siteUrl($oPage->published_slug ?: $oPage->draft_slug),
-                userHasPermission('admin:cms:pages:edit')
-                    ? siteUrl('admin/cms/pages/edit/' . $oPage->id)
-                    : null
-            );
-
-            return $oUsage;
-
-        }, $oDb->get()->result());
+        return ['published_template', 'draft_template'];
     }
 
     // --------------------------------------------------------------------------
 
-    private function compileQuery(Interfaces\Template $oTemplate): void
+    private function getQueryColumns(): array
     {
-        /** @var \Nails\Common\Service\Database $oDb */
-        $oDb = Factory::service('Database');
-        /** @var \Nails\Cms\Model\Page $oModel */
-        $oModel = Factory::model('Page', Constants::MODULE_SLUG);
+        return ['id', 'published_title', 'published_slug', 'draft_title', 'draft_slug'];
+    }
 
-        $oDb->from($oModel->getTableName());
-        $oDb->or_where('published_template', $oTemplate->getSlug());
-        $oDb->or_where('draft_template', $oTemplate->getSlug());
+    // --------------------------------------------------------------------------
+
+    protected function compileUsage(\stdClass $oRow): \Nails\Cms\Factory\Monitor\Detail\Usage
+    {
+        /** @var \Nails\Cms\Factory\Monitor\Detail\Usage $oUsage */
+        $oUsage = Factory::factory(
+            'MonitorDetailUsage',
+            Constants::MODULE_SLUG,
+            $oRow->published_title ?: $oRow->draft_title,
+            siteUrl($oRow->published_slug ?: $oRow->draft_slug),
+            userHasPermission('admin:cms:pages:edit')
+                ? siteUrl('admin/cms/pages/edit/' . $oRow->id)
+                : null
+        );
+
+        return $oUsage;
     }
 }
