@@ -3,17 +3,32 @@
 use Nails\Cms\Model;
 use Nails\Cms\Resource;
 use Nails\Cms\Service;
+use Nails\Cms\Factory;
 
 return [
     'services'  => [
-        'Widget'   => function (): Service\Widget {
+        'MonitorTemplate' => function (): Service\Monitor\Template {
+            if (class_exists('\App\Cms\Service\Monitor\Template')) {
+                return new \App\Cms\Service\Monitor\Template();
+            } else {
+                return new Service\Monitor\Template();
+            }
+        },
+        'MonitorWidget'   => function (): Service\Monitor\Widget {
+            if (class_exists('\App\Cms\Service\Monitor\Widget')) {
+                return new \App\Cms\Service\Monitor\Widget();
+            } else {
+                return new Service\Monitor\Widget();
+            }
+        },
+        'Widget'          => function (): Service\Widget {
             if (class_exists('\App\Cms\Service\Widget')) {
                 return new \App\Cms\Service\Widget();
             } else {
                 return new Service\Widget();
             }
         },
-        'Template' => function (): Service\Template {
+        'Template'        => function (): Service\Template {
             if (class_exists('\App\Cms\Service\Template')) {
                 return new \App\Cms\Service\Template();
             } else {
@@ -66,42 +81,42 @@ return [
         },
     ],
     'resources' => [
-        'Area'     => function ($mObj): Resource\Area {
+        'Area'               => function ($mObj): Resource\Area {
             if (class_exists('\App\Cms\Resource\Area')) {
                 return new \App\Cms\Resource\Area($mObj);
             } else {
                 return new Resource\Area($mObj);
             }
         },
-        'Block'    => function ($mObj): Resource\Block {
+        'Block'              => function ($mObj): Resource\Block {
             if (class_exists('\App\Cms\Resource\Block')) {
                 return new \App\Cms\Resource\Block($mObj);
             } else {
                 return new Resource\Block($mObj);
             }
         },
-        'Menu'     => function ($mObj): Resource\Menu {
+        'Menu'               => function ($mObj): Resource\Menu {
             if (class_exists('\App\Cms\Resource\Menu')) {
                 return new \App\Cms\Resource\Menu($mObj);
             } else {
                 return new Resource\Menu($mObj);
             }
         },
-        'MenuItem' => function ($mObj): Resource\Menu\Item {
+        'MenuItem'           => function ($mObj): Resource\Menu\Item {
             if (class_exists('\App\Cms\Resource\Menu\Item')) {
                 return new \App\Cms\Resource\Menu\Item($mObj);
             } else {
                 return new Resource\Menu\Item($mObj);
             }
         },
-        'Page'     => function ($mObj): Resource\Page {
+        'Page'               => function ($mObj): Resource\Page {
             if (class_exists('\App\Cms\Resource\Page')) {
                 return new \App\Cms\Resource\Page($mObj);
             } else {
                 return new Resource\Page($mObj);
             }
         },
-        'PageData' => function ($mObj): Resource\Page\Data {
+        'PageData'           => function ($mObj): Resource\Page\Data {
             if (class_exists('\App\Cms\Resource\Page\Data')) {
                 return new \App\Cms\Resource\Page\Data($mObj);
             } else {
@@ -117,28 +132,58 @@ return [
         },
     ],
     'factories' => [
-        'TemplateGroup'  => function () {
+        'MonitorDetail'      => function (string $sSlug, array $aUsages): Factory\Monitor\Detail {
+            if (class_exists('\App\Cms\Factory\Monitor\Detail')) {
+                return new \App\Cms\Factory\Monitor\Detail($sSlug, $aUsages);
+            } else {
+                return new Factory\Monitor\Detail($sSlug, $aUsages);
+            }
+        },
+        'MonitorDetailUsage' => function (
+            string $sLabel,
+            ?string $sUrlView,
+            ?string $sUrlEdit
+        ): Factory\Monitor\Detail\Usage {
+            if (class_exists('\App\Cms\Factory\Monitor\Detail\Usage')) {
+                return new \App\Cms\Factory\Monitor\Detail\Usage($sLabel, $sUrlView, $sUrlEdit);
+            } else {
+                return new Factory\Monitor\Detail\Usage($sLabel, $sUrlView, $sUrlEdit);
+            }
+        },
+        'MonitorItem'        => function (
+            string $sSlug,
+            string $sLabel,
+            string $sDescription,
+            int $iUsages
+        ): Factory\Monitor\Item {
+            if (class_exists('\App\Cms\Factory\Monitor\Item')) {
+                return new \App\Cms\Factory\Monitor\Item($sSlug, $sLabel, $sDescription, $iUsages);
+            } else {
+                return new Factory\Monitor\Item($sSlug, $sLabel, $sDescription, $iUsages);
+            }
+        },
+        'TemplateGroup'      => function (): \Nails\Cms\Template\TemplateGroup {
             if (class_exists('\App\Cms\Template\TemplateGroup')) {
                 return new \App\Cms\Template\TemplateGroup();
             } else {
                 return new \Nails\Cms\Template\TemplateGroup();
             }
         },
-        'TemplateArea'   => function () {
+        'TemplateArea'       => function (): \Nails\Cms\Template\TemplateArea {
             if (class_exists('\App\Cms\Template\TemplateArea')) {
                 return new \App\Cms\Template\TemplateArea();
             } else {
                 return new \Nails\Cms\Template\TemplateArea();
             }
         },
-        'TemplateOption' => function () {
+        'TemplateOption'     => function (): \Nails\Cms\Template\TemplateOption {
             if (class_exists('\App\Cms\Template\TemplateOption')) {
                 return new \App\Cms\Template\TemplateOption();
             } else {
                 return new \Nails\Cms\Template\TemplateOption();
             }
         },
-        'WidgetGroup'    => function () {
+        'WidgetGroup'        => function (): \Nails\Cms\Widget\WidgetGroup {
             if (class_exists('\App\Cms\Widget\WidgetGroup')) {
                 return new \App\Cms\Widget\WidgetGroup();
             } else {
