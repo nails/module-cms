@@ -13,6 +13,7 @@
 namespace Nails\Cms\Template;
 
 use Nails\Cms\Constants;
+use Nails\Cms\Interfaces\Template;
 use Nails\Config;
 use Nails\Factory;
 use Nails\Functions;
@@ -22,7 +23,7 @@ use Nails\Functions;
  *
  * @package Nails\Cms\Template
  */
-abstract class TemplateBase
+abstract class TemplateBase implements Template
 {
     /**
      * Whether the template is enabled or not

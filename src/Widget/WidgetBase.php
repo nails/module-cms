@@ -12,6 +12,7 @@
 
 namespace Nails\Cms\Widget;
 
+use Nails\Cms\Interfaces;
 use Nails\Common\Service\FileCache;
 use Nails\Factory;
 
@@ -20,7 +21,7 @@ use Nails\Factory;
  *
  * @package Nails\Cms\Widget
  */
-abstract class WidgetBase
+abstract class WidgetBase implements Interfaces\Widget
 {
     /**
      * Whether this widget is disabled or not
