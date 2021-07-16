@@ -821,6 +821,16 @@ class Page extends Base
      */
     public function getAllFlat($iPage = null, $iPerPage = null, array $aData = [], $bIncludeDeleted = false): array
     {
+        //  If the first value is an array then treat as if called with getAll(null, null, $aData);
+        if (is_array($iPage)) {
+            $aData = $iPage;
+            $iPage = null;
+        }
+
+        if (empty($aData['select'])) {
+            $aData['select'] = $this->describeFieldsExcludingData();
+        }
+
         $aOut   = [];
         $aPages = $this->getAll($iPage, $iPerPage, $aData, $bIncludeDeleted);
 
