@@ -28,7 +28,11 @@ class Page implements SiteMap\Interfaces\Generator
         $oModel = Factory::model('Page', Constants::MODULE_SLUG);
         $aUrls  = [];
 
-        foreach ($oModel->getAll() as $oItem) {
+        $aPages = $oModel->getAll([
+            'select' => $oModel->describeFieldsExcludingData(),
+        ]);
+
+        foreach ($aPages as $oItem) {
 
             if (!$oItem->is_published) {
                 continue;
