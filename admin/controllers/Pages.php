@@ -131,11 +131,8 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Load common items
-        /** @var Page oPageModel */
-        $this->oPageModel = Factory::model('Page', Constants::MODULE_SLUG);
-        /** @var Widget oWidgetService */
-        $this->oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
-        /** @var Template oTemplateService */
+        $this->oPageModel       = Factory::model('Page', Constants::MODULE_SLUG);
+        $this->oWidgetService   = Factory::service('Widget', Constants::MODULE_SLUG);
         $this->oTemplateService = Factory::service('Template', Constants::MODULE_SLUG);
 
         //  Note the ID of the homepage
