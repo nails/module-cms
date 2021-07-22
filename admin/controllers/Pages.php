@@ -69,12 +69,15 @@ class Pages extends BaseAdmin
         if (userHasPermission('admin:cms:pages:manage')) {
 
             //  Alerts
+            /** @var Page $oModel */
+            $oModel = Factory::model('Page', Constants::MODULE_SLUG);
+
             //  Draft pages
             /** @var Database $oDb */
             $oDb = Factory::service('Database');
             $oDb->where('is_published', false);
-            $oDb->where('is_deleted', false);
-            $iNumDrafts = $oDb->count_all_results(Config::get('NAILS_DB_PREFIX') . 'cms_page');
+            $oDb->where($oModel->getColumnIsDeleted(), false);
+            $iNumDrafts = $oDb->count_all_results($oModel->getTableName());
 
             /** @var Alert $oAlert */
             $oAlert = Factory::factory('NavAlert', \Nails\Admin\Constants::MODULE_SLUG);

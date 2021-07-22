@@ -450,10 +450,10 @@ class Page extends Base
         $oDb->set('published_seo_keywords', 'draft_seo_keywords', false);
         $oDb->set('published_seo_image_id', 'draft_seo_image_id', false);
         $oDb->set('is_published', true);
-        $oDb->set('modified', $oDate->format('Y-m-d H:i:s'));
+        $oDb->set($this->getColumnModified(), $oDate->format('Y-m-d H:i:s'));
 
         if (isLoggedIn()) {
-            $oDb->set('modified_by', activeUser('id'));
+            $oDb->set($this->getColumnModifiedBy(), activeUser('id'));
         }
 
         $oDb->where('id', $oPage->id);
@@ -495,7 +495,7 @@ class Page extends Base
                     $oDb->set('published_slug', $oChild->draft->slug);
                     $oDb->set('published_slug_end', $oChild->draft->slug_end);
                     $oDb->set('published_breadcrumbs', json_encode($oChild->draft->breadcrumbs));
-                    $oDb->set('modified', $oDate->format('Y-m-d H:i:s'));
+                    $oDb->set($this->getColumnModified(), $oDate->format('Y-m-d H:i:s'));
 
                     $oDb->where('id', $oChild->id);
 
@@ -514,7 +514,7 @@ class Page extends Base
                 $oDb->set('hash', md5($item['slug'] . $item['page_id']));
                 $oDb->set('slug', $item['slug']);
                 $oDb->set('page_id', $item['page_id']);
-                $oDb->set('created', 'NOW()', false);
+                $oDb->set($this->getColumnCreated(), 'NOW()', false);
                 $oDb->replace(Config::get('NAILS_DB_PREFIX') . 'cms_page_slug_history');
             }
 
@@ -568,8 +568,8 @@ class Page extends Base
         // --------------------------------------------------------------------------
 
         $oDb->set('is_published', false);
-        $oDb->set('modified', $oNow->format('Y-m-d H:i:s'));
-        $oDb->set('modified_by', activeUser('id') ?: null);
+        $oDb->set($this->getColumnModified(), $oNow->format('Y-m-d H:i:s'));
+        $oDb->set($this->getColumnModifiedBy(), activeUser('id') ?: null);
         $oDb->where('id', $iId);
 
         if (!$oDb->update($this->getTableName())) {
@@ -760,7 +760,7 @@ class Page extends Base
 
         $oDb->select('id,draft_slug,draft_title,is_published');
         $oDb->where('draft_parent_id', $iPageId);
-        $aChildren = $oDb->get(Config::get('NAILS_DB_PREFIX') . 'cms_page')->result();
+        $aChildren = $oDb->get($this->getTableName())->result();
 
         if ($aChildren) {
 
@@ -958,11 +958,11 @@ class Page extends Base
         try {
 
             $oDb->where('id', $iId);
-            $oDb->set('is_deleted', true);
-            $oDb->set('modified', 'NOW()', false);
+            $oDb->set($this->getColumnIsDeleted(), true);
+            $oDb->set($this->getColumnModified(), 'NOW()', false);
 
             if (isLoggedIn()) {
-                $oDb->set('modified_by', activeUser('id'));
+                $oDb->set($this->getColumnModifiedBy(), activeUser('id'));
             }
 
             if (!$oDb->update($this->getTableName())) {
@@ -975,11 +975,11 @@ class Page extends Base
             if ($aChildren) {
 
                 $oDb->where_in('id', $aChildren);
-                $oDb->set('is_deleted', true);
-                $oDb->set('modified', 'NOW()', false);
+                $oDb->set($this->getColumnIsDeleted(), true);
+                $oDb->set($this->getColumnModified(), 'NOW()', false);
 
                 if (isLoggedIn()) {
-                    $oDb->set('modified_by', activeUser('id'));
+                    $oDb->set($this->getColumnModifiedBy(), activeUser('id'));
                 }
 
                 if (!$oDb->update($this->getTableName())) {
