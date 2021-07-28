@@ -126,7 +126,7 @@ trait Widget
         $aSql = [];
         foreach ($this->getDataColumns() as $sColumn) {
             $aSql[] = sprintf(
-                'JSON_CONTAINS(JSON_EXTRACT(%s, "%s"), \'"%s"\', "$"")',
+                'JSON_CONTAINS(JSON_EXTRACT(%s, "%s"), \'"%s"\', "$")',
                 $sColumn,
                 $this->getJsonPath(),
                 $oWidget->getSlug()
