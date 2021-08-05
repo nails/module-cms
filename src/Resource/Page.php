@@ -114,7 +114,9 @@ class Page extends Entity
             throw new RenderException(
                 sprintf(
                     '"%s" is not a valid template.',
-                    $sTemplate
+                    $bRenderPublished
+                        ? $this->published->template
+                        : $this->draft->template,
                 )
             );
         }
