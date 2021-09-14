@@ -31,7 +31,6 @@ use Nails\Common\Service\Asset;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
-use Nails\Common\Service\UserFeedback;
 use Nails\Common\Service\Uri;
 use Nails\Components;
 use Nails\Config;
@@ -285,18 +284,16 @@ class Pages extends BaseAdmin
 
                     } else {
 
-                        /** @var UserFeedback $oUserFeedback */
-                        $oUserFeedback = Factory::service('UserFeedback');
-                        $oUserFeedback->success('Page created successfully!');
+                        $this->oUserFeedback->success('Page created successfully!');
                         redirect('admin/cms/pages/edit/' . $oNewPageId);
                     }
 
                 } else {
-                    $this->data['error'] = 'Failed to create page. ' . $this->oPageModel->lastError();
+                    $this->oUserFeedback->error('Failed to create page. ' . $this->oPageModel->lastError());
                 }
 
             } else {
-                $this->data['error'] = lang('fv_there_were_errors');
+                $this->oUserFeedback->error(lang('fv_there_were_errors'));
             }
         }
 
@@ -375,9 +372,7 @@ class Pages extends BaseAdmin
         $oPage = $this->oPageModel->getById($oUri->segment(5));
 
         if (!$oPage) {
-            /** @var UserFeedback $oUserFeedback */
-            $oUserFeedback = Factory::service('UserFeedback');
-            $oUserFeedback->error('No page found by that ID');
+            $this->oUserFeedback->error('No page found by that ID');
             redirect('admin/cms/pages');
         }
 
@@ -435,19 +430,17 @@ class Pages extends BaseAdmin
 
                     } else {
 
-                        /** @var UserFeedback $oUserFeedback */
-                        $oUserFeedback = Factory::service('UserFeedback');
-                        $oUserFeedback->success('Page saved successfully!');
+                        $this->oUserFeedback->success('Page saved successfully!');
 
                         redirect('admin/cms/pages/edit/' . $oPage->id);
                     }
 
                 } else {
-                    $this->data['error'] = 'Failed to update page. ' . $this->oPageModel->lastError();
+                    $this->oUserFeedback->error('Failed to update page. ' . $this->oPageModel->lastError());
                 }
 
             } else {
-                $this->data['error'] = lang('fv_there_were_errors');
+                $this->oUserFeedback->error(lang('fv_there_were_errors'));
             }
         }
 
@@ -527,8 +520,6 @@ class Pages extends BaseAdmin
         $oUri = Factory::service('Uri');
         /** @var Input $oInput */
         $oInput = Factory::service('Input');
-        /** @var UserFeedback $oUserFeedback */
-        $oUserFeedback = Factory::service('UserFeedback');
 
         $iId        = $oUri->segment(5);
         $bIsEditing = (bool) $oInput->get('editing');
@@ -537,7 +528,7 @@ class Pages extends BaseAdmin
         if ($this->oPageModel->publish($iId)) {
 
             $oPage = $this->oPageModel->getById($iId);
-            $oUserFeedback->success(sprintf(
+            $this->oUserFeedback->success(sprintf(
                 'Page was published successfully - %s',
                 anchor(
                     $oPage->published->url,
@@ -547,7 +538,7 @@ class Pages extends BaseAdmin
             ));
 
         } else {
-            $oUserFeedback->error('Could not publish page. ' . $this->oPageModel->lastError());
+            $this->oUserFeedback->error('Could not publish page. ' . $this->oPageModel->lastError());
         }
 
         if (!empty($sReturnTo)) {
@@ -612,15 +603,13 @@ class Pages extends BaseAdmin
 
                 $oDb->transaction()->commit();
 
-                /** @var UserFeedback $oUserFeedback */
-                $oUserFeedback = Factory::service('UserFeedback');
-                $oUserFeedback->success('Page unpublished successfully');
+                $this->oUserFeedback->success('Page unpublished successfully');
 
                 redirect($oInput->post('return_to') ?: 'admin/cms/pages');
 
             } catch (NailsException $e) {
                 $oDb->transaction()->rollback();
-                $this->data['error'] = $e->getMessage();
+                $this->oUserFeedback->error($e->getMessage());
             }
         }
 
@@ -785,15 +774,13 @@ class Pages extends BaseAdmin
 
                 $oDb->transaction()->commit();
 
-                /** @var UserFeedback $oUserFeedback */
-                $oUserFeedback = Factory::service('UserFeedback');
-                $oUserFeedback->success('Page deleted successfully');
+                $this->oUserFeedback->success('Page deleted successfully');
 
                 redirect($oInput->post('return_to') ?: 'admin/cms/pages');
 
             } catch (NailsException $e) {
                 $oDb->transaction()->rollback();
-                $this->data['error'] = $e->getMessage();
+                $this->oUserFeedback->error($e->getMessage());
             }
         }
 
@@ -837,20 +824,18 @@ class Pages extends BaseAdmin
 
         /** @var Uri $oUri */
         $oUri = Factory::service('Uri');
-        /** @var UserFeedback $oUserFeedback */
-        $oUserFeedback = Factory::service('UserFeedback');
 
         $iId   = $oUri->segment(5);
         $oPage = $this->oPageModel->getById($iId);
 
         if ($oPage && $oPage->is_deleted) {
             if ($this->oPageModel->restore($iId)) {
-                $oUserFeedback->success('Page was restored successfully. ');
+                $this->oUserFeedback->success('Page was restored successfully. ');
             } else {
-                $oUserFeedback->error('Could not restore page. ' . $this->oPageModel->lastError());
+                $this->oUserFeedback->error('Could not restore page. ' . $this->oPageModel->lastError());
             }
         } else {
-            $oUserFeedback->error('Invalid page ID.');
+            $this->oUserFeedback->error('Invalid page ID.');
         }
 
         redirect('admin/cms/pages');
@@ -872,8 +857,6 @@ class Pages extends BaseAdmin
 
         /** @var Uri $oUri */
         $oUri = Factory::service('Uri');
-        /** @var UserFeedback $oUserFeedback */
-        $oUserFeedback = Factory::service('UserFeedback');
 
         $iId   = $oUri->segment(5);
         $oPage = $this->oPageModel->getById($iId);
@@ -888,11 +871,11 @@ class Pages extends BaseAdmin
                 throw new \Exception($this->oPageModel->lastError());
             }
 
-            $oUserFeedback->success('Page copied successfully.');
+            $this->oUserFeedback->success('Page copied successfully.');
             redirect('admin/cms/pages/edit/' . $iNewId);
 
         } catch (\Exception $e) {
-            $oUserFeedback->error('Failed to copy item. ' . $e->getMessage());
+            $this->oUserFeedback->error('Failed to copy item. ' . $e->getMessage());
         }
 
         redirect('admin/cms/pages');

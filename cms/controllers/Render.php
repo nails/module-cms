@@ -157,17 +157,17 @@ class Render extends Base
          * a system alert (which the templates *should* handle).
          */
 
-        $bHasDataAndNotPreview  = !$this->data['warning'] && !$this->bIsPreview;
+        $bHasDataAndNotPreview  = !((string) $this->data['warning']) && !$this->bIsPreview;
         $bHasUnpublishedChanges = $oPage->has_unpublished_changes;
         $bUserHasPermission     = userHasPermission('admin:cms:pages:edit');
 
         if ($bHasDataAndNotPreview && $bHasUnpublishedChanges && $bUserHasPermission) {
-            $this->data['warning'] = lang(
+            $this->oUserFeedback->warning(lang(
                 'cms_notice_unpublished_changes',
                 [
                     siteUrl('admin/cms/pages/edit/' . $oPage->id),
                 ]
-            );
+            ));
         }
 
         // --------------------------------------------------------------------------
