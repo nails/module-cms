@@ -857,7 +857,7 @@ class Page extends Base
      *
      * @return Resource\Page[]
      */
-    public function getTopLevel($iPage = null, $iPerPage = null, $aData = [], $bIncludeDeleted = false): array
+    public function getTopLevel($iPage = null, $iPerPage = null, array $aData = [], bool $bIncludeDeleted = false): array
     {
         if (empty($aData['where'])) {
             $aData['were'] = [];
