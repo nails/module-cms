@@ -819,7 +819,7 @@ class Page extends Base
      *
      * @return string[]
      */
-    public function getAllFlat($iPage = null, $iPerPage = null, array $aData = [], $bIncludeDeleted = false): array
+    public function getAllFlat($iPage = null, $iPerPage = null, array $aData = [], bool $bIncludeDeleted = false): array
     {
         //  If the first value is an array then treat as if called with getAll(null, null, $aData);
         if (is_array($iPage)) {
