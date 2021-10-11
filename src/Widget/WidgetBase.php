@@ -13,6 +13,7 @@
 namespace Nails\Cms\Widget;
 
 use Nails\Cms\Interfaces;
+use Nails\Common\Helper\ArrayHelper;
 use Nails\Common\Service\FileCache;
 use Nails\Factory;
 
@@ -134,6 +135,13 @@ abstract class WidgetBase implements Interfaces\Widget
      * @var object
      */
     protected $callbacks;
+
+    /**
+     * The widget's data, and defaults. Keys are the variable names, values are the default values
+     *
+     * @var array
+     */
+    protected $data = [];
 
     // --------------------------------------------------------------------------
 
@@ -503,6 +511,9 @@ abstract class WidgetBase implements Interfaces\Widget
      */
     protected function populateWidgetData(array &$aWidgetData)
     {
+        foreach ($this->data as $sKey => $sDefault) {
+            $aWidgetData[$sKey] = ArrayHelper::get($sKey, $aWidgetData, $sDefault);
+        }
     }
 
     // --------------------------------------------------------------------------
