@@ -32,6 +32,13 @@ abstract class TemplateBase implements Template
      */
     const DISABLED = false;
 
+    /**
+     * If widget is deprecated, suggest alternative
+     *
+     * @var string
+     */
+    const ALTERNATIVE = '';
+
     // --------------------------------------------------------------------------
 
     /**
@@ -140,6 +147,30 @@ abstract class TemplateBase implements Template
     public static function isDefault(): bool
     {
         return !empty(static::$isDefault);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Whether the template is deprecated or not
+     *
+     * @return bool
+     */
+    public static function isDeprecated(): bool
+    {
+        return !empty(static::ALTERNATIVE);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * When deprecated, an alternative template to use
+     *
+     * @return string
+     */
+    public static function alternative(): string
+    {
+        return static::ALTERNATIVE;
     }
 
     // --------------------------------------------------------------------------
@@ -527,6 +558,8 @@ abstract class TemplateBase implements Template
             'assets_editor'     => $this->getEditorAssets(),
             'assets_render'     => $this->getRenderAssets(),
             'path'              => $this->getPath(),
+            'is_deprecated'     => static::isDeprecated(),
+            'alternative'       => static::alternative(),
         ];
     }
 }

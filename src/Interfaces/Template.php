@@ -36,6 +36,24 @@ interface Template
     // --------------------------------------------------------------------------
 
     /**
+     * Whether the template is deprecated or not
+     *
+     * @return bool
+     */
+    public static function isDeprecated(): bool;
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * When deprecated, an alternative template to use
+     *
+     * @return string
+     */
+    public static function alternative(): string;
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Detects the path of the called class
      *
      * @return string
@@ -45,7 +63,7 @@ interface Template
     // --------------------------------------------------------------------------
 
     /**
-     * Looks for a file in the widget hierarchy and returns it if found
+     * Looks for a file in the template hierarchy and returns it if found
      *
      * @param string $sFile The file name to look for
      *
