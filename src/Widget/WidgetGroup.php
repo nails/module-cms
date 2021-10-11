@@ -124,9 +124,14 @@ class WidgetGroup
         return json_encode(
             [
                 'label'   => $this->getLabel(),
-                'widgets' => array_map(function (Interfaces\Widget $oWidget) {
-                    return $oWidget->toArray();
-                }, $this->getWidgets()),
+                'widgets' => array_values(
+                    array_map(
+                        function (Interfaces\Widget $oWidget) {
+                            return $oWidget->toArray();
+                        },
+                        $this->getWidgets()
+                    )
+                ),
             ],
             $iJsonOptions,
             $iJsonDepth
