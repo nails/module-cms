@@ -293,6 +293,10 @@ class WidgetEditor {
                     '<a href="#" class="action action-remove fa fa-trash"></a>' +
                     '<a href="#" class="action action-refresh-editor fa fa-sync"></a>' +
                     '<div class="description">{{description}}</div>' +
+                    '<div class="deprecated alert alert-danger">' +
+                    '<i class="fa fa-exclamation-triangle"></i> ' +
+                    'This widget is deprecated. {{#alternative}}Consider using {{alternative}} instead.{{/alternative}}' +
+                    '</div>' +
                     '<div class="editor-target fieldset">Widget Loading...</div>'
                 ),
                 'preview': $('<div>')
@@ -568,7 +572,7 @@ class WidgetEditor {
 
         this.sections.widgets.empty();
 
-        let i, x, label, toggle, container, icon;
+        let i, x, label, deprecated, toggle, container, icon;
 
         for (i = 0; i < this.widgets.length; i++) {
 
@@ -590,6 +594,15 @@ class WidgetEditor {
 
                 icon = $('<i>').addClass('icon fa ' + this.widgets[i].widgets[x].icon);
                 label = $('<span>').text(this.widgets[i].widgets[x].label);
+
+                if (this.widgets[i].widgets[x].is_deprecated) {
+                    deprecated = $('<span>')
+                        .addClass('deprecated')
+                        .html('<i class="fa fa-exclamation-triange"></i> Deprecated');
+                } else {
+                    deprecated = null;
+                }
+
                 container = $('<div>')
                     .addClass('widget widget-group-' + i)
                     .data('group', i)
@@ -604,7 +617,8 @@ class WidgetEditor {
 
                 container
                     .append(icon)
-                    .append(label);
+                    .append(label)
+                    .append(deprecated);
 
                 this.sections.widgets.append(container);
             }

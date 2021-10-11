@@ -304,7 +304,9 @@ class Pages extends BaseAdmin
 
         //  Get data, available templates & widgets
         $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
-        $this->data['templates']       = $this->oTemplateService->getAvailable('EDITOR');
+        $this->data['templates']       = $this->oTemplateService->getAvailable();
+
+        $this->oTemplateService->loadEditorAssets($this->data['templates']);
 
         $aTemplatesJson = [];
         foreach ($this->data['templates'] as $oTemplateGroup) {
@@ -452,7 +454,9 @@ class Pages extends BaseAdmin
         //  Get data, available templates & widgets
         $this->data['cmspage']         = $oPage;
         $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
-        $this->data['templates']       = $this->oTemplateService->getAvailable('EDITOR');
+        $this->data['templates']       = $this->oTemplateService->getAvailable();
+
+        $this->oTemplateService->loadEditorAssets($this->data['templates']);
 
         $aTemplatesJson = [];
         foreach ($this->data['templates'] as $oTemplateGroup) {

@@ -61,30 +61,19 @@ class Widgets extends Api\Controller\Base
      */
     public function getIndex()
     {
+        /** @var \Nails\Cms\Service\Widget $oWidgetService */
         $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
-        $oAsset         = Factory::service('Asset');
-        $aWidgets       = [];
-        $aWidgetGroups  = $oWidgetService->getAvailable();
+        /** @var \Nails\Common\Service\Asset $oAsset */
+        $oAsset = Factory::service('Asset');
+
+        $aWidgets      = [];
+        $aWidgetGroups = $oWidgetService->getAvailable();
 
         $oAsset->clear();
+        $oWidgetService->loadEditorAssets($aWidgetGroups);
 
         foreach ($aWidgetGroups as $oWidgetGroup) {
-
             $aWidgets[] = json_decode($oWidgetGroup->toJson());
-
-            foreach ($oWidgetGroup->getWidgets() as $oWidget) {
-
-                $aWidgetAssets = $oWidget->getAssets('EDITOR');
-
-                foreach ($aWidgetAssets as $aAsset) {
-                    $sAsset    = !empty($aAsset[0]) ? $aAsset[0] : '';
-                    $sLocation = !empty($aAsset[1]) ? $aAsset[1] : '';
-
-                    if (!empty($sAsset)) {
-                        $oAsset->load($sAsset, $sLocation);
-                    }
-                }
-            }
         }
 
         arraySortMulti($aWidgets, 'label');

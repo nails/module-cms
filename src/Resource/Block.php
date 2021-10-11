@@ -12,7 +12,6 @@ namespace Nails\Cms\Resource;
 use Nails\Cms\Constants;
 use Nails\Cms\Exception\Widget\NotFoundException;
 use Nails\Cms\Service\Widget;
-use Nails\Cms\Widget\WidgetBase;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Resource\Entity;
 use Nails\Environment;

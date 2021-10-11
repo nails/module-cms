@@ -36,6 +36,13 @@ abstract class WidgetBase implements Interfaces\Widget
     const HIDDEN = false;
 
     /**
+     * If widget is deprecated, suggest alternative
+     *
+     * @var string
+     */
+    const ALTERNATIVE = '';
+
+    /**
      * The default icon to use
      *
      * @var string
@@ -44,16 +51,81 @@ abstract class WidgetBase implements Interfaces\Widget
 
     // --------------------------------------------------------------------------
 
-    protected $label;
-    protected $icon;
-    protected $description;
-    protected $keywords;
-    protected $grouping;
-    protected $slug;
-    protected $screenshot;
-    protected $assets_editor;
-    protected $assets_render;
-    protected $path;
+    /**
+     * The widget's label
+     *
+     * @var string
+     */
+    protected $label = '';
+
+    /**
+     * The widget's icon
+     *
+     * @var string
+     */
+    protected $icon = '';
+
+    /**
+     * The widget's description
+     *
+     * @var string
+     */
+    protected $description = '';
+
+    /**
+     * The widget's keywords
+     *
+     * @var string
+     */
+    protected $keywords = '';
+
+    /**
+     * The widget's grouping
+     *
+     * @var string
+     */
+    protected $grouping = '';
+
+    /**
+     * The widget's slug
+     *
+     * @var string
+     */
+    protected $slug = '';
+
+    /**
+     * The widget's screenshot
+     *
+     * @var string
+     */
+    protected $screenshot = '';
+
+    /**
+     * The widget's assets_editor
+     *
+     * @var array
+     */
+    protected $assets_editor = [];
+
+    /**
+     * The widget's assets_render
+     *
+     * @var array
+     */
+    protected $assets_render = [];
+
+    /**
+     * The widget's path
+     *
+     * @var string
+     */
+    protected $path = '';
+
+    /**
+     * The widget's callbacks
+     *
+     * @var object
+     */
     protected $callbacks;
 
     // --------------------------------------------------------------------------
@@ -83,21 +155,36 @@ abstract class WidgetBase implements Interfaces\Widget
     // --------------------------------------------------------------------------
 
     /**
+     * Whether the widget is deprecated or not
+     *
+     * @return bool
+     */
+    public static function isDeprecated(): bool
+    {
+        return !empty(static::ALTERNATIVE);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * When deprecated, an alternative widget to use
+     *
+     * @return string
+     */
+    public static function alternative(): string
+    {
+        return static::ALTERNATIVE;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Constructs the widgets
      */
     public function __construct()
     {
-        $this->label         = 'Widget';
-        $this->icon          = '';
-        $this->description   = '';
-        $this->keywords      = '';
-        $this->grouping      = '';
-        $this->slug          = '';
-        $this->screenshot    = '';
-        $this->assets_editor = [];
-        $this->assets_render = [];
-        $this->path          = '';
-        $this->callbacks     = (object) [
+        $this->label     = 'Widget';
+        $this->callbacks = (object) [
             'dropped' => '',
             'removed' => '',
         ];
@@ -155,7 +242,7 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @return string
      */
-    public static function detectPath()
+    public static function detectPath(): string
     {
         $oReflect = new \ReflectionClass(get_called_class());
         return dirname($oReflect->getFileName()) . '/';
@@ -168,9 +255,9 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @param string $sFile The file name to look for
      *
-     * @return null|string
+     * @return string|null
      */
-    public static function getFilePath($sFile)
+    public static function getFilePath($sFile): ?string
     {
         //  Look for the file in the [potential] class hierarchy
         $aClasses = array_filter(
@@ -197,7 +284,7 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @return string
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         return $this->label;
     }
@@ -209,7 +296,7 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @return string
      */
-    public function getIcon()
+    public function getIcon(): string
     {
         return $this->icon ?: static::DEFAULT_ICON;
     }
@@ -221,7 +308,7 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->description;
     }
@@ -233,7 +320,7 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @return string
      */
-    public function getKeywords()
+    public function getKeywords(): string
     {
         return $this->keywords;
     }
@@ -245,7 +332,7 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @return string
      */
-    public function getGrouping()
+    public function getGrouping(): string
     {
         return $this->grouping;
     }
@@ -257,7 +344,7 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @return string
      */
-    public function getSlug()
+    public function getSlug(): string
     {
         return $this->slug;
     }
@@ -269,7 +356,7 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @return string
      */
-    public function getScreenshot()
+    public function getScreenshot(): string
     {
         return $this->screenshot;
     }
@@ -281,7 +368,7 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @return string
      */
-    public function getPath()
+    public function getPath(): string
     {
         return $this->path;
     }
@@ -291,19 +378,44 @@ abstract class WidgetBase implements Interfaces\Widget
     /**
      * Returns the widget's assets
      *
-     * @param string $sType the type of assets to return
+     * @param string $sType The type of assets to return
      *
-     * @return array
+     * @return string[]
      */
-    public function getAssets($sType)
+    protected function getAssets(string $sType): array
     {
-        if ($sType == 'EDITOR') {
+        if ($sType === static::ASSETS_EDITOR) {
             return $this->assets_editor;
-        } elseif ($sType == 'RENDER') {
+
+        } elseif ($sType === static::ASSETS_RENDER) {
             return $this->assets_render;
-        } else {
-            return [];
         }
+
+        return [];
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the widget's render assets
+     *
+     * @return string[]
+     */
+    public function getRenderAssets(): array
+    {
+        return $this->getAssets(static::ASSETS_RENDER);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the widget's editor assets
+     *
+     * @return string[]
+     */
+    public function getEditorAssets(): array
+    {
+        return $this->getAssets(static::ASSETS_EDITOR);
     }
 
     // --------------------------------------------------------------------------
@@ -311,11 +423,11 @@ abstract class WidgetBase implements Interfaces\Widget
     /**
      * Returns the widget's callbacks
      *
-     * @param string $sType the type of callback to return
+     * @param string $sType The type of callback to return
      *
      * @return mixed
      */
-    public function getCallbacks($sType = '')
+    public function getCallbacks(string $sType = '')
     {
         if (property_exists($this->callbacks, $sType)) {
             return $this->callbacks->{$sType};
@@ -334,7 +446,7 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @return string
      */
-    public function getEditor(array $aWidgetData = [])
+    public function getEditor(array $aWidgetData = []): string
     {
         return $this->loadView('editor', $aWidgetData);
     }
@@ -348,7 +460,7 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @return string
      */
-    public function render(array $aWidgetData = [])
+    public function render(array $aWidgetData = []): string
     {
         return $this->loadView('render', $aWidgetData, true);
     }
@@ -396,7 +508,7 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @return string
      */
-    public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
+    public function toJson(int $iJsonOptions = 0, int $iJsonDepth = 512)
     {
         return json_encode($this->toArray(), $iJsonOptions, $iJsonDepth);
     }
@@ -408,7 +520,7 @@ abstract class WidgetBase implements Interfaces\Widget
      *
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'label'         => $this->getLabel(),
@@ -418,10 +530,12 @@ abstract class WidgetBase implements Interfaces\Widget
             'grouping'      => $this->getGrouping(),
             'slug'          => $this->getSlug(),
             'screenshot'    => $this->getScreenshot(),
-            'assets_editor' => $this->getAssets('EDITOR'),
-            'assets_render' => $this->getAssets('RENDER'),
+            'assets_editor' => $this->getEditorAssets(),
+            'assets_render' => $this->getRenderAssets(),
             'path'          => $this->getPath(),
             'callbacks'     => $this->getCallbacks(),
+            'is_deprecated' => static::isDeprecated(),
+            'alternative'   => static::alternative(),
         ];
     }
 }

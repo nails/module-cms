@@ -83,7 +83,7 @@ class Widget
         $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
 
         $aSummary = [];
-        foreach ($oWidgetService->getAvailable(false, true) as $oWidgetGroup) {
+        foreach ($oWidgetService->getAvailable(true) as $oWidgetGroup) {
             foreach ($oWidgetGroup->getWidgets() as $oWidget) {
 
                 $iUsages = 0;

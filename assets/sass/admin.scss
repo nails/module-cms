@@ -2,6 +2,7 @@
    Nails CMS Module Admin Styles
 -------------------------------------------------------------- */
 
+@use "sass:math";
 @import './components/widget.accordion.scss';
 @import './components/widget.tabs.scss';
 @import './components/widgeteditor.scss';
@@ -101,7 +102,7 @@
                         }
 
                         .container-label {
-                            padding-right: $content_padding/2;
+                            padding-right: math.div($content-padding, 2);
 
                             input {
                                 width: 100%;
@@ -109,7 +110,7 @@
                         }
 
                         .container-url {
-                            padding-left: $content_padding/2;
+                            padding-left: math.div($content-padding, 2);
                             float: right;
 
                             input,

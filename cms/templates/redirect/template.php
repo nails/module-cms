@@ -37,37 +37,43 @@ class Redirect extends TemplateBase
         // --------------------------------------------------------------------------
 
         //  Additional fields
-        $this->additional_fields[0] = Factory::factory('TemplateOption', Constants::MODULE_SLUG);
-        $this->additional_fields[0]->setType('dropdown');
-        $this->additional_fields[0]->setKey('redirect_page_id');
-        $this->additional_fields[0]->setLabel('Redirect To Page');
-        $this->additional_fields[0]->setClass('select2');
-        $this->additional_fields[0]->setOptions(
+        $oOptionPage = Factory::factory('TemplateOption', Constants::MODULE_SLUG);
+        $oOptionPage->setType('dropdown');
+        $oOptionPage->setKey('redirect_page_id');
+        $oOptionPage->setLabel('Redirect To Page');
+        $oOptionPage->setClass('select2');
+        $oOptionPage->setOptions(
             ['None'] + $this->oPageModel->getAllNestedFlat()
         );
 
-        $this->additional_fields[1] = Factory::factory('TemplateOption', Constants::MODULE_SLUG);
-        $this->additional_fields[1]->setType('text');
-        $this->additional_fields[1]->setKey('redirect_url');
-        $this->additional_fields[1]->setLabel('Redirect To URL');
-        $this->additional_fields[1]->setPlaceholder(
+        $oOptionUrl = Factory::factory('TemplateOption', Constants::MODULE_SLUG);
+        $oOptionUrl->setType('text');
+        $oOptionUrl->setKey('redirect_url');
+        $oOptionUrl->setLabel('Redirect To URL');
+        $oOptionUrl->setPlaceholder(
             'Manually set the URL to redirect to, this will override any option set above.'
         );
-        $this->additional_fields[1]->setTip(
+        $oOptionUrl->setTip(
             'URLs which do not begin with http(s):// will automatically be prefixed with ' . siteUrl()
         );
 
-        $this->additional_fields[2] = Factory::factory('TemplateOption', Constants::MODULE_SLUG);
-        $this->additional_fields[2]->setType('dropdown');
-        $this->additional_fields[2]->setKey('redirect_code');
-        $this->additional_fields[2]->setLabel('Redirect Type');
-        $this->additional_fields[2]->setClass('select2');
-        $this->additional_fields[2]->setOptions(
+        $oOptionCode = Factory::factory('TemplateOption', Constants::MODULE_SLUG);
+        $oOptionCode->setType('dropdown');
+        $oOptionCode->setKey('redirect_code');
+        $oOptionCode->setLabel('Redirect Type');
+        $oOptionCode->setClass('select2');
+        $oOptionCode->setOptions(
             [
                 '302' => '302 Moved Temporarily',
                 '301' => '301 Moved Permanently',
             ]
         );
+
+        $this->additional_fields = [
+            $oOptionPage,
+            $oOptionUrl,
+            $oOptionCode,
+        ];
     }
 
     // --------------------------------------------------------------------------
@@ -75,17 +81,16 @@ class Redirect extends TemplateBase
     /**
      * Executes the redirect
      *
-     * @param  array $aTplData    The widgets to include in the template
-     * @param  array $aTplOptions Additional data created by the template
+     * @param array $aTplData    The widgets to include in the template
+     * @param array $aTplOptions Additional data created by the template
      *
-     * @return void
+     * @return string
      */
-    public function render(array $aTplData = [], array $aTplOptions = [])
+    public function render(array $aTplData = [], array $aTplOptions = []): string
     {
         $sUrl = '';
 
         if (!empty($aTplOptions['redirect_url'])) {
-
             $sUrl = $aTplOptions['redirect_url'];
 
         } elseif (!empty($aTplOptions['redirect_page_id'])) {
@@ -93,7 +98,6 @@ class Redirect extends TemplateBase
             $oPage = $this->oPageModel->getById($aTplOptions['redirect_page_id']);
 
             if ($oPage && !$oPage->is_deleted && $oPage->is_published) {
-
                 $sUrl = $oPage->published->url;
             }
         }
@@ -103,11 +107,9 @@ class Redirect extends TemplateBase
         $iCode = !empty($aTplOptions['redirect_code']) ? $aTplOptions['redirect_code'] : null;
 
         if ($sUrl) {
-
             redirect($sUrl, 'location', $iCode);
 
         } else {
-
             show404();
         }
     }

@@ -28,7 +28,7 @@ class Table extends WidgetBase
         $this->description = 'Easily build a table';
         $this->keywords    = 'table,tabular data,data';
 
-        $this->assets_editor[] = ['https://cdnjs.cloudflare.com/ajax/libs/handsontable/0.20.3/handsontable.full.min.js'];
-        $this->assets_editor[] = ['https://cdnjs.cloudflare.com/ajax/libs/handsontable/0.20.3/handsontable.min.css'];
+        $this->assets_editor[] = 'https://cdnjs.cloudflare.com/ajax/libs/handsontable/0.20.3/handsontable.full.min.js';
+        $this->assets_editor[] = 'https://cdnjs.cloudflare.com/ajax/libs/handsontable/0.20.3/handsontable.min.css';
     }
 }

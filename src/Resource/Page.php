@@ -94,20 +94,18 @@ class Page extends Entity
      * Renders the page as HTML
      *
      * @param bool $bRenderPublished Whether to use published or draft data
-     * @param bool $bLoadAssets      Whether to laod page assets or not
      *
      * @return string
      * @throws FactoryException
      */
-    public function render(bool $bRenderPublished = true, bool $bLoadAssets = true): string
+    public function render(bool $bRenderPublished = true): string
     {
         /** @var Template $oTemplateService */
         $oTemplateService = Factory::service('Template', Constants::MODULE_SLUG);
         $oTemplate        = $oTemplateService->getBySlug(
             $bRenderPublished
                 ? $this->published->template
-                : $this->draft->template,
-            $bLoadAssets
+                : $this->draft->template
         );
 
         if (!$oTemplate) {
@@ -120,6 +118,8 @@ class Page extends Entity
                 )
             );
         }
+
+        $oTemplateService->loadRenderAssets([$oTemplate]);
 
         return $oTemplate->render(
             (array) ($bRenderPublished ? $this->published->template_data : $this->draft->template_data),

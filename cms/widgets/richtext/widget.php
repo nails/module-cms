@@ -28,7 +28,7 @@ class Richtext extends WidgetBase
         $this->description = 'Build beautiful pages using the rich text editor; embed images, links and more.';
         $this->keywords    = 'rich text,formatted text,formatted,wysiwyg,embed';
 
-        $this->assets_editor[] = ['https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.16.0/ckeditor.min.js'];
-        $this->assets_editor[] = ['https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.16.0/adapters/jquery.min.js'];
+        $this->assets_editor[] = 'https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.16.0/ckeditor.min.js';
+        $this->assets_editor[] = 'https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.16.0/adapters/jquery.min.js';
     }
 }

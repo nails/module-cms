@@ -20,6 +20,7 @@ class Fullwidth extends TemplateBase
 {
     /**
      * Set this template as the default template so it is rendered first
+     *
      * @var boolean
      */
     protected static $isDefault = true;

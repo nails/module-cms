@@ -62,8 +62,7 @@ class Area extends Entity
 
             foreach ($aWidgetData as $oWidgetData) {
 
-                $sSlug = $oWidgetData->slug ?? '';
-                /** @var WidgetBase $oWidget */
+                $sSlug   = $oWidgetData->slug ?? '';
                 $oWidget = $oWidgetService->getBySlug($sSlug);
 
                 if (!empty($oWidget)) {

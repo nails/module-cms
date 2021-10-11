@@ -14,7 +14,10 @@ namespace Nails\Cms\Service;
 
 use Nails\Cms\Constants;
 use Nails\Cms\Exception\Widget\NotFoundException;
-use Nails\Cms\Widget\WidgetBase;
+use Nails\Cms\Interfaces;
+use Nails\Cms\Widget\WidgetGroup;
+use Nails\Common\Exception\NailsException;
+use Nails\Common\Helper\ArrayHelper;
 use Nails\Common\Helper\Directory;
 use Nails\Components;
 use Nails\Factory;
@@ -38,12 +41,12 @@ class Widget
     /**
      * Get all available widgets to the system
      *
-     * @param bool $bLoadAssets Whether or not to load widget's assets, and if so whether EDITOR or RENDER assets.
+     * @param bool $bIncludeHidden Whether to include hidden widgets
      *
-     * @throws NotFoundException
      * @return \Nails\Cms\Widget\WidgetGroup[]
+     * @throws NotFoundException
      */
-    public function getAvailable($bLoadAssets = false, $bIncludeHidden = false)
+    public function getAvailable($bIncludeHidden = false)
     {
         if (!empty($this->aLoadedWidgets)) {
             return $this->aLoadedWidgets;
@@ -105,12 +108,6 @@ class Widget
             }
 
             $aLoadedWidgets[$oWidget->name] = new $sClassName();
-
-            //  Load the widget's assets if requested
-            if ($bLoadAssets) {
-                $aAssets = $aLoadedWidgets[$oWidget->name]->getAssets($bLoadAssets);
-                $this->loadAssets($aAssets);
-            }
         }
 
         // --------------------------------------------------------------------------
@@ -162,14 +159,13 @@ class Widget
     /**
      * Get an individual widget
      *
-     * @param string $sSlug       The widget's slug
-     * @param string $sLoadAssets Whether or not to load the widget's assets, and if so whether EDITOR or RENDER assets.
+     * @param string $sSlug The widget's slug
      *
-     * @return WidgetBase|null
+     * @return Interfaces\Widget|null
      */
-    public function getBySlug($sSlug, $sLoadAssets = false): ?WidgetBase
+    public function getBySlug($sSlug): ?Interfaces\Widget
     {
-        $aWidgetGroups = $this->getAvailable(false, true);
+        $aWidgetGroups = $this->getAvailable(true);
 
         foreach ($aWidgetGroups as $oWidgetGroup) {
 
@@ -177,12 +173,6 @@ class Widget
 
             foreach ($aWidgets as $oWidget) {
                 if ($sSlug == $oWidget->getSlug()) {
-
-                    if ($sLoadAssets) {
-                        $aAssets = $oWidget->getAssets($sLoadAssets);
-                        $this->loadAssets($aAssets);
-                    }
-
                     return $oWidget;
                 }
             }
@@ -207,16 +197,124 @@ class Widget
 
         foreach ($aAssets as $aAsset) {
             if (is_array($aAsset)) {
-
-                $bIsNails = !empty($aAsset[1])
-                    ? $aAsset[1]
-                    : false;
-
-                $oAsset->load($aAsset[0], $bIsNails);
+                $oAsset->load($aAsset[0], $aAsset[1] ?? null);
 
             } elseif (is_string($aAsset)) {
                 $oAsset->load($aAsset);
             }
         }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Extracts assets of a particular type from an array of Widgets or WidgetGroups
+     *
+     * @param WidgetGroup[]|Interfaces\Widget[] $aWidgets The widgets, or widget groups
+     * @param string                            $sType    The type of asset
+     *
+     * @return array
+     * @throws \Nails\Common\Exception\NailsException
+     */
+    protected function extractAssets(array $aWidgets, string $sType): array
+    {
+        $aAssets = array_map(function ($oWidget) use ($sType) {
+
+            if ($oWidget instanceof WidgetGroup) {
+                return $this->reduceAssets(
+                    array_map(
+                        function (Interfaces\Widget $oWidget) use ($sType) {
+                            if ($sType === Interfaces\Widget::ASSETS_EDITOR) {
+                                return $oWidget->getEditorAssets();
+                            } elseif ($sType === Interfaces\Widget::ASSETS_RENDER) {
+                                return $oWidget->getEditorAssets();
+                            } else {
+                                return [];
+                            }
+                        },
+                        $oWidget->getWidgets()
+                    )
+                );
+
+            } elseif ($oWidget instanceof Interfaces\Widget) {
+                if ($sType === Interfaces\Widget::ASSETS_EDITOR) {
+                    return $oWidget->getEditorAssets();
+
+                } elseif ($sType === Interfaces\Widget::ASSETS_RENDER) {
+                    return $oWidget->getEditorAssets();
+
+                } else {
+                    return [];
+                }
+
+            } else {
+                throw new NailsException(sprintf(
+                    'Expected instance of %s or %s, received %s',
+                    WidgetGroup::class,
+                    Interfaces\Widget::class,
+                    get_class($oWidget)
+                ));
+            }
+
+        }, $aWidgets);
+
+        return $this->reduceAssets($aAssets);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Reduces widget assets to a normalised array
+     *
+     * @param string[]|array[] $aAssets The assets to reduce
+     *
+     * @return string[]|array[]
+     */
+    protected function reduceAssets(array $aAssets): array
+    {
+        $aOut = [];
+        foreach ($aAssets as $mAsset) {
+            $aOut = array_merge($aOut, $mAsset);
+        }
+
+        return array_values(
+            array_filter(
+                ArrayHelper::arrayUniqueMulti(
+                    $aOut
+                )
+            )
+        );
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Loads widget editor assets
+     *
+     * @param Interfaces\Widget[] $aWidgets The widgets to load assets for
+     *
+     * @return $this
+     * @throws NailsException
+     */
+    public function loadEditorAssets(array $aWidgets): self
+    {
+        $this->loadAssets($this->extractAssets($aWidgets, Interfaces\Widget::ASSETS_EDITOR));
+        return $this;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Loads widget render assets
+     *
+     * @param Interfaces\Widget[] $aWidgets The widgets to load assets for
+     *
+     * @return $this
+     * @throws NailsException
+     */
+    public function loadRenderAssets(array $aWidgets): self
+    {
+        $this->loadAssets($this->extractAssets($aWidgets, Interfaces\Widget::ASSETS_RENDER));
+        return $this;
     }
 }

@@ -51,7 +51,7 @@ class Area extends WidgetBase
     /**
      * @inheritDoc
      */
-    public function getEditor(array $aWidgetData = [])
+    public function getEditor(array $aWidgetData = []): string
     {
         /** @var \Nails\Cms\Model\Area $oModel */
         $oModel                = Factory::model('Area', Constants::MODULE_SLUG);

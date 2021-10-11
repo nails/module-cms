@@ -14,7 +14,10 @@ namespace Nails\Cms\Service;
 
 use Nails\Cms\Constants;
 use Nails\Cms\Exception\Template\NotFoundException;
-use Nails\Cms\Template\TemplateBase;
+use Nails\Cms\Interfaces;
+use Nails\Cms\Template\TemplateGroup;
+use Nails\Common\Exception\NailsException;
+use Nails\Common\Helper\ArrayHelper;
 use Nails\Common\Helper\Directory;
 use Nails\Components;
 use Nails\Factory;
@@ -64,12 +67,10 @@ class Template
     /**
      * Get all available templates to the system
      *
-     * @param string $loadAssets Whether or not to load template's assets, and if so whether EDITOR or RENDER assets.
-     *
-     * @throws NotFoundException
      * @return \Nails\Cms\Template\TemplateGroup[]
+     * @throws NotFoundException
      */
-    public function getAvailable($loadAssets = '')
+    public function getAvailable()
     {
         if (!empty($this->aLoadedTemplates)) {
             return $this->aLoadedTemplates;
@@ -122,14 +123,7 @@ class Template
             }
 
             if (!$sTemplateClass::isDisabled()) {
-
                 $aLoadedTemplates[$aTemplate['name']] = new $sTemplateClass();
-
-                //  Load the template's assets if requested
-                if ($loadAssets) {
-                    $aAssets = $aLoadedTemplates[$aTemplate['name']]->getAssets($loadAssets);
-                    $this->loadAssets($aAssets);
-                }
             }
         }
 
@@ -187,12 +181,11 @@ class Template
     /**
      * Get an individual template
      *
-     * @param string  $sSlug       The template's slug
-     * @param boolean $sLoadAssets Whether or not to load the template's assets, and if so whether EDITOR or RENDER assets.
+     * @param string $sSlug The template's slug
      *
-     * @return TemplateBase|null
+     * @return Interfaces\Template|null
      */
-    public function getBySlug($sSlug, $sLoadAssets = false): ?TemplateBase
+    public function getBySlug($sSlug): ?Interfaces\Template
     {
         $oTemplateGroups = $this->getAvailable();
 
@@ -201,15 +194,7 @@ class Template
             $aTemplates = $oTemplateGroup->getTemplates();
 
             foreach ($aTemplates as $oTemplate) {
-
                 if ($sSlug == $oTemplate->getSlug()) {
-
-                    if ($sLoadAssets) {
-
-                        $aAssets = $oTemplate->getAssets($sLoadAssets);
-                        $this->loadAssets($aAssets);
-                    }
-
                     return $oTemplate;
                 }
             }
@@ -234,16 +219,124 @@ class Template
 
         foreach ($aAssets as $aAsset) {
             if (is_array($aAsset)) {
-
-                $bIsNails = !empty($aAsset[1])
-                    ? $aAsset[1]
-                    : false;
-
-                $oAsset->load($aAsset[0], $bIsNails);
+                $oAsset->load($aAsset[0], $aAsset[1] ?? null);
 
             } elseif (is_string($aAsset)) {
                 $oAsset->load($aAsset);
             }
         }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Extracts assets of a particular type from an array of Templates or TemplateGroups
+     *
+     * @param TemplateGroup[]|Interfaces\Template[] $aTemplates The templates, or template groups
+     * @param string                                $sType      The type of asset
+     *
+     * @return array
+     * @throws \Nails\Common\Exception\NailsException
+     */
+    protected function extractAssets(array $aTemplates, string $sType): array
+    {
+        $aAssets = array_map(function ($oTemplate) use ($sType) {
+
+            if ($oTemplate instanceof TemplateGroup) {
+                return $this->reduceAssets(
+                    array_map(
+                        function (Interfaces\Template $oTemplate) use ($sType) {
+                            if ($sType === Interfaces\Template::ASSETS_EDITOR) {
+                                return $oTemplate->getEditorAssets();
+                            } elseif ($sType === Interfaces\Template::ASSETS_RENDER) {
+                                return $oTemplate->getEditorAssets();
+                            } else {
+                                return [];
+                            }
+                        },
+                        $oTemplate->getTemplates()
+                    )
+                );
+
+            } elseif ($oTemplate instanceof Interfaces\Template) {
+                if ($sType === Interfaces\Template::ASSETS_EDITOR) {
+                    return $oTemplate->getEditorAssets();
+
+                } elseif ($sType === Interfaces\Template::ASSETS_RENDER) {
+                    return $oTemplate->getEditorAssets();
+
+                } else {
+                    return [];
+                }
+
+            } else {
+                throw new NailsException(sprintf(
+                    'Expected instance of %s or %s, received %s',
+                    TemplateGroup::class,
+                    Interfaces\Template::class,
+                    get_class($oTemplate)
+                ));
+            }
+
+        }, $aTemplates);
+
+        return $this->reduceAssets($aAssets);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Reduces template assets to a normalised array
+     *
+     * @param string[]|array[] $aAssets The assets to reduce
+     *
+     * @return string[]|array[]
+     */
+    protected function reduceAssets(array $aAssets): array
+    {
+        $aOut = [];
+        foreach ($aAssets as $mAsset) {
+            $aOut = array_merge($aOut, $mAsset);
+        }
+
+        return array_values(
+            array_filter(
+                ArrayHelper::arrayUniqueMulti(
+                    $aOut
+                )
+            )
+        );
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Loads template editor assets
+     *
+     * @param Interfaces\Template[] $aTemplates The templates to load assets for
+     *
+     * @return $this
+     * @throws NailsException
+     */
+    public function loadEditorAssets(array $aTemplates): self
+    {
+        $this->loadAssets($this->extractAssets($aTemplates, Interfaces\Template::ASSETS_EDITOR));
+        return $this;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Loads template render assets
+     *
+     * @param Interfaces\Template[] $aTemplates The templates to load assets for
+     *
+     * @return $this
+     * @throws NailsException
+     */
+    public function loadRenderAssets(array $aTemplates): self
+    {
+        $this->loadAssets($this->extractAssets($aTemplates, Interfaces\Template::ASSETS_RENDER));
+        return $this;
     }
 }

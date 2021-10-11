@@ -27,6 +27,7 @@ abstract class TemplateBase implements Template
 {
     /**
      * Whether the template is enabled or not
+     *
      * @var bool
      */
     const DISABLED = false;
@@ -35,83 +36,96 @@ abstract class TemplateBase implements Template
 
     /**
      * Whether the template is the default template
+     *
      * @var bool
      */
-    protected static $isDefault;
+    protected static $isDefault = false;
 
     /**
      * The template's label
+     *
      * @var string
      */
-    protected $label;
+    protected $label = '';
 
     /**
      * The template's description
+     *
      * @var string
      */
-    protected $description;
+    protected $description = '';
 
     /**
      * The template's grouping
+     *
      * @var string
      */
-    protected $grouping;
+    protected $grouping = '';
 
     /**
      * The available widget areas
+     *
      * @var array
      */
-    protected $widget_areas;
+    protected $widget_areas = [];
 
     /**
      * Additional fields to make available
+     *
      * @var array
      */
-    protected $additional_fields;
+    protected $additional_fields = [];
 
     /**
      * Any manual config items to pass in
+     *
      * @var string
      */
-    protected $manual_config;
+    protected $manual_config = '';
 
     /**
      * The template's icon
+     *
      * @var string
      */
-    protected $icon;
+    protected $icon = '';
 
     /**
      * The template's slug
+     *
      * @var string
      */
-    protected $slug;
+    protected $slug = '';
 
     /**
      * Assets to load when in the editor
+     *
      * @var array
      */
-    protected $assets_editor;
+    protected $assets_editor = [];
 
     /**
      * Assets to load when rendering
+     *
      * @var array
      */
-    protected $assets_render;
+    protected $assets_render = [];
 
     /**
      * The template's path
+     *
      * @var string
      */
-    protected $path;
+    protected $path = '';
 
     // --------------------------------------------------------------------------
 
     /**
      * Returns whether the template is disabled
+     *
      * @return bool
      */
-    public static function isDisabled()
+    public static function isDisabled(): bool
     {
         return !empty(static::DISABLED);
     }
@@ -120,9 +134,10 @@ abstract class TemplateBase implements Template
 
     /**
      * Returns whether the template is a default template or not
+     *
      * @return bool
      */
-    public static function isDefault()
+    public static function isDefault(): bool
     {
         return !empty(static::$isDefault);
     }
@@ -134,16 +149,7 @@ abstract class TemplateBase implements Template
      */
     public function __construct()
     {
-        $this->label             = 'Template';
-        $this->description       = '';
-        $this->widget_areas      = [];
-        $this->additional_fields = [];
-        $this->manual_config     = '';
-        $this->icon              = '';
-        $this->slug              = '';
-        $this->assets_editor     = [];
-        $this->assets_render     = [];
-        $this->path              = '';
+        $this->label = 'Template';
 
         // --------------------------------------------------------------------------
 
@@ -188,9 +194,10 @@ abstract class TemplateBase implements Template
 
     /**
      * Detects the path of the called class
+     *
      * @return string
      */
-    public static function detectPath()
+    public static function detectPath(): string
     {
         $oReflect = new \ReflectionClass(get_called_class());
         return dirname($oReflect->getFileName()) . '/';
@@ -203,9 +210,9 @@ abstract class TemplateBase implements Template
      *
      * @param string $sFile The file name to look for
      *
-     * @return null|string
+     * @return string|null
      */
-    public static function getFilePath($sFile)
+    public static function getFilePath(string $sFile): ?string
     {
         //  Look for the file in the [potential] class hierarchy
         $aClasses = array_filter(
@@ -229,9 +236,10 @@ abstract class TemplateBase implements Template
 
     /**
      * Returns the template's label
+     *
      * @return string
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         return $this->label;
     }
@@ -240,9 +248,10 @@ abstract class TemplateBase implements Template
 
     /**
      * Returns the template's description
+     *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->description;
     }
@@ -251,9 +260,10 @@ abstract class TemplateBase implements Template
 
     /**
      * Returns the template's grouping
+     *
      * @return string
      */
-    public function getGrouping()
+    public function getGrouping(): string
     {
         return $this->grouping;
     }
@@ -262,9 +272,10 @@ abstract class TemplateBase implements Template
 
     /**
      * Returns the template's widget areas
+     *
      * @return array
      */
-    public function getWidgetAreas()
+    public function getWidgetAreas(): array
     {
         return $this->widget_areas;
     }
@@ -273,9 +284,10 @@ abstract class TemplateBase implements Template
 
     /**
      * Returns the template's additional fields
+     *
      * @return array
      */
-    public function getAdditionalFields()
+    public function getAdditionalFields(): array
     {
         return $this->additional_fields;
     }
@@ -284,9 +296,10 @@ abstract class TemplateBase implements Template
 
     /**
      * Returns the template's manual config
+     *
      * @return string
      */
-    public function getManualConfig()
+    public function getManualConfig(): string
     {
         return $this->manual_config;
     }
@@ -295,9 +308,10 @@ abstract class TemplateBase implements Template
 
     /**
      * Returns the template's icon
+     *
      * @return string
      */
-    public function getIcon()
+    public function getIcon(): string
     {
         return $this->icon;
     }
@@ -306,9 +320,10 @@ abstract class TemplateBase implements Template
 
     /**
      * Returns the template's slug
+     *
      * @return string
      */
-    public function getSlug()
+    public function getSlug(): string
     {
         return $this->slug;
     }
@@ -317,9 +332,10 @@ abstract class TemplateBase implements Template
 
     /**
      * Returns the template's path
+     *
      * @return string
      */
-    public function getPath()
+    public function getPath(): string
     {
         return $this->path;
     }
@@ -333,15 +349,41 @@ abstract class TemplateBase implements Template
      *
      * @return array
      */
-    public function getAssets($sType)
+    protected function getAssets(string $sType): array
     {
-        if ($sType == 'EDITOR') {
+        if ($sType === static::ASSETS_EDITOR) {
             return $this->assets_editor;
-        } elseif ($sType == 'RENDER') {
+
+        } elseif ($sType === static::ASSETS_RENDER) {
             return $this->assets_render;
-        } else {
-            return [];
         }
+
+        return [];
+
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the template's render assets
+     *
+     * @return string[]
+     */
+    public function getRenderAssets(): array
+    {
+        return $this->getAssets(static::ASSETS_RENDER);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the template's editor assets
+     *
+     * @return string[]
+     */
+    public function getEditorAssets(): array
+    {
+        return $this->getAssets(static::ASSETS_EDITOR);
     }
 
     // --------------------------------------------------------------------------
@@ -349,19 +391,19 @@ abstract class TemplateBase implements Template
     /**
      * Renders the template with the provided data.
      *
-     * @param  array $aTplData    The widgets to include in the template
-     * @param  array $aTplOptions Additional data created by the template
+     * @param array $aTplData    The widgets to include in the template
+     * @param array $aTplOptions Additional data created by the template
      *
      * @return string
      */
-    public function render(array $aTplData = [], array $aTplOptions = [])
+    public function render(array $aTplData = [], array $aTplOptions = []): string
     {
         //  Process each widget area and render the HTML
         $aWidgetAreas  = $this->getWidgetAreas();
         $aRenderedData = [];
 
         /** @var \Nails\Cms\Service\Widget $oWidgetService */
-        $oWidgetService  = Factory::service('Widget', Constants::MODULE_SLUG);
+        $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
 
         foreach ($aWidgetAreas as $sAreaSlug => $oWidgetArea) {
 
@@ -369,14 +411,18 @@ abstract class TemplateBase implements Template
             $aRenderedData[$sAreaSlug] = '';
 
             foreach ($aWidgetData as $oWidgetData) {
+
                 if (empty($oWidgetData->slug)) {
                     continue;
-                }
-                if (!property_exists($oWidgetData, 'data')) {
+
+                } elseif (!property_exists($oWidgetData, 'data')) {
                     $oWidgetData->data = [];
                 }
-                $oWidget = $oWidgetService->getBySlug($oWidgetData->slug, 'RENDER');
+
+                $oWidget = $oWidgetService->getBySlug($oWidgetData->slug);
+
                 if ($oWidget) {
+                    $oWidgetService->loadRenderAssets([$oWidget]);
                     $aRenderedData[$sAreaSlug] .= $oWidget->render((array) $oWidgetData->data);
                 }
             }
@@ -456,7 +502,7 @@ abstract class TemplateBase implements Template
      *
      * @return string
      */
-    public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
+    public function toJson(int $iJsonOptions = 0, int $iJsonDepth = 512): string
     {
         return json_encode($this->toArray(), $iJsonOptions, $iJsonDepth);
     }
@@ -465,9 +511,10 @@ abstract class TemplateBase implements Template
 
     /**
      * Format the template as an array
+     *
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'label'             => $this->getLabel(),
@@ -477,8 +524,8 @@ abstract class TemplateBase implements Template
             'manual_config'     => $this->getManualConfig(),
             'icon'              => $this->getIcon(),
             'slug'              => $this->getSlug(),
-            'assets_editor'     => $this->getAssets('EDITOR'),
-            'assets_render'     => $this->getAssets('RENDER'),
+            'assets_editor'     => $this->getEditorAssets(),
+            'assets_render'     => $this->getRenderAssets(),
             'path'              => $this->getPath(),
         ];
     }

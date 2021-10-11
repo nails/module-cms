@@ -131,8 +131,7 @@ if (!function_exists('cmsWidget')) {
     {
         /** @var \Nails\Cms\Service\Widget $oWidgetService */
         $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
-        /** @var \Nails\Cms\Widget\WidgetBase $oWidget */
-        $oWidget = $oWidgetService->getBySlug($sSlug);
+        $oWidget        = $oWidgetService->getBySlug($sSlug);
 
         if ($oWidget) {
             return $oWidget->render($aData);
