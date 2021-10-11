@@ -36,6 +36,13 @@ abstract class WidgetBase implements Interfaces\Widget
     const HIDDEN = false;
 
     /**
+     * Whether the widget is deprecated
+     *
+     * @var string
+     */
+    const DEPRECATED = false;
+
+    /**
      * If widget is deprecated, suggest alternative
      *
      * @var string
@@ -161,7 +168,7 @@ abstract class WidgetBase implements Interfaces\Widget
      */
     public static function isDeprecated(): bool
     {
-        return !empty(static::ALTERNATIVE);
+        return static::DEPRECATED;
     }
 
     // --------------------------------------------------------------------------

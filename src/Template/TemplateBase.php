@@ -33,7 +33,14 @@ abstract class TemplateBase implements Template
     const DISABLED = false;
 
     /**
-     * If widget is deprecated, suggest alternative
+     * Whether the template is deprecated
+     *
+     * @var bool
+     */
+    const DEPRECATED = false;
+
+    /**
+     * If template is deprecated, suggest alternative
      *
      * @var string
      */
@@ -158,7 +165,7 @@ abstract class TemplateBase implements Template
      */
     public static function isDeprecated(): bool
     {
-        return !empty(static::ALTERNATIVE);
+        return static::DEPRECATED;
     }
 
     // --------------------------------------------------------------------------
