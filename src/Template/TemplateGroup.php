@@ -12,27 +12,30 @@
 
 namespace Nails\Cms\Template;
 
+use Nails\Cms\Interfaces;
+
 class TemplateGroup
 {
+    /** @var string */
     protected $sLabel;
-    protected $aTemplates;
+
+    /** @var Interfaces\Template[] */
+    protected $aTemplates = [];
 
     // --------------------------------------------------------------------------
 
     /**
-     * Construct a new widget group
-     * @param string $sLabel The label to give the group
-     * @param array $aTemplates An array of widgets to add to the group
+     * Construct a new template group
+     *
+     * @param string                $sLabel     The label to give the group
+     * @param Interfaces\Template[] $aTemplates An array of templates to add to the group
      */
-    public function __construct($sLabel = '', $aTemplates = array())
+    public function __construct(string $sLabel = '', array $aTemplates = [])
     {
         $this->setLabel($sLabel);
-        $this->aTemplates = array();
 
-        if (!empty($aTemplates)) {
-            foreach ($aTemplates as $oTemplate) {
-                $this->add($oTemplate);
-            }
+        foreach ($aTemplates as $oTemplate) {
+            $this->add($oTemplate);
         }
     }
 
@@ -40,9 +43,10 @@ class TemplateGroup
 
     /**
      * Get the group's label
+     *
      * @return string
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         return $this->sLabel;
     }
@@ -51,10 +55,12 @@ class TemplateGroup
 
     /**
      * Set the group's label
+     *
      * @param string $sLabel The label to give the group
+     *
      * @return $this
      */
-    public function setLabel($sLabel)
+    public function setLabel(string $sLabel): self
     {
         $this->sLabel = $sLabel;
         return $this;
@@ -63,11 +69,13 @@ class TemplateGroup
     // --------------------------------------------------------------------------
 
     /**
-     * Add a widget to the group
-     * @param object $oTemplate The widget to add
+     * Add a template to the group
+     *
+     * @param Interfaces\Template $oTemplate The template to add
+     *
      * @return $this
      */
-    public function add($oTemplate)
+    public function add(Interfaces\Template $oTemplate): self
     {
         $this->aTemplates[$oTemplate->getSlug()] = $oTemplate;
         return $this;
@@ -76,30 +84,37 @@ class TemplateGroup
     // --------------------------------------------------------------------------
 
     /**
-     * Remove a widget from the group
-     * @param object $oTemplate The widget to remove
+     * Remove a template from the group
+     *
+     * @param Interfaces\Template $oTemplate The template to remove
+     *
      * @return $this
      */
-    public function remove($oTemplate)
+    public function remove(Interfaces\Template $oTemplate): self
     {
         $this->aTemplates[$oTemplate->getSlug()] = null;
-        $this->aTemplates = array_filter($this->aTemplates);
+        $this->aTemplates                        = array_filter($this->aTemplates);
         return $this;
     }
 
     // --------------------------------------------------------------------------
 
-    public function getTemplates()
+    /**
+     * Return the templates in the group
+     *
+     * @return Interfaces\Template[]
+     */
+    public function getTemplates(): array
     {
         //  Sort into some alphabetical order and save for later
         ksort($this->aTemplates);
 
         //  Place default templates first
-        $aDefaultTemplates = array();
+        $aDefaultTemplates = [];
         foreach ($this->aTemplates as $sKey => &$oTemplate) {
             if ($oTemplate->isDefault()) {
                 $aDefaultTemplates[$sKey] = $oTemplate;
-                $oTemplate = null;
+                $oTemplate                = null;
             }
         }
 
@@ -110,10 +125,42 @@ class TemplateGroup
 
     // --------------------------------------------------------------------------
 
-    public function getTemplatesAsJson($iJsonOptions = 0, $iJsonDepth = 512)
+    /**
+     * Get the group as JSON
+     *
+     * @param int $iJsonOptions
+     * @param int $iJsonDepth
+     *
+     * @return string
+     */
+    public function toJson(int $iJsonOptions = 0, int $iJsonDepth = 512): string
     {
-        $aTemplatesJson = array();
-        $aTemplates = $this->getTemplates();
+        return json_encode(
+            [
+                'label'     => $this->getLabel(),
+                'templates' => array_map(function (Interfaces\Template $oTemplate) {
+                    return $oTemplate->toArray();
+                }, $this->getTemplates()),
+            ],
+            $iJsonOptions,
+            $iJsonDepth
+        );
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Get the templates as JSON
+     *
+     * @param int $iJsonOptions
+     * @param int $iJsonDepth
+     *
+     * @return string
+     */
+    public function getTemplatesAsJson(int $iJsonOptions = 0, int $iJsonDepth = 512): string
+    {
+        $aTemplatesJson = [];
+        $aTemplates     = $this->getTemplates();
 
         foreach ($aTemplates as $oTemplate) {
             $aTemplatesJson[] = $oTemplate->toJson($iJsonOptions, $iJsonDepth);

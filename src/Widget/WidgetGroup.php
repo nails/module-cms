@@ -20,25 +20,22 @@ class WidgetGroup
     protected $sLabel;
 
     /** @var Interfaces\Widget[] */
-    protected $aWidgets;
+    protected $aWidgets = [];
 
     // --------------------------------------------------------------------------
 
     /**
      * Construct a new widget group
      *
-     * @param string $sLabel   The label to give the group
-     * @param array  $aWidgets An array of widgets to add to the group
+     * @param string              $sLabel   The label to give the group
+     * @param Interfaces\Widget[] $aWidgets An array of widgets to add to the group
      */
-    public function __construct($sLabel = '', $aWidgets = [])
+    public function __construct(string $sLabel = '', array $aWidgets = [])
     {
         $this->setLabel($sLabel);
-        $this->aWidgets = [];
 
-        if (!empty($aWidgets)) {
-            foreach ($aWidgets as $oWidget) {
-                $this->add($oWidget);
-            }
+        foreach ($aWidgets as $oWidget) {
+            $this->add($oWidget);
         }
     }
 
@@ -49,7 +46,7 @@ class WidgetGroup
      *
      * @return string
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         return $this->sLabel;
     }
@@ -63,7 +60,7 @@ class WidgetGroup
      *
      * @return $this
      */
-    public function setLabel($sLabel)
+    public function setLabel(string $sLabel): self
     {
         $this->sLabel = $sLabel;
         return $this;
@@ -74,11 +71,11 @@ class WidgetGroup
     /**
      * Add a widget to the group
      *
-     * @param object $oWidget The widget to add
+     * @param Interfaces\Widget $oWidget The widget to add
      *
      * @return $this
      */
-    public function add($oWidget)
+    public function add(Interfaces\Widget $oWidget): self
     {
         $this->aWidgets[$oWidget->getSlug()] = $oWidget;
         return $this;
@@ -89,11 +86,11 @@ class WidgetGroup
     /**
      * Remove a widget from the group
      *
-     * @param object $oWidget The widget to remove
+     * @param Interfaces\Widget $oWidget The widget to remove
      *
      * @return $this
      */
-    public function remove($oWidget)
+    public function remove(Interfaces\Widget $oWidget): self
     {
         $this->aWidgets[$oWidget->getSlug()] = null;
         $this->aWidgets                      = array_filter($this->aWidgets);
@@ -102,31 +99,51 @@ class WidgetGroup
 
     // --------------------------------------------------------------------------
 
-    public function getWidgets()
+    /**
+     * Return the widgets in the group
+     *
+     * @return Interfaces\Widget[]
+     */
+    public function getWidgets(): array
     {
         return $this->aWidgets;
     }
 
     // --------------------------------------------------------------------------
 
-    public function toJson($iJsonOptions = 0, $iJsonDepth = 512)
+    /**
+     * Get the group as JSON
+     *
+     * @param int $iJsonOptions
+     * @param int $iJsonDepth
+     *
+     * @return string
+     */
+    public function toJson(int $iJsonOptions = 0, int $iJsonDepth = 512): string
     {
-        $oObj          = new \stdClass();
-        $oObj->label   = $this->getLabel();
-        $oObj->widgets = [];
-
-        $aWidgets = $this->getWidgets();
-
-        foreach ($aWidgets as $oWidget) {
-            $oObj->widgets[] = $oWidget->toArray($iJsonOptions, $iJsonDepth);
-        }
-
-        return json_encode($oObj, $iJsonOptions, $iJsonDepth);
+        return json_encode(
+            [
+                'label'   => $this->getLabel(),
+                'widgets' => array_map(function (Interfaces\Widget $oWidget) {
+                    return $oWidget->toArray();
+                }, $this->getWidgets()),
+            ],
+            $iJsonOptions,
+            $iJsonDepth
+        );
     }
 
     // --------------------------------------------------------------------------
 
-    public function getWidgetsAsJson($iJsonOptions = 0, $iJsonDepth = 512)
+    /**
+     * Get the widgets as JSON
+     *
+     * @param int $iJsonOptions
+     * @param int $iJsonDepth
+     *
+     * @return string
+     */
+    public function getWidgetsAsJson(int $iJsonOptions = 0, int $iJsonDepth = 512): string
     {
         $aWidgetsJson = [];
         $aWidgets     = $this->getWidgets();
