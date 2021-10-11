@@ -366,8 +366,15 @@
             }
 
             .deprecated {
+                display: none;
                 padding: 0.5em 1em;
                 margin: 0.5em 0;
+            }
+
+            &.deprecated {
+                .deprecated {
+                    display: block;
+                }
             }
 
             .editor-target {

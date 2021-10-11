@@ -597,7 +597,7 @@ class WidgetEditor {
 
                 if (this.widgets[i].widgets[x].is_deprecated) {
                     deprecated = $('<span>')
-                        .addClass('deprecated')
+                        .addClass('deprecated alert alert-danger')
                         .html('<i class="fa fa-exclamation-triange"></i> Deprecated');
                 } else {
                     deprecated = null;
@@ -989,6 +989,10 @@ class WidgetEditor {
                 .data('slug', widget.slug)
                 .addClass('editor-loading')
                 .html(Mustache.render(this.sections.widget.html(), widget));
+
+            if (widget.is_deprecated) {
+                $(widgetDom).addClass('deprecated');
+            }
 
             //  Setup the widget's editor
             if (!skipSetup) {
