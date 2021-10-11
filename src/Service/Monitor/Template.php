@@ -98,7 +98,8 @@ class Template
                     $oTemplate->getSlug(),
                     $oTemplate->getLabel(),
                     $oTemplate->getDescription(),
-                    $iUsages
+                    $iUsages,
+                    $oTemplate::isDeprecated(),
                 );
 
                 $aSummary[] = $oItem;

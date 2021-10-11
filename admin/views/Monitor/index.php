@@ -27,6 +27,7 @@ echo adminHelper('loadSearch', (object) [
                 <th>Item</th>
                 <th>Slug</th>
                 <th class="text-center">Usages</th>
+                <th class="text-center">In Use</th>
                 <th class="actions" style="width: 175px;">Actions</th>
             </tr>
         </thead>
@@ -45,6 +46,7 @@ echo adminHelper('loadSearch', (object) [
                     <td class="text-center">
                         <?=$oItem->usages?>
                     </td>
+                    <?=\Nails\Admin\Helper::loadBoolCell(!$oItem->is_deprecated)?>
                     <td class="actions">
                         <a href="<?=current_url() . '/' . $oItem->slug?>" class="btn btn-xs btn-primary">
                             Details

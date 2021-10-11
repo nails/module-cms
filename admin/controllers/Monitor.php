@@ -103,16 +103,18 @@ class Monitor extends BaseAdmin
 
         if ($oUri->segment(5)) {
 
-            $oWidget = $oItemService->getBySlug($oUri->segment(5));
-            if (empty($oWidget)) {
+            $oItem = $oItemService->getBySlug($oUri->segment(5));
+            if (empty($oItem)) {
                 show404();
             }
 
-            $this->data['aSummary']    = $oService->summariseItem($oWidget);
-            $this->data['page']->title = sprintf(
+            $this->data['aSummary']      = $oService->summariseItem($oItem);
+            $this->data['bIsDeprecated'] = $oItem::isDeprecated();
+            $this->data['sAlternative']  = $oItem::alternative();
+            $this->data['page']->title   = sprintf(
                 'CMS Monitor &rsaquo; %s &rsaquo; %s',
                 $sLabel,
-                $oWidget->getLabel()
+                $oItem->getLabel()
             );
             Admin\Helper::loadView('details');
 

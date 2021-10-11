@@ -2,7 +2,24 @@
 
 /**
  * @var \Nails\Cms\Factory\Monitor\Detail[] $aSummary
+ * @var bool                                $bIsDeprecated
+ * @var string                              $sAlternative
  */
+
+if ($bIsDeprecated) {
+    ?>
+    <div class="alert alert-danger">
+        This item is deprecated.
+        <?php
+        if ($sAlternative) {
+            ?>
+            Consider using <?=$sAlternative?> instead.
+            <?php
+        }
+        ?>
+    </div>
+    <?php
+}
 
 if (empty($aSummary)) {
     ?>

@@ -21,6 +21,12 @@ class Item
     /** @var int */
     public $usages;
 
+    /** @var bool */
+    public $is_deprecated;
+
+    /** @var string */
+    public $alternative;
+
     // --------------------------------------------------------------------------
 
     /**
@@ -30,11 +36,19 @@ class Item
      * @param string $sLabel
      * @param string $sDescription
      */
-    public function __construct(string $sSlug, string $sLabel, string $sDescription, int $iUsages)
-    {
-        $this->slug        = $sSlug;
-        $this->label       = $sLabel;
-        $this->description = $sDescription;
-        $this->usages      = $iUsages;
+    public function __construct(
+        string $sSlug,
+        string $sLabel,
+        string $sDescription,
+        int $iUsages,
+        bool $bIsDeprecated = false,
+        string $sAlternative = ''
+    ) {
+        $this->slug          = $sSlug;
+        $this->label         = $sLabel;
+        $this->description   = $sDescription;
+        $this->usages        = $iUsages;
+        $this->is_deprecated = $bIsDeprecated;
+        $this->alternative   = $sAlternative;
     }
 }

@@ -154,12 +154,14 @@ return [
             string $sSlug,
             string $sLabel,
             string $sDescription,
-            int $iUsages
+            int $iUsages,
+            bool $bIsDeprecated = false,
+            string $sAlternative = ''
         ): Factory\Monitor\Item {
             if (class_exists('\App\Cms\Factory\Monitor\Item')) {
-                return new \App\Cms\Factory\Monitor\Item($sSlug, $sLabel, $sDescription, $iUsages);
+                return new \App\Cms\Factory\Monitor\Item($sSlug, $sLabel, $sDescription, $iUsages, $bIsDeprecated, $sAlternative);
             } else {
-                return new Factory\Monitor\Item($sSlug, $sLabel, $sDescription, $iUsages);
+                return new Factory\Monitor\Item($sSlug, $sLabel, $sDescription, $iUsages, $bIsDeprecated, $sAlternative);
             }
         },
         'TemplateGroup'      => function (): \Nails\Cms\Template\TemplateGroup {
