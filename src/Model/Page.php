@@ -1116,7 +1116,22 @@ class Page extends Base
     public function describeFieldsExcludingData()
     {
         return array_filter(array_keys($this->describeFields()), function (string $sField) {
-            return !in_array($sField, ['published_template_data', 'draft_template_data']);
+            return !in_array($sField, $this->getDataColumns());
         });
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Returns the columns which contain page data
+     *
+     * @return string[]
+     */
+    public function getDataColumns(): array
+    {
+        return [
+            'published_template_data',
+            'draft_template_data',
+        ];
     }
 }

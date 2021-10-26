@@ -34,7 +34,7 @@ class Page implements Interfaces\Monitor\Widget
 
     private function getDataColumns(): array
     {
-        return ['published_template_data', 'draft_template_data'];
+        return Factory::model('Page', Constants::MODULE_SLUG)->getDataColumns();
     }
 
     // --------------------------------------------------------------------------
