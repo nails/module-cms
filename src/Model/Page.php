@@ -101,9 +101,7 @@ class Page extends Base
     {
         return [
             'draft_title',
-            'draft_template_data',
             'published_title',
-            'published_template_data',
         ];
     }
 
