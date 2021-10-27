@@ -227,7 +227,7 @@ class Widget
                             if ($sType === Interfaces\Widget::ASSETS_EDITOR) {
                                 return $oWidget->getEditorAssets();
                             } elseif ($sType === Interfaces\Widget::ASSETS_RENDER) {
-                                return $oWidget->getEditorAssets();
+                                return $oWidget->getRenderAssets();
                             } else {
                                 return [];
                             }
@@ -241,7 +241,7 @@ class Widget
                     return $oWidget->getEditorAssets();
 
                 } elseif ($sType === Interfaces\Widget::ASSETS_RENDER) {
-                    return $oWidget->getEditorAssets();
+                    return $oWidget->getRenderAssets();
 
                 } else {
                     return [];

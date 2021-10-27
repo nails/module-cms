@@ -249,7 +249,7 @@ class Template
                             if ($sType === Interfaces\Template::ASSETS_EDITOR) {
                                 return $oTemplate->getEditorAssets();
                             } elseif ($sType === Interfaces\Template::ASSETS_RENDER) {
-                                return $oTemplate->getEditorAssets();
+                                return $oTemplate->getRenderAssets();
                             } else {
                                 return [];
                             }
@@ -263,7 +263,7 @@ class Template
                     return $oTemplate->getEditorAssets();
 
                 } elseif ($sType === Interfaces\Template::ASSETS_RENDER) {
-                    return $oTemplate->getEditorAssets();
+                    return $oTemplate->getRenderAssets();
 
                 } else {
                     return [];
