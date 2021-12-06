@@ -28,4 +28,22 @@ class Events extends Base
      * @param int $iId The Page ID
      */
     const PAGE_UNPUBLISHED = 'PAGE:UNPUBLISHED';
+
+    /**
+     * Fired immediately before a widget is rendered
+     *
+     * @param \Nails\Cms\Interfaces\Widget $oWidget     The widget being rendered
+     * @param array                        $aWidgetData The widget's data
+     * @param string                       $sOutput     The rendered output
+     */
+    const WIDGET_RENDER_PRE = 'WIDGET:RENDER:PRE';
+
+    /**
+     * Fired immediately after a widget is rendered
+     *
+     * @param \Nails\Cms\Interfaces\Widget $oWidget     The widget being rendered
+     * @param array                        $aWidgetData The widget's data
+     * @param string                       $sOutput     The rendered output
+     */
+    const WIDGET_RENDER_POST = 'WIDGET:RENDER:POST';
 }

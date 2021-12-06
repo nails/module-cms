@@ -12,10 +12,14 @@
 
 namespace Nails\Cms\Widget;
 
+use Nails\Cms\Events;
 use Nails\Cms\Interfaces;
+use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\NailsException;
 use Nails\Common\Helper\ArrayHelper;
 use Nails\Common\Service\FileCache;
 use Nails\Factory;
+use ReflectionException;
 
 /**
  * Class WidgetBase
@@ -474,10 +478,50 @@ abstract class WidgetBase implements Interfaces\Widget
      * @param array $aWidgetData The data to render the widget with
      *
      * @return string
+     * @throws FactoryException
+     * @throws NailsException
+     * @throws ReflectionException
      */
     public function render(array $aWidgetData = []): string
     {
-        return $this->loadView('render', $aWidgetData, true);
+        $sOutput = '';
+
+        $this->fireEvent(Events::WIDGET_RENDER_PRE, $aWidgetData, $sOutput);
+
+        $sOutput .= $this->loadView('render', $aWidgetData, true);
+
+        $this->fireEvent(Events::WIDGET_RENDER_POST, $aWidgetData, $sOutput);
+
+        return $sOutput;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Fires CMS widget render events
+     *
+     * @param string $sEvent      The event to fire
+     * @param array  $aWidgetData The widget's data
+     * @param string $sOutput     The current output
+     *
+     * @throws FactoryException
+     * @throws NailsException
+     * @throws ReflectionException
+     */
+    protected function fireEvent(string $sEvent, array $aWidgetData, string &$sOutput): void
+    {
+        /** @var \Nails\Common\Service\Event $oEvent */
+        $oEvent = Factory::service('Event');
+
+        $oEvent->trigger(
+            $sEvent,
+            Events::getEventNamespace(),
+            [
+                $this,
+                $aWidgetData,
+                &$sOutput,
+            ]
+        );
     }
 
     // --------------------------------------------------------------------------
