@@ -13,6 +13,7 @@
 namespace Nails\Cms\Template;
 
 use Nails\Cms\Constants;
+use Nails\Cms\Helper\Block;
 use Nails\Cms\Interfaces\Template;
 use Nails\Config;
 use Nails\Factory;
@@ -485,45 +486,12 @@ abstract class TemplateBase implements Template
         $sPath = static::getFilePath($sView . '.php');
         if (!empty($sPath)) {
 
-            $oView   = Factory::service('View');
+            /** @var \Nails\Common\Service\View $oView */
+            $oView = Factory::service('View');
+
             $sBuffer = $oView->load($sPath, array_merge($aTplOptions, $aTplData), true);
+            $sBuffer = Block::replaceShortTags($sBuffer);
 
-            //  Look for blocks
-            preg_match_all('/\[:([a-zA-Z0-9\-]+?):\]/', $sBuffer, $aMatches);
-
-            if ($aMatches[0]) {
-
-                //  Get all the blocks which were found
-                $oBlockModel = Factory::model('Block', Constants::MODULE_SLUG);
-                $aBlocks     = $oBlockModel->getBySlugs($aMatches[1]);
-
-                //  Swap them in
-                if ($aBlocks) {
-                    foreach ($aBlocks as $oBlock) {
-
-                        //  Translate some block types
-                        switch ($oBlock->type) {
-                            case 'file':
-                            case 'image':
-                                $oBlock->value = cdnServe($oBlock->value);
-                                break;
-                        }
-
-                        $sBuffer = str_replace('[:' . $oBlock->slug . ':]', $oBlock->value, $sBuffer);
-                    }
-                }
-
-                //  Swap page variables
-                $aPageShortTags = [
-                    'page-title' => !empty($aTplData['cmspage']) ? $aTplData['cmspage']->title : '',
-                ];
-
-                foreach ($aPageShortTags as $sShortTag => $sValue) {
-                    $sBuffer = str_replace('[:' . $sShortTag . ':]', $sValue, $sBuffer);
-                }
-            }
-
-            //  Return the HTML
             return $sBuffer;
         }
 
