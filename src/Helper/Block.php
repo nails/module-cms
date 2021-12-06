@@ -42,23 +42,13 @@ class Block
             /** @var Model\Block $oBlockModel */
             $oBlockModel = Factory::model('Block', Constants::MODULE_SLUG);
 
-            /** @var Resource\Block $aBlocks */
+            /** @var Resource\Block[] $aBlocks */
             $aBlocks = $oBlockModel->getBySlugs(array_keys($aTags));
 
             if ($aBlocks) {
                 foreach ($aBlocks as $oBlock) {
-
                     if (array_key_exists($oBlock->slug, $aTags)) {
-
-                        //  Translate some block types
-                        switch ($oBlock->type) {
-                            case Model\Block::TYPE_FILE:
-                            case Model\Block::TYPE_IMAGE:
-                                $oBlock->value = cdnServe($oBlock->value);
-                                break;
-                        }
-
-                        $aTags[$oBlock->slug] = $oBlock->value;
+                        $aTags[$oBlock->slug] = $oBlock->render();
                     }
                 }
             }

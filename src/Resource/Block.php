@@ -11,6 +11,7 @@ namespace Nails\Cms\Resource;
 
 use Nails\Cms\Constants;
 use Nails\Cms\Exception\Widget\NotFoundException;
+use Nails\Cms\Model;
 use Nails\Cms\Service\Widget;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Resource\Entity;
@@ -41,4 +42,24 @@ class Block extends Entity
 
     /** @var string */
     public $value;
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Renders a blocks
+     *
+     * @return string
+     */
+    public function render(): string
+    {
+        switch ($this->type) {
+            case Model\Block::TYPE_FILE:
+            case Model\Block::TYPE_IMAGE:
+                return cdnServe($this->value);
+                break;
+
+            default:
+                return $this->value;
+        }
+    }
 }
