@@ -59,7 +59,7 @@ class Block extends Entity
                 break;
 
             default:
-                return $this->value;
+                return $this->value ?? '';
         }
     }
 }
