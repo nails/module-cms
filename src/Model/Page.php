@@ -23,6 +23,7 @@ use Nails\Cms\Resource;
 use Nails\Common\Service\Database;
 use Nails\Common\Service\Event;
 use Nails\Common\Service\Routes;
+use Nails\Common\Traits\Model\HasDataColumns;
 use Nails\Config;
 use Nails\Factory;
 
@@ -33,6 +34,10 @@ use Nails\Factory;
  */
 class Page extends Base
 {
+    use HasDataColumns;
+
+    // --------------------------------------------------------------------------
+
     /**
      * The table this model represents
      *
@@ -1107,21 +1112,7 @@ class Page extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * Describes the fields excluding the data fields (which can be very big and cause memory issues)
-     *
-     * @return Field[]
-     */
-    public function describeFieldsExcludingData()
-    {
-        return array_filter(array_keys($this->describeFields()), function (string $sField) {
-            return !in_array($sField, $this->getDataColumns());
-        });
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Returns the columns which contain page data
+     * Returns the columns which contain large data
      *
      * @return string[]
      */
