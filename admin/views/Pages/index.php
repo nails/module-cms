@@ -40,7 +40,7 @@
 
                                         if ($sPublishedHash !== $sDraftHash) {
                                             ?>
-                                            <strong class="label label-unpublished-changes hint--bottom"
+                                            <strong class="label label-unpublished-changes hint--right"
                                                     aria-label="This page is visible on site but changes have been made which have not been published."
                                             >
                                                 Unpublished Changes
@@ -50,8 +50,8 @@
 
                                     } else {
                                         ?>
-                                        <strong class="label label-draft hint--bottom"
-                                                aria-label="This page has not been published. It is not available to your site\'s visitors."
+                                        <strong class="label label-draft hint--right"
+                                                aria-label="This page has not been published. It is not available to your site's visitors."
                                         >
                                             Draft
                                         </strong>
