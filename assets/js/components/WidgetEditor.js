@@ -1,4 +1,3 @@
-/* global _nails, window._nails_admin */
 class WidgetEditor {
 
     /**
@@ -10,6 +9,7 @@ class WidgetEditor {
         this.adminController.log('Constructing');
         this.instantiated = false;
         this.$btns = $('.open-editor').addClass('processed');
+        this.localStorage = new LocalStorage();
 
         this.setupListeners();
 
@@ -378,7 +378,7 @@ class WidgetEditor {
                 $('.widget-group-' + groupIndex, this.sections.widgets).toggleClass('hidden');
 
                 //  Save the state to localstorage
-                window._nails_admin.localStorage
+                this.localStorage
                     .set(
                         'widgeteditor-group-' + groupIndex + '-hidden',
                         !isOpen
@@ -582,7 +582,7 @@ class WidgetEditor {
             container = $('<div>').addClass('widget-group').data('group', i).append(label).append(toggle);
 
             //  Hidden by default?
-            let hidden = window._nails_admin.localStorage.get('widgeteditor-group-' + i + '-hidden');
+            let hidden = this.localStorage.get('widgeteditor-group-' + i + '-hidden');
             if (hidden === true || hidden === null) {
                 container.addClass('closed');
             }
@@ -1325,6 +1325,53 @@ class WidgetEditor {
     isOpen() {
         return this.isEditorOpen;
     };
+}
+
+class LocalStorage {
+
+    constructor() {
+        this.enabled = this.enabled();
+    }
+
+    enabled() {
+        let uid = new Date().toString();
+        let storage;
+        let result;
+        try {
+
+            (storage = window.localStorage).setItem(uid, uid);
+            result = storage.getItem(uid) === uid;
+            storage.removeItem(uid);
+            return true;
+
+        } catch (exception) {
+            return false;
+        }
+    }
+
+    set(key, value) {
+        if (this.enabled) {
+            return window.localStorage.setItem(key, JSON.stringify(value));
+        }
+        return false;
+    }
+
+    get(key) {
+
+        if (this.enabled) {
+            return JSON.parse(window.localStorage.getItem(key));
+        }
+
+        return false;
+    }
+
+    remove(key) {
+
+        if (this.enabled) {
+            return window.localStorage.removeItem(key);
+        }
+        return false;
+    }
 }
 
 export default WidgetEditor;
