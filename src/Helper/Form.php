@@ -59,6 +59,7 @@ class Form
      */
     public static function form_field_cms_widgets($aField, $sTip = ''): string
     {
+        $aField['type'] = 'cms-widgets';
         $aField['html'] = static::cms_widgets_button($aField);
         return \Nails\Common\Helper\Form\Field::html($aField, $sTip);
     }
