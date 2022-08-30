@@ -27,5 +27,38 @@ class Accordion extends WidgetBase
         $this->icon        = 'fa-list-alt';
         $this->description = 'A collapsible accordion component.';
         $this->keywords    = 'accordion';
+        $this->data        = [
+            'title' => [],
+            'body'  => [],
+            'state' => [],
+        ];
+    }
+
+    // --------------------------------------------------------------------------
+
+    protected function populateWidgetData(array &$aWidgetData)
+    {
+        parent::populateWidgetData($aWidgetData);
+
+        $aWidgetData['sUuid'] = '_' . md5(microtime(true) + rand(1, 1000));
+
+        if (!empty($aWidgetData['panels'])) {
+
+            //  Developer provided panels
+            $aWidgetData['aPanels'] = array_values($aWidgetData['panels']);
+
+        } else {
+
+            //  CMS provided panels
+            $aWidgetData['aPanels'] = [];
+            for ($i = 0; $i < count($aWidgetData['title']); $i++) {
+
+                $aWidgetData['aPanels'][] = [
+                    'title' => getFromArray($i, $aWidgetData['title']),
+                    'body'  => getFromArray($i, $aWidgetData['body']),
+                    'state' => getFromArray($i, $aWidgetData['state'], 'CLOSED'),
+                ];
+            }
+        }
     }
 }
