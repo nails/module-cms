@@ -14,8 +14,8 @@ if (empty($oItem)) {
     <div class="group-cms blocks edit">
         <fieldset>
             <legend>Details</legend>
-            <table>
-                <thead>
+            <table class="table table-striped table-hover table-bordered table-responsive mb-0">
+                <thead class="table-dark">
                     <tr>
                         <th>Label</th>
                         <th>Slug</th>

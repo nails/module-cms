@@ -10,10 +10,11 @@
  * @link
  */
 
-namespace Nails\Admin\Cms;
+namespace Nails\Cms\Admin\Controller;
 
 use Nails\Common\Exception\NailsException;
 use Nails\Admin\Controller\DefaultController;
+use Nails\Cms\Admin\Permission;
 use Nails\Cms\Constants;
 
 /**
@@ -23,11 +24,14 @@ use Nails\Cms\Constants;
  */
 class Area extends DefaultController
 {
-    const CONFIG_MODEL_NAME     = 'Area';
-    const CONFIG_MODEL_PROVIDER = Constants::MODULE_SLUG;
-    const CONFIG_PERMISSION     = 'cms:area';
-    const CONFIG_SIDEBAR_GROUP  = 'CMS';
-    const CONFIG_SIDEBAR_ICON   = 'fa-file-alt';
+    const CONFIG_MODEL_NAME        = 'Area';
+    const CONFIG_MODEL_PROVIDER    = Constants::MODULE_SLUG;
+    const CONFIG_SIDEBAR_GROUP     = 'CMS';
+    const CONFIG_SIDEBAR_ICON      = 'fa-file-alt';
+    const CONFIG_PERMISSION_CREATE = Permission\Area\Create::class;
+    const CONFIG_PERMISSION_EDIT   = Permission\Area\Edit::class;
+    const CONFIG_PERMISSION_BROWSE = Permission\Area\Browse::class;
+    const CONFIG_PERMISSION_DELETE = Permission\Area\Delete::class;
 
     // --------------------------------------------------------------------------
 

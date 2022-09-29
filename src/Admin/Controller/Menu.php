@@ -7,9 +7,10 @@
  * @category controller
  */
 
-namespace Nails\Admin\Cms;
+namespace Nails\Cms\Admin\Controller;
 
 use Nails\Admin\Controller\DefaultController;
+use Nails\Cms\Admin\Permission;
 use Nails\Cms\Constants;
 use Nails\Cms\Model\Page;
 use Nails\Cms\Resource\Menu\Item;
@@ -30,11 +31,15 @@ use Nails\Factory;
  */
 class Menu extends DefaultController
 {
-    const CONFIG_MODEL_NAME     = 'Menu';
-    const CONFIG_MODEL_PROVIDER = Constants::MODULE_SLUG;
-    const CONFIG_PERMISSION     = 'cms:menu';
-    const CONFIG_SIDEBAR_GROUP  = 'CMS';
-    const CONFIG_SIDEBAR_ICON   = 'fa-file-alt';
+    const CONFIG_MODEL_NAME         = 'Menu';
+    const CONFIG_MODEL_PROVIDER     = Constants::MODULE_SLUG;
+    const CONFIG_SIDEBAR_GROUP      = 'CMS';
+    const CONFIG_SIDEBAR_ICON       = 'fa-file-alt';
+    const CONFIG_PERMISSION_CREATE  = Permission\Menu\Create::class;
+    const CONFIG_PERMISSION_EDIT    = Permission\Menu\Edit::class;
+    const CONFIG_PERMISSION_BROWSE  = Permission\Menu\Browse::class;
+    const CONFIG_PERMISSION_DELETE  = Permission\Menu\Delete::class;
+    const CONFIG_PERMISSION_RESTORE = Permission\Menu\Restore::class;
 
     // --------------------------------------------------------------------------
 

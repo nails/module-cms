@@ -10,13 +10,13 @@
  * @link
  */
 
-namespace Nails\Admin\Cms;
+namespace Nails\Cms\Admin\Controller;
 
 use Nails\Admin\Factory\Nav;
 use Nails\Admin\Factory\Nav\Alert;
 use Nails\Admin\Helper;
+use Nails\Cms\Admin\Permission;
 use Nails\Cms\Constants;
-use Nails\Cms\Controller\BaseAdmin;
 use Nails\Cms\Exception\Template\NotFoundException;
 use Nails\Cms\Model\Page;
 use Nails\Cms\Service\Template;
@@ -42,7 +42,7 @@ use Nails\Redirect;
  *
  * @package Nails\Admin\Cms
  */
-class Pages extends BaseAdmin
+class Pages extends \Nails\Admin\Controller\Base
 {
     /** @var Page */
     protected $oPageModel;
@@ -65,7 +65,7 @@ class Pages extends BaseAdmin
      */
     public static function announce()
     {
-        if (userHasPermission('admin:cms:pages:manage')) {
+        if (userHasPermission(Permission\Page\Browse::class)) {
 
             //  Alerts
             /** @var Page $oModel */
@@ -78,42 +78,22 @@ class Pages extends BaseAdmin
             $oDb->where($oModel->getColumnIsDeleted(), false);
             $iNumDrafts = $oDb->count_all_results($oModel->getTableName());
 
-            /** @var Alert $oAlert */
-            $oAlert = Factory::factory('NavAlert', \Nails\Admin\Constants::MODULE_SLUG);
-            $oAlert->setValue($iNumDrafts);
-            $oAlert->setSeverity('danger');
-            $oAlert->setLabel('Draft Pages');
+            if ($iNumDrafts) {
+                /** @var Alert $oAlert */
+                $oAlert = Factory::factory('NavAlert', \Nails\Admin\Constants::MODULE_SLUG);
+                $oAlert->setValue($iNumDrafts);
+                $oAlert->setSeverity('danger');
+                $oAlert->setLabel('Draft Pages');
+            }
 
             /** @var Nav $oNavGroup */
             $oNavGroup = Factory::factory('Nav', \Nails\Admin\Constants::MODULE_SLUG);
             $oNavGroup->setLabel('CMS');
             $oNavGroup->setIcon('fa-file-alt');
-            $oNavGroup->addAction('Manage Pages', 'index', [$oAlert]);
+            $oNavGroup->addAction('Manage Pages', 'index', array_filter([$oAlert ?? null]));
 
             return $oNavGroup;
         }
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Returns an array of permissions which can be configured for the user
-     *
-     * @return array
-     */
-    public static function permissions(): array
-    {
-        $aPermissions = parent::permissions();
-
-        $aPermissions['manage']  = 'Can manage pages';
-        $aPermissions['create']  = 'Can create a new page';
-        $aPermissions['edit']    = 'Can edit an existing page';
-        $aPermissions['preview'] = 'Can preview pages';
-        $aPermissions['delete']  = 'Can delete an existing page';
-        $aPermissions['restore'] = 'Can restore a deleted page';
-        $aPermissions['destroy'] = 'Can permanently delete a page';
-
-        return $aPermissions;
     }
 
     // --------------------------------------------------------------------------
@@ -150,14 +130,13 @@ class Pages extends BaseAdmin
      */
     public function index()
     {
-        if (!userHasPermission('admin:cms:pages:manage')) {
+        if (!userHasPermission(Permission\Page\Browse::class)) {
             unauthorised();
         }
 
         // --------------------------------------------------------------------------
 
-        //  Page Title
-        $this->data['page']->title = 'Manage Pages';
+        $this->setTitles(['Manage Pages']);
 
         // --------------------------------------------------------------------------
 
@@ -204,8 +183,8 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Add a header button
-        if (userHasPermission('admin:cms:pages:create')) {
-            Helper::addHeaderButton('admin/cms/pages/create', 'Add New Page');
+        if (userHasPermission(Permission\Page\Create::class)) {
+            Helper::addHeaderButton(self::url('create'), 'Create');
         }
 
         // --------------------------------------------------------------------------
@@ -226,7 +205,7 @@ class Pages extends BaseAdmin
      */
     public function create()
     {
-        if (!userHasPermission('admin:cms:pages:create')) {
+        if (!userHasPermission(Permission\Page\Create::class)) {
             unauthorised();
         }
 
@@ -280,12 +259,12 @@ class Pages extends BaseAdmin
 
                     if ($oInput->post('action') == 'PUBLISH') {
 
-                        redirect('admin/cms/pages/publish/' . $oNewPageId . '?editing=1');
+                        redirect(self::url('publish/' . $oNewPageId . '?editing=1'));
 
                     } else {
 
                         $this->oUserFeedback->success('Page created successfully!');
-                        redirect('admin/cms/pages/edit/' . $oNewPageId);
+                        redirect(self::url('edit/' . $oNewPageId));
                     }
 
                 } else {
@@ -300,7 +279,7 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Set method info
-        $this->data['page']->title = 'Create Page';
+        $this->setTitles(['Create Page']);
 
         //  Get data, available templates & widgets
         $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
@@ -363,7 +342,7 @@ class Pages extends BaseAdmin
      */
     public function edit()
     {
-        if (!userHasPermission('admin:cms:pages:edit')) {
+        if (!userHasPermission(Permission\Page\Edit::class)) {
             unauthorised();
         }
 
@@ -375,7 +354,7 @@ class Pages extends BaseAdmin
 
         if (!$oPage) {
             $this->oUserFeedback->error('No page found by that ID');
-            redirect('admin/cms/pages');
+            redirect(self::url());
         }
 
         // --------------------------------------------------------------------------
@@ -428,13 +407,13 @@ class Pages extends BaseAdmin
 
                     if ($oInput->post('action') == 'PUBLISH') {
 
-                        redirect('admin/cms/pages/publish/' . $oPage->id . '?editing=1');
+                        redirect(self::url('publish/' . $oPage->id . '?editing=1'));
 
                     } else {
 
                         $this->oUserFeedback->success('Page saved successfully!');
 
-                        redirect('admin/cms/pages/edit/' . $oPage->id);
+                        redirect(self::url('edit/' . $oPage->id));
                     }
 
                 } else {
@@ -449,7 +428,7 @@ class Pages extends BaseAdmin
         // --------------------------------------------------------------------------
 
         //  Set method info
-        $this->data['page']->title = 'Edit Page "' . $oPage->draft->title . '"';
+        $this->setTitles(['Edit Page "' . $oPage->draft->title . '"']);
 
         //  Get data, available templates & widgets
         $this->data['cmspage']         = $oPage;
@@ -514,7 +493,7 @@ class Pages extends BaseAdmin
      */
     public function publish()
     {
-        if (!userHasPermission('admin:cms:pages:edit')) {
+        if (!userHasPermission(Permission\Page\Edit::class)) {
             unauthorised();
         }
 
@@ -548,9 +527,9 @@ class Pages extends BaseAdmin
         if (!empty($sReturnTo)) {
             redirect($sReturnTo);
         } elseif ($bIsEditing) {
-            redirect('admin/cms/pages/edit/' . $iId);
+            redirect(self::url('edit/' . $iId));
         } else {
-            redirect('admin/cms/pages');
+            redirect(self::url());
         }
     }
 
@@ -565,7 +544,7 @@ class Pages extends BaseAdmin
      */
     public function unpublish()
     {
-        if (!userHasPermission('admin:cms:pages:edit')) {
+        if (!userHasPermission(Permission\Page\Edit::class)) {
             unauthorised();
         }
 
@@ -609,7 +588,7 @@ class Pages extends BaseAdmin
 
                 $this->oUserFeedback->success('Page unpublished successfully');
 
-                redirect($oInput->post('return_to') ?: 'admin/cms/pages');
+                redirect($oInput->post('return_to') ?: self::url());
 
             } catch (NailsException $e) {
                 $oDb->transaction()->rollback();
@@ -620,8 +599,9 @@ class Pages extends BaseAdmin
         $this->data['sReturnTo']   = $oInput->get('return_to') ?: $oInput->post('return_to');
         $this->data['oPage']       = $oPage;
         $this->data['aChildren']   = $this->oPageModel->getIdsOfChildren($oPage->id);
-        $this->data['page']->title = 'Unpublish "' . $oPage->published->title . '"';
         $this->data['aOtherPages'] = $this->oPageModel->getAllFlat();
+
+        $this->setTitles(['Unpublish "' . $oPage->published->title . '"']);
 
         unset($this->data['aOtherPages'][$oPage->id]);
 
@@ -739,7 +719,7 @@ class Pages extends BaseAdmin
      */
     public function delete()
     {
-        if (!userHasPermission('admin:cms:pages:delete')) {
+        if (!userHasPermission(Permission\Page\Delete::class)) {
             unauthorised();
         }
 
@@ -780,7 +760,7 @@ class Pages extends BaseAdmin
 
                 $this->oUserFeedback->success('Page deleted successfully');
 
-                redirect($oInput->post('return_to') ?: 'admin/cms/pages');
+                redirect($oInput->post('return_to') ?: self::url());
 
             } catch (NailsException $e) {
                 $oDb->transaction()->rollback();
@@ -792,8 +772,9 @@ class Pages extends BaseAdmin
         $this->data['oPage']       = $oPage;
         $this->data['oPageData']   = $oPageData;
         $this->data['aChildren']   = $this->oPageModel->getIdsOfChildren($oPage->id);
-        $this->data['page']->title = 'Delete "' . $oPageData->title . '"';
         $this->data['aOtherPages'] = $this->oPageModel->getAllFlat();
+
+        $this->setTitles(['Delete "' . $oPageData->title . '"']);
 
         unset($this->data['aOtherPages'][$oPage->id]);
 
@@ -820,7 +801,7 @@ class Pages extends BaseAdmin
      */
     public function restore()
     {
-        if (!userHasPermission('admin:cms:pages:restore')) {
+        if (!userHasPermission(Permission\Page\Restore::class)) {
             unauthorised();
         }
 
@@ -842,7 +823,7 @@ class Pages extends BaseAdmin
             $this->oUserFeedback->error('Invalid page ID.');
         }
 
-        redirect('admin/cms/pages');
+        redirect(self::url());
     }
 
     // --------------------------------------------------------------------------
@@ -855,7 +836,7 @@ class Pages extends BaseAdmin
      */
     public function copy()
     {
-        if (!userHasPermission('admin:cms:pages:create')) {
+        if (!userHasPermission(Permission\Page\Create::class)) {
             unauthorised();
         }
 
@@ -876,12 +857,12 @@ class Pages extends BaseAdmin
             }
 
             $this->oUserFeedback->success('Page copied successfully.');
-            redirect('admin/cms/pages/edit/' . $iNewId);
+            redirect(self::url('edit/' . $iNewId));
 
         } catch (\Exception $e) {
             $this->oUserFeedback->error('Failed to copy item. ' . $e->getMessage());
         }
 
-        redirect('admin/cms/pages');
+        redirect(self::url());
     }
 }

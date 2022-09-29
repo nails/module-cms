@@ -19,7 +19,7 @@ use Nails\Common\Console\Migrate\Base;
 /**
  * Class Migration3
  *
- * @package Nails\Database\Migration\Nails\ModuleCms
+ * @package Nails\Cms\Database\Migration
  */
 class Migration3 extends Base
 {

@@ -9,11 +9,11 @@
  * @author     Nails Dev Team
  */
 
-namespace Nails\Admin\Cms;
+namespace Nails\Cms\Admin\Controller;
 
 use Nails\Admin;
+use Nails\Cms\Admin\Permission;
 use Nails\Cms\Constants;
-use Nails\Cms\Controller\BaseAdmin;
 use Nails\Cms\Service;
 use Nails\Factory;
 
@@ -22,38 +22,23 @@ use Nails\Factory;
  *
  * @package Nails\Admin\Cms
  */
-class Monitor extends BaseAdmin
+class Monitor extends Admin\Controller\Base
 {
     public static function announce()
     {
-        if (userHasPermission('admin:cms:monitor:*')) {
-            /** @var Nav $oNav */
-            $oNav = Factory::factory('Nav', Admin\Constants::MODULE_SLUG);
-            $oNav->setLabel('Utilities');
+        /** @var Nav $oNav */
+        $oNav = Factory::factory('Nav', Admin\Constants::MODULE_SLUG);
+        $oNav->setLabel('Utilities');
 
-            if (userHasPermission('admin:cms:monitor:widget')) {
-                $oNav->addAction('CMS Monitor: Widgets', 'widget');
-            }
-
-            if (userHasPermission('admin:cms:monitor:template')) {
-                $oNav->addAction('CMS Monitor: Templates', 'template');
-            }
-
-            return $oNav;
+        if (userHasPermission(Permission\Monitor\Widget::class)) {
+            $oNav->addAction('CMS Monitor: Widgets', 'widget');
         }
-    }
 
-    // --------------------------------------------------------------------------
+        if (userHasPermission(Permission\Monitor\Template::class)) {
+            $oNav->addAction('CMS Monitor: Templates', 'template');
+        }
 
-    public static function permissions(): array
-    {
-        return array_merge(
-            parent::permissions(),
-            [
-                'widget'   => 'Can monitor CMS widget usage',
-                'template' => 'Can monitor CMS template usage',
-            ]
-        );
+        return $oNav;
     }
 
     // --------------------------------------------------------------------------
@@ -64,7 +49,8 @@ class Monitor extends BaseAdmin
             Factory::service('MonitorWidget', Constants::MODULE_SLUG),
             Factory::service('Widget', Constants::MODULE_SLUG),
             'Widgets',
-            'widget'
+            'widget',
+            Permission\Monitor\Widget::class
         );
     }
 
@@ -76,26 +62,35 @@ class Monitor extends BaseAdmin
             Factory::service('MonitorTemplate', Constants::MODULE_SLUG),
             Factory::service('Template', Constants::MODULE_SLUG),
             'Templates',
-            'template'
+            'template',
+            Permission\Monitor\Template::class
         );
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * @param Service\Monitor\Widget|Service\Monitor\Template $oService
-     * @param Service\Widget|Service\Template                 $oItemService
-     * @param string                                          $sLabel
-     * @param string                                          $sView
+     * @param object $oService
+     * @param object $oItemService
+     * @param string $sLabel
+     * @param string $sView
+     * @param string $sPermission
      *
+     * @throws \Nails\Cms\Exception\Template\NotFoundException
+     * @throws \Nails\Cms\Exception\Widget\NotFoundException
      * @throws \Nails\Common\Exception\FactoryException
      */
     private function overview(
         object $oService,
         object $oItemService,
         string $sLabel,
-        string $sView
+        string $sView,
+        string $sPermission
     ) {
+        if (!userHasPermission($sPermission)) {
+            unauthorised();
+        }
+
         /** @var \Nails\Common\Service\Uri $oUri */
         $oUri = Factory::service('Uri');
         /** @var \Nails\Common\Service\Input $oInput */
@@ -108,15 +103,12 @@ class Monitor extends BaseAdmin
                 show404();
             }
 
-            $this->data['aSummary']      = $oService->summariseItem($oItem);
-            $this->data['bIsDeprecated'] = $oItem::isDeprecated();
-            $this->data['sAlternative']  = $oItem::alternative();
-            $this->data['page']->title   = sprintf(
-                'CMS Monitor &rsaquo; %s &rsaquo; %s',
-                $sLabel,
-                $oItem->getLabel()
-            );
-            Admin\Helper::loadView('details');
+            $this
+                ->setData('aSummary', $oService->summariseItem($oItem))
+                ->setData('bIsDeprecated', $oItem::isDeprecated())
+                ->setData('sAlternative', $oItem::alternative())
+                ->setTitles(['CMS Monitor', $sLabel, $oItem->getLabel()])
+                ->loadView('details');
 
         } else {
 
@@ -153,12 +145,10 @@ class Monitor extends BaseAdmin
                 }
             }
 
-            $this->data['aSummary']    = $aSummary;
-            $this->data['page']->title = sprintf(
-                'CMS Monitor &rsaquo; %s',
-                $sLabel
-            );
-            Admin\Helper::loadView('index');
+            $this
+                ->setData('aSummary', $aSummary)
+                ->setTitles(['CMS Monitor', $sLabel])
+                ->loadView('index');
         }
     }
 }

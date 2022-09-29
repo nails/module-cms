@@ -10,10 +10,11 @@
  * @link
  */
 
-namespace Nails\Admin\Cms;
+namespace Nails\Cms\Admin\Controller;
 
 use Nails\Common\Exception\NailsException;
 use Nails\Admin\Controller\DefaultController;
+use Nails\Cms\Admin\Permission;
 use Nails\Cms\Constants;
 use Nails\Common\Exception\ValidationException;
 use Nails\Common\Resource;
@@ -29,7 +30,6 @@ class Block extends DefaultController
 {
     const CONFIG_MODEL_NAME           = 'Block';
     const CONFIG_MODEL_PROVIDER       = Constants::MODULE_SLUG;
-    const CONFIG_PERMISSION           = 'cms:block';
     const CONFIG_SIDEBAR_GROUP        = 'CMS';
     const CONFIG_SIDEBAR_ICON         = 'fa-file-alt';
     const CONFIG_INDEX_FIELDS         = [
@@ -45,6 +45,10 @@ class Block extends DefaultController
     const CONFIG_CREATE_READONLY_FIELDS = [
         'value',
     ];
+    const CONFIG_PERMISSION_CREATE  = Permission\Block\Create::class;
+    const CONFIG_PERMISSION_EDIT    = Permission\Block\Edit::class;
+    const CONFIG_PERMISSION_BROWSE  = Permission\Block\Browse::class;
+    const CONFIG_PERMISSION_DELETE  = Permission\Block\Delete::class;
 
     // --------------------------------------------------------------------------
 

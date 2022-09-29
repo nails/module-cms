@@ -7,12 +7,32 @@
  * @subpackage  module-cms
  * @category    Widget
  * @author      Nails Dev Team
- *
- * @var string[] $title
- * @var string[] $body
- * @var array[]  $aPanels
- * @var string   $sUuid
+ * @link
  */
+
+$sUuid = '_' . md5(microtime(true) + rand(1, 1000));
+
+if (!empty($panels)) {
+
+    //  Developer defined panels
+    $aPanels = $panels;
+
+} else {
+
+    //  CMS Defined tabs
+    $aTitle  = !empty($title) ? $title : [];
+    $aBody   = !empty($body) ? $body : [];
+    $aPanels = [];
+
+    for ($i = 0; $i < count($aTitle); $i++) {
+
+        $aPanels[] = [
+            'title'     => getFromArray($i, $aTitle),
+            'body'      => getFromArray($i, $aBody),
+            'collapsed' => $i !== 0,
+        ];
+    }
+}
 
 if (!empty($aPanels)) {
 
@@ -26,7 +46,7 @@ if (!empty($aPanels)) {
             foreach ($aPanels as $aPanel) {
 
                 $sPanelId   = $sUuid . '-' . $iCounter;
-                $sCollapsed = $aPanel['state'] === 'CLOSED' ? '' : 'in';
+                $sCollapsed = $aPanel['collapsed'] ? '' : 'in';
 
                 ?>
                 <div class="panel panel-default">
@@ -52,4 +72,5 @@ if (!empty($aPanels)) {
         </div>
     </div>
     <?php
+
 }

@@ -159,13 +159,13 @@ class Render extends Base
 
         $bHasDataAndNotPreview  = !((string) $this->data['warning']) && !$this->bIsPreview;
         $bHasUnpublishedChanges = $oPage->has_unpublished_changes;
-        $bUserHasPermission     = userHasPermission('admin:cms:pages:edit');
+        $bUserHasPermission     = userHasPermission(\Nails\Cms\Admin\Permission\Page\Edit::class);
 
         if ($bHasDataAndNotPreview && $bHasUnpublishedChanges && $bUserHasPermission) {
             $this->oUserFeedback->warning(lang(
                 'cms_notice_unpublished_changes',
                 [
-                    siteUrl('admin/cms/pages/edit/' . $oPage->id),
+                    \Nails\Cms\Admin\Controller\Pages::url('edit/' . $oPage->id),
                 ]
             ));
         }
@@ -188,7 +188,7 @@ class Render extends Base
      */
     public function preview()
     {
-        if (!userHasPermission('admin:cms:pages:edit')) {
+        if (!userHasPermission(\Nails\Cms\Admin\Permission\Page\Edit::class)) {
             show404();
         }
 
