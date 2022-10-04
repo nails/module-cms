@@ -17,6 +17,8 @@ use Nails\Cms\Exception\Widget\NotFoundException;
 use Nails\Cms\Interfaces;
 use Nails\Cms\Widget\WidgetGroup;
 use Nails\Common\Exception\NailsException;
+use Nails\Common\Exception\AssetException;
+use Nails\Common\Exception\FactoryException;
 use Nails\Common\Helper\ArrayHelper;
 use Nails\Common\Helper\Directory;
 use Nails\Components;
@@ -32,9 +34,16 @@ class Widget
     /**
      * The loaded widgets
      *
-     * @var \Nails\Cms\Widget\WidgetGroup[]
+     * @var WidgetGroup[]|null
      */
-    protected $aLoadedWidgets;
+    protected ?array $aLoadedWidgets = null;
+
+    /**
+     * The loaded widgets (including hidden)
+     *
+     * @var WidgetGroup[]|null
+     */
+    protected ?array $aLoadedWidgetsIncHidden = null;
 
     // --------------------------------------------------------------------------
 
@@ -43,12 +52,16 @@ class Widget
      *
      * @param bool $bIncludeHidden Whether to include hidden widgets
      *
-     * @return \Nails\Cms\Widget\WidgetGroup[]
+     * @return WidgetGroup[]
      * @throws NotFoundException
+     * @throws FactoryException
      */
-    public function getAvailable($bIncludeHidden = false)
+    public function getAvailable(bool $bIncludeHidden = false): array
     {
-        if (!empty($this->aLoadedWidgets)) {
+        if ($bIncludeHidden && !empty($this->aLoadedWidgetsIncHidden)) {
+            return $this->aLoadedWidgetsIncHidden;
+
+        } elseif (!empty($this->aLoadedWidgets)) {
             return $this->aLoadedWidgets;
         }
 
@@ -117,7 +130,7 @@ class Widget
         $aGeneric      = [];
         $sGenericLabel = 'Generic';
 
-        foreach ($aLoadedWidgets as $sWidgetSlug => $oWidget) {
+        foreach ($aLoadedWidgets as $oWidget) {
 
             $sWidgetGrouping = $oWidget->getGrouping();
 
@@ -149,9 +162,11 @@ class Widget
         $aOut = array_merge($aGeneric, $aOut);
         $aOut = array_values($aOut);
 
-        $this->aLoadedWidgets = $aOut;
-
-        return $this->aLoadedWidgets;
+        if ($bIncludeHidden) {
+            return $this->aLoadedWidgetsIncHidden = $aOut;
+        } else {
+            return $this->aLoadedWidgets = $aOut;
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -162,8 +177,11 @@ class Widget
      * @param string $sSlug The widget's slug
      *
      * @return Interfaces\Widget|null
+     * @return \Nails\Cms\Interfaces\Widget|null
+     * @throws NotFoundException
+     * @throws FactoryException
      */
-    public function getBySlug($sSlug): ?Interfaces\Widget
+    public function getBySlug(string $sSlug): ?Interfaces\Widget
     {
         $aWidgetGroups = $this->getAvailable(true);
 
@@ -172,7 +190,7 @@ class Widget
             $aWidgets = $oWidgetGroup->getWidgets();
 
             foreach ($aWidgets as $oWidget) {
-                if ($sSlug == $oWidget->getSlug()) {
+                if ($sSlug === $oWidget->getSlug()) {
                     return $oWidget;
                 }
             }
@@ -189,8 +207,10 @@ class Widget
      * @param array $aAssets An array of assets to load
      *
      * @return void
+     * @throws AssetException
+     * @throws FactoryException
      */
-    protected function loadAssets($aAssets = [])
+    protected function loadAssets(array $aAssets = []): void
     {
         /** @var \Nails\Common\Service\Asset $oAsset */
         $oAsset = Factory::service('Asset');
@@ -214,7 +234,7 @@ class Widget
      * @param string                            $sType    The type of asset
      *
      * @return array
-     * @throws \Nails\Common\Exception\NailsException
+     * @throws NailsException
      */
     protected function extractAssets(array $aWidgets, string $sType): array
     {
