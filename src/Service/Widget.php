@@ -129,6 +129,7 @@ class Widget
         $aOut          = [];
         $aGeneric      = [];
         $sGenericLabel = 'Generic';
+        $sGenericKey   = md5('Generic');
 
         foreach ($aLoadedWidgets as $oWidget) {
 
@@ -147,14 +148,12 @@ class Widget
 
             } else {
 
-                $sKey = md5($sGenericLabel);
-
-                if (!isset($aGeneric[$sKey])) {
-                    $aGeneric[$sKey] = Factory::factory('WidgetGroup', Constants::MODULE_SLUG);
-                    $aGeneric[$sKey]->setLabel($sGenericLabel);
+                if (!isset($aGeneric[$sGenericKey])) {
+                    $aGeneric[$sGenericKey] = Factory::factory('WidgetGroup', Constants::MODULE_SLUG);
+                    $aGeneric[$sGenericKey]->setLabel($sGenericLabel);
                 }
 
-                $aGeneric[$sKey]->add($oWidget);
+                $aGeneric[$sGenericKey]->add($oWidget);
             }
         }
 
