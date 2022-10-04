@@ -135,7 +135,7 @@ class Widget
 
             $sWidgetGrouping = $oWidget->getGrouping();
 
-            if (!empty($sWidgetGrouping)) {
+            if (!empty($sWidgetGrouping) && $sWidgetGrouping !== $sGenericLabel) {
 
                 $sKey = md5($sWidgetGrouping);
 
