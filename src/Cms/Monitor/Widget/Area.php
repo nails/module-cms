@@ -54,8 +54,8 @@ class Area implements Interfaces\Monitor\Widget
             Constants::MODULE_SLUG,
             $oRow->label,
             null,
-            userHasPermission('admin:cms:area:edit')
-                ? siteUrl('admin/cms/area/edit/' . $oRow->id)
+            userHasPermission(\Nails\Cms\Admin\Permission\Area\Edit::class)
+                ? \Nails\Cms\Admin\Controller\Area::url('edit/' . $oRow->id)
                 : null
         );
 

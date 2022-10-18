@@ -157,6 +157,7 @@
             div.nested-sortable {
                 p {
                     margin: 1em;
+                    margin-top: 3em;
                 }
             }
         }
@@ -176,7 +177,7 @@
                 }
 
                 td {
-                    &.title {
+                    &.page-title {
                         .label {
                             margin-right: 0.5em;
                             display: inline;
@@ -211,8 +212,8 @@
 
         &.edit {
             .templates {
-                margin: 1em;
-                margin-bottom: 0;
+                padding: 1em;
+                padding-bottom: 0;
 
                 li {
                     display: inline-block;
@@ -276,6 +277,7 @@
                             font-size: 1.5em;
                             position: relative;
                             top: 3px;
+                            border: 0;
                         }
                     }
 
@@ -303,6 +305,7 @@
             .template-options {
                 .alert {
                     padding: 5px 10px;
+                    margin: 3em 1em 1em 1em;
                 }
             }
 

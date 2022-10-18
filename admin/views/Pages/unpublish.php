@@ -1,7 +1,7 @@
 <div class="group-cms pages unpublish">
     <?=form_open()?>
     <?=form_hidden('return_to', $sReturnTo)?>
-    <p>
+    <p class="mb-3">
         You are about to unpublish the page "<?=$oPage->published->title?>". Please confirm the following options:
     </p>
     <fieldset>
@@ -9,7 +9,7 @@
         <?php
         if (!empty($aChildren)) {
             ?>
-            <p class="alert alert-warning">
+            <p class="alert alert-warning m-1">
                 This page has children, please decide how they should be processed
             </p>
             <?php
@@ -24,7 +24,7 @@
             ]);
         } else {
             ?>
-            <p class="alert alert-success">
+            <p class="alert alert-success m-0">
                 No child pages
             </p>
             <?php

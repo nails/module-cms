@@ -7,7 +7,7 @@
 /** @var \Nails\Common\Service\Input $oInput */
 $oInput = \Nails\Factory::service('Input');
 
-echo adminHelper('loadSearch', (object) [
+echo Nails\Admin\Helper::loadSearch((object) [
     'keywords'    => $oInput->get('keywords'),
     'searchable'  => true,
     'sortColumns' => [
@@ -20,42 +20,40 @@ echo adminHelper('loadSearch', (object) [
 ]);
 
 ?>
-<div class="table-responsive">
-    <table>
-        <thead>
-            <tr>
-                <th>Item</th>
-                <th>Slug</th>
-                <th class="text-center">Usages</th>
-                <th class="text-center">In Use</th>
-                <th class="actions" style="width: 175px;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            foreach ($aSummary as $oItem) {
-                ?>
-                <tr>
-                    <td>
-                        <?=$oItem->label?>
-                        <small><?=$oItem->description?></small>
-                    </td>
-                    <td>
-                        <code><?=$oItem->slug?></code>
-                    </td>
-                    <td class="text-center">
-                        <?=$oItem->usages?>
-                    </td>
-                    <?=\Nails\Admin\Helper::loadBoolCell(!$oItem->is_deprecated)?>
-                    <td class="actions">
-                        <a href="<?=current_url() . '/' . $oItem->slug?>" class="btn btn-xs btn-primary">
-                            Details
-                        </a>
-                    </td>
-                </tr>
-                <?php
-            }
+<table class="table table-striped table-hover table-bordered table-responsive">
+    <thead class="table-dark">
+        <tr>
+            <th>Item</th>
+            <th>Slug</th>
+            <th class="text-center">Usages</th>
+            <th class="text-center">In Use</th>
+            <th class="actions" style="width: 175px;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        foreach ($aSummary as $oItem) {
             ?>
-        </tbody>
-    </table>
-</div>
+            <tr>
+                <td>
+                    <?=$oItem->label?>
+                    <small><?=$oItem->description?></small>
+                </td>
+                <td>
+                    <code><?=$oItem->slug?></code>
+                </td>
+                <td class="text-center">
+                    <?=$oItem->usages?>
+                </td>
+                <?=\Nails\Admin\Helper::loadBoolCell(!$oItem->is_deprecated)?>
+                <td class="actions">
+                    <a href="<?=current_url() . '/' . $oItem->slug?>" class="btn btn-xs btn-primary">
+                        Details
+                    </a>
+                </td>
+            </tr>
+            <?php
+        }
+        ?>
+    </tbody>
+</table>

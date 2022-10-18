@@ -1,7 +1,7 @@
 <div class="group-cms pages unpublish">
     <?=form_open()?>
     <?=form_hidden('return_to', $sReturnTo)?>
-    <p>
+    <p class="mb-3">
         You are about to delete the page "<?=$oPageData->title?>". Please confirm the following options:
     </p>
     <fieldset>
@@ -9,13 +9,13 @@
         <?php
         if (!empty($aChildren)) {
             ?>
-            <p class="alert alert-danger">
+            <p class="alert alert-danger m-1">
                 This page has children which will be deleted if you continue.
             </p>
             <?php
         } else {
             ?>
-            <p class="alert alert-success">
+            <p class="alert alert-success m-0">
                 No child pages
             </p>
             <?php

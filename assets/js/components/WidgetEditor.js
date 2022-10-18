@@ -464,7 +464,7 @@ class WidgetEditor {
 
         //  Keyboard shortcuts
         $(document).on('keyup', (e) => {
-            if (this.isOpen() && e.which === this.keymap.ESC) {
+            if (this.isOpen() && !this.ignoreCloseOnEsc && e.which === this.keymap.ESC) {
                 this.actionClose();
             }
         });
@@ -1270,37 +1270,40 @@ class WidgetEditor {
      */
     confirm(message, title) {
 
-        message = message ? message : 'Are you sure you wish to complete this action?';
-        title = title ? title : 'Are you sure?';
-
         let deferred = $.Deferred();
+
+        if (!this.confirmModal) {
+            this.confirmModal = this.adminController.getInstance('Modal').create();
+            this.confirmModal.onShow(() => {
+                this.ignoreCloseOnEsc = true;
+            });
+            this.confirmModal.onHide(() => {
+                this.ignoreCloseOnEsc = false;
+            });
+        }
+
+        this.confirmModal
+            .clearActions()
+            .addAction('OK', ['btn-primary'], (event, modal) => {
+                modal.hide();
+                deferred.resolve();
+            })
+            .addAction('Cancel', ['btn-danger'], (event, modal) => {
+                modal.hide();
+                deferred.reject();
+            });
 
         /**
          * Hack: setTimeout used due to layout issue which caused the modal to
          * appear off screen. Potentially a race condition for the noscroll class.
          * Delaying by a fraction of a sec allows the UI to settle.
          */
-        setTimeout(function() {
-            $('<div>')
-                .text(message)
-                .dialog({
-                    'title': title,
-                    'resizable': false,
-                    'draggable': false,
-                    'modal': true,
-                    'dialogClass': 'group-cms widgeteditor-alert',
-                    'buttons': {
+        setTimeout(() => {
+            this.confirmModal
+                .setTitle(title ? title : 'Are you sure?')
+                .setBody(message ? message : 'Are you sure you wish to complete this action?')
+                .show();
 
-                        'OK': function() {
-                            $(this).dialog('close');
-                            deferred.resolve();
-                        },
-                        'Cancel': function() {
-                            $(this).dialog('close');
-                            deferred.reject();
-                        }
-                    }
-                });
         }, 10);
 
         return deferred.promise();

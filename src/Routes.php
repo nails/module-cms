@@ -22,11 +22,17 @@ class Routes implements RouteGenerator
 {
     /**
      * Returns an array of routes for this module
-     * @return array
+     *
+     * @return string[]
+     * @throws \Nails\Common\Exception\Database\ConnectionException
+     * @throws \Nails\Common\Exception\FactoryException
+     * @throws \Nails\Common\Exception\ModelException
      */
-    public static function generate()
+    public static function generate(): array
     {
-        $oDb        = Factory::service('PDODatabase');
+        /** @var \Nails\Common\Service\PDODatabase $oDb */
+        $oDb = Factory::service('PDODatabase');
+        /** @var \Nails\Cms\Model\Page $oPageModel */
         $oPageModel = Factory::model('Page', Constants::MODULE_SLUG);
         $aRoutes    = [];
 

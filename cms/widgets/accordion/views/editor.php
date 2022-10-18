@@ -1,14 +1,21 @@
 <?php
 
-/**
- * @var string[] $title
- * @var string[] $body
- * @var array[]  $aPanels
- * @var string   $sUuid
- */
+$aTitle  = !empty($title) ? $title : array();
+$aBody   = !empty($body) ? $body : array();
+$aPanels = array();
+
+for ($i = 0; $i < count($aTitle); $i++) {
+
+    $aPanels[] = array(
+        'title'     => getFromArray($i, $aTitle),
+        'body'      => getFromArray($i, $aBody),
+    );
+}
+
+$sPanels = htmlentities(json_encode($aPanels), ENT_QUOTES);
 
 ?>
-<ol class="nails-cms-widget-editor-accordion" data-prefill="<?=htmlentities(json_encode($aPanels), ENT_QUOTES)?>">
+<ol class="nails-cms-widget-editor-accordion" data-prefill="<?=$sPanels?>">
     <li class="add-panel">
         <a href="#" class="add-panel js-action-add-panel">
             <b class="fa fa-plus"></b>
@@ -17,44 +24,35 @@
 </ol>
 <section class="nails-cms-widget-editor-accordion"></section>
 <script type="text/x-template" class="tpl-panel">
-<li class="panel">
-    <a href="#" class="switch-panel js-action-switch-panel" data-index="{{index}}">
-        Panel
-    </a>
-    <a href="#" class="remove-panel js-action-remove-panel" data-index="{{index}}">
-        <b class="fa fa-times"></b>
-    </a>
-</li>
+    <li class="panel">
+        <a href="#" class="switch-panel js-action-switch-panel" data-index="{{index}}">
+            Panel
+        </a>
+        <a href="#" class="remove-panel js-action-remove-panel" data-index="{{index}}">
+            <b class="fa fa-times"></b>
+        </a>
+    </li>
 </script>
 <script type="text/x-template" class="tpl-fieldset">
-<div class="fieldset hidden" data-index="{{index}}">
-    <?php
+    <div class="fieldset hidden" data-index="{{index}}">
+        <?php
 
-    echo form_field([
-        'key'     => 'title[]',
-        'label'   => 'Title',
-        'default' => '{{title}}',
-    ]);
+        echo form_field(
+            array(
+                'key'     => 'title[]',
+                'label'   => 'Title',
+                'default' => '{{title}}'
+            )
+        );
 
-    echo form_field_wysiwyg([
-        'key'     => 'body[]',
-        'label'   => 'Body',
-        'default' => '{{body}}',
-    ]);
+        echo form_field_wysiwyg(
+            array(
+                'key'     => 'body[]',
+                'label'   => 'Body',
+                'default' => '{{body}}'
+            )
+        );
 
-    echo form_field_dropdown([
-        'key'     => 'state[]',
-        'label'   => 'State',
-        'options' => [
-            'CLOSED' => 'Closed',
-            'OPEN'   => 'Open',
-        ],
-        'class'   => 'select2',
-        'data'    => [
-            'value' => '{{state}}',
-        ],
-    ]);
-
-    ?>
-</div>
+        ?>
+    </div>
 </script>

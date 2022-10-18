@@ -258,7 +258,7 @@ $oInput = \Nails\Factory::service('Input');
 
         echo form_field([
             'key'         => 'seo_title',
-            'label'       => 'SEO Title',
+            'label'       => 'Title',
             'default'     => html_entity_decode($cmspage->draft->seo_title ?? '', ENT_COMPAT | ENT_HTML5, 'UTF-8'),
             'placeholder' => 'The page\'s SEO title, keep this short and concise. If not set, this will fallback to the page title.',
             'max_length'  => 150,
@@ -266,7 +266,7 @@ $oInput = \Nails\Factory::service('Input');
 
         echo form_field([
             'key'         => 'seo_description',
-            'label'       => 'SEO Description',
+            'label'       => 'Description',
             'default'     => html_entity_decode($cmspage->draft->seo_description ?? '', ENT_COMPAT | ENT_HTML5, 'UTF-8'),
             'placeholder' => 'The page\'s SEO description, keep this short and concise. Recommended to keep below 150 characters.',
             'tip'         => 'This should be kept short (< 300 characters) and concise. It\'ll be shown in search result listings and search engines will use it to help determine the page\'s content.',
@@ -275,7 +275,7 @@ $oInput = \Nails\Factory::service('Input');
 
         echo form_field([
             'key'         => 'seo_keywords',
-            'label'       => 'SEO Keywords',
+            'label'       => 'Keywords',
             'default'     => html_entity_decode($cmspage->draft->seo_keywords ?? '', ENT_COMPAT | ENT_HTML5, 'UTF-8'),
             'placeholder' => 'Comma separated keywords relating to the content of the page. A maximum of 10 keywords is recommended.',
             'tip'         => 'SEO good practice recommend keeping the number of keyword phrases below 10 and less than 150 characters in total.',
@@ -284,7 +284,7 @@ $oInput = \Nails\Factory::service('Input');
 
         echo form_field_cdn_object_picker([
             'key'     => 'seo_image_id',
-            'label'   => 'SEO Image',
+            'label'   => 'Image',
             'default' => $cmspage->draft->seo_image_id ?? null,
             'tip'     => 'Will be cropped to 1200x630px',
         ]);
@@ -294,10 +294,10 @@ $oInput = \Nails\Factory::service('Input');
     <div class="admin-floating-controls">
         <input type="hidden" name="action" value="" id="input-action" />
         <button id="action-save" class="btn btn-primary hint--top-right" aria-label="Your changes will be saved so you can come back later, but won't be published on site.">
-            Save <span class="hidden-xs">Changes</span>
+            Save Changes
         </button>
         <button id="action-publish" class="btn btn-success hint--top" aria-label="Your changes will be published on site and will take hold immediately.">
-            Publish <span class="hidden-xs">Changes</span>
+            Publish Changes
         </button>
         <a href="#" id="action-preview" class="btn btn-default right">
             <?=lang('action_preview')?>
@@ -312,19 +312,19 @@ $oInput = \Nails\Factory::service('Input');
     <div class="row actions">
         <div class="col-xs-4 col-md-2">
             <button class="btn btn-primary btn-block btn-sm action-save">
-                Save <span class="hidden-xs">Changes</span>
+                Save Changes
             </button>
         </div>
         <div class="col-xs-4 col-md-2">
             <button class="btn btn-success btn-block btn-sm action-publish">
-                Publish <span class="hidden-xs">Changes</span>
+                Publish Changes
             </button>
         </div>
         <div class="hidden-xs col-md-6">
         </div>
         <div class="col-xs-4 col-md-2">
             <button class="btn btn-danger btn-block btn-sm action-close">
-                Close <span class="hidden-xs">Preview</span>
+                Close Preview
             </button>
         </div>
     </div>

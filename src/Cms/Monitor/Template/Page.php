@@ -54,8 +54,8 @@ class Page implements Interfaces\Monitor\Template
             Constants::MODULE_SLUG,
             $oRow->published_title ?: $oRow->draft_title,
             siteUrl($oRow->published_slug ?: $oRow->draft_slug),
-            userHasPermission('admin:cms:pages:edit')
-                ? siteUrl('admin/cms/pages/edit/' . $oRow->id)
+            userHasPermission(\Nails\Cms\Admin\Permission\Page\Edit::class)
+                ? \Nails\Cms\Admin\Controller\Pages::url('edit/' . $oRow->id)
                 : null
         );
 
