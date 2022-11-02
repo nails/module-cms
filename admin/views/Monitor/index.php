@@ -23,6 +23,7 @@ echo Nails\Admin\Helper::loadSearch((object) [
 <table class="table table-striped table-hover table-bordered table-responsive">
     <thead class="table-dark">
         <tr>
+            <th>Image</th>
             <th>Item</th>
             <th>Slug</th>
             <th class="text-center">Usages</th>
@@ -35,6 +36,17 @@ echo Nails\Admin\Helper::loadSearch((object) [
         foreach ($aSummary as $oItem) {
             ?>
             <tr>
+                <td class="text-center" style="width:300px;">
+                    <?php
+
+                    if (!empty($oItem->image)) {
+                        echo img(['src' => $oItem->screenshot, 'width' => '100%']);
+                    } else {
+                        echo '&mdash;';
+                    }
+
+                    ?>
+                </td>
                 <td>
                     <?=$oItem->label?>
                     <small><?=$oItem->description?></small>

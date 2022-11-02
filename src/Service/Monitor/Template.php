@@ -98,6 +98,7 @@ class Template
                     $oTemplate->getSlug(),
                     $oTemplate->getLabel(),
                     $oTemplate->getDescription(),
+                    $oTemplate->getIcon(),
                     $iUsages,
                     $oTemplate::isDeprecated(),
                 );

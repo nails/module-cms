@@ -98,6 +98,7 @@ class Widget
                     $oWidget->getSlug(),
                     $oWidget->getLabel(),
                     $oWidget->getDescription(),
+                    $oWidget->getScreenshot(),
                     $iUsages
                 );
 
