@@ -40,7 +40,7 @@ echo Nails\Admin\Helper::loadSearch((object) [
                     <?php
 
                     if (!empty($oItem->image)) {
-                        echo img(['src' => $oItem->screenshot, 'width' => '100%']);
+                        echo img(['src' => $oItem->image, 'width' => '100%']);
                     } else {
                         echo '&mdash;';
                     }
