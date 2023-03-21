@@ -261,7 +261,7 @@ class Page extends Base
         $aUpdateData['draft_breadcrumbs'] = [];
 
         if (!empty($oParent->draft_breadcrumbs)) {
-            $aUpdateData['draft_breadcrumbs'] = json_decode($oParent->draft_breadcrumbs);
+            $aUpdateData['draft_breadcrumbs'] = json_decode((string) $oParent->draft_breadcrumbs);
         }
 
         $oTemp = (object) [

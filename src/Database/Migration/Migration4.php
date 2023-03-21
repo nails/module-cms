@@ -110,13 +110,13 @@ class Migration4 extends Base
 
     /**
      * Converts old template data into the new format
-     * @param  String $sTemplate The template to extract
-     * @param  String $sData     The data as a JSON String
+     * @param  string $sTemplate The template to extract
+     * @param  string $sData     The data as a JSON String
      * @return array
      */
     private function convertTplData($sTemplate, $sData)
     {
-        $oData = json_decode($sData);
+        $oData = json_decode((string) $sData);
         $aOut  = array(
             'template_data'    => '',
             'template_options' => ''

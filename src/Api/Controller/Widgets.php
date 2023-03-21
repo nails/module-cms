@@ -124,7 +124,7 @@ class Widgets extends Api\Controller\Base
     public function postEditors()
     {
         $oInput         = Factory::service('Input');
-        $aWidgetData    = json_decode($oInput->post('data')) ?: [];
+        $aWidgetData    = json_decode((string) $oInput->post('data')) ?: [];
         $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
         $aOut           = [];
 

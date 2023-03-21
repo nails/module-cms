@@ -10,7 +10,7 @@
  * @link
  */
 
-$sTableData = !empty($tblData) ? $tblData : '';
+$sTableData = !empty($tblData) ? (string) $tblData : '';
 $sTblAttr = !empty($tblAttr) ? $tblAttr : '';
 
 if (!empty($sTableData)) {
