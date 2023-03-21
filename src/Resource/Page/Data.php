@@ -71,7 +71,7 @@ class Data extends Resource
      */
     public function __construct($mObj = [])
     {
-        $mObj->depth = count(explode('/', $mObj->slug)) - 1;
+        $mObj->depth = count(explode('/', (string) $mObj->slug)) - 1;
         $mObj->url   = siteUrl($mObj->slug);
 
         //  Decode JSON
