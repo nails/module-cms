@@ -93,14 +93,14 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
 
     // --------------------------------------------------------------------------
 
-    public function delete(Detail $oDetail): void
+    public function delete(Detail $oDetail, CdnObject $oObject): void
     {
         dd(__METHOD__, $oDetail);
     }
 
     // --------------------------------------------------------------------------
 
-    public function replace(CdnObject $oObject, Detail $oDetail): void
+    public function replace(Detail $oDetail, CdnObject $oObject, CdnObject $oReplacement): void
     {
         dd(__METHOD__, $oObject, $oDetail);
     }
