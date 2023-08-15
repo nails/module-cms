@@ -7,6 +7,13 @@ use Nails\Cms\Factory;
 
 return [
     'services'  => [
+        'MonitorCdn'      => function (): Service\Monitor\Cdn {
+            if (class_exists('\App\Cms\Service\Monitor\Cdn')) {
+                return new \App\Cms\Service\Monitor\Cdn();
+            } else {
+                return new Service\Monitor\Cdn();
+            }
+        },
         'MonitorTemplate' => function (): Service\Monitor\Template {
             if (class_exists('\App\Cms\Service\Monitor\Template')) {
                 return new \App\Cms\Service\Monitor\Template();
