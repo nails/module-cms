@@ -9,6 +9,7 @@ use Nails\Cdn\Resource\CdnObject;
 use Nails\Cms\Constants;
 use Nails\Cms\Service\Monitor\Cdn;
 use Nails\Common\Helper\ArrayHelper;
+use Nails\Common\Helper\Model\Condition;
 use Nails\Common\Helper\Model\Where;
 use Nails\Common\Model\Base;
 use Nails\Common\Resource\Entity;
@@ -36,16 +37,18 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
             $aWidgets
         );
 
-        $aResults = $oDb
-            ->where(implode(PHP_EOL . ' OR ', $aConditions))
-            ->get($this->getModel()->getTableName())
-            ->result();
+        $aResults = $this
+            ->getModel()
+            ->getAll([
+                new Condition(implode(PHP_EOL . ' OR ', $aConditions)),
+            ]);
 
         $aDetails = [];
-        foreach ($aResults as $oRow) {
+        /** @var Entity $oEntity */
+        foreach ($aResults as $oEntity) {
 
             //  Only return rows where the object is actually used
-            $aWidgetData = json_decode($oRow->{$this->getColumn()});
+            $aWidgetData = json_decode($oEntity->{$this->getColumn()});
 
             foreach ($aWidgetData as $iIndex => $oWidget) {
 
@@ -55,8 +58,6 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
 
                 $aPaths = $aMappings[$oWidget->slug] ?? [];
                 foreach ($aPaths as $sPath) {
-
-                    //  @todo (Pablo 2023-08-14) - handle nested arrays, using * to represent iterables
 
                     $aDataFlat = ArrayHelper::arrayFlattenWithDotNotation($oWidget->data);
 
@@ -69,19 +70,18 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
                                 /** @var Detail $oDetail */
                                 $oDetail = Factory::factory('MonitorDetail', \Nails\Cdn\Constants::MODULE_SLUG, $this);
                                 $oDetail->setData((object) [
-                                    'id'       => $oRow->id,
+                                    'id'       => $oEntity->id,
                                     /**
                                      * Label isn't necessary, but helps humans
                                      * understand what the ID is referring to
                                      */
-                                    'label'    => $oRow->label ?? '<no label>',
+                                    'label'    => $oEntity->label ?? '<no label>',
                                     'widget'   => $oWidget->slug,
                                     'path'     => $sResolvedPath,
                                     'position' => $iIndex + 1,
                                 ]);
                                 $aDetails[] = $oDetail;
                             }
-
                         }
                     }
                 }
@@ -95,13 +95,15 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
 
     public function delete(Detail $oDetail, CdnObject $oObject): void
     {
-        dd(__METHOD__, $oDetail);
+        //  @todo (Pablo 2023-08-15) - Complete this method
+        dd(__METHOD__, $oDetail, $oObject);
     }
 
     // --------------------------------------------------------------------------
 
     public function replace(Detail $oDetail, CdnObject $oObject, CdnObject $oReplacement): void
     {
-        dd(__METHOD__, $oObject, $oDetail);
+        //  @todo (Pablo 2023-08-15) - Complete this method
+        dd(__METHOD__, $oDetail, $oObject, $oReplacement);
     }
 }
