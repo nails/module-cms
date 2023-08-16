@@ -4,20 +4,23 @@ namespace Nails\Cms\Cdn\Monitor;
 
 use Nails\Cdn\Cdn\Monitor\ObjectIsInColumn;
 use Nails\Cdn\Factory\Monitor\Detail;
-use Nails\Cdn\Interfaces\Monitor;
 use Nails\Cdn\Resource\CdnObject;
 use Nails\Cms\Constants;
 use Nails\Cms\Service\Monitor\Cdn;
+use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\ModelException;
 use Nails\Common\Helper\ArrayHelper;
 use Nails\Common\Helper\Model\Condition;
-use Nails\Common\Helper\Model\Where;
-use Nails\Common\Model\Base;
 use Nails\Common\Resource\Entity;
-use Nails\Common\Service\Database;
 use Nails\Factory;
 
 abstract class ObjectIsInWidgetData extends ObjectIsInColumn
 {
+    /**
+     * @return Detail[]
+     * @throws FactoryException
+     * @throws ModelException
+     */
     public function locate(CdnObject $oObject): array
     {
         /** @var Cdn $oCdnMonitor */
@@ -35,6 +38,7 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
             $aWidgets
         );
 
+        /** @var Entity[] $aResults */
         $aResults = $this
             ->getModel()
             ->getAll([
@@ -42,7 +46,6 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
             ]);
 
         $aDetails = [];
-        /** @var Entity $oEntity */
         foreach ($aResults as $oEntity) {
 
             //  Only return rows where the object is actually used
@@ -65,20 +68,14 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
                             $iValue = (int) $mValue ?: null;
 
                             if ($iValue === $oObject->id) {
-                                /** @var Detail $oDetail */
-                                $oDetail = Factory::factory('MonitorDetail', \Nails\Cdn\Constants::MODULE_SLUG, $this);
-                                $oDetail->setData((object) [
-                                    'id'       => $oEntity->id,
-                                    /**
-                                     * Label isn't necessary, but helps humans
-                                     * understand what the ID is referring to
-                                     */
-                                    'label'    => $oEntity->label ?? '<no label>',
-                                    'widget'   => $oWidget->slug,
-                                    'path'     => $sResolvedPath,
-                                    'position' => $iIndex + 1,
-                                ]);
-                                $aDetails[] = $oDetail;
+                                $aDetails[] = $this->createDetail(
+                                    $oEntity,
+                                    [
+                                        'widget'   => $oWidget->slug,
+                                        'path'     => $sResolvedPath,
+                                        'position' => $iIndex + 1,
+                                    ]
+                                );
                             }
                         }
                     }
@@ -93,15 +90,13 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
 
     public function delete(Detail $oDetail, CdnObject $oObject): void
     {
-        //  @todo (Pablo 2023-08-15) - Complete this method
-        dd(__METHOD__, $oDetail);
+        dd(__FILE__, __LINE__);
     }
 
     // --------------------------------------------------------------------------
 
     public function replace(Detail $oDetail, CdnObject $oObject, CdnObject $oReplacement): void
     {
-        //  @todo (Pablo 2023-08-15) - Complete this method
-        dd(__METHOD__, $oDetail);
+        dd(__FILE__, __LINE__);
     }
 }
