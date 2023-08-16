@@ -22,8 +22,6 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
     {
         /** @var Cdn $oCdnMonitor */
         $oCdnMonitor = Factory::service('MonitorCdn', Constants::MODULE_SLUG);
-        /** @var Database $oDb */
-        $oDb = Factory::service('Database');
 
         $aMappings = $oCdnMonitor->getWidgetMappings();
         $aWidgets  = array_keys($aMappings);
@@ -96,7 +94,7 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
     public function delete(Detail $oDetail, CdnObject $oObject): void
     {
         //  @todo (Pablo 2023-08-15) - Complete this method
-        dd(__METHOD__, $oDetail, $oObject);
+        dd(__METHOD__, $oDetail);
     }
 
     // --------------------------------------------------------------------------
@@ -104,6 +102,6 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
     public function replace(Detail $oDetail, CdnObject $oObject, CdnObject $oReplacement): void
     {
         //  @todo (Pablo 2023-08-15) - Complete this method
-        dd(__METHOD__, $oDetail, $oObject, $oReplacement);
+        dd(__METHOD__, $oDetail);
     }
 }
