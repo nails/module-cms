@@ -3,6 +3,7 @@
 namespace Nails\Cms\Cdn\Monitor;
 
 use Nails\Cdn\Cdn\Monitor\ObjectIsInColumn;
+use Nails\Cdn\Exception\CdnException;
 use Nails\Cdn\Factory\Monitor\Detail;
 use Nails\Cdn\Resource\CdnObject;
 use Nails\Cms\Constants;
@@ -88,15 +89,93 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
 
     // --------------------------------------------------------------------------
 
+    /**
+     * @throws CdnException
+     * @throws FactoryException
+     * @throws ModelException
+     */
     public function delete(Detail $oDetail, CdnObject $oObject): void
     {
-        dd(__FILE__, __LINE__);
+        $this->setObjectId($oDetail, null);
     }
 
     // --------------------------------------------------------------------------
 
+    /**
+     * @throws CdnException
+     * @throws FactoryException
+     * @throws ModelException
+     */
     public function replace(Detail $oDetail, CdnObject $oObject, CdnObject $oReplacement): void
     {
-        dd(__FILE__, __LINE__);
+        $this->setObjectId($oDetail, $oReplacement->id);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @throws CdnException
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    protected function setObjectId(Detail $oDetail, ?int $iObjectId): void
+    {
+        $oEntity = $this
+            ->getModel()
+            ->getById($oDetail->getData()->id);
+
+        $aWidgetData = json_decode($oEntity->{$this->getColumn()});
+        $oWidetData  = $aWidgetData[$oDetail->getData()->position - 1]->data;
+
+        $this->setValueAtPath($oDetail->getData()->path, $oWidetData, $iObjectId);
+
+        $this
+            ->getModel()
+            ->update(
+                $oEntity->id,
+                [
+                    $this->getColumn() => json_encode($aWidgetData),
+                ]
+            );
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @throws CdnException
+     */
+    protected function setValueAtPath(string $sPath, $aData, ?int $mValue): void
+    {
+        $aKeys         = explode('.', $sPath);
+        $mCurrentValue = $aData;
+
+        for ($i = 0; $i < count($aKeys) - 1; $i++) {
+
+            if (is_array($mCurrentValue)) {
+
+                if (!isset($mCurrentValue[$aKeys[$i]])) {
+                    $mCurrentValue[$aKeys[$i]] = [];
+                }
+                $mCurrentValue = $mCurrentValue[$aKeys[$i]];
+
+            } elseif (is_object($mCurrentValue)) {
+                $mCurrentValue = $mCurrentValue->{$aKeys[$i]};
+
+            } else {
+                throw new CdnException('Unable to set value at path: ' . $sPath);
+            }
+        }
+
+        if (is_array($mCurrentValue)) {
+            //  Set as string as that is how values from the UI will be set
+            $mCurrentValue[$aKeys[count($aKeys) - 1]] = (string) $mValue;
+
+        } elseif (is_object($mCurrentValue)) {
+            //  Set as string as that is how values from the UI will be set
+            $mCurrentValue->{$aKeys[count($aKeys) - 1]} = (string) $mValue;
+
+        } else {
+            throw new CdnException('Unable to set value at path: ' . $sPath);
+        }
     }
 }
