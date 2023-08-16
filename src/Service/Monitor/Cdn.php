@@ -11,7 +11,9 @@ use Nails\Factory;
 class Cdn
 {
     /** @var string[][] */
-    private $aWidgetMappings = [];
+    private array $aWidgetMappings = [];
+    /** @var string[][] */
+    private array $aTemplateMappings = [];
 
     // --------------------------------------------------------------------------
 
@@ -22,6 +24,7 @@ class Cdn
     public function __construct()
     {
         $this->discoverWidgetMappings();
+        $this->discoverTemplateMappings();
     }
 
     // --------------------------------------------------------------------------
@@ -51,5 +54,30 @@ class Cdn
     public function getWidgetMappings(): array
     {
         return $this->aWidgetMappings;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function discoverTemplateMappings(): void
+    {
+        /** @var Service\Template $oTemplateService */
+        $oTemplateService = Factory::service('Template', Constants::MODULE_SLUG);
+        $aGroups        = $oTemplateService->getAvailable();
+
+        $this->aTemplateMappings = [];
+        foreach ($aGroups as $oGroup) {
+            foreach ($oGroup->getTemplates() as $oTemplate) {
+                if ($oTemplate instanceof \Nails\Cms\Interfaces\Monitor\Cdn\Template) {
+                    $this->aTemplateMappings[$oTemplate->getSlug()] = $oTemplate->getCdnMonitorPaths();
+                }
+            }
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function getTemplateMappings(): array
+    {
+        return $this->aTemplateMappings;
     }
 }
