@@ -12,6 +12,7 @@ use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Helper\Model\Condition;
 use Nails\Common\Model\Base;
+use Nails\Common\Resource\Entity;
 use Nails\Factory;
 
 abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
