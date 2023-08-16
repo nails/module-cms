@@ -1,12 +1,13 @@
 <?php
 
-namespace Nails\Cms\Cdn\Monnitor\Block;
+namespace Nails\Cms\Cdn\Monitor\Block;
 
 use Nails\Cdn\Cdn\Monitor\ObjectIsInColumn;
 use Nails\Cms\Constants;
 use Nails\Cms\Model\Block;
 use Nails\Common\Helper\Model\WhereIn;
 use Nails\Common\Model\Base;
+use Nails\Factory;
 
 class Value extends ObjectIsInColumn
 {
