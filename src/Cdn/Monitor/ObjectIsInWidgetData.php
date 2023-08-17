@@ -28,7 +28,11 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
         $oCdnMonitor = Factory::service('MonitorCdn', Constants::MODULE_SLUG);
 
         $aMappings = $oCdnMonitor->getWidgetMappings();
-        $aWidgets  = array_keys($aMappings);
+        if (empty($aMappings)) {
+            return [];
+        }
+
+        $aWidgets = array_keys($aMappings);
 
         $aConditions = array_map(
             fn(string $sSlug) => sprintf(

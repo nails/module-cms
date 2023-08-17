@@ -68,9 +68,12 @@ abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
         /** @var Cdn $oCdnMonitor */
         $oCdnMonitor = Factory::service('MonitorCdn', Constants::MODULE_SLUG);
 
-        $aMappings   = $oCdnMonitor->getTemplateMappings();
-        $aConditions = [];
+        $aMappings = $oCdnMonitor->getTemplateMappings();
+        if (empty($aMappings)) {
+            return [];
+        }
 
+        $aConditions = [];
         foreach ($aMappings as $sTemplate => $aPaths) {
             foreach ($aPaths as $sPath) {
                 $aConditions[] = sprintf(
