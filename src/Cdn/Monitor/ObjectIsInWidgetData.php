@@ -24,10 +24,7 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
      */
     public function locate(CdnObject $oObject): array
     {
-        /** @var Cdn $oCdnMonitor */
-        $oCdnMonitor = Factory::service('MonitorCdn', Constants::MODULE_SLUG);
-
-        $aMappings = $oCdnMonitor->getWidgetMappings();
+        $aMappings = $this->getWidgetMappings();
         if (empty($aMappings)) {
             return [];
         }
@@ -35,11 +32,7 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
         $aWidgets = array_keys($aMappings);
 
         $aConditions = array_map(
-            fn(string $sSlug) => sprintf(
-                'JSON_EXTRACT(`%s`, \'$[*].slug\') LIKE \'%%"%s"%%\'',
-                $this->getColumn(),
-                $sSlug
-            ),
+            fn(string $sSlug) => $this->getJsonExtractPath($sSlug),
             $aWidgets
         );
 
@@ -54,34 +47,88 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
         foreach ($aResults as $oEntity) {
 
             //  Only return rows where the object is actually used
-            $aWidgetData = json_decode($oEntity->{$this->getColumn()});
+            $aWidgetData = $this->extractWidgetData($oEntity);
 
-            foreach ($aWidgetData as $iIndex => $oWidget) {
+            $aDetails = array_merge(
+                $aDetails,
+                $this->extractDetailsFromWidgetData(
+                    $aWidgets,
+                    $aMappings,
+                    $aWidgetData,
+                    $oObject,
+                    $oEntity,
+                    $aDetails
+                )
+            );
+        }
 
-                if (!in_array($oWidget->slug, $aWidgets)) {
-                    continue;
-                }
+        return $aDetails;
+    }
 
-                $aPaths = $aMappings[$oWidget->slug] ?? [];
-                foreach ($aPaths as $sPath) {
+    // --------------------------------------------------------------------------
 
-                    $aDataFlat = ArrayHelper::arrayFlattenWithDotNotation($oWidget->data);
+    protected function getWidgetMappings(): array
+    {
+        /** @var Cdn $oCdnMonitor */
+        $oCdnMonitor = Factory::service('MonitorCdn', Constants::MODULE_SLUG);
 
-                    foreach ($aDataFlat as $sResolvedPath => $mValue) {
-                        if (preg_match('/' . str_replace('*', '\d+', $sPath) . '/', $sResolvedPath)) {
+        return $oCdnMonitor->getWidgetMappings();
+    }
 
-                            $iValue = (int) $mValue ?: null;
+    // --------------------------------------------------------------------------
 
-                            if ($iValue === $oObject->id) {
-                                $aDetails[] = $this->createDetail(
-                                    $oEntity,
-                                    [
-                                        'widget'   => $oWidget->slug,
-                                        'path'     => $sResolvedPath,
-                                        'position' => $iIndex + 1,
-                                    ]
-                                );
-                            }
+    protected function getJsonExtractPath(string $sSlug): string
+    {
+        return sprintf(
+            'JSON_EXTRACT(`%s`, \'$[*].slug\') LIKE \'%%"%s"%%\'',
+            $this->getColumn(),
+            $sSlug
+        );
+    }
+
+    // --------------------------------------------------------------------------
+
+    protected function extractWidgetData(Entity $oEntity): object|array
+    {
+        return json_decode($oEntity->{$this->getColumn()}) ?? [];
+    }
+
+    // --------------------------------------------------------------------------
+
+    protected function extractDetailsFromWidgetData(
+        array $aWidgets,
+        array $aMappings,
+        object|array $aWidgetData,
+        CdnObject $oObject,
+        Entity $oEntity
+    ): array {
+
+        $aDetails = [];
+        foreach ($aWidgetData as $iIndex => $oWidget) {
+
+            if (!in_array($oWidget->slug, $aWidgets)) {
+                continue;
+            }
+
+            $aPaths = $aMappings[$oWidget->slug] ?? [];
+
+            foreach ($aPaths as $sPath) {
+
+                $aDataFlat = ArrayHelper::arrayFlattenWithDotNotation($oWidget->data);
+
+                foreach ($aDataFlat as $sResolvedPath => $mValue) {
+                    if (preg_match('/' . str_replace('*', '\d+', $sPath) . '/', $sResolvedPath)) {
+
+                        $iValue = (int) $mValue ?: null;
+
+                        if ($iValue === $oObject->id) {
+                            $aDetails[] = $this->createDetail(
+                                $oEntity,
+                                [
+                                    'widget' => $oWidget->slug,
+                                    'path'   => $iIndex . '.data.' . $sResolvedPath,
+                                ]
+                            );
                         }
                     }
                 }
@@ -128,10 +175,13 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
             ->getModel()
             ->getById($oDetail->getData()->id);
 
-        $aWidgetData = json_decode($oEntity->{$this->getColumn()});
-        $oWidetData  = $aWidgetData[$oDetail->getData()->position - 1]->data;
+        $aWidgetData = $this->extractWidgetData($oEntity);
 
-        $this->setValueAtPath($oDetail->getData()->path, $oWidetData, $iObjectId);
+        $this->setValueAtPath(
+            $oDetail->getData()->path,
+            $aWidgetData,
+            $iObjectId
+        );
 
         $this
             ->getModel()

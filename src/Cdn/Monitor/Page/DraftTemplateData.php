@@ -2,13 +2,13 @@
 
 namespace Nails\Cms\Cdn\Monitor\Page;
 
-use Nails\Cms\Cdn\Monitor\ObjectIsInWidgetData;
+use Nails\Cms\Cdn\Monitor\ObjectIsInTemplateWidgetData;
 use Nails\Cms\Constants;
 use Nails\Common\Model\Base;
 use Nails\Common\Resource\Entity;
 use Nails\Factory;
 
-class DraftTemplateData extends ObjectIsInWidgetData
+class DraftTemplateData extends ObjectIsInTemplateWidgetData
 {
     protected function getModel(): Base
     {
@@ -19,7 +19,14 @@ class DraftTemplateData extends ObjectIsInWidgetData
 
     protected function getColumn(): string
     {
-        return 'draft_template_data';
+        return 'template_data';
+    }
+
+    // --------------------------------------------------------------------------
+
+    protected function getState(): string
+    {
+        return static::STATE_DRAFT;
     }
 
     // --------------------------------------------------------------------------

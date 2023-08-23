@@ -4,8 +4,8 @@ namespace Nails\Cms\Cdn\Monitor\Page;
 
 class PublishedTemplateData extends DraftTemplateData
 {
-    protected function getColumn(): string
+    protected function getState(): string
     {
-        return 'published_template_data';
+        return static::STATE_PUBLISHED;
     }
 }
