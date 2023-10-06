@@ -80,7 +80,8 @@ class Block extends DefaultController
         $this->aConfig['INDEX_FIELDS']['Value'] = function (\Nails\Cms\Resource\Block $oBlock) use ($oModel) {
             switch ($oBlock->type) {
                 case $oModel::TYPE_IMAGE:
-                    return img(cdnCrop((int) $oBlock->value ?: null, 50, 50));
+                    $sUrl = cdnCrop((int) $oBlock->value ?: null, 50, 50);
+                    return $sUrl ? img($sUrl) : '';
                     break;
 
                 case $oModel::TYPE_FILE:
