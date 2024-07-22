@@ -292,6 +292,7 @@ class WidgetEditor {
                     '<span>{{label}}</span>' +
                     '<a href="#" class="action action-remove fa fa-trash"></a>' +
                     '<a href="#" class="action action-refresh-editor fa fa-sync"></a>' +
+                    '<a href="#" class="action action-copy fa fa-copy"></a>' +
                     '<div class="description">{{description}}</div>' +
                     '<div class="deprecated alert alert-danger">' +
                     '<i class="fa fa-exclamation-triangle"></i> ' +
@@ -460,6 +461,20 @@ class WidgetEditor {
 
             this.setupWidgetEditor(slug, data, widget);
 
+        });
+
+        this.sections.body.on('click', '.action-copy', (e) => {
+
+            let $el = $(e.currentTarget);
+            let widget = $el.closest('.widget');
+            let slug = widget.data('slug');
+            let data = widget.find(':input').serializeObject();
+
+            //  Place new domElement in the right place
+            let clone = $('<div>').addClass('widget');
+            widget.after(clone);
+
+            this.addWidget(slug, data, clone);
         });
 
         //  Keyboard shortcuts
