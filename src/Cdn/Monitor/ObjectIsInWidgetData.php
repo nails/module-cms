@@ -12,6 +12,7 @@ use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Helper\ArrayHelper;
 use Nails\Common\Helper\Model\Condition;
+use Nails\Common\Helper\Model\Where;
 use Nails\Common\Resource\Entity;
 use Nails\Factory;
 
@@ -31,17 +32,14 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
 
         $aWidgets = array_keys($aMappings);
 
-        $aConditions = array_map(
-            fn(string $sSlug) => $this->getJsonExtractPath($sSlug),
-            $aWidgets
-        );
-
         /** @var Entity[] $aResults */
         $aResults = $this
             ->getModel()
-            ->getAll([
-                new Condition(implode(PHP_EOL . ' OR ', $aConditions)),
-            ]);
+            ->getAll(array_merge(
+                $this->getQuerySelect(),
+                $this->getQueryConditions($aMappings, $aWidgets),
+                $this->getQuerySort(),
+            ));
 
         $aDetails = [];
         foreach ($aResults as $oEntity) {
@@ -63,6 +61,43 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
         }
 
         return $aDetails;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @return Select[]
+     */
+    protected function getQuerySelect(): array
+    {
+        return [];
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @return Where[]|Condition[]
+     */
+    protected function getQueryConditions(array $aMappings, array $aWidgets): array
+    {
+        $aConditions = array_map(
+            fn(string $sSlug) => $this->getJsonExtractPath($sSlug),
+            $aWidgets
+        );
+
+        return [
+            new Condition(implode(PHP_EOL . ' OR ', $aConditions)),
+        ];
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @return Sort[]
+     */
+    protected function getQuerySort(): array
+    {
+        return [];
     }
 
     // --------------------------------------------------------------------------
