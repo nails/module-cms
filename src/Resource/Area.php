@@ -9,6 +9,7 @@
 
 namespace Nails\Cms\Resource;
 
+use Nails\Admin\Interfaces\ChangeLog;
 use Nails\Cms\Constants;
 use Nails\Cms\Exception\Widget\NotFoundException;
 use Nails\Cms\Service\Widget;
@@ -23,7 +24,7 @@ use Nails\Factory;
  *
  * @package Nails\Cms\Resource
  */
-class Area extends Entity
+class Area extends Entity implements ChangeLog
 {
     /** @var string */
     public $label;
@@ -75,5 +76,19 @@ class Area extends Entity
         }
 
         return $sOut;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public static function getChageLogTypeLabel(): string
+    {
+        return 'CMS: Area';
+    }
+
+    // --------------------------------------------------------------------------
+
+    public static function getChageLogTypeUrl(): string
+    {
+        return \Nails\Cms\Admin\Controller\Area::url();
     }
 }

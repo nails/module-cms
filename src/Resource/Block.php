@@ -9,21 +9,16 @@
 
 namespace Nails\Cms\Resource;
 
-use Nails\Cms\Constants;
-use Nails\Cms\Exception\Widget\NotFoundException;
+use Nails\Admin\Interfaces\ChangeLog;
 use Nails\Cms\Model;
-use Nails\Cms\Service\Widget;
-use Nails\Common\Exception\FactoryException;
 use Nails\Common\Resource\Entity;
-use Nails\Environment;
-use Nails\Factory;
 
 /**
  * Class Block
  *
  * @package Nails\Cms\Resource
  */
-class Block extends Entity
+class Block extends Entity implements ChangeLog
 {
     /** @var string */
     public $type;
@@ -61,5 +56,19 @@ class Block extends Entity
             default:
                 return $this->value ?? '';
         }
+    }
+
+    // --------------------------------------------------------------------------
+
+    public static function getChageLogTypeLabel(): string
+    {
+        return 'CMS: Block';
+    }
+
+    // --------------------------------------------------------------------------
+
+    public static function getChageLogTypeUrl(): string
+    {
+        return \Nails\Cms\Admin\Controller\Block::url();
     }
 }

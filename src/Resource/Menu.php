@@ -9,6 +9,7 @@
 
 namespace Nails\Cms\Resource;
 
+use Nails\Admin\Interfaces\ChangeLog;
 use Nails\Cms\Constants;
 use Nails\Cms\Resource\Menu\Item;
 use Nails\Common\Exception\FactoryException;
@@ -23,7 +24,7 @@ use Nails\Factory;
  *
  * @package Nails\Cms\Resource
  */
-class Menu extends Entity
+class Menu extends Entity implements ChangeLog
 {
     /** @var string */
     public $slug;
@@ -58,5 +59,19 @@ class Menu extends Entity
         }
 
         return $this->items;
+    }
+
+    // --------------------------------------------------------------------------
+
+    public static function getChageLogTypeLabel(): string
+    {
+        return 'CMS: Menu';
+    }
+
+    // --------------------------------------------------------------------------
+
+    public static function getChageLogTypeUrl(): string
+    {
+        return \Nails\Cms\Admin\Controller\Menu::url();
     }
 }

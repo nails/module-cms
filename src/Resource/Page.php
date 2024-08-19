@@ -9,6 +9,7 @@
 
 namespace Nails\Cms\Resource;
 
+use Nails\Admin\Interfaces\ChangeLog;
 use Nails\Cms\Constants;
 use Nails\Cms\Exception\RenderException;
 use Nails\Cms\Resource\Page\Data;
@@ -22,7 +23,7 @@ use Nails\Factory;
  *
  * @package Nails\Cms\Resource
  */
-class Page extends Entity
+class Page extends Entity implements ChangeLog
 {
     /** @var Data */
     public $published;
@@ -125,5 +126,19 @@ class Page extends Entity
             (array) ($bRenderPublished ? $this->published->template_data : $this->draft->template_data),
             (array) ($bRenderPublished ? $this->published->template_options : $this->draft->template_options),
         );
+    }
+
+    // --------------------------------------------------------------------------
+
+    public static function getChageLogTypeLabel(): string
+    {
+        return 'CMS: Page';
+    }
+
+    // --------------------------------------------------------------------------
+
+    public static function getChageLogTypeUrl(): string
+    {
+        return \Nails\Cms\Admin\Controller\Pages::url();
     }
 }
