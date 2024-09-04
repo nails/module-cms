@@ -40,10 +40,14 @@ abstract class ObjectIsInTemplateWidgetData extends ObjectIsInWidgetData
     protected function extractDetailsFromWidgetData(
         array $aWidgets,
         array $aMappings,
-        object|array $aWidgetData,
+        object|array|null $aWidgetData,
         CdnObject $oObject,
         Entity $oEntity
     ): array {
+
+        if (empty($aWidgetData)) {
+            return [];
+        }
 
         $aDetails = [];
         foreach ($aWidgetData as $sWidgetArea => $aData) {
