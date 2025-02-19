@@ -163,6 +163,7 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
                         if ($iValue === $oObject->id) {
                             $aDetails[] = $this->createDetail(
                                 $oEntity,
+                                $this->getModel(),
                                 [
                                     'widget' => $oWidget->slug,
                                     'path'   => $iIndex . '.data.' . $sResolvedPath,

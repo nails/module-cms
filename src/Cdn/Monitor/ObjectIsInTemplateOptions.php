@@ -105,7 +105,7 @@ abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
                 foreach ($aPaths as $sPath) {
                     if ($oPage->{$this->getState()}->template === $sTemplate) {
                         if ($oObject->id === (int) ($oOptions->{$sPath} ?? null)) {
-                            $aDetails[] = $this->createDetail($oPage, ['path' => $sPath]);
+                            $aDetails[] = $this->createDetail($oPage, $oModel, ['path' => $sPath]);
                         }
                     }
                 }
