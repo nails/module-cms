@@ -85,9 +85,13 @@ abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
             }
         }
 
+        $oModel = $this->getModel();
+        if (!$oModel->isDestructiveDelete()) {
+            $oModel->includeDeleted();
+        }
+
         /** @var Page[] $aPages */
-        $aPages = $this
-            ->getModel()
+        $aPages = $oModel
             ->getAll([
                 new Condition(implode(PHP_EOL . ' OR ', $aConditions)),
             ]);
@@ -151,9 +155,12 @@ abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
      */
     protected function getOptionsFromEntityId(int $iId): \stdClass
     {
-        $oEntity = $this
-            ->getModel()
-            ->getById($iId);
+        $oModel = $this->getModel();
+        if (!$oModel->isDestructiveDelete()) {
+            $oModel->includeDeleted();
+        }
+
+        $oEntity = $oModel->getById($iId);
 
         return $this->getOptionsFromEntity($oEntity);
     }
