@@ -11,7 +11,7 @@ use Nails\Factory;
 
 class Value extends ObjectIsInColumn
 {
-    protected function getModel(): Base
+    public function getModel(): Base
     {
         return Factory::model('Block', Constants::MODULE_SLUG);
     }

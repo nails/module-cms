@@ -30,7 +30,7 @@ abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
     /**
      * @throws FactoryException
      */
-    protected function getModel(): Base
+    public function getModel(): Base
     {
         return Factory::model('Page', Constants::MODULE_SLUG);
     }

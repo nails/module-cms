@@ -10,7 +10,7 @@ use Nails\Factory;
 
 class DraftSeoImageId extends ObjectIsInColumn
 {
-    protected function getModel(): Base
+    public function getModel(): Base
     {
         return Factory::model('Page', Constants::MODULE_SLUG);
     }
