@@ -15,7 +15,6 @@ namespace Nails\Cms\Model;
 use Nails\Cms\Constants;
 use Nails\Common\Helper\Form;
 use Nails\Common\Model\Base;
-use Nails\Config;
 
 /**
  * Class Block
@@ -111,13 +110,15 @@ class Block extends Base
     {
         $aFields = parent::describeFields($sTable);
 
-        $aFields['type']->info       = 'Cannot be changed once block is created.';
-        $aFields['type']->info_class = 'alert alert-warning';
-        $aFields['type']->options    = $this->getTypes();
+        $aFields['type']
+            ->setInfo('Cannot be changed once block is created.')
+            ->setInfoClass('alert alert-warning')
+            ->setOptions($this->getTypes());
 
-        $aFields['value']->type       = Form::FIELD_TEXT;
-        $aFields['value']->info       = 'Block\'s value can be set once block is created.';
-        $aFields['value']->info_class = 'alert alert-warning';
+        $aFields['value']
+            ->setType(Form::FIELD_TEXT)
+            ->setInfo('Block\'s value can be set once block is created.')
+            ->setInfoClass('alert alert-warning');
 
         return $aFields;
     }
