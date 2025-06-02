@@ -139,11 +139,11 @@ return [
         },
     ],
     'factories' => [
-        'ModelFieldWysiwyg'  => function (): Factory\Model\Field\Wysiwyg {
-            if (class_exists('\App\Cms\Factory\Model\Field\Wysiwyg')) {
-                return new \App\Cms\Factory\Model\Field\Wysiwyg();
+        'ModelFieldWidgets'  => function (): Factory\Model\Field\Widgets {
+            if (class_exists('\App\Cms\Factory\Model\Field\Widgets')) {
+                return new \App\Cms\Factory\Model\Field\Widgets();
             } else {
-                return new Factory\Model\Field\Wysiwyg();
+                return new Factory\Model\Field\Widgets();
             }
         },
         'MonitorDetail'      => function (string $sSlug, array $aUsages): Factory\Monitor\Detail {
