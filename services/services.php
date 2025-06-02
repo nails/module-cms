@@ -1,41 +1,48 @@
 <?php
 
+use Nails\Cms\Factory;
 use Nails\Cms\Model;
 use Nails\Cms\Resource;
 use Nails\Cms\Service;
-use Nails\Cms\Factory;
 
 return [
     'services'  => [
-        'MonitorCdn'      => function (): Service\Monitor\Cdn {
+        'ModelFieldWysiwyg' => function (): Factory\Model\Field\Wysiwyg {
+            if (class_exists('\App\Cms\Factory\Model\Field\Wysiwyg')) {
+                return new \App\Cms\Factory\Model\Field\Wysiwyg();
+            } else {
+                return new Factory\Model\Field\Wysiwyg();
+            }
+        },
+        'MonitorCdn'        => function (): Service\Monitor\Cdn {
             if (class_exists('\App\Cms\Service\Monitor\Cdn')) {
                 return new \App\Cms\Service\Monitor\Cdn();
             } else {
                 return new Service\Monitor\Cdn();
             }
         },
-        'MonitorTemplate' => function (): Service\Monitor\Template {
+        'MonitorTemplate'   => function (): Service\Monitor\Template {
             if (class_exists('\App\Cms\Service\Monitor\Template')) {
                 return new \App\Cms\Service\Monitor\Template();
             } else {
                 return new Service\Monitor\Template();
             }
         },
-        'MonitorWidget'   => function (): Service\Monitor\Widget {
+        'MonitorWidget'     => function (): Service\Monitor\Widget {
             if (class_exists('\App\Cms\Service\Monitor\Widget')) {
                 return new \App\Cms\Service\Monitor\Widget();
             } else {
                 return new Service\Monitor\Widget();
             }
         },
-        'Widget'          => function (): Service\Widget {
+        'Widget'            => function (): Service\Widget {
             if (class_exists('\App\Cms\Service\Widget')) {
                 return new \App\Cms\Service\Widget();
             } else {
                 return new Service\Widget();
             }
         },
-        'Template'        => function (): Service\Template {
+        'Template'          => function (): Service\Template {
             if (class_exists('\App\Cms\Service\Template')) {
                 return new \App\Cms\Service\Template();
             } else {
