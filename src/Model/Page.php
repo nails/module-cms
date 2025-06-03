@@ -393,7 +393,7 @@ class Page extends Base
      *
      * @return string
      */
-    protected function generateSlugBase(array $aData, string $sKey = null): string
+    protected function generateSlugBase(array $aData, ?string $sKey = null): string
     {
         return parent::generateSlugBase($aData, $sKey ?? 'draft_title');
     }
@@ -679,7 +679,7 @@ class Page extends Base
      *
      * @return array
      */
-    protected function nestPages(array &$aList, int $iParentId = null, bool $bUseDraft = true): array
+    protected function nestPages(array &$aList, ?int $iParentId = null, bool $bUseDraft = true): array
     {
         $aResult = [];
 

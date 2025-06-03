@@ -13,10 +13,7 @@ namespace Nails\Cms\Model;
 
 use Nails\Cms\Constants;
 use Nails\Cms\Exception\Widget\NotFoundException;
-use Nails\Cms\Helper\Form;
-use Nails\Cms\Service\Widget;
 use Nails\Common\Model\Base;
-use Nails\Environment;
 use Nails\Factory;
 
 /**
@@ -54,6 +51,10 @@ class Area extends Base
      */
     const AUTO_SET_SLUG = true;
 
+    const FIELD_CLASSES = [
+        'widget_data' => ['ModelFieldWidgets', Constants::MODULE_SLUG],
+    ];
+
     // --------------------------------------------------------------------------
 
     /**
@@ -67,7 +68,7 @@ class Area extends Base
             'id',
             'label',
             'slug',
-            'description'
+            'description',
         ];
     }
 
@@ -80,8 +81,8 @@ class Area extends Base
     {
         $aFields = parent::describeFields($sTable);
 
-        $aFields['widget_data']->label = 'Widgets';
-        $aFields['widget_data']->type  = Form::FIELD_WIDGETS;
+        $aFields['widget_data']
+            ->setLabel('Widgets');
 
         return $aFields;
     }

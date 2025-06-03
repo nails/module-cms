@@ -1,9 +1,9 @@
 <?php
 
+use Nails\Cms\Factory;
 use Nails\Cms\Model;
 use Nails\Cms\Resource;
 use Nails\Cms\Service;
-use Nails\Cms\Factory;
 
 return [
     'services'  => [
@@ -139,6 +139,13 @@ return [
         },
     ],
     'factories' => [
+        'ModelFieldWidgets'  => function (): Factory\Model\Field\Widgets {
+            if (class_exists('\App\Cms\Factory\Model\Field\Widgets')) {
+                return new \App\Cms\Factory\Model\Field\Widgets();
+            } else {
+                return new Factory\Model\Field\Widgets();
+            }
+        },
         'MonitorDetail'      => function (string $sSlug, array $aUsages): Factory\Monitor\Detail {
             if (class_exists('\App\Cms\Factory\Monitor\Detail')) {
                 return new \App\Cms\Factory\Monitor\Detail($sSlug, $aUsages);
