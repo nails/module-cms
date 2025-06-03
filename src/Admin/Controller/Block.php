@@ -100,7 +100,7 @@ class Block extends DefaultController
     /**
      * @inheritDoc
      */
-    protected function loadEditViewData(Resource $oItem = null): void
+    protected function loadEditViewData(?Resource $oItem = null): void
     {
         parent::loadEditViewData($oItem);
         $this->data['aTypes'] = static::getModel()->getTypes();

@@ -65,7 +65,7 @@ class Menu extends DefaultController
     /**
      * @inheritDoc
      */
-    protected function loadEditViewData(Resource $oMenu = null): void
+    protected function loadEditViewData(?Resource $oMenu = null): void
     {
         parent::loadEditViewData($oMenu);
 
@@ -132,7 +132,7 @@ class Menu extends DefaultController
     /**
      * @inheritDoc
      */
-    protected function afterCreateAndEdit($sMode, Resource $oNewItem, Resource $oOldItem = null): void
+    protected function afterCreateAndEdit($sMode, Resource $oNewItem, ?Resource $oOldItem = null): void
     {
         parent::afterCreateAndEdit($sMode, $oNewItem, $oOldItem);
 
