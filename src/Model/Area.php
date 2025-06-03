@@ -52,7 +52,7 @@ class Area extends Base
     const AUTO_SET_SLUG = true;
 
     const FIELD_CLASSES = [
-        'body' => ['ModelFieldWidgets', Constants::MODULE_SLUG],
+        'widget_data' => ['ModelFieldWidgets', Constants::MODULE_SLUG],
     ];
 
     // --------------------------------------------------------------------------
