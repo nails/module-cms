@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 /**
  * Widget Editor
  */
@@ -310,7 +312,7 @@
             &.ui-sortable-helper {
                 color: #ffffff;
                 background: #03a9f4;
-                border: 1px solid darken(#03a9f4, 10%);
+                border: 1px solid color.adjust(#03a9f4, $lightness: -10%, $space: hsl);
                 height: 40px;
             }
 

@@ -3,9 +3,9 @@
 -------------------------------------------------------------- */
 
 @use "sass:math";
-@import './components/widget.accordion.scss';
-@import './components/widget.tabs.scss';
-@import './components/widgeteditor.scss';
+@use 'components/widget-accordion.scss';
+@use 'components/widget-tabs.scss';
+@use 'components/widget-editor.scss';
 
 .group-cms {
     /**
