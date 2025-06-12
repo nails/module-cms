@@ -60,10 +60,8 @@ class Pages extends \Nails\Admin\Controller\Base
 
     /**
      * Announces this controller's navGroups
-     *
-     * @return \Nails\Admin\Factory\Nav
      */
-    public static function announce()
+    public static function announce(): Nav|array|null
     {
         if (userHasPermission(Permission\Page\Browse::class)) {
 
@@ -91,9 +89,9 @@ class Pages extends \Nails\Admin\Controller\Base
             $oNavGroup->setLabel('CMS');
             $oNavGroup->setIcon('fa-file-alt');
             $oNavGroup->addAction('Manage Pages', 'index', array_filter([$oAlert ?? null]));
-
-            return $oNavGroup;
         }
+
+        return $oNavGroup ?? null;
     }
 
     // --------------------------------------------------------------------------

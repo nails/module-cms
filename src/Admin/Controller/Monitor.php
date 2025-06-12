@@ -12,6 +12,7 @@
 namespace Nails\Cms\Admin\Controller;
 
 use Nails\Admin;
+use Nails\Admin\Factory\Nav;
 use Nails\Cms\Admin\Permission;
 use Nails\Cms\Constants;
 use Nails\Cms\Service;
@@ -24,7 +25,7 @@ use Nails\Factory;
  */
 class Monitor extends Admin\Controller\Base
 {
-    public static function announce()
+    public static function announce(): Nav|array|null
     {
         /** @var Nav $oNav */
         $oNav = Factory::factory('Nav', Admin\Constants::MODULE_SLUG);
