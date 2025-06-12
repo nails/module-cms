@@ -24,7 +24,7 @@ use Nails\Factory;
  */
 class Monitor extends BaseAdmin
 {
-    public static function announce()
+    public static function announce(): Nav|array|null
     {
         if (userHasPermission('admin:cms:monitor:*')) {
             /** @var Nav $oNav */
@@ -38,9 +38,9 @@ class Monitor extends BaseAdmin
             if (userHasPermission('admin:cms:monitor:template')) {
                 $oNav->addAction('CMS Monitor: Templates', 'template');
             }
-
-            return $oNav;
         }
+
+        return $oNav ?? null
     }
 
     // --------------------------------------------------------------------------

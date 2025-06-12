@@ -60,10 +60,8 @@ class Pages extends BaseAdmin
 
     /**
      * Announces this controller's navGroups
-     *
-     * @return \Nails\Admin\Factory\Nav
      */
-    public static function announce()
+    public static function announce(): Nav|array|null
     {
         if (userHasPermission('admin:cms:pages:manage')) {
 
@@ -89,9 +87,9 @@ class Pages extends BaseAdmin
             $oNavGroup->setLabel('CMS');
             $oNavGroup->setIcon('fa-file-alt');
             $oNavGroup->addAction('Manage Pages', 'index', [$oAlert]);
-
-            return $oNavGroup;
         }
+
+        return $oNavGroup ?? null;
     }
 
     // --------------------------------------------------------------------------
