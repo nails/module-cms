@@ -12,6 +12,7 @@
 namespace Nails\Admin\Cms;
 
 use Nails\Admin;
+use Nails\Admin\Factory\Nav;
 use Nails\Cms\Constants;
 use Nails\Cms\Controller\BaseAdmin;
 use Nails\Cms\Service;
@@ -40,7 +41,7 @@ class Monitor extends BaseAdmin
             }
         }
 
-        return $oNav ?? null
+        return $oNav ?? null;
     }
 
     // --------------------------------------------------------------------------
