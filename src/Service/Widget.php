@@ -16,11 +16,12 @@ use Nails\Cms\Constants;
 use Nails\Cms\Exception\Widget\NotFoundException;
 use Nails\Cms\Interfaces;
 use Nails\Cms\Widget\WidgetGroup;
-use Nails\Common\Exception\NailsException;
 use Nails\Common\Exception\AssetException;
 use Nails\Common\Exception\FactoryException;
+use Nails\Common\Exception\NailsException;
 use Nails\Common\Helper\ArrayHelper;
 use Nails\Common\Helper\Directory;
+use Nails\Common\Service\Asset;
 use Nails\Components;
 use Nails\Factory;
 
@@ -141,7 +142,9 @@ class Widget
 
                 if (!isset($aOut[$sKey])) {
                     $aOut[$sKey] = Factory::factory('WidgetGroup', Constants::MODULE_SLUG);
-                    $aOut[$sKey]->setLabel($sWidgetGrouping);
+                    $aOut[$sKey]
+                        ->setLabel($sWidgetGrouping)
+                        ->setOrder($this->getWidgetGroupOrder($sWidgetGrouping));
                 }
 
                 $aOut[$sKey]->add($oWidget);
@@ -150,7 +153,9 @@ class Widget
 
                 if (!isset($aGeneric[$sGenericKey])) {
                     $aGeneric[$sGenericKey] = Factory::factory('WidgetGroup', Constants::MODULE_SLUG);
-                    $aGeneric[$sGenericKey]->setLabel($sGenericLabel);
+                    $aGeneric[$sGenericKey]
+                        ->setLabel($sGenericLabel)
+                        ->setOrder($this->getWidgetGroupOrder($sGenericLabel));
                 }
 
                 $aGeneric[$sGenericKey]->add($oWidget);
@@ -171,12 +176,29 @@ class Widget
     // --------------------------------------------------------------------------
 
     /**
+     * Returns the order value for a widget group
+     */
+    protected function getWidgetGroupOrder(string $sLabel): ?int
+    {
+        /**
+         * This method is intended to be overridden by the App.
+         * By default, all widget groups are ordered `null`. The `null`
+         * order comes after any other numerically defined orders, i.e.:
+         * 0, 1, 2, 3, null
+         * Widget groups with the same order are sub-sorted by label A-Z
+         */
+        return null;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Get an individual widget
      *
      * @param string $sSlug The widget's slug
      *
      * @return Interfaces\Widget|null
-     * @return \Nails\Cms\Interfaces\Widget|null
+     * @return Interfaces\Widget|null
      * @throws NotFoundException
      * @throws FactoryException
      */
@@ -211,7 +233,7 @@ class Widget
      */
     protected function loadAssets(array $aAssets = []): void
     {
-        /** @var \Nails\Common\Service\Asset $oAsset */
+        /** @var Asset $oAsset */
         $oAsset = Factory::service('Asset');
 
         foreach ($aAssets as $aAsset) {

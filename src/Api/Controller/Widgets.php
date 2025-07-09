@@ -76,7 +76,29 @@ class Widgets extends Api\Controller\Base
             $aWidgets[] = json_decode($oWidgetGroup->toJson());
         }
 
-        arraySortMulti($aWidgets, 'label');
+        usort($aWidgets, function($a, $b) {
+
+            // Handle null values for order (null values come last)
+            if ($a->order === null && $b->order === null) {
+                // Both have null order, so sort by label
+                return strcmp($a->label, $b->label);
+            } elseif ($a->order === null) {
+                // a has null order, so it comes after b
+                return 1;
+            } elseif ($b->order === null) {
+                // b has null order, so it comes after a
+                return -1;
+            }
+
+            // If orders are different, sort by order
+            if ($a->order !== $b->order) {
+                return $a->order - $b->order;
+            }
+
+            // Orders are the same (and not null), so sort by label
+            return strcmp($a->label, $b->label);
+        });
+
         $aWidgets = array_values($aWidgets);
 
         return Factory::factory('ApiResponse', Api\Constants::MODULE_SLUG)
