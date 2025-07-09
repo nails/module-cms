@@ -619,6 +619,7 @@ class WidgetEditor {
                     .data('group', i)
                     .data('slug', this.widgets[i].widgets[x].slug)
                     .data('preview', this.widgets[i].widgets[x].screenshot)
+                    .data('label', this.widgets[i].widgets[x].label)
                     .data('description', this.widgets[i].widgets[x].description)
                     .data('keywords', this.widgets[i].widgets[x].keywords);
 
@@ -656,18 +657,23 @@ class WidgetEditor {
             this.sections.widgets.find('.widget').each((index, element) => {
 
                 let $el = $(element);
-                keywords = $el.data('keywords').split(',');
-                for (i = keywords.length - 1; i >= 0; i--) {
+
+                let label = $el.data('label');
+                let description = $el.data('description');
+                let keywords = $el.data('keywords').split(',');
+
+                let allKeywords = [label, description, ...keywords];
+
+
+                for (i = allKeywords.length - 1; i >= 0; i--) {
 
                     regex = new RegExp(term, 'gi');
-                    if (regex.test(keywords[i])) {
-
+                    if (regex.test(allKeywords[i])) {
                         $el.removeClass('search-hide');
                         $el.addClass('search-show');
                         return;
 
                     } else {
-
                         $el.removeClass('search-show');
                         $el.addClass('search-hide');
                     }
