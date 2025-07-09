@@ -36,7 +36,8 @@ interface Widget
     // --------------------------------------------------------------------------
 
     /**
-     * Whether the widget is deprecated or not
+     * Whether the widget is deprecated or not. Deprecated widgets cannot be
+     * selected, but if they exist in the data, they can be maintained/edited
      *
      * @return bool
      */
