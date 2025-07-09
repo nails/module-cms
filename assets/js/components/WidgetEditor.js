@@ -587,7 +587,7 @@ class WidgetEditor {
 
         this.sections.widgets.empty();
 
-        let i, x, label, deprecated, toggle, container, icon;
+        let i, x, label, toggle, container, icon;
 
         for (i = 0; i < this.widgets.length; i++) {
 
@@ -611,11 +611,7 @@ class WidgetEditor {
                 label = $('<span>').text(this.widgets[i].widgets[x].label);
 
                 if (this.widgets[i].widgets[x].is_deprecated) {
-                    deprecated = $('<span>')
-                        .addClass('deprecated alert alert-danger')
-                        .html('<i class="fa fa-exclamation-triange"></i> Deprecated');
-                } else {
-                    deprecated = null;
+                    continue;
                 }
 
                 container = $('<div>')
@@ -632,8 +628,7 @@ class WidgetEditor {
 
                 container
                     .append(icon)
-                    .append(label)
-                    .append(deprecated);
+                    .append(label);
 
                 this.sections.widgets.append(container);
             }
