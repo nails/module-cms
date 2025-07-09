@@ -17,10 +17,12 @@ use Nails\Cms\Interfaces;
 class WidgetGroup
 {
     /** @var string */
-    protected $sLabel;
+    protected string $sLabel;
 
     /** @var Interfaces\Widget[] */
-    protected $aWidgets = [];
+    protected array $aWidgets = [];
+
+    protected ?int $iOrder = null;
 
     // --------------------------------------------------------------------------
 
@@ -63,6 +65,33 @@ class WidgetGroup
     public function setLabel(string $sLabel): self
     {
         $this->sLabel = $sLabel;
+        return $this;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Get the group's order
+     *
+     * @return int|null
+     */
+    public function getOrder(): ?int
+    {
+        return $this->iOrder;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Set the group's order
+     *
+     * @param int|null $iOrder The order to give the group
+     *
+     * @return $this
+     */
+    public function setOrder(?int $iOrder): self
+    {
+        $this->iOrder = $iOrder;
         return $this;
     }
 
@@ -124,6 +153,7 @@ class WidgetGroup
         return json_encode(
             [
                 'label'   => $this->getLabel(),
+                'order'   => $this->getOrder(),
                 'widgets' => array_values(
                     array_map(
                         function (Interfaces\Widget $oWidget) {

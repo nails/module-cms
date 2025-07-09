@@ -16,9 +16,12 @@ use Nails\Cms\Constants;
 use Nails\Cms\Exception\Widget\NotFoundException;
 use Nails\Cms\Interfaces;
 use Nails\Cms\Widget\WidgetGroup;
+use Nails\Common\Exception\AssetException;
+use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\NailsException;
 use Nails\Common\Helper\ArrayHelper;
 use Nails\Common\Helper\Directory;
+use Nails\Common\Service\Asset;
 use Nails\Components;
 use Nails\Factory;
 
@@ -32,9 +35,9 @@ class Widget
     /**
      * The loaded widgets
      *
-     * @var \Nails\Cms\Widget\WidgetGroup[]
+     * @var WidgetGroup[]
      */
-    protected $aLoadedWidgets;
+    protected array $aLoadedWidgets;
 
     // --------------------------------------------------------------------------
 
@@ -43,10 +46,11 @@ class Widget
      *
      * @param bool $bIncludeHidden Whether to include hidden widgets
      *
-     * @return \Nails\Cms\Widget\WidgetGroup[]
+     * @return WidgetGroup[]
      * @throws NotFoundException
+     * @throws FactoryException
      */
-    public function getAvailable($bIncludeHidden = false)
+    public function getAvailable(bool $bIncludeHidden = false): array
     {
         if (!empty($this->aLoadedWidgets)) {
             return $this->aLoadedWidgets;
@@ -112,12 +116,12 @@ class Widget
 
         // --------------------------------------------------------------------------
 
-        //  Sort the widgets into their sub groupings
+        //  Sort the widgets into their subgroupings
         $aOut          = [];
         $aGeneric      = [];
         $sGenericLabel = 'Generic';
 
-        foreach ($aLoadedWidgets as $sWidgetSlug => $oWidget) {
+        foreach ($aLoadedWidgets as $oWidget) {
 
             $sWidgetGrouping = $oWidget->getGrouping();
 
@@ -127,7 +131,9 @@ class Widget
 
                 if (!isset($aOut[$sKey])) {
                     $aOut[$sKey] = Factory::factory('WidgetGroup', Constants::MODULE_SLUG);
-                    $aOut[$sKey]->setLabel($sWidgetGrouping);
+                    $aOut[$sKey]
+                        ->setLabel($sWidgetGrouping)
+                        ->setOrder($this->getWidgetGroupOrder($sWidgetGrouping));
                 }
 
                 $aOut[$sKey]->add($oWidget);
@@ -138,7 +144,9 @@ class Widget
 
                 if (!isset($aGeneric[$sKey])) {
                     $aGeneric[$sKey] = Factory::factory('WidgetGroup', Constants::MODULE_SLUG);
-                    $aGeneric[$sKey]->setLabel($sGenericLabel);
+                    $aGeneric[$sKey]
+                        ->setLabel($sGenericLabel)
+                        ->setOrder($this->getWidgetGroupOrder($sGenericLabel));
                 }
 
                 $aGeneric[$sKey]->add($oWidget);
@@ -157,13 +165,32 @@ class Widget
     // --------------------------------------------------------------------------
 
     /**
+     * Returns the order value for a widget group
+     */
+    protected function getWidgetGroupOrder(string $sLabel): ?int
+    {
+        /**
+         * This method is intended to be overridden by the App.
+         * By default, all widget groups are ordered `null`. The `null`
+         * order comes after any other numerically defined orders, i.e.:
+         * 0, 1, 2, 3, null
+         * Widget groups with the same order are sub-sorted by label A-Z
+         */
+        return null;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Get an individual widget
      *
      * @param string $sSlug The widget's slug
      *
      * @return Interfaces\Widget|null
+     * @throws FactoryException
+     * @throws NotFoundException
      */
-    public function getBySlug($sSlug): ?Interfaces\Widget
+    public function getBySlug(string $sSlug): ?Interfaces\Widget
     {
         $aWidgetGroups = $this->getAvailable(true);
 
@@ -189,10 +216,12 @@ class Widget
      * @param array $aAssets An array of assets to load
      *
      * @return void
+     * @throws FactoryException
+     * @throws AssetException
      */
-    protected function loadAssets($aAssets = [])
+    protected function loadAssets(array $aAssets = []): void
     {
-        /** @var \Nails\Common\Service\Asset $oAsset */
+        /** @var Asset $oAsset */
         $oAsset = Factory::service('Asset');
 
         foreach ($aAssets as $aAsset) {
@@ -214,7 +243,7 @@ class Widget
      * @param string                            $sType    The type of asset
      *
      * @return array
-     * @throws \Nails\Common\Exception\NailsException
+     * @throws NailsException
      */
     protected function extractAssets(array $aWidgets, string $sType): array
     {
