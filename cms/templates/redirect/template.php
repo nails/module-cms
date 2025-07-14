@@ -107,7 +107,11 @@ class Redirect extends TemplateBase
         $iCode = !empty($aTplOptions['redirect_code']) ? $aTplOptions['redirect_code'] : null;
 
         if ($sUrl) {
-            redirect($sUrl, 'location', $iCode);
+            redirect(
+                sUrl: $sUrl,
+                iHttpResponseCode: $iCode,
+                bAllowExternal: true
+            );
 
         } else {
             show404();
