@@ -49,7 +49,7 @@ class Page extends Entity implements ChangeLog
      *
      * @throws FactoryException
      */
-    public function __construct(self|stdClass|array $resource = [], ?Base $model)
+    public function __construct(self|stdClass|array $resource = [], ?Base $model = null)
     {
         parent::__construct($resource, $model);
 
