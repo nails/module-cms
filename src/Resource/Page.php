@@ -14,8 +14,10 @@ use Nails\Cms\Exception\RenderException;
 use Nails\Cms\Resource\Page\Data;
 use Nails\Cms\Service\Template;
 use Nails\Common\Exception\FactoryException;
+use Nails\Common\Model\Base;
 use Nails\Common\Resource\Entity;
 use Nails\Factory;
+use stdClass;
 
 /**
  * Class Page
@@ -44,48 +46,46 @@ class Page extends Entity
     /**
      * Page constructor.
      *
-     * @param array $mObj
-     *
      * @throws FactoryException
      */
-    public function __construct($mObj = [])
+    public function __construct(self|stdClass|array $resource = [], ?Base $model)
     {
-        //  Loop properties and sort into published data and draft data
-        $mObj->published = new \stdClass();
-        $mObj->draft     = new \stdClass();
+        parent::__construct($resource, $model);
 
-        foreach ($mObj as $sProperty => $mValue) {
+        //  Loop properties and sort into published data and draft data
+        $entity->published = new \stdClass();
+        $entity->draft     = new \stdClass();
+
+        foreach ($entity as $sProperty => $mValue) {
 
             preg_match('/^(published|draft)_(.+)$/', $sProperty, $aMatches);
 
             if (!empty($aMatches[1]) && !empty($aMatches[2]) && $aMatches[1] == 'published') {
-                $mObj->published->{$aMatches[2]} = $mValue;
-                unset($mObj->{$sProperty});
+                $entity->published->{$aMatches[2]} = $mValue;
+                unset($entity->{$sProperty});
 
             } elseif (!empty($aMatches[1]) && !empty($aMatches[2]) && $aMatches[1] == 'draft') {
-                $mObj->draft->{$aMatches[2]} = $mValue;
-                unset($mObj->{$sProperty});
+                $entity->draft->{$aMatches[2]} = $mValue;
+                unset($entity->{$sProperty});
             }
         }
 
         // --------------------------------------------------------------------------
 
         //  Unpublished changes?
-        $mObj->has_unpublished_changes = $mObj->is_published && $mObj->draft->hash != $mObj->published->hash;
+        $entity->has_unpublished_changes = $entity->is_published && $entity->draft->hash != $entity->published->hash;
 
         // --------------------------------------------------------------------------
 
         //  SEO Title; If not set then fallback to the page title
-        if (empty($mObj->seo_title) && !empty($mObj->title)) {
-            $mObj->seo_title = $mObj->title;
+        if (empty($entity->seo_title) && !empty($entity->title)) {
+            $entity->seo_title = $entity->title;
         }
 
         // --------------------------------------------------------------------------
 
-        $mObj->published = Factory::resource('PageData', Constants::MODULE_SLUG, $mObj->published);
-        $mObj->draft     = Factory::resource('PageData', Constants::MODULE_SLUG, $mObj->draft);
-
-        parent::__construct($mObj);
+        $entity->published = Factory::resource('PageData', Constants::MODULE_SLUG, $entity->published);
+        $entity->draft     = Factory::resource('PageData', Constants::MODULE_SLUG, $entity->draft);
     }
 
     // --------------------------------------------------------------------------
