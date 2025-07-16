@@ -65,26 +65,24 @@ class Data extends Resource
     /**
      * Data constructor.
      *
-     * @param array $mObj
-     *
      * @throws FactoryException
      */
-    public function __construct($mObj = [])
+    public function __construct(self|\stdClass|array $resource = [])
     {
-        $mObj->depth = count(explode('/', (string) $mObj->slug)) - 1;
-        $mObj->url   = siteUrl($mObj->slug);
+        $resource->depth = count(explode('/', (string) $resource->slug)) - 1;
+        $resource->url   = siteUrl($resource->slug);
 
         //  Decode JSON
-        $mObj->template_data    = json_decode($mObj->template_data ?? 'null');
-        $mObj->template_options = json_decode($mObj->template_options ?? 'null') ?: [];
-        $mObj->breadcrumbs      = json_decode($mObj->breadcrumbs ?? 'null') ?: [];
+        $resource->template_data    = json_decode($resource->template_data ?? 'null');
+        $resource->template_options = json_decode($resource->template_options ?? 'null') ?: [];
+        $resource->breadcrumbs      = json_decode($resource->breadcrumbs ?? 'null') ?: [];
 
         // --------------------------------------------------------------------------
 
-        foreach ($mObj->breadcrumbs as &$oBreadcrumb) {
+        foreach ($resource->breadcrumbs as &$oBreadcrumb) {
             $oBreadcrumb = Factory::resource('PageDataBreadcrumb', Constants::MODULE_SLUG, $oBreadcrumb);
         }
 
-        parent::__construct($mObj);
+        parent::__construct($resource);
     }
 }

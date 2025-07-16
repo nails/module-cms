@@ -88,53 +88,55 @@ return [
         },
     ],
     'resources' => [
-        'Area'               => function ($mObj): Resource\Area {
+        'Area'               => function ($resource, $model): Resource\Area {
             if (class_exists('\App\Cms\Resource\Area')) {
-                return new \App\Cms\Resource\Area($mObj);
+                return new \App\Cms\Resource\Area($resource, $model);
             } else {
-                return new Resource\Area($mObj);
+                return new Resource\Area($resource, $model);
             }
         },
-        'Block'              => function ($mObj): Resource\Block {
+        'Block'              => function ($resource, $model): Resource\Block {
             if (class_exists('\App\Cms\Resource\Block')) {
-                return new \App\Cms\Resource\Block($mObj);
+                return new \App\Cms\Resource\Block($resource, $model);
             } else {
-                return new Resource\Block($mObj);
+                return new Resource\Block($resource, $model);
             }
         },
-        'Menu'               => function ($mObj): Resource\Menu {
+        'Menu'               => function ($resource, $model): Resource\Menu {
             if (class_exists('\App\Cms\Resource\Menu')) {
-                return new \App\Cms\Resource\Menu($mObj);
+                return new \App\Cms\Resource\Menu($resource, $model);
             } else {
-                return new Resource\Menu($mObj);
+                return new Resource\Menu($resource, $model);
             }
         },
-        'MenuItem'           => function ($mObj): Resource\Menu\Item {
+        'MenuItem'           => function ($resource, $model): Resource\Menu\Item {
             if (class_exists('\App\Cms\Resource\Menu\Item')) {
-                return new \App\Cms\Resource\Menu\Item($mObj);
+                return new \App\Cms\Resource\Menu\Item($resource, $model);
             } else {
-                return new Resource\Menu\Item($mObj);
+                return new Resource\Menu\Item($resource, $model);
             }
         },
-        'Page'               => function ($mObj): Resource\Page {
+        'Page'               => function ($resource, $model): Resource\Page {
             if (class_exists('\App\Cms\Resource\Page')) {
-                return new \App\Cms\Resource\Page($mObj);
+                return new \App\Cms\Resource\Page($resource, $model);
             } else {
-                return new Resource\Page($mObj);
+                return new Resource\Page($resource, $model);
             }
         },
-        'PageData'           => function ($mObj): Resource\Page\Data {
+        'PageData'           => function ($resource, $model = null): Resource\Page\Data {
+            //  @todo (Pablo 2025-07-15) - this should be a factory
             if (class_exists('\App\Cms\Resource\Page\Data')) {
-                return new \App\Cms\Resource\Page\Data($mObj);
+                return new \App\Cms\Resource\Page\Data($resource);
             } else {
-                return new Resource\Page\Data($mObj);
+                return new Resource\Page\Data($resource);
             }
         },
-        'PageDataBreadcrumb' => function ($mObj): Resource\Page\Data\Breadcrumb {
+        'PageDataBreadcrumb' => function ($resource, $model = null): Resource\Page\Data\Breadcrumb {
+            //  @todo (Pablo 2025-07-15) - this should be a factory
             if (class_exists('\App\Cms\Resource\Page\Data\Breadcrumb')) {
-                return new \App\Cms\Resource\Page\Data\Breadcrumb($mObj);
+                return new \App\Cms\Resource\Page\Data\Breadcrumb($resource);
             } else {
-                return new Resource\Page\Data\Breadcrumb($mObj);
+                return new Resource\Page\Data\Breadcrumb($resource);
             }
         },
     ],
