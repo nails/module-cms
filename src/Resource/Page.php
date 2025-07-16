@@ -54,39 +54,39 @@ class Page extends Entity implements ChangeLog
         parent::__construct($resource, $model);
 
         //  Loop properties and sort into published data and draft data
-        $entity->published = new \stdClass();
-        $entity->draft     = new \stdClass();
+        $dataPublished = new \stdClass();
+        $dataDraft     = new \stdClass();
 
-        foreach ($entity as $sProperty => $mValue) {
+        foreach ($resource as $sProperty => $mValue) {
 
             preg_match('/^(published|draft)_(.+)$/', $sProperty, $aMatches);
 
             if (!empty($aMatches[1]) && !empty($aMatches[2]) && $aMatches[1] == 'published') {
-                $entity->published->{$aMatches[2]} = $mValue;
-                unset($entity->{$sProperty});
+                $dataPublished->{$aMatches[2]} = $mValue;
+                unset($resource->{$sProperty});
 
             } elseif (!empty($aMatches[1]) && !empty($aMatches[2]) && $aMatches[1] == 'draft') {
-                $entity->draft->{$aMatches[2]} = $mValue;
-                unset($entity->{$sProperty});
+                $dataDraft->{$aMatches[2]} = $mValue;
+                unset($resource->{$sProperty});
             }
         }
 
         // --------------------------------------------------------------------------
 
         //  Unpublished changes?
-        $entity->has_unpublished_changes = $entity->is_published && $entity->draft->hash != $entity->published->hash;
+        $resource->has_unpublished_changes = $resource->is_published && $dataDraft->hash != $dataPublished->hash;
 
         // --------------------------------------------------------------------------
 
         //  SEO Title; If not set then fallback to the page title
-        if (empty($entity->seo_title) && !empty($entity->title)) {
-            $entity->seo_title = $entity->title;
+        if (empty($resource->seo_title) && !empty($resource->title)) {
+            $resource->seo_title = $resource->title;
         }
 
         // --------------------------------------------------------------------------
 
-        $entity->published = Factory::resource('PageData', Constants::MODULE_SLUG, $entity->published);
-        $entity->draft     = Factory::resource('PageData', Constants::MODULE_SLUG, $entity->draft);
+        $this->published = Factory::resource('PageData', Constants::MODULE_SLUG, $dataPublished);
+        $this->draft     = Factory::resource('PageData', Constants::MODULE_SLUG, $dataDraft);
     }
 
     // --------------------------------------------------------------------------
