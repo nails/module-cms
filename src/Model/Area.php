@@ -119,7 +119,7 @@ class Area extends Base
     public function renderWithData($mWidgetData): string
     {
         /** @var \Nails\Cms\Resource\Area $oArea */
-        $oArea = Factory::resource('Area', Constants::MODULE_SLUG, ['widget_data' => $mWidgetData]);
+        $oArea = Factory::resource('Area', Constants::MODULE_SLUG, ['widget_data' => $mWidgetData], $this);
         return $oArea->render();
     }
 }
