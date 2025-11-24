@@ -216,9 +216,19 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
      */
     protected function setObjectId(Detail $oDetail, ?int $iObjectId): void
     {
-        $oEntity = $this
-            ->getModel()
-            ->getById($oDetail->getData()->id);
+        $oModel = $this->getModel();
+        if ($oModel->isDestructiveDelete()) {
+            $oEntity = $oModel
+                ->getById($oDetail->getData()->id);
+        } else {
+            $oEntity = $oModel
+                ->includeDeleted()
+                ->getById($oDetail->getData()->id);
+        }
+
+        if (!$oEntity) {
+            throw new ModelException('Entity not found');
+        }
 
         $aWidgetData = $this->extractWidgetData($oEntity);
 
