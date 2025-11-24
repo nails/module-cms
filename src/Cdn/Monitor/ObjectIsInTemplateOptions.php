@@ -188,10 +188,26 @@ abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
          */
 
         /** @var Database $oDb */
-        $oDb = Factory::service('Database');
+        $oDb    = Factory::service('Database');
+        $oModel = $this->getModel();
+
+        $aData = [
+            $this->getDatabaseColumn() => json_encode($oOptions),
+        ];
+
+        if ($oModel->isAutoSetTimestamps()) {
+            /** @var \DateTime $oNow */
+            $oNow              = Factory::factory('DateTime');
+            $aData['modified'] = $oNow->format('Y-m-d H:i:s');
+        }
+
+        if ($oModel->isAutoSetUsers()) {
+            $aData['modified_by'] = activeUser('id');
+        }
+
         $oDb
-            ->set($this->getDatabaseColumn(), json_encode($oOptions))
-            ->where('id', $iEntityId)
-            ->update($this->getModel()->getTableName());
+            ->set($aData)
+            ->where($oModel->getColumnId(), $iEntityId)
+            ->update($oModel->getTableName());
     }
 }

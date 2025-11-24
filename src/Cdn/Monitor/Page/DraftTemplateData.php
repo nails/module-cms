@@ -24,6 +24,13 @@ class DraftTemplateData extends ObjectIsInTemplateWidgetData
 
     // --------------------------------------------------------------------------
 
+    protected function getDatabaseColumn(): string
+    {
+        return sprintf('%s_%s', $this->getState(), $this->getColumn());
+    }
+
+    // --------------------------------------------------------------------------
+
     protected function getState(): string
     {
         return static::STATE_DRAFT;
