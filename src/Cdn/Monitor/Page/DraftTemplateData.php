@@ -4,12 +4,17 @@ namespace Nails\Cms\Cdn\Monitor\Page;
 
 use Nails\Cms\Cdn\Monitor\ObjectIsInTemplateWidgetData;
 use Nails\Cms\Constants;
+use Nails\Common\Exception\FactoryException;
 use Nails\Common\Model\Base;
 use Nails\Common\Resource\Entity;
 use Nails\Factory;
 
 class DraftTemplateData extends ObjectIsInTemplateWidgetData
 {
+    /**
+     * @return Base
+     * @throws FactoryException
+     */
     public function getModel(): Base
     {
         return Factory::model('Page', Constants::MODULE_SLUG);
