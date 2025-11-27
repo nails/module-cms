@@ -2,6 +2,8 @@
 
 namespace Nails\Cms\Cdn\Monitor;
 
+use Closure;
+use DateTime;
 use Nails\Cdn\Cdn\Monitor\ObjectIsInColumn;
 use Nails\Cdn\Factory\Monitor\Detail;
 use Nails\Cdn\Resource\CdnObject;
@@ -10,6 +12,7 @@ use Nails\Cms\Resource\Page;
 use Nails\Cms\Service\Monitor\Cdn;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
+use Nails\Common\Exception\NailsException;
 use Nails\Common\Helper\Model\Condition;
 use Nails\Common\Model\Base;
 use Nails\Common\Resource\Entity;
@@ -63,18 +66,47 @@ abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
      * @throws FactoryException
      * @throws ModelException
      */
-    public function locate(CdnObject $oObject): array
+    public function locate(CdnObject $oObject, ?Closure $fnCreateDetail = null): array
     {
-        /** @var Cdn $oCdnMonitor */
-        $oCdnMonitor = Factory::service('MonitorCdn', Constants::MODULE_SLUG);
-
-        $aMappings = $oCdnMonitor->getTemplateMappings();
+        $oModel    = $this->getModel();
+        $aDetails  = [];
+        $aMappings = $this->getCdnMappings();
         if (empty($aMappings)) {
+            //  No mappings, nothing to locate
             return [];
         }
 
+        parent::locate($oObject, function (Entity $oEntity) use (&$aDetails, $aMappings, $oObject, $oModel) {
+
+            $oOptions = $this->getOptionsFromEntity($oEntity);
+
+            foreach ($aMappings as $sTemplate => $aPaths) {
+                foreach ($aPaths as $sPath) {
+                    if ($oEntity->{$this->getState()}->template === $sTemplate) {
+                        if ($oObject->id === (int) ($oOptions->{$sPath} ?? null)) {
+                            $aDetails[] = $this->createDetail($oEntity, $oModel, ['path' => $sPath]);
+                        }
+                    }
+                }
+            }
+
+        });
+
+        return $aDetails;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @return Condition[]
+     * @throws FactoryException
+     */
+    protected function getQueryConditions(CdnObject $oObject): array
+    {
+        $aMappings   = $this->getCdnMappings();
         $aConditions = [];
-        foreach ($aMappings as $sTemplate => $aPaths) {
+
+        foreach ($aMappings as $aPaths) {
             foreach ($aPaths as $sPath) {
                 $aConditions[] = sprintf(
                     'JSON_EXTRACT(`%s`, \'$.%s\') LIKE \'%%"%s"%%\'',
@@ -85,34 +117,21 @@ abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
             }
         }
 
-        $oModel = $this->getModel();
-        if (!$oModel->isDestructiveDelete()) {
-            $oModel->includeDeleted();
-        }
+        return [
+            new Condition(implode(PHP_EOL . ' OR ', $aConditions)),
+        ];
+    }
 
-        /** @var Page[] $aPages */
-        $aPages = $oModel
-            ->getAll([
-                new Condition(implode(PHP_EOL . ' OR ', $aConditions)),
-            ]);
+    // --------------------------------------------------------------------------
 
-        $aDetails = [];
-        foreach ($aPages as $oPage) {
-
-            $oOptions = $this->getOptionsFromEntity($oPage);
-
-            foreach ($aMappings as $sTemplate => $aPaths) {
-                foreach ($aPaths as $sPath) {
-                    if ($oPage->{$this->getState()}->template === $sTemplate) {
-                        if ($oObject->id === (int) ($oOptions->{$sPath} ?? null)) {
-                            $aDetails[] = $this->createDetail($oPage, $oModel, ['path' => $sPath]);
-                        }
-                    }
-                }
-            }
-        }
-
-        return $aDetails;
+    /**
+     * @throws FactoryException
+     */
+    protected function getCdnMappings(): array
+    {
+        /** @var Cdn $oCdnMonitor */
+        $oCdnMonitor = Factory::service('MonitorCdn', Constants::MODULE_SLUG);
+        return $oCdnMonitor->getTemplateMappings();
     }
 
     // --------------------------------------------------------------------------
@@ -120,15 +139,21 @@ abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
     /**
      * @throws FactoryException
      * @throws ModelException
+     * @throws NailsException
      */
     public function delete(Detail $oDetail, CdnObject $oObject): void
     {
-        $iId      = $oDetail->getData()->id;
-        $oOptions = $this->getOptionsFromEntityId($iId);
+        $oEntity  = $this->getEntityFromDetail($oDetail);
+        $oOptions = $this->getOptionsFromEntity($oEntity);
 
         $oOptions->{$oDetail->getData()->path} = null;
 
-        $this->updateEntity($iId, $oOptions);
+        $this->updateEntity(
+            $oEntity,
+            [
+                $this->getDatabaseColumn() => json_encode($oOptions),
+            ]
+        );
     }
 
     // --------------------------------------------------------------------------
@@ -136,33 +161,22 @@ abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
     /**
      * @throws FactoryException
      * @throws ModelException
+     * @throws NailsException
      */
     public function replace(Detail $oDetail, CdnObject $oObject, CdnObject $oReplacement): void
     {
-        $iId      = $oDetail->getData()->id;
-        $oOptions = $this->getOptionsFromEntityId($iId);
+        $oEntity  = $this->getEntityFromDetail($oDetail);
+        $oOptions = $this->getOptionsFromEntity($oEntity);
 
-        //  Cast as string as that is how it is stored when a value is set via the admin UI
+        //  Cast as a string as that is how it is stored when a value is set via the admin UI
         $oOptions->{$oDetail->getData()->path} = (string) $oReplacement->id;
 
-        $this->updateEntity($iId, $oOptions);
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * @throws ModelException
-     */
-    protected function getOptionsFromEntityId(int $iId): \stdClass
-    {
-        $oModel = $this->getModel();
-        if (!$oModel->isDestructiveDelete()) {
-            $oModel->includeDeleted();
-        }
-
-        $oEntity = $oModel->getById($iId);
-
-        return $this->getOptionsFromEntity($oEntity);
+        $this->updateEntity(
+            $oEntity,
+            [
+                $this->getDatabaseColumn() => json_encode($oOptions),
+            ]
+        );
     }
 
     // --------------------------------------------------------------------------
@@ -175,10 +189,69 @@ abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
     // --------------------------------------------------------------------------
 
     /**
+     * @return Detail\Action[]
+     * @throws FactoryException
+     */
+    protected function generateActions(Entity $oEntity, Base $oModel): array
+    {
+        $aActions = [];
+
+        /** @var Page $oEntity */
+        if ($oEntity->is_published) {
+            /** @var Detail\Action $oActionView */
+            $oActionView = Factory::factory('MonitorDetailAction', \Nails\Cdn\Constants::MODULE_SLUG);
+            $aActions[]  = $oActionView
+                ->setUrl($oEntity->published->url)
+                ->setLabel('View')
+                ->setTarget('_blank');
+        }
+
+        /** @var Detail\Action $oActionEdit */
+        $oActionEdit = Factory::factory('MonitorDetailAction', \Nails\Cdn\Constants::MODULE_SLUG);
+        $aActions[]  = $oActionEdit
+            ->setUrl('admin/cms/pages/edit/' . $oEntity->id)
+            ->setLabel('Edit')
+            ->setClass('btn-primary')
+            ->setTarget('_blank')
+            ->setConfirm(true)
+            ->setConfirmTitle('Refresh Page After Changes')
+            ->setConfirmBody(
+                <<<EOT
+                This action will open in a new tab.
+                <br><br>
+                Once you have saved your changes, close the tab and refresh this page to see any changes applied.
+                EOT
+            );
+
+        /** @var Detail\Action $oActionDelete */
+        $oActionDelete    = Factory::factory('MonitorDetailAction', \Nails\Cdn\Constants::MODULE_SLUG);
+        $aActions[] = $oActionDelete
+            ->setUrl('admin/cms/pages/delete/' . $oEntity->id)
+            ->setLabel('Delete')
+            ->setClass('btn-danger')
+            ->setConfirm(true)
+            ->setConfirmTitle('Refresh Page After Changes')
+            ->setConfirmBody(
+                <<<EOT
+                This action will open in a new tab.
+                <br><br>
+                Once you have saved your changes, close the tab and refresh this page to see any changes applied.
+                EOT
+            );
+
+        return array_merge(
+            parent::generateActions($oEntity, $oModel),
+            $aActions
+        );
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * @throws FactoryException
      * @throws ModelException
      */
-    protected function updateEntity(int $iEntityId, \stdClass $oOptions): void
+    protected function updateEntity(Entity $oEntity, array $aData): void
     {
         /**
          * The Page model is a mess and doesn't support updating individual columns.
@@ -191,12 +264,8 @@ abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
         $oDb    = Factory::service('Database');
         $oModel = $this->getModel();
 
-        $aData = [
-            $this->getDatabaseColumn() => json_encode($oOptions),
-        ];
-
         if ($oModel->isAutoSetTimestamps()) {
-            /** @var \DateTime $oNow */
+            /** @var DateTime $oNow */
             $oNow              = Factory::factory('DateTime');
             $aData['modified'] = $oNow->format('Y-m-d H:i:s');
         }
@@ -207,7 +276,7 @@ abstract class ObjectIsInTemplateOptions extends ObjectIsInColumn
 
         $oDb
             ->set($aData)
-            ->where($oModel->getColumnId(), $iEntityId)
+            ->where($oModel->getColumnId(), $oEntity->id)
             ->update($oModel->getTableName());
     }
 }

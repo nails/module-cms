@@ -13,6 +13,7 @@ use Nails\Common\Exception\ModelException;
 use Nails\Common\Helper\ArrayHelper;
 use Nails\Common\Helper\Model\Condition;
 use Nails\Common\Helper\Model\Select;
+use Nails\Common\Helper\Model\Sort;
 use Nails\Common\Helper\Model\Where;
 use Nails\Common\Resource\Entity;
 use Nails\Factory;
@@ -24,10 +25,11 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
      * @throws FactoryException
      * @throws ModelException
      */
-    public function locate(CdnObject $oObject): array
+    public function locate(CdnObject $oObject, ?\Closure $fnCreateDetail = null): array
     {
         $aMappings = $this->getWidgetMappings();
         if (empty($aMappings)) {
+            //  No mappings, nothing to locate
             return [];
         }
 
@@ -42,7 +44,7 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
         $aResults = $oModel
             ->getAll(array_merge(
                 $this->getQuerySelect(),
-                $this->getQueryConditions($aMappings, $aWidgets),
+                $this->getQueryConditions($oObject, $aMappings, $aWidgets),
                 $this->getQuerySort(),
             ));
 
@@ -60,7 +62,6 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
                     $aWidgetData,
                     $oObject,
                     $oEntity,
-                    $aDetails
                 )
             );
         }
@@ -83,7 +84,7 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
     /**
      * @return Where[]|Condition[]
      */
-    protected function getQueryConditions(array $aMappings, array $aWidgets): array
+    protected function getQueryConditions(CdnObject $oObject, array $aMappings = [], array $aWidgets = []): array
     {
         $aConditions = array_map(
             fn(string $sSlug) => $this->getJsonExtractPath($sSlug),
@@ -107,6 +108,9 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
 
     // --------------------------------------------------------------------------
 
+    /**
+     * @throws FactoryException
+     */
     protected function getWidgetMappings(): array
     {
         /** @var Cdn $oCdnMonitor */
@@ -135,6 +139,9 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
 
     // --------------------------------------------------------------------------
 
+    /**
+     * @throws FactoryException
+     */
     protected function extractDetailsFromWidgetData(
         array $aWidgets,
         array $aMappings,
@@ -214,17 +221,17 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
      * @throws FactoryException
      * @throws ModelException
      */
-    protected function setObjectId(Detail $oDetail, ?int $iObjectId): void
+    protected function setObjectId(Detail $oDetail, ?int $iReplacementId): void
     {
         $oModel = $this->getModel();
-        if ($oModel->isDestructiveDelete()) {
-            $oEntity = $oModel
-                ->getById($oDetail->getData()->id);
-        } else {
-            $oEntity = $oModel
-                ->includeDeleted()
-                ->getById($oDetail->getData()->id);
+
+        if (!$oModel->isDestructiveDelete()) {
+            $oModel->includeDeleted();
         }
+
+        /** @var Entity $oEntity */
+        $oEntity = $oModel
+            ->getById($oDetail->getData()->id);
 
         if (!$oEntity) {
             throw new ModelException('Entity not found');
@@ -235,16 +242,30 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
         $this->setValueAtPath(
             $oDetail->getData()->path,
             $aWidgetData,
-            $iObjectId
+            $iReplacementId
         );
 
+        $this->updateEntity(
+            $oEntity,
+            [
+                $this->getColumn() => json_encode($aWidgetData),
+            ]
+        );
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @throws FactoryException
+     * @throws ModelException
+     */
+    protected function updateEntity(Entity $oEntity, array $aData): void
+    {
         $this
             ->getModel()
             ->update(
                 $oEntity->id,
-                [
-                    $this->getColumn() => json_encode($aWidgetData),
-                ]
+                $aData
             );
     }
 
