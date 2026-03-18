@@ -15,7 +15,7 @@ use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
 use Nails\Common\Helper\Model\Expand;
 use Nails\Common\Resource\Entity;
-use Nails\Common\Resource\ExpandableField;
+use Nails\Common\Resource\ExpandableFieldData;
 use Nails\Factory;
 
 /**
@@ -34,7 +34,7 @@ class Menu extends Entity
     /** @var string */
     public $description;
 
-    /** @var ExpandableField|null */
+    /** @var ExpandableFieldData|null */
     public $items;
 
     // --------------------------------------------------------------------------
@@ -42,11 +42,11 @@ class Menu extends Entity
     /**
      * Returns the menu's items
      *
-     * @return ExpandableField|null
+     * @return ExpandableFieldData|null
      * @throws FactoryException
      * @throws ModelException
      */
-    public function items(): ?ExpandableField
+    public function items(): ?ExpandableFieldData
     {
         if (empty($this->items)) {
 
