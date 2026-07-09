@@ -1233,6 +1233,53 @@ class WidgetEditor {
     // --------------------------------------------------------------------------
 
     /**
+     * Serialise a collection of :input elements into a plain object, preserving
+     * the checked state of checkboxes (including unchecked, non-grouped boxes as
+     * boolean false) so the backend can distinguish unset / false / true.
+     * @param {Object} $inputs A jQuery collection of :input elements
+     * @return {Object} The serialised data
+     */
+    serializeInputs($inputs) {
+
+        let out = {};
+
+        $inputs.each((index, element) => {
+
+            let $el = $(element);
+            let name = $el.attr('name');
+
+            if (!name) {
+                return;
+            }
+
+            let type = $el.attr('type');
+
+            if (type === 'checkbox') {
+                if (name.slice(-2) === '[]') {
+                    if (!Array.isArray(out[name])) {
+                        out[name] = [];
+                    }
+                    if ($el.prop('checked')) {
+                        out[name].push($el.val());
+                    }
+                } else {
+                    out[name] = $el.prop('checked');
+                }
+            } else if (type === 'radio') {
+                if ($el.prop('checked')) {
+                    out[name] = $el.val();
+                }
+            } else {
+                out[name] = $el.val();
+            }
+        });
+
+        return out;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Returns the data of widgets in the currently active editor
      * @return {Array} The active editor's data
      */
@@ -1257,7 +1304,7 @@ class WidgetEditor {
             } else {
                 out.push({
                     'slug': $widget.data('slug'),
-                    'data': $widget.find(':input').serializeObject()
+                    'data': this.serializeInputs($widget.find(':input'))
                 });
             }
         });
