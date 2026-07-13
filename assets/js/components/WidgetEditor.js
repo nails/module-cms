@@ -1252,30 +1252,34 @@ class WidgetEditor {
             }
 
             let type = element.type;
+            let isGrouped = name.slice(-2) === '[]';
+
+            //  Store grouped inputs under the bare property name, without the []
+            let key = isGrouped ? name.slice(0, -2) : name;
 
             if (type === 'radio') {
                 //  Always represent the group; null indicates nothing is selected
-                if (!(name in out)) {
-                    out[name] = null;
+                if (!(key in out)) {
+                    out[key] = null;
                 }
                 if (element.checked) {
-                    out[name] = element.value;
+                    out[key] = element.value;
                 }
             } else if (type === 'select-multiple') {
                 //  Multi-selects yield every selected option's value
-                out[name] = Array.from(element.selectedOptions, (option) => option.value);
-            } else if (name.slice(-2) === '[]') {
+                out[key] = Array.from(element.selectedOptions, (option) => option.value);
+            } else if (isGrouped) {
                 //  Grouped inputs always yield an array; checkboxes contribute only when checked
-                if (!Array.isArray(out[name])) {
-                    out[name] = [];
+                if (!Array.isArray(out[key])) {
+                    out[key] = [];
                 }
                 if (type !== 'checkbox' || element.checked) {
-                    out[name].push(element.value);
+                    out[key].push(element.value);
                 }
             } else if (type === 'checkbox') {
-                out[name] = element.checked;
+                out[key] = element.checked;
             } else {
-                out[name] = element.value;
+                out[key] = element.value;
             }
         });
 
