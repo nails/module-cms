@@ -1243,34 +1243,39 @@ class WidgetEditor {
 
         let out = {};
 
-        $inputs.each((index, element) => {
+        Array.from($inputs).forEach((element) => {
 
-            let $el = $(element);
-            let name = $el.attr('name');
+            let name = element.name;
 
-            if (!name) {
+            if (!name || element.disabled) {
                 return;
             }
 
-            let type = $el.attr('type');
+            let type = element.type;
 
-            if (type === 'checkbox') {
-                if (name.slice(-2) === '[]') {
-                    if (!Array.isArray(out[name])) {
-                        out[name] = [];
-                    }
-                    if ($el.prop('checked')) {
-                        out[name].push($el.val());
-                    }
-                } else {
-                    out[name] = $el.prop('checked');
+            if (type === 'radio') {
+                //  Always represent the group; null indicates nothing is selected
+                if (!(name in out)) {
+                    out[name] = null;
                 }
-            } else if (type === 'radio') {
-                if ($el.prop('checked')) {
-                    out[name] = $el.val();
+                if (element.checked) {
+                    out[name] = element.value;
                 }
+            } else if (type === 'select-multiple') {
+                //  Multi-selects yield every selected option's value
+                out[name] = Array.from(element.selectedOptions, (option) => option.value);
+            } else if (name.slice(-2) === '[]') {
+                //  Grouped inputs always yield an array; checkboxes contribute only when checked
+                if (!Array.isArray(out[name])) {
+                    out[name] = [];
+                }
+                if (type !== 'checkbox' || element.checked) {
+                    out[name].push(element.value);
+                }
+            } else if (type === 'checkbox') {
+                out[name] = element.checked;
             } else {
-                out[name] = $el.val();
+                out[name] = element.value;
             }
         });
 
