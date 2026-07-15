@@ -448,7 +448,7 @@ class WidgetEditor {
             let $el = $(e.currentTarget);
             let widget = $el.closest('.widget');
             let slug = widget.data('slug');
-            let data = widget.find(':input').serializeObject();
+            let data = this.serializeInputs(widget.find(':input'))
 
             widget
                 .data('original-data', data)
@@ -468,7 +468,7 @@ class WidgetEditor {
             let $el = $(e.currentTarget);
             let widget = $el.closest('.widget');
             let slug = widget.data('slug');
-            let data = widget.find(':input').serializeObject();
+            let data = this.serializeInputs(widget.find(':input'))
 
             //  Place new domElement in the right place
             let clone = $('<div>').addClass('widget');
