@@ -1257,29 +1257,34 @@ class WidgetEditor {
             //  Store grouped inputs under the bare property name, without the []
             let key = isGrouped ? name.slice(0, -2) : name;
 
+            //  Read values via jQuery so plugin valHooks (e.g. CKEditor, which syncs
+            //  the editor's live content back through .val()) are respected; native
+            //  element.value would return the un-synced underlying textarea.
+            let $el = $(element);
+
             if (type === 'radio') {
                 //  Always represent the group; null indicates nothing is selected
                 if (!(key in out)) {
                     out[key] = null;
                 }
                 if (element.checked) {
-                    out[key] = element.value;
+                    out[key] = $el.val();
                 }
             } else if (type === 'select-multiple') {
-                //  Multi-selects yield every selected option's value
-                out[key] = Array.from(element.selectedOptions, (option) => option.value);
+                //  Multi-selects yield every selected option's value ([] when none)
+                out[key] = $el.val() || [];
             } else if (isGrouped) {
                 //  Grouped inputs always yield an array; checkboxes contribute only when checked
                 if (!Array.isArray(out[key])) {
                     out[key] = [];
                 }
                 if (type !== 'checkbox' || element.checked) {
-                    out[key].push(element.value);
+                    out[key].push($el.val());
                 }
             } else if (type === 'checkbox') {
                 out[key] = element.checked;
             } else {
-                out[key] = element.value;
+                out[key] = $el.val();
             }
         });
 
