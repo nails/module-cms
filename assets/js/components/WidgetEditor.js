@@ -1236,6 +1236,13 @@ class WidgetEditor {
      * Serialise a collection of :input elements into a plain object, preserving
      * the checked state of checkboxes (including unchecked, non-grouped boxes as
      * boolean false) so the backend can distinguish unset / false / true.
+     *
+     * Bracket notation in input names is expanded so the serialised data mirrors
+     * the structure of the form, exactly as PHP would parse it, e.g. inputs named
+     * items[0][label] and items[0][tags][] serialise to:
+     *
+     *     {"items": [{"label": "...", "tags": ["..."]}]}
+     *
      * @param {Object} $inputs A jQuery collection of :input elements
      * @return {Object} The serialised data
      */
@@ -1252,10 +1259,11 @@ class WidgetEditor {
             }
 
             let type = element.type;
-            let isGrouped = name.slice(-2) === '[]';
+            let path = this.parseInputName(name);
+            let isGrouped = path[path.length - 1] === '';
 
             //  Store grouped inputs under the bare property name, without the []
-            let key = isGrouped ? name.slice(0, -2) : name;
+            let ref = this.resolveInputPath(out, isGrouped ? path.slice(0, -1) : path);
 
             //  Read values via jQuery so plugin valHooks (e.g. CKEditor, which syncs
             //  the editor's live content back through .val()) are respected; native
@@ -1264,31 +1272,154 @@ class WidgetEditor {
 
             if (type === 'radio') {
                 //  Always represent the group; null indicates nothing is selected
-                if (!(key in out)) {
-                    out[key] = null;
-                }
                 if (element.checked) {
-                    out[key] = $el.val();
+                    ref.target[ref.key] = $el.val();
+                } else if (!(ref.key in ref.target)) {
+                    ref.target[ref.key] = null;
                 }
             } else if (type === 'select-multiple') {
                 //  Multi-selects yield every selected option's value ([] when none)
-                out[key] = $el.val() || [];
+                ref.target[ref.key] = $el.val() || [];
             } else if (isGrouped) {
                 //  Grouped inputs always yield an array; checkboxes contribute only when checked
-                if (!Array.isArray(out[key])) {
-                    out[key] = [];
+                if (!Array.isArray(ref.target[ref.key])) {
+                    ref.target[ref.key] = [];
                 }
                 if (type !== 'checkbox' || element.checked) {
-                    out[key].push($el.val());
+                    ref.target[ref.key].push($el.val());
                 }
             } else if (type === 'checkbox') {
-                out[key] = element.checked;
+                ref.target[ref.key] = element.checked;
             } else {
-                out[key] = $el.val();
+                ref.target[ref.key] = $el.val();
             }
         });
 
-        return out;
+        return this.normaliseSerialisedValue(out);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Split an input's name into its path segments, an empty segment denoting a
+     * bare [], e.g. items[0][tags][] yields ['items', '0', 'tags', '']. Names
+     * which aren't valid bracket notation are treated as a single, literal key.
+     * @param {String} name The input's name
+     * @return {Array} The path segments
+     */
+    parseInputName(name) {
+
+        let matches = name.match(/^([^\[\]]+)((?:\[[^\[\]]*])*)$/);
+
+        if (!matches) {
+            return [name];
+        }
+
+        let path = [matches[1]];
+
+        (matches[2].match(/\[[^\[\]]*]/g) || []).forEach((segment) => {
+            path.push(segment.slice(1, -1));
+        });
+
+        return path;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Resolve where a value described by a path should be written, creating any
+     * intermediate containers (arrays where the child is indexed or appended,
+     * objects otherwise) as it descends
+     * @param {Object} root The object being serialised into
+     * @param {Array}  path The path segments, as returned by parseInputName
+     * @return {Object} The container to write to, and the key to write it under
+     */
+    resolveInputPath(root, path) {
+
+        let target = root;
+
+        for (let i = 0; i < path.length - 1; i++) {
+
+            let key = this.resolveInputPathKey(target, path[i]);
+            let childIsList = path[i + 1] === '' || this.isIndexSegment(path[i + 1]);
+
+            if (target[key] === null || typeof target[key] !== 'object') {
+                target[key] = childIsList ? [] : {};
+            }
+
+            target = target[key];
+        }
+
+        return {
+            'target': target,
+            'key': this.resolveInputPathKey(target, path[path.length - 1]),
+        };
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Resolve a single path segment into a key within its container; empty
+     * segments append to the container, as PHP does for []
+     * @param {Object|Array} target  The container the key belongs to
+     * @param {String}       segment The path segment
+     * @return {String|Number} The key
+     */
+    resolveInputPathKey(target, segment) {
+
+        if (segment === '') {
+            return Array.isArray(target) ? target.length : Object.keys(target).length;
+        }
+
+        return Array.isArray(target) && this.isIndexSegment(segment) ? Number(segment) : segment;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Whether a path segment is an array index, i.e. a canonical, non-negative integer
+     * @param {String} segment The path segment
+     * @return {Boolean}
+     */
+    isIndexSegment(segment) {
+        return /^(0|[1-9]\d*)$/.test(segment);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Recursively tidy serialised data; arrays with gaps in their indexes (e.g. a
+     * repeater whose rows are named items[0] and items[2]) become objects keyed by
+     * index rather than arrays padded with nulls, as PHP would encode them
+     * @param {*} value The value to normalise
+     * @return {*} The normalised value
+     */
+    normaliseSerialisedValue(value) {
+
+        if (Array.isArray(value)) {
+
+            let normalised = value.map((item) => this.normaliseSerialisedValue(item));
+
+            //  Object.keys only reports indexes which are actually set
+            if (Object.keys(normalised).length === normalised.length) {
+                return normalised;
+            }
+
+            let out = {};
+            normalised.forEach((item, index) => {
+                out[index] = item;
+            });
+
+            return out;
+        }
+
+        if (value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+            Object.keys(value).forEach((key) => {
+                value[key] = this.normaliseSerialisedValue(value[key]);
+            });
+        }
+
+        return value;
     }
 
     // --------------------------------------------------------------------------
