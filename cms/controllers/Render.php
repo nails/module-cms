@@ -70,7 +70,7 @@ class Render extends Base
         /** @var \Nails\Cms\Model\Page\Preview $oPagePreviewModel */
         $this->oPagePreviewModel = Factory::model('PagePreview', Constants::MODULE_SLUG);
 
-        get_instance()->lang->load('cms');
+        Factory::service('Translation')->load('cms');
 
         $this->iPageId     = $oUri->rsegment(3);
         $this->bIsPreview  = false;
