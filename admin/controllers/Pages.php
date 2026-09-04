@@ -234,36 +234,21 @@ class Pages extends BaseAdmin
         $oInput = Factory::service('Input');
         if ($oInput->post()) {
 
-            $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('title', '', '');
-            $oFormValidation->set_rules('slug', '', 'alpha_dash');
-            $oFormValidation->set_rules('parent_id', '', 'is_natural');
-            $oFormValidation->set_rules('template', '', 'trim|required');
-            $oFormValidation->set_rules('template_data', '', 'trim');
-            $oFormValidation->set_rules('template_options[]', '', 'is_array');
-            $oFormValidation->set_rules('seo_title', '', 'trim|max_length[150]');
-            $oFormValidation->set_rules('seo_description', '', 'trim|max_length[300]');
-            $oFormValidation->set_rules('seo_keywords', '', 'trim|max_length[150]');
-            $oFormValidation->set_rules('seo_image_id', '', 'is_natural');
-            $oFormValidation->set_rules('action', '', 'required');
+            try {
 
-            $oFormValidation->set_message('alpha_dash', lang('fv_alpha_dash'));
-            $oFormValidation->set_message('is_natural', 'Please select a valid Parent Page.');
-            $oFormValidation->set_message('max_length', 'Exceeds maximum length (%2$s characters)');
-
-            if ($oFormValidation->run()) {
+                $aPost = $this->validatePagePost();
 
                 $aPageData = [
-                    'title'            => $oInput->post('title'),
-                    'slug'             => $oInput->post('slug'),
-                    'parent_id'        => (int) $oInput->post('parent_id') ?: null,
-                    'template'         => $oInput->post('template'),
-                    'template_data'    => $oInput->post('template_data'),
-                    'template_options' => $oInput->post('template_options'),
-                    'seo_title'        => $oInput->post('seo_title'),
-                    'seo_description'  => $oInput->post('seo_description'),
-                    'seo_keywords'     => $oInput->post('seo_keywords'),
-                    'seo_image_id'     => (int) $oInput->post('seo_keywords') ?: null,
+                    'title'            => ($aPost['title'] ?? null),
+                    'slug'             => ($aPost['slug'] ?? null),
+                    'parent_id'        => (int) ($aPost['parent_id'] ?? null) ?: null,
+                    'template'         => ($aPost['template'] ?? null),
+                    'template_data'    => ($aPost['template_data'] ?? null),
+                    'template_options' => ($aPost['template_options'] ?? null),
+                    'seo_title'        => ($aPost['seo_title'] ?? null),
+                    'seo_description'  => ($aPost['seo_description'] ?? null),
+                    'seo_keywords'     => ($aPost['seo_keywords'] ?? null),
+                    'seo_image_id'     => (int) ($aPost['seo_image_id'] ?? null) ?: null,
                 ];
 
                 if (!empty($aPageData['template_options'][$aPageData['template']])) {
@@ -290,8 +275,8 @@ class Pages extends BaseAdmin
                     $this->oUserFeedback->error('Failed to create page. ' . $this->oPageModel->lastError());
                 }
 
-            } else {
-                $this->oUserFeedback->error(lang('fv_there_were_errors'));
+            } catch (ValidationException $e) {
+                $this->oUserFeedback->error($e->getMessage());
             }
         }
 
@@ -382,37 +367,21 @@ class Pages extends BaseAdmin
         $oInput = Factory::service('Input');
         if ($oInput->post()) {
 
-            /** @var FormValidation $oFormValidation */
-            $oFormValidation = Factory::service('FormValidation');
-            $oFormValidation->set_rules('title', '', '');
-            $oFormValidation->set_rules('slug', '', 'alpha_dash');
-            $oFormValidation->set_rules('parent_id', '', 'is_natural');
-            $oFormValidation->set_rules('template', '', 'trim|required');
-            $oFormValidation->set_rules('template_data', '', 'trim');
-            $oFormValidation->set_rules('template_options[]', '', 'is_array');
-            $oFormValidation->set_rules('seo_title', '', 'trim|max_length[150]');
-            $oFormValidation->set_rules('seo_description', '', 'trim|max_length[300]');
-            $oFormValidation->set_rules('seo_keywords', '', 'trim|max_length[150]');
-            $oFormValidation->set_rules('seo_image_id', '', 'is_natural');
-            $oFormValidation->set_rules('action', '', 'required');
+            try {
 
-            $oFormValidation->set_message('alpha_dash', lang('fv_alpha_dash'));
-            $oFormValidation->set_message('is_natural', 'Please select a valid Parent Page.');
-            $oFormValidation->set_message('max_length', 'Exceeds maximum length (%2$s characters)');
-
-            if ($oFormValidation->run()) {
+                $aPost = $this->validatePagePost();
 
                 $aPageData = [
-                    'title'            => $oInput->post('title'),
-                    'slug'             => $oInput->post('slug'),
-                    'parent_id'        => (int) $oInput->post('parent_id') ?: null,
-                    'template'         => $oInput->post('template'),
-                    'template_data'    => $oInput->post('template_data'),
-                    'template_options' => $oInput->post('template_options'),
-                    'seo_title'        => $oInput->post('seo_title'),
-                    'seo_description'  => $oInput->post('seo_description'),
-                    'seo_keywords'     => $oInput->post('seo_keywords'),
-                    'seo_image_id'     => (int) $oInput->post('seo_image_id') ?: null,
+                    'title'            => ($aPost['title'] ?? null),
+                    'slug'             => ($aPost['slug'] ?? null),
+                    'parent_id'        => (int) ($aPost['parent_id'] ?? null) ?: null,
+                    'template'         => ($aPost['template'] ?? null),
+                    'template_data'    => ($aPost['template_data'] ?? null),
+                    'template_options' => ($aPost['template_options'] ?? null),
+                    'seo_title'        => ($aPost['seo_title'] ?? null),
+                    'seo_description'  => ($aPost['seo_description'] ?? null),
+                    'seo_keywords'     => ($aPost['seo_keywords'] ?? null),
+                    'seo_image_id'     => (int) ($aPost['seo_image_id'] ?? null) ?: null,
                 ];
 
                 if (!empty($aPageData['template_options'][$aPageData['template']])) {
@@ -439,8 +408,8 @@ class Pages extends BaseAdmin
                     $this->oUserFeedback->error('Failed to update page. ' . $this->oPageModel->lastError());
                 }
 
-            } else {
-                $this->oUserFeedback->error(lang('fv_there_were_errors'));
+            } catch (ValidationException $e) {
+                $this->oUserFeedback->error($e->getMessage());
             }
         }
 
@@ -881,5 +850,44 @@ class Pages extends BaseAdmin
         }
 
         redirect('admin/cms/pages');
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Validates the page create/edit form, returning the validated (trimmed) values
+     *
+     * @return array
+     * @throws ValidationException
+     * @throws FactoryException
+     */
+    protected function validatePagePost(): array
+    {
+        /** @var FormValidation $oFormValidation */
+        $oFormValidation = Factory::service('FormValidation');
+
+        $oValidator = $oFormValidation
+            ->buildValidator(
+                [
+                    'title'              => [],
+                    'slug'               => [FormValidation::RULE_ALPHA_DASH],
+                    'parent_id'          => [FormValidation::RULE_IS_NATURAL],
+                    'template'           => ['trim', FormValidation::RULE_REQUIRED],
+                    'template_data'      => ['trim'],
+                    'template_options[]' => ['is_array'],
+                    'seo_title'          => ['trim', FormValidation::rule(FormValidation::RULE_MAX_LENGTH, 150)],
+                    'seo_description'    => ['trim', FormValidation::rule(FormValidation::RULE_MAX_LENGTH, 300)],
+                    'seo_keywords'       => ['trim', FormValidation::rule(FormValidation::RULE_MAX_LENGTH, 150)],
+                    'seo_image_id'       => [FormValidation::RULE_IS_NATURAL],
+                    'action'             => [FormValidation::RULE_REQUIRED],
+                ],
+                [
+                    FormValidation::RULE_IS_NATURAL => 'Please select a valid Parent Page.',
+                    FormValidation::RULE_MAX_LENGTH => 'Exceeds maximum length ({param} characters)',
+                ]
+            )
+            ->run();
+
+        return $oValidator->getValidatedData();
     }
 }
