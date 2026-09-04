@@ -21,6 +21,7 @@ use Nails\Cms\Exception\Template\NotFoundException;
 use Nails\Cms\Model\Page;
 use Nails\Cms\Service\Template;
 use Nails\Cms\Service\Widget;
+use Nails\Cms\Validator;
 use Nails\Common\Exception\AssetException;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
@@ -29,7 +30,6 @@ use Nails\Common\Exception\ValidationException;
 use Nails\Common\Resource;
 use Nails\Common\Service\Asset;
 use Nails\Common\Service\Database;
-use Nails\Common\Service\FormValidation;
 use Nails\Common\Service\Input;
 use Nails\Common\Service\Uri;
 use Nails\Components;
@@ -863,31 +863,11 @@ class Pages extends BaseAdmin
      */
     protected function validatePagePost(): array
     {
-        /** @var FormValidation $oFormValidation */
-        $oFormValidation = Factory::service('FormValidation');
+        /** @var Input $oInput */
+        $oInput = Factory::service('Input');
 
-        $oValidator = $oFormValidation
-            ->buildValidator(
-                [
-                    'title'              => [],
-                    'slug'               => [FormValidation::RULE_ALPHA_DASH],
-                    'parent_id'          => [FormValidation::RULE_IS_NATURAL],
-                    'template'           => ['trim', FormValidation::RULE_REQUIRED],
-                    'template_data'      => ['trim'],
-                    'template_options[]' => ['is_array'],
-                    'seo_title'          => ['trim', FormValidation::rule(FormValidation::RULE_MAX_LENGTH, 150)],
-                    'seo_description'    => ['trim', FormValidation::rule(FormValidation::RULE_MAX_LENGTH, 300)],
-                    'seo_keywords'       => ['trim', FormValidation::rule(FormValidation::RULE_MAX_LENGTH, 150)],
-                    'seo_image_id'       => [FormValidation::RULE_IS_NATURAL],
-                    'action'             => [FormValidation::RULE_REQUIRED],
-                ],
-                [
-                    FormValidation::RULE_IS_NATURAL => 'Please select a valid Parent Page.',
-                    FormValidation::RULE_MAX_LENGTH => 'Exceeds maximum length ({param} characters)',
-                ]
-            )
-            ->run();
-
-        return $oValidator->getValidatedData();
+        return (new Validator\Page())
+            ->run($oInput->post())
+            ->getValidatedData();
     }
 }
