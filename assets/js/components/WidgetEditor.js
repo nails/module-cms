@@ -1160,7 +1160,9 @@ class WidgetEditor {
             'method': 'POST',
             'data': {
                 'slug': slug,
-                'data': data
+                //  Sent as JSON so value types survive the round trip; form encoding
+                //  stringifies everything, turning boolean false into a truthy "false"
+                'data': JSON.stringify(data || {})
             }
         })
             .done((response) => {
