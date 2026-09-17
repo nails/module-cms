@@ -122,7 +122,7 @@ class Widgets extends Api\Controller\Base
     {
         $oInput         = Factory::service('Input');
         $sWidgetSlug    = $oInput->post('slug');
-        $aWidgetData    = $oInput->post('data') ?: [];
+        $aWidgetData    = $this->parseWidgetData($oInput->post('data'));
         $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
         $oWidget        = $oWidgetService->getBySlug($sWidgetSlug);
 
@@ -134,6 +134,28 @@ class Widgets extends Api\Controller\Base
             ->setData([
                 'editor' => $oWidget->getEditor($aWidgetData),
             ]);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Normalises POST'ed widget data into an array
+     *
+     * The editor sends the data as a JSON string so that value types, notably
+     * booleans, survive the round trip; form encoded data, where every value is
+     * a string, is still accepted for backwards compatibility.
+     *
+     * @param mixed $mWidgetData The data as supplied by the client
+     *
+     * @return array
+     */
+    protected function parseWidgetData($mWidgetData): array
+    {
+        if (is_string($mWidgetData)) {
+            $mWidgetData = json_decode($mWidgetData, true);
+        }
+
+        return is_array($mWidgetData) ? $mWidgetData : [];
     }
 
     // --------------------------------------------------------------------------
