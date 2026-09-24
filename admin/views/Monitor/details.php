@@ -34,7 +34,7 @@ if (empty($aSummary)) {
         ?>
         <fieldset>
             <legend><?=$oSummary->label?></legend>
-            <table class="table table-striped table-hover table-bordered table-responsive mb-0">
+            <table class="table table-striped table-hover table-responsive mb-0">
                 <thead class="table-dark">
                     <tr>
                         <th>Label</th>
