@@ -52,11 +52,14 @@ class Menu extends DefaultController
     {
         parent::__construct();
         $this->aConfig['INDEX_FIELDS']['Label'] = function (\Nails\Cms\Resource\Menu $oMenu) {
-            return sprintf(
-                '%s<small>%s</small>',
-                $oMenu->label,
-                $oMenu->description
-            );
+            $sLabel = htmlspecialchars((string) $oMenu->label, ENT_QUOTES, 'UTF-8');
+            $sDescription = trim((string) $oMenu->description);
+
+            if ($sDescription === '') {
+                return $sLabel;
+            }
+
+            return $sLabel . ' <small>' . htmlspecialchars($sDescription, ENT_QUOTES, 'UTF-8') . '</small>';
         };
     }
 
@@ -78,17 +81,16 @@ class Menu extends DefaultController
 
         $this->data['aPages'] = ['Select a CMS Page'] + $oPageModel->getAllNestedFlat(null, false);
 
-        $aMenuItems = $oInput->post()
+        $this->data['aMenuItems'] = $oInput->post()
             ? $this->compileItemsFromPost()
             : $this->compileItemsFromMenu($oMenu);
 
+        //  admin.min.js binds the editor on refreshUi. Nested sortable is loaded
+        //  after that first refresh, so ask the UI to bind again.
         $oAsset
             ->load('admin.min.css', Constants::MODULE_SLUG)
             ->load('https://cdnjs.cloudflare.com/ajax/libs/nestedSortable/1.3.4/jquery.ui.nestedSortable.min.js')
-            //  @todo (Pablo - 2018-12-01) - Update/Remove/Use minified once JS is refactored to be a module
-            ->load('admin.menus.edit.js', Constants::MODULE_SLUG)
-            ->library('MUSTACHE')
-            ->inline('var menuEdit = new NAILS_Admin_CMS_Menus_Create_Edit(' . json_encode($aMenuItems) . ');', 'JS');
+            ->inline('window.NAILS.ADMIN.refreshUi();', 'JS');
     }
 
     // --------------------------------------------------------------------------

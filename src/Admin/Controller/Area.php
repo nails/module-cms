@@ -33,6 +33,11 @@ class Area extends DefaultController
     const CONFIG_PERMISSION_BROWSE = Permission\Area\Browse::class;
     const CONFIG_PERMISSION_DELETE = Permission\Area\Delete::class;
 
+    const CONFIG_EDIT_FIELDSET_ORDER = [
+        'Details',
+        'Content',
+    ];
+
     // --------------------------------------------------------------------------
 
     /**

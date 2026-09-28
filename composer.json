@@ -30,6 +30,7 @@
         "php": ">=8.3",
         "nails/module-cdn": "dev-develop",
         "nails/module-console": "dev-develop",
+        "nails/module-housekeeping": "dev-develop",
         "nails/module-redirect": "dev-develop"
     },
     "require-dev": {

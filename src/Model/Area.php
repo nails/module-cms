@@ -81,8 +81,18 @@ class Area extends Base
     {
         $aFields = parent::describeFields($sTable);
 
+        $aFields['label']
+            ->setPlaceholder('The name of this area')
+            ->setTip('Shown in admin. The slug is generated from this label.');
+
+        $aFields['description']
+            ->setPlaceholder('Where this area is used, and what it is for')
+            ->setTip('For editors. It is not shown on the website.');
+
         $aFields['widget_data']
-            ->setLabel('Widgets');
+            ->setLabel('Widgets')
+            ->setFieldset('Content')
+            ->setTip('Rendered wherever this area is included.');
 
         return $aFields;
     }

@@ -134,7 +134,7 @@ class Pages extends \Nails\Admin\Controller\Base
 
         // --------------------------------------------------------------------------
 
-        $this->setTitles(['Manage Pages']);
+        $this->setPageBreadcrumb();
 
         // --------------------------------------------------------------------------
 
@@ -262,20 +262,13 @@ class Pages extends \Nails\Admin\Controller\Base
         // --------------------------------------------------------------------------
 
         //  Set method info
-        $this->setTitles(['Create Page']);
+        $this->setPageBreadcrumb('Create');
 
         //  Get data, available templates & widgets
         $this->data['pagesNestedFlat'] = $this->oPageModel->getAllNestedFlat(' &rsaquo; ', false);
         $this->data['templates']       = $this->oTemplateService->getAvailable();
 
         $this->oTemplateService->loadEditorAssets($this->data['templates']);
-
-        $aTemplatesJson = [];
-        foreach ($this->data['templates'] as $oTemplateGroup) {
-            $aTemplatesJson[] = $oTemplateGroup->getTemplatesAsJson();
-        }
-
-        // --------------------------------------------------------------------------
 
         //  Set the default template; either POST data or the first in the list.
         $this->data['defaultTemplate'] = '';
@@ -295,18 +288,6 @@ class Pages extends \Nails\Admin\Controller\Base
                 }
             }
         }
-
-        // --------------------------------------------------------------------------
-
-        /** @var Asset $oAsset */
-        $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.pages.edit.js', Constants::MODULE_SLUG);
-        $oAsset->inline(implode("\n", [
-            'var templates = [' . implode(',', $aTemplatesJson) . ']',
-            'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit(templates);',
-        ]), 'JS');
-
-        // --------------------------------------------------------------------------
 
         Helper::loadView('edit');
     }
@@ -395,7 +376,7 @@ class Pages extends \Nails\Admin\Controller\Base
         // --------------------------------------------------------------------------
 
         //  Set method info
-        $this->setTitles(['Edit Page "' . $oPage->draft->title . '"']);
+        $this->setPageBreadcrumb('Edit');
 
         //  Get data, available templates & widgets
         $this->data['cmspage']         = $oPage;
@@ -403,13 +384,6 @@ class Pages extends \Nails\Admin\Controller\Base
         $this->data['templates']       = $this->oTemplateService->getAvailable();
 
         $this->oTemplateService->loadEditorAssets($this->data['templates']);
-
-        $aTemplatesJson = [];
-        foreach ($this->data['templates'] as $oTemplateGroup) {
-            $aTemplatesJson[] = substr($oTemplateGroup->getTemplatesAsJson(), 1, -1);
-        }
-
-        // --------------------------------------------------------------------------
 
         //  Set the default template; either POST data or the first in the list.
         $this->data['defaultTemplate'] = '';
@@ -433,18 +407,6 @@ class Pages extends \Nails\Admin\Controller\Base
                 }
             }
         }
-
-        // --------------------------------------------------------------------------
-
-        /** @var Asset $oAsset */
-        $oAsset = Factory::service('Asset');
-        $oAsset->load('admin.pages.edit.js', Constants::MODULE_SLUG);
-        $oAsset->inline(implode("\n", [
-            'var templates = [' . implode(',', $aTemplatesJson) . ']',
-            'var pageEdit = new NAILS_Admin_CMS_Pages_CreateEdit( templates);',
-        ]), 'JS');
-
-        // --------------------------------------------------------------------------
 
         Helper::loadView('edit');
     }
@@ -568,7 +530,7 @@ class Pages extends \Nails\Admin\Controller\Base
         $this->data['aChildren']   = $this->oPageModel->getIdsOfChildren($oPage->id);
         $this->data['aOtherPages'] = $this->oPageModel->getAllFlat();
 
-        $this->setTitles(['Unpublish "' . $oPage->published->title . '"']);
+        $this->setPageBreadcrumb('Unpublish');
 
         unset($this->data['aOtherPages'][$oPage->id]);
 
@@ -741,7 +703,7 @@ class Pages extends \Nails\Admin\Controller\Base
         $this->data['aChildren']   = $this->oPageModel->getIdsOfChildren($oPage->id);
         $this->data['aOtherPages'] = $this->oPageModel->getAllFlat();
 
-        $this->setTitles(['Delete "' . $oPageData->title . '"']);
+        $this->setPageBreadcrumb('Delete');
 
         unset($this->data['aOtherPages'][$oPage->id]);
 
@@ -831,6 +793,29 @@ class Pages extends \Nails\Admin\Controller\Base
         }
 
         redirect(self::url());
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Admin › Pages, with an optional current-page tip (Create, Edit, …)
+     *
+     * The current crumb is not linked. Pages is linked only when a tip follows it.
+     *
+     * @param string|null $sTip
+     *
+     * @return $this
+     * @throws FactoryException
+     */
+    protected function setPageBreadcrumb(?string $sTip = null): self
+    {
+        $this->addBreadcrumb('Pages', $sTip === null ? null : self::url());
+
+        if ($sTip !== null) {
+            $this->addBreadcrumb($sTip);
+        }
+
+        return $this;
     }
 
     // --------------------------------------------------------------------------
