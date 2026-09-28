@@ -2,7 +2,6 @@
    Nails CMS Module Admin Styles
 -------------------------------------------------------------- */
 
-@use "sass:math";
 @use 'components/widget-accordion.scss';
 @use 'components/widget-tabs.scss';
 @use 'components/widget-editor.scss';
@@ -16,8 +15,16 @@
             table {
                 th,
                 td {
-                    &.label {
+                    &.label,
+                    &.field--label {
                         min-width: 200px;
+
+                        small {
+                            display: block;
+                            margin-top: 0.15rem;
+                            color: #666666;
+                            font-weight: 400;
+                        }
                     }
 
                     &.actions {
@@ -28,136 +35,196 @@
         }
 
         &.edit {
-            ol.nested-sortable {
+            .cms-menu-items {
                 margin: 0;
-                margin-bottom: 1em;
-                padding: 0;
-                list-style: none;
-                font-size: 100%;
-                $background: #cccccc;
-                $handle_width: 30px;
-                $actions_width: 70px;
-                $content_padding: 5px;
+            }
 
-                li {
-                    border: 1px solid rgba(159, 159, 159, 1);
-                    margin: 0;
-                    margin-bottom: 0.5em;
-                    list-style: none;
-                    position: relative;
-                    background: rgba(179, 179, 179, 0.35);
-                    font-size: 1em;
+            .cms-menu-toolbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
 
-                    &:last-child {
-                        margin-bottom: 0;
-                    }
+            .cms-menu-toolbar__actions {
+                display: flex;
+                flex: 0 0 auto;
+                gap: 0.35rem;
 
-                    &.ui-sortable-placeholder {
-                        border: 1px dashed rgba(159, 159, 159, 1);
-                        visibility: visible !important;
-                    }
-
-                    li {
-                        margin-bottom: 0;
-                    }
-
-                    div.handle,
-                    div.actions {
-                        line-height: 37px;
-                        position: absolute;
-                        top: 0;
-                        text-align: center;
-                        bottom: 0;
-                        background: rgba(179, 179, 179, 1);
-                    }
-
-                    div.handle {
-                        left: 0;
-                        bottom: 0;
-                        width: $handle_width;
-                        cursor: move; /* fallback if grab cursor is unsupported */
-                        cursor: grab;
-                        cursor: -moz-grab;
-                        cursor: -webkit-grab;
-                    }
-
-                    div.content {
-                        padding: 0;
-                        margin: 0;
-                        margin-left: $handle_width;
-                        margin-right: $actions_width;
-                        clear: right;
-
-                        .container-label,
-                        .container-url {
-                            display: inline-block;
-                            width: 50%;
-                            padding: 0;
-                            margin: 0;
-                            padding: $content_padding;
-
-                            input {
-                                margin: 0;
-                            }
-                        }
-
-                        .container-label {
-                            padding-right: math.div($content-padding, 2);
-
-                            input {
-                                width: 100%;
-                            }
-                        }
-
-                        .container-url {
-                            padding-left: math.div($content-padding, 2);
-                            float: right;
-
-                            input,
-                            select {
-                                width: 44%;
-                                display: inline-block;
-                            }
-
-                            div.or {
-                                display: inline-block;
-                                width: 10%;
-                                text-align: center;
-                                font-size: 0.8em;
-                            }
-                        }
-                    }
-
-                    div.actions {
-                        right: 0;
-                        width: $actions_width;
-
-                        a {
-                            margin: 0;
-                        }
-                    }
-
-                    ol {
-                        font-size: 100%;
-                        margin: 0;
-                        margin-left: $handle_width;
-                        padding: 0;
-
-                        li {
-                            border-right: 0;
-
-                            &:last-child {
-                                border-bottom: 0;
-                            }
-                        }
-                    }
+                &[hidden] {
+                    display: none;
                 }
             }
 
-            div.nested-sortable {
-                p {
-                    margin: 1em;
-                    margin-top: 3em;
+            .cms-menu-help,
+            .js-cms-menu-empty {
+                margin: 0 0 0.75rem;
+            }
+
+            .cms-menu-toolbar .cms-menu-help {
+                margin: 0;
+            }
+
+            .cms-menu-help {
+                color: #666666;
+            }
+
+            .cms-menu-add {
+                margin: 0.75rem 0 0;
+            }
+
+            ul.tabs a .cms-menu-count {
+                margin-left: 0.35rem;
+                vertical-align: middle;
+            }
+
+            .cms-menu__tree {
+                margin: 0;
+                padding: 0;
+                list-style: none;
+            }
+
+            // Every nested list, at any depth. Padding rather than margin so
+            // the gap under the parent row cannot collapse away.
+            .cms-menu-item > .cms-menu__tree:not(:empty) {
+                margin-left: 1.25rem;
+                padding-top: 0.85rem;
+            }
+
+            .cms-menu-item {
+                list-style: none;
+                margin: 0 0 0.5rem;
+                padding: 0;
+                border: 0;
+                background: transparent;
+
+                &:last-child {
+                    margin-bottom: 0;
+                }
+
+                &.ui-sortable-placeholder {
+                    box-sizing: border-box;
+                    min-height: 3.25rem;
+                    margin-bottom: 0.5rem;
+                    border: 1px dashed #b5b5b5;
+                    border-radius: 0.4rem;
+                    visibility: visible !important;
+                    background: rgba(0, 0, 0, 0.03);
+                }
+
+                &__row {
+                    display: flex;
+                    align-items: flex-end;
+                    gap: 0.5rem;
+                    padding: 0.5rem;
+                    border: 1px solid #d5d5d5;
+                    border-radius: 0.4rem;
+                    background: #f7f7f7;
+                }
+
+                &__handle {
+                    flex: 0 0 auto;
+                    align-self: stretch;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 1.75rem;
+                    border-radius: 0.3rem;
+                    background: #e4e4e4;
+                    color: #555555;
+                    cursor: grab;
+                    user-select: none;
+                }
+
+                &__toggle {
+                    flex: 0 0 auto;
+                    align-self: center;
+                    width: 1.75rem;
+                    height: 1.75rem;
+                    padding: 0;
+                    border: 0;
+                    border-radius: 0.3rem;
+                    background: transparent;
+                    color: #555555;
+                    cursor: pointer;
+
+                    .fa {
+                        transition: transform 0.15s ease-out;
+                    }
+
+                    &[hidden] {
+                        display: none;
+                    }
+                }
+
+                &.is-collapsed > .cms-menu__tree {
+                    display: none;
+                }
+
+                &.is-collapsed &__toggle .fa {
+                    transform: rotate(-90deg);
+                }
+
+                &__fields {
+                    flex: 1 1 auto;
+                    display: grid;
+                    grid-template-columns: minmax(8rem, 1fr) 9rem minmax(10rem, 1.4fr);
+                    gap: 0.5rem;
+                    align-items: end;
+                    min-width: 0;
+                }
+
+                &__field {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.2rem;
+                    margin: 0;
+                    min-width: 0;
+                    font-weight: 400;
+
+                    > span {
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        letter-spacing: 0.02em;
+                        text-transform: uppercase;
+                        color: #666666;
+                    }
+
+                    input,
+                    select,
+                    .select2-container {
+                        width: 100%;
+                        margin: 0;
+                        font-weight: 400;
+                        letter-spacing: normal;
+                        text-transform: none;
+                    }
+
+                    .select2-container {
+                        width: 100% !important;
+                    }
+                }
+
+                &__target {
+                    min-width: 0;
+                }
+
+                .js-cms-menu-remove {
+                    flex: 0 0 auto;
+                    min-width: 2.125rem;
+                    padding-left: 0.5rem;
+                    padding-right: 0.5rem;
+                }
+            }
+
+            @media (max-width: 720px) {
+                .cms-menu-item__row {
+                    flex-wrap: wrap;
+                }
+
+                .cms-menu-item__fields {
+                    grid-template-columns: 1fr;
                 }
             }
         }
@@ -178,6 +245,11 @@
 
                 td {
                     &.page-title {
+                        .badge {
+                            margin-right: 0.5em;
+                            vertical-align: middle;
+                        }
+
                         .label {
                             margin-right: 0.5em;
                             display: inline;
@@ -193,10 +265,6 @@
                             position: relative;
                             top: -1px;
 
-                            &.label-draft {
-                                background: #4db3d6;
-                            }
-
                             &.label-homepage {
                                 background: #26c53d;
                             }
@@ -211,9 +279,12 @@
         }
 
         &.edit {
+            fieldset > ul.templates {
+                margin: 0.5rem 0.75rem 0.25rem;
+                padding: 0;
+            }
+
             .templates {
-                padding: 1em;
-                padding-bottom: 0;
 
                 li {
                     display: inline-block;
@@ -233,9 +304,10 @@
                 }
 
                 .template {
+                    position: relative;
                     box-sizing: border-box;
                     display: table;
-                    border: 1px solid #cccccc;
+                    border: 2px solid #d7d7d7;
                     background: #ffffff;
                     border-radius: 3px;
                     width: 150px;
@@ -244,8 +316,7 @@
                     text-align: center;
                     vertical-align: middle;
                     cursor: pointer;
-                    opacity: 0.75;
-                    transition: opacit 0.2s ease-out;
+                    transition: border-color 0.15s ease-out, background-color 0.15s ease-out;
 
                     input {
                         display: none;
@@ -257,132 +328,105 @@
                         width: 100%;
                         height: 111px;
                         border: 1px solid #eae9eb;
+                        overflow: hidden;
+
+                        img {
+                            display: block;
+                            width: 100%;
+                            height: 100%;
+                            margin: 0;
+                            object-fit: contain;
+                            object-position: center;
+                            filter: none;
+                        }
+
+                        &:has(img) {
+                            background-image: none;
+                        }
                     }
 
                     .name {
                         background: transparent;
                         height: 28px;
-                        margin-top: 0.5em;
-                        width: 152px;
+                        margin-top: 0.35em;
+                        width: auto;
+                        max-width: 100%;
                         display: block;
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
-                        transition: opacity 0.2s ease-out;
 
-                        .checkmark {
-                            color: #669933;
-                            padding-right: 0.25em;
-                            display: none;
-                            font-size: 1.5em;
-                            position: relative;
-                            top: 3px;
-                            border: 0;
-                        }
+                    }
+
+                    .checkmark {
+                        display: none;
+                        position: absolute;
+                        top: 0.3rem;
+                        right: 0.35rem;
+                        font-size: 1.15rem;
+                        line-height: 1;
+                        color: #2f6fad;
+                        background: #ffffff;
+                        border-radius: 50%;
                     }
 
                     &:hover {
-                        border-color: #aaaaaa;
-                        opacity: 1;
-                        transition: opacity 0.2s ease-out;
+                        border-color: #8aa4c2;
                     }
 
-                    &.selected {
-                        border-color: #999999;
-                        box-shadow: 0 0 7px rgba(0, 0, 0, 0.3);
-                        opacity: 1;
+                    &:has(input:checked) {
+                        border-color: #2f6fad;
+                        background: #e8f2fb;
+                        box-shadow: inset 0 0 0 1px #2f6fad;
 
-                        .name {
-                            .checkmark {
-                                display: inline;
-                            }
+                        .checkmark {
+                            display: block;
                         }
                     }
                 }
             }
 
-            .template-areas,
-            .template-options {
-                .alert {
-                    padding: 5px 10px;
-                    margin: 3em 1em 1em 1em;
+            .template-areas__body {
+                margin: 0 1rem 1rem;
+            }
+
+            .template-areas .template-area {
+                margin: 0.75rem 0 0;
+            }
+
+            .template-options__body,
+            .template-options .additional-fields {
+                margin: 0;
+            }
+
+            // The alert's margin-top collapses through the fieldset, so the
+            // gap under the legend is padding on the wrapper — the same
+            // 0.75rem the area buttons use. Side and bottom inset comes from
+            // the body margin. Option fields stay flush, so that margin is
+            // applied only while the empty-state alert is the visible child.
+            .template-areas__body:has(> .alert:not([style*="display:none"]):not([style*="display: none"])),
+            .template-options__body:has(> .alert:not([style*="display:none"]):not([style*="display: none"])) {
+                padding-top: 0.75rem;
+            }
+
+            .template-options__body:has(> .alert:not([style*="display:none"]):not([style*="display: none"])) {
+                margin: 0 1rem 1rem;
+            }
+
+            .template-areas__body > .alert,
+            .template-options__body > .alert {
+                margin: 0;
+            }
+
+            .admin-floating-controls {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+
+                .cms-page-actions-end {
+                    margin-left: auto;
                 }
-            }
-
-            .template-areas {
-                .btn-group {
-                    margin: 1em;
-                }
-            }
-
-            .actions {
-                border: 1px solid #cccccc;
-                padding: 15px;
-                background: #eeeeee;
-                box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
-                border-top: 1px solid #aaaaaa;
-                border-bottom: 1px solid #aaaaaa;
-
-                &.loading {
-                    $colour1: rgba(213, 212, 214, 1);
-                    background-image: linear-gradient(
-                            -45deg,
-                            $colour1 25%,
-                            transparent 25%,
-                            transparent 50%,
-                            $colour1 50%,
-                            $colour1 75%,
-                            transparent 75%,
-                            transparent
-                    );
-                    background-size: 50px 50px;
-                    animation: move 2s linear infinite;
-                    overflow: hidden;
-                    box-shadow: inset 0 10px 0 rgba(255, 255, 255, 0.2);
-                    /*
-                    Animate the stripes
-                    */
-                    @keyframes move {
-                        0% {
-                            background-position: 0 0;
-                        }
-                        100% {
-                            background-position: 50px 50px;
-                        }
-                    }
-                }
-            }
-        }
-
-        &.cms-page-preview {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 1.5em;
-            box-sizing: border-box;
-            display: none;
-
-            .spinner {
-                position: absolute;
-                left: 50%;
-                top: 50%;
-                color: #ffffff;
-                font-size: 2em;
-                transform: translate(-50%, -50%);
-            }
-
-            iframe {
-                width: 100%;
-                height: 100%;
-                margin-top: 1.5em;
-                background: #ffffff;
-            }
-
-            .actions {
-
             }
         }
     }
@@ -464,5 +508,62 @@
                 }
             }
         }
+    }
+}
+
+//  Page preview is a Modal instance appended to body, so it sits outside .group-cms.
+.modal.cms-page-preview {
+    z-index: 1100;
+
+    .modal__inner {
+        width: calc(100vw - 2rem);
+        max-width: none;
+        height: calc(100vh - 2rem);
+        max-height: none;
+    }
+
+    .modal__body {
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+        max-height: none;
+        background: #ffffff;
+    }
+
+    iframe {
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 0;
+        border: 0;
+        background: #ffffff;
+    }
+
+    &.is-loading .modal__body {
+        position: relative;
+        background: #f3f3f3;
+
+        &::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 2rem;
+            height: 2rem;
+            margin: -1rem 0 0 -1rem;
+            border: 3px solid #dddddd;
+            border-top-color: #666666;
+            border-radius: 50%;
+            animation: cms-page-preview-spin 0.7s linear infinite;
+        }
+
+        iframe {
+            visibility: hidden;
+        }
+    }
+}
+
+@keyframes cms-page-preview-spin {
+    to {
+        transform: rotate(360deg);
     }
 }

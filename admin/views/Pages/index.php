@@ -51,11 +51,11 @@ use Nails\Admin\Helper;
 
                                 } else {
                                     ?>
-                                    <strong class="label label-draft hint--right"
-                                            aria-label="This page has not been published. It is not available to your site's visitors."
+                                    <span class="badge badge-warning hint--right"
+                                          aria-label="This page has not been published. It is not available to your site's visitors."
                                     >
                                         Draft
-                                    </strong>
+                                    </span>
                                     <?php
                                 }
 

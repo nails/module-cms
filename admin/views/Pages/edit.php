@@ -1,240 +1,283 @@
 <?php
-$oInput = \Nails\Factory::service('Input');
+
+use Nails\Admin\Helper;
+use Nails\Factory;
+
+/** @var \Nails\Common\Service\Input $oInput */
+$oInput = Factory::service('Input');
+
+$oPage  = $cmspage ?? null;
+$oDraft = $oPage?->draft;
+
+$mPostedTemplateData = $oInput->post('template_data');
+if (is_string($mPostedTemplateData) && $mPostedTemplateData !== '') {
+    $mTemplateData = json_decode($mPostedTemplateData);
+} else {
+    $mTemplateData = $oDraft?->template_data;
+}
+
+$sTemplateData = htmlspecialchars(
+    (string) json_encode($mTemplateData),
+    ENT_QUOTES,
+    'UTF-8'
+);
+
+$aSlugsWithoutAreas   = [];
+$aSlugsWithoutOptions = [];
+
+foreach ($templates as $oTemplateGroup) {
+    foreach ($oTemplateGroup->getTemplates() as $oTemplate) {
+        if (empty($oTemplate->getWidgetAreas())) {
+            $aSlugsWithoutAreas[] = $oTemplate->getSlug();
+        }
+        if (empty($oTemplate->getAdditionalFields())) {
+            $aSlugsWithoutOptions[] = $oTemplate->getSlug();
+        }
+    }
+}
+
+$bShowNoAreas   = in_array($defaultTemplate, $aSlugsWithoutAreas, true);
+$bShowNoOptions = in_array($defaultTemplate, $aSlugsWithoutOptions, true);
+
+$sNoAreas   = htmlspecialchars(implode(',', $aSlugsWithoutAreas), ENT_QUOTES, 'UTF-8');
+$sNoOptions = htmlspecialchars(implode(',', $aSlugsWithoutOptions), ENT_QUOTES, 'UTF-8');
+
+$sSave = <<<'HTML'
+<button type="submit" name="action" value="SAVE" class="btn btn-primary" aria-label="Saves a draft. The live page does not change.">
+    Save Changes
+</button>
+HTML;
+
+$sPublish = <<<'HTML'
+<button type="submit" name="action" value="PUBLISH" class="btn btn-success" aria-label="Saves and publishes. The live page updates immediately.">
+    Publish Changes
+</button>
+HTML;
+
+$sPreview = <<<'HTML'
+<span class="cms-page-actions-end">
+    <button type="button" class="btn btn-default js-cms-page-preview">
+        Preview
+    </button>
+</span>
+HTML;
+
 ?>
 <div class="group-cms pages edit">
     <?php
 
-    echo form_open(null, 'id="main-form"');
-
-    $bIssetCmsPage = isset($cmspage);
-    $bHashMismatch = $bIssetCmsPage && $cmspage->published->hash !== $cmspage->draft->hash;
-
-    if ($bIssetCmsPage && $cmspage->is_published && $bHashMismatch) {
+    if ($oPage && $oPage->is_published && $oPage->published->hash !== $oPage->draft->hash) {
         ?>
         <p class="alert alert-warning">
             <strong>You have unpublished changes.</strong>
-            <br />This version of the page is more recent than the version currently published on site. When
-            you're done make sure you click "Publish Changes" below.
+            This version of the page is more recent than the version currently published.
+            Save a draft, or publish when you want it to go live.
         </p>
         <?php
     }
 
+    echo form_open(null, 'id="cms-page-form" data-unsaved-changes');
+
+    ob_start();
+
     ?>
-    <fieldset>
-        <legend>Page Data</legend>
-        <?php
-
-        echo form_field([
-            'key'         => 'title',
-            'label'       => 'Title',
-            'default'     => html_entity_decode($cmspage->draft->title ?? '', ENT_COMPAT | ENT_HTML5, 'UTF-8'),
-            'placeholder' => 'The title of the page',
-        ]);
-
-        echo form_field([
-            'key'         => 'slug',
-            'label'       => 'Slug',
-            'default'     => $cmspage->draft->slug_end ?? '',
-            'placeholder' => 'The page\'s slug, leave blank to auto-generate',
-        ]);
-
-        $aField = [
-            'key'              => 'parent_id',
-            'label'            => 'Parent Page',
-            'placeholder'      => 'The Page\'s parent.',
-            'class'            => 'select2',
-            'default'          => $cmspage->draft->parent_id ?? null,
-            'disabled_options' => $page_children ?? [],
-        ];
-
-        /**
-         * Remove this page from the available options; INFINITE LOOP
-         */
-
-        if (isset($cmspage)) {
-            foreach ($pagesNestedFlat as $id => $label) {
-                if ($id == $cmspage->id) {
-                    $aField['disabled_options'][] = $id;
-                    break;
-                }
-            }
-        }
-
-        if (count($pagesNestedFlat) && count($aField['disabled_options']) < count($pagesNestedFlat)) {
-            $pagesNestedFlat = ['' => 'No Parent Page'] + $pagesNestedFlat;
-            echo form_field_dropdown($aField, $pagesNestedFlat);
-        } else {
-            echo form_hidden($aField['key'], '');
-        }
-
-        ?>
-    </fieldset>
-    <fieldset>
-        <legend>Template</legend>
-        <?=form_error('template', '<div class="alert alert-danger">', '</div>')?>
-        <ul class="templates">
+        <fieldset>
             <?php
 
-            $iNumTemplateGroups = count($templates);
-            foreach ($templates as $oTemplateGroup) {
+            echo form_field([
+                'key'         => 'title',
+                'label'       => 'Title',
+                'default'     => html_entity_decode((string) ($oDraft->title ?? ''), ENT_COMPAT | ENT_HTML5, 'UTF-8'),
+                'placeholder' => 'The title of the page',
+                'max_length'  => 255,
+            ]);
 
-                if ($iNumTemplateGroups > 1) {
-                    ?>
-                    <li class="template-group-label">
-                        <?=$oTemplateGroup->getLabel()?>
-                    </li>
-                    <?php
-                }
+            echo form_field([
+                'key'         => 'slug',
+                'label'       => 'Slug',
+                'default'     => $oDraft->slug_end ?? '',
+                'placeholder' => 'Leave blank to generate a slug from the title',
+                'tip'         => 'The last part of the URL. The parent page supplies the rest.',
+                'max_length'  => 150,
+            ]);
 
-                foreach ($oTemplateGroup->getTemplates() as $oTemplate) {
+            $aField = [
+                'key'              => 'parent_id',
+                'label'            => 'Parent Page',
+                'placeholder'      => 'The Page\'s parent.',
+                'class'            => 'select2',
+                'default'          => $oDraft->parent_id ?? null,
+                'disabled_options' => $page_children ?? [],
+            ];
 
-                    //  This template selected?
-                    $bIsSelected = $defaultTemplate == $oTemplate->getSlug();
-
-                    //  Define attributes
-                    $aAttr = [
-                        'class'     => $bIsSelected ? 'template selected hint--top' : 'template hint--top',
-                        'data-slug' => $oTemplate->getSlug(),
-                    ];
-
-                    //  Glue together
-                    $sAttrStr = '';
-                    foreach ($aAttr as $sKey => $sValue) {
-                        $sAttrStr .= $sKey . '="' . $sValue . '" ';
+            if ($oPage) {
+                foreach ($pagesNestedFlat as $id => $label) {
+                    if ($id == $oPage->id) {
+                        $aField['disabled_options'][] = $id;
+                        break;
                     }
-
-                    ?>
-                    <li>
-                        <label <?=trim($sAttrStr)?> aria-label="<?=$oTemplate->getDescription()?>">
-                            <?php
-
-                            echo form_radio(
-                                'template',
-                                $oTemplate->getSlug(),
-                                set_radio(
-                                    'template',
-                                    $oTemplate->getSlug(),
-                                    $bIsSelected
-                                ),
-                                'data-slug="' . $aAttr['data-slug'] . '"'
-                            );
-
-                            echo '<span class="icon">';
-                            if (!empty($oTemplate->getIcon())) {
-
-                                echo img($oTemplate->getIcon());
-                            }
-                            echo '</span>';
-
-                            ?>
-                            <span class="name">
-                            <span class="checkmark fa fa-check-circle"></span>
-                            <span>
-                                <?=$oTemplate->getLabel()?>
-                            </span>
-                        </span>
-                        </label>
-                    </li>
-                    <?php
                 }
+            }
+
+            if (count($pagesNestedFlat) && count($aField['disabled_options']) < count($pagesNestedFlat)) {
+                $pagesNestedFlat = ['' => 'No Parent Page'] + $pagesNestedFlat;
+                echo form_field_dropdown($aField, $pagesNestedFlat);
+            } else {
+                echo form_hidden($aField['key'], '');
             }
 
             ?>
-        </ul>
-    </fieldset>
-    <fieldset class="template-areas">
-        <legend>Page Content</legend>
-        <p id="template-areas-none" class="alert alert-info">
-            This template has no editable areas
-        </p>
-        <?php
+        </fieldset>
+    <?php
 
-        foreach ($templates as $oTemplateGroup) {
+    $sDetailsTab = ob_get_clean();
+    ob_start();
 
-            $aTemplates = $oTemplateGroup->getTemplates();
-            foreach ($aTemplates as $oTemplate) {
+    ?>
+        <fieldset>
+            <legend>Template</legend>
+            <?=form_error('template', '<div class="alert alert-danger">', '</div>')?>
+            <ul class="templates">
+                <?php
 
-                $aWidgetAreas = $oTemplate->getWidgetAreas();
+                $iNumTemplateGroups = count($templates);
+                foreach ($templates as $oTemplateGroup) {
 
-                if (!empty($aWidgetAreas)) {
+                    if ($iNumTemplateGroups > 1) {
+                        ?>
+                        <li class="template-group-label">
+                            <?=htmlspecialchars($oTemplateGroup->getLabel(), ENT_QUOTES, 'UTF-8')?>
+                        </li>
+                        <?php
+                    }
 
-                    echo '<div class="btn-group template-area" id="template-area-' . $oTemplate->getSlug() . '" role="group">';
+                    foreach ($oTemplateGroup->getTemplates() as $oTemplate) {
+
+                        $sSlug     = $oTemplate->getSlug();
+                        $sSlugAttr = htmlspecialchars($sSlug, ENT_QUOTES, 'UTF-8');
+                        $bIsSelected = $defaultTemplate == $sSlug;
+
+                        ?>
+                        <li>
+                            <label class="template hint--top" data-slug="<?=$sSlugAttr?>" aria-label="<?=htmlspecialchars($oTemplate->getDescription(), ENT_QUOTES, 'UTF-8')?>">
+                                <?php
+
+                                echo form_radio(
+                                    'template',
+                                    $sSlug,
+                                    set_radio('template', $sSlug, $bIsSelected),
+                                    'data-revealer="cms-page-template"'
+                                );
+
+                                echo '<span class="icon">';
+                                if (!empty($oTemplate->getIcon())) {
+                                    echo img($oTemplate->getIcon());
+                                }
+                                echo '</span>';
+
+                                ?>
+                                <span class="name">
+                                    <span><?=htmlspecialchars($oTemplate->getLabel(), ENT_QUOTES, 'UTF-8')?></span>
+                                </span>
+                                <span class="checkmark fa fa-check-circle"></span>
+                            </label>
+                        </li>
+                        <?php
+                    }
+                }
+
+                ?>
+            </ul>
+        </fieldset>
+        <fieldset class="template-areas">
+            <legend>Page content</legend>
+            <div class="template-areas__body">
+            <?php
+
+            if ($aSlugsWithoutAreas) {
+                ?>
+                <p class="alert alert-info" data-revealer="cms-page-template" data-reveal-on="<?=$sNoAreas?>"<?=$bShowNoAreas ? '' : ' style="display:none"'?>>
+                    This template has no editable areas.
+                </p>
+                <?php
+            }
+
+            foreach ($templates as $oTemplateGroup) {
+                foreach ($oTemplateGroup->getTemplates() as $oTemplate) {
+
+                    $aWidgetAreas = $oTemplate->getWidgetAreas();
+
+                    if (empty($aWidgetAreas)) {
+                        continue;
+                    }
+
+                    $sSlug     = $oTemplate->getSlug();
+                    $sSlugAttr = htmlspecialchars($sSlug, ENT_QUOTES, 'UTF-8');
+                    $bShow     = $defaultTemplate === $sSlug;
+
+                    echo '<div class="btn-group template-area" id="template-area-' . $sSlugAttr . '" role="group"';
+                    echo ' data-revealer="cms-page-template" data-reveal-on="' . $sSlugAttr . '"';
+                    echo $bShow ? '' : ' style="display:none"';
+                    echo '>';
 
                     foreach ($aWidgetAreas as $sWidgetSlug => $oWidgetArea) {
-
-                        $aAttr = [
-                            'class'     => 'btn btn-default disabled launch-editor',
-                            'data-area' => $sWidgetSlug,
-                        ];
-
-                        $sAttr = '';
-                        foreach ($aAttr as $sKey => $sValue) {
-                            $sAttr .= $sKey . '="' . $sValue . '" ';
-                        }
-
-                        echo '<button ' . trim($sAttr) . '>' . $oWidgetArea->getTitle() . '</button>';
+                        echo '<button type="button" class="btn btn-default js-cms-page-area" disabled';
+                        echo ' data-area="' . htmlspecialchars($sWidgetSlug, ENT_QUOTES, 'UTF-8') . '">';
+                        echo '<span class="fa fa-pencil"></span> ';
+                        echo htmlspecialchars($oWidgetArea->getTitle(), ENT_QUOTES, 'UTF-8');
+                        echo '</button>';
                     }
 
                     echo '</div>';
                 }
             }
-        }
 
-        if ($oInput->post('template_data')) {
+            ?>
+            <input type="hidden" name="template_data" id="template-data" value="<?=$sTemplateData?>" />
+            </div>
+        </fieldset>
+        <fieldset class="template-options">
+            <legend>Template options</legend>
+            <div class="template-options__body">
+            <?php
 
-            $sTemplateData = $oInput->post('template_data');
+            if ($aSlugsWithoutOptions) {
+                ?>
+                <p class="alert alert-info" data-revealer="cms-page-template" data-reveal-on="<?=$sNoOptions?>"<?=$bShowNoOptions ? '' : ' style="display:none"'?>>
+                    This template has no additional options.
+                </p>
+                <?php
+            }
 
-        } elseif (!empty($cmspage->draft->template_data)) {
+            $oTemplateOptions = $oDraft?->template_options;
 
-            $sTemplateData = $cmspage->draft->template_data;
+            foreach ($templates as $oTemplateGroup) {
+                foreach ($oTemplateGroup->getTemplates() as $oTemplate) {
 
-        } else {
-            $sTemplateData = null;
-        }
+                    $sTplSlug             = $oTemplate->getSlug();
+                    $aTplAdditionalFields = $oTemplate->getAdditionalFields();
 
-        $sTemplateData = json_encode($sTemplateData);
-        $sTemplateData = htmlentities($sTemplateData);
+                    if (empty($aTplAdditionalFields)) {
+                        continue;
+                    }
 
-        ?>
-        <input type="hidden" name="template_data" id="template-data" value="<?=$sTemplateData?>" />
-    </fieldset>
-    <fieldset class="template-options">
-        <legend>Template Options</legend>
-        <p id="template-options-none" class="alert alert-info">
-            This template has no additional options
-        </p>
-        <?php
-
-        //  Any additional page data for the templates
-        foreach ($templates as $oTemplateGroup) {
-
-            $aTemplates = $oTemplateGroup->getTemplates();
-            foreach ($aTemplates as $oTemplate) {
-
-                $sTplSlug             = $oTemplate->getSlug();
-                $aTplAdditionalFields = $oTemplate->getAdditionalFields();
-
-                //  Any other fields, if specified
-                if (!empty($aTplAdditionalFields)) {
+                    $sSlugAttr = htmlspecialchars($sTplSlug, ENT_QUOTES, 'UTF-8');
+                    $bShow     = $defaultTemplate === $sTplSlug;
 
                     ?>
-                    <div id="additional-fields-<?=$sTplSlug?>" class="additional-fields">
+                    <div class="additional-fields" data-revealer="cms-page-template" data-reveal-on="<?=$sSlugAttr?>"<?=$bShow ? '' : ' style="display:none"'?>>
                         <?php
 
                         foreach ($aTplAdditionalFields as $oField) {
 
-                            //  Set the default key
-                            $sFieldKey     = $oField->getKey();
-                            $sFieldType    = $oField->getType();
-                            $aFieldOptions = $oField->getOptions();
-                            if (!empty($cmspage->draft->template_options->{$sFieldKey})) {
-                                $oField->setDefault($cmspage->draft->template_options->{$sFieldKey});
+                            $sFieldKey = $oField->getKey();
+
+                            if (is_object($oTemplateOptions) && !empty($oTemplateOptions->{$sFieldKey})) {
+                                $oField->setDefault($oTemplateOptions->{$sFieldKey});
                             }
 
-                            //  Override the field key
                             $oField->setKey('template_options[' . $sTplSlug . '][' . $sFieldKey . ']');
 
-                            //  Render the appropriate field
                             $sType = 'form_field_' . $oField->getProperty('type');
                             if (function_exists($sType)) {
                                 echo $sType($oField->toArray());
@@ -248,89 +291,75 @@ $oInput = \Nails\Factory::service('Input');
                     <?php
                 }
             }
-        }
 
-        ?>
-    </fieldset>
-    <fieldset>
-        <legend>Search Engine Optimisation</legend>
-        <?php
+            ?>
+            </div>
+        </fieldset>
+    <?php
 
-        echo form_field([
-            'key'         => 'seo_title',
-            'label'       => 'Title',
-            'default'     => html_entity_decode($cmspage->draft->seo_title ?? '', ENT_COMPAT | ENT_HTML5, 'UTF-8'),
-            'placeholder' => 'The page\'s SEO title, keep this short and concise. If not set, this will fallback to the page title.',
-            'max_length'  => 150,
-        ]);
+    $sContentTab = ob_get_clean();
+    ob_start();
 
-        echo form_field([
-            'key'         => 'seo_description',
-            'label'       => 'Description',
-            'default'     => html_entity_decode($cmspage->draft->seo_description ?? '', ENT_COMPAT | ENT_HTML5, 'UTF-8'),
-            'placeholder' => 'The page\'s SEO description, keep this short and concise. Recommended to keep below 150 characters.',
-            'tip'         => 'This should be kept short (< 300 characters) and concise. It\'ll be shown in search result listings and search engines will use it to help determine the page\'s content.',
-            'max_length'  => 300,
-        ]);
+    ?>
+        <fieldset>
+            <legend>Search engines</legend>
+            <?php
 
-        echo form_field([
-            'key'         => 'seo_keywords',
-            'label'       => 'Keywords',
-            'default'     => html_entity_decode($cmspage->draft->seo_keywords ?? '', ENT_COMPAT | ENT_HTML5, 'UTF-8'),
-            'placeholder' => 'Comma separated keywords relating to the content of the page. A maximum of 10 keywords is recommended.',
-            'tip'         => 'SEO good practice recommend keeping the number of keyword phrases below 10 and less than 150 characters in total.',
-            'max_length'  => 150,
-        ]);
+            echo form_field([
+                'key'         => 'seo_title',
+                'label'       => 'Title',
+                'default'     => html_entity_decode((string) ($oDraft->seo_title ?? ''), ENT_COMPAT | ENT_HTML5, 'UTF-8'),
+                'placeholder' => 'Shown in search results. Falls back to the page title.',
+                'max_length'  => 150,
+            ]);
 
-        echo form_field_cdn_object_picker([
-            'key'     => 'seo_image_id',
-            'label'   => 'Image',
-            'default' => $cmspage->draft->seo_image_id ?? null,
-            'tip'     => 'Will be cropped to 1200x630px',
-        ]);
+            echo form_field([
+                'key'         => 'seo_description',
+                'label'       => 'Description',
+                'default'     => html_entity_decode((string) ($oDraft->seo_description ?? ''), ENT_COMPAT | ENT_HTML5, 'UTF-8'),
+                'placeholder' => 'A short summary for search results. Aim for under 150 characters.',
+                'tip'         => 'Search engines may use this when they list the page.',
+                'max_length'  => 300,
+            ]);
 
-        ?>
-    </fieldset>
-    <div class="admin-floating-controls">
-        <input type="hidden" name="action" value="" id="input-action" />
-        <button id="action-save" class="btn btn-primary hint--top-right" aria-label="Your changes will be saved so you can come back later, but won't be published on site.">
-            Save Changes
-        </button>
-        <button id="action-publish" class="btn btn-success hint--top" aria-label="Your changes will be published on site and will take hold immediately.">
-            Publish Changes
-        </button>
-        <a href="#" id="action-preview" class="btn btn-default right">
-            <?=lang('action_preview')?>
-        </a>
-    </div>
-    <?=form_close()?>
-</div>
-<div id="page-preview" class="group-cms pages cms-page-preview">
-    <div class="spinner">
-        <b class="fa fa-circle-o-notch fa-spin"></b>
-    </div>
-    <div class="row actions">
-        <div class="col-xs-4 col-md-2">
-            <button class="btn btn-primary btn-block btn-sm action-save">
-                Save Changes
-            </button>
-        </div>
-        <div class="col-xs-4 col-md-2">
-            <button class="btn btn-success btn-block btn-sm action-publish">
-                Publish Changes
-            </button>
-        </div>
-        <div class="hidden-xs col-md-6">
-        </div>
-        <div class="col-xs-4 col-md-2">
-            <button class="btn btn-danger btn-block btn-sm action-close">
-                Close Preview
-            </button>
-        </div>
-    </div>
-    <div class="row iframe">
-        <div class="col-xs-12">
-            <iframe></iframe>
-        </div>
-    </div>
+            echo form_field([
+                'key'         => 'seo_keywords',
+                'label'       => 'Keywords',
+                'default'     => html_entity_decode((string) ($oDraft->seo_keywords ?? ''), ENT_COMPAT | ENT_HTML5, 'UTF-8'),
+                'placeholder' => 'Comma separated. Ten keywords or fewer is plenty.',
+                'max_length'  => 150,
+            ]);
+
+            echo form_field_cdn_object_picker([
+                'key'     => 'seo_image_id',
+                'label'   => 'Image',
+                'default' => $oDraft->seo_image_id ?? null,
+                'tip'     => 'Used when the page is shared. Cropped to 1200×630.',
+            ]);
+
+            ?>
+        </fieldset>
+    <?php
+
+    $sSeoTab = ob_get_clean();
+
+    echo Helper::tabs([
+        ['label' => 'Details', 'content' => $sDetailsTab],
+        ['label' => 'Content', 'content' => $sContentTab],
+        ['label' => 'SEO', 'content' => $sSeoTab],
+    ]);
+
+    echo Helper::floatingControls([
+        'unsaved_changes' => true,
+        'save'            => ['enabled' => false],
+        'notes'           => ['enabled' => false],
+        'html'            => [
+            'left'  => $sSave . $sPublish,
+            'right' => $sPreview,
+        ],
+    ]);
+
+    echo form_close();
+
+    ?>
 </div>
