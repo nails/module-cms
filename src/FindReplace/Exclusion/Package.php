@@ -25,7 +25,9 @@ class Package implements Exclusion
             NAILS_DB_PREFIX . 'cms_page.published_slug_end',
             NAILS_DB_PREFIX . 'cms_page.draft_template',
             NAILS_DB_PREFIX . 'cms_page.published_template',
-            NAILS_DB_PREFIX . 'cms_menu_item.url',
+            //  Built from parent page titles; a direct edit is overwritten or goes stale.
+            NAILS_DB_PREFIX . 'cms_page.draft_breadcrumbs',
+            NAILS_DB_PREFIX . 'cms_page.published_breadcrumbs',
         ];
     }
 }
