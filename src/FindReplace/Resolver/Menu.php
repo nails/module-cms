@@ -2,7 +2,6 @@
 
 namespace Nails\Cms\FindReplace\Resolver;
 
-use Nails\Cms\Admin\Controller;
 use Nails\Common\Service\Database;
 use Nails\Factory;
 use Nails\FindReplace\Factory\Action;
@@ -131,6 +130,6 @@ class Menu implements Resolver
 
     protected function editUrl(): string
     {
-        return Controller\Menu::url('edit');
+        return siteUrl('admin/cms/menu/edit');
     }
 }

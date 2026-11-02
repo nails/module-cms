@@ -2,7 +2,6 @@
 
 namespace Nails\Cms\FindReplace\Resolver;
 
-use Nails\Cms\Admin\Controller;
 use Nails\Common\Service\Database;
 use Nails\Factory;
 use Nails\FindReplace\Factory\Action;
@@ -76,6 +75,6 @@ class Area implements Resolver
 
     protected function editUrl(): string
     {
-        return Controller\Area::url('edit');
+        return siteUrl('admin/cms/area/edit');
     }
 }

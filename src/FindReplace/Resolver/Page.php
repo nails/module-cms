@@ -2,7 +2,6 @@
 
 namespace Nails\Cms\FindReplace\Resolver;
 
-use Nails\Cms\Admin\Controller;
 use Nails\Common\Service\Database;
 use Nails\Factory;
 use Nails\FindReplace\Factory\Action;
@@ -134,6 +133,6 @@ class Page implements Resolver, Facets, FacetValues, Badges
 
     protected function editUrl(): string
     {
-        return Controller\Pages::url('edit');
+        return siteUrl('admin/cms/pages/edit');
     }
 }
