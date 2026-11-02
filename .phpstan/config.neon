@@ -4,3 +4,5 @@ parameters:
         - ../helpers
         - ../src
         - ../tests
+    scanFiles:
+        - ../vendor/nails/common/helpers/url.php
