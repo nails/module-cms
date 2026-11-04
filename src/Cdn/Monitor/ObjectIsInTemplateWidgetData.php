@@ -31,11 +31,7 @@ abstract class ObjectIsInTemplateWidgetData extends ObjectIsInWidgetData
 
     protected function getJsonExtractPath(string $sSlug): string
     {
-        return sprintf(
-            'JSON_EXTRACT(`%s`, \'$.*[*].slug\') LIKE \'%%"%s"%%\'',
-            $this->getDatabaseColumn(),
-            $sSlug
-        );
+        return $this->compileSlugCondition($this->getDatabaseColumn(), '$.*[*].slug', $sSlug);
     }
 
     // --------------------------------------------------------------------------

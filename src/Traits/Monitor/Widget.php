@@ -4,6 +4,7 @@ namespace Nails\Cms\Traits\Monitor;
 
 use Nails\Cms\Constants;
 use Nails\Cms\Factory\Monitor\Detail;
+use Nails\Cms\Helper\Monitor;
 use Nails\Cms\Interfaces;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Service\Database;
@@ -126,16 +127,17 @@ trait Widget
         $aSql = [];
         foreach ($this->getDataColumns() as $sColumn) {
             $aSql[] = sprintf(
-                'JSON_CONTAINS(JSON_EXTRACT(%s, "%s"), \'"%s"\', "$")',
+                'JSON_CONTAINS(JSON_EXTRACT(%s, %s), %s, "$")',
                 $sColumn,
-                $this->getJsonPath(),
-                $oWidget->getSlug()
+                $oDb->escape($this->getJsonPath()),
+                $oDb->escape(Monitor::jsonString($oWidget->getSlug()))
             );
         }
 
-        $oDb->where(sprintf(
-            '(%s)',
-            implode(' OR ', $aSql)
-        ));
+        $oDb->where(
+            sprintf('(%s)', implode(' OR ', $aSql)),
+            null,
+            false
+        );
     }
 }

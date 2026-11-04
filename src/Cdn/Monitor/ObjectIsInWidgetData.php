@@ -7,6 +7,7 @@ use Nails\Cdn\Exception\CdnException;
 use Nails\Cdn\Factory\Monitor\Detail;
 use Nails\Cdn\Resource\CdnObject;
 use Nails\Cms\Constants;
+use Nails\Cms\Helper\Monitor;
 use Nails\Cms\Service\Monitor\Cdn;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
@@ -16,6 +17,7 @@ use Nails\Common\Helper\Model\Select;
 use Nails\Common\Helper\Model\Sort;
 use Nails\Common\Helper\Model\Where;
 use Nails\Common\Resource\Entity;
+use Nails\Common\Service\Database;
 use Nails\Factory;
 
 abstract class ObjectIsInWidgetData extends ObjectIsInColumn
@@ -123,10 +125,27 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
 
     protected function getJsonExtractPath(string $sSlug): string
     {
+        return $this->compileSlugCondition($this->getColumn(), '$[*].slug', $sSlug);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Compiles a condition matching rows whose JSON column holds the slug at the given path
+     *
+     * @throws FactoryException
+     */
+    protected function compileSlugCondition(string $sColumn, string $sJsonPath, string $sSlug): string
+    {
+        /** @var Database $oDb */
+        $oDb = Factory::service('Database');
+
         return sprintf(
-            'JSON_EXTRACT(`%s`, \'$[*].slug\') LIKE \'%%"%s"%%\'',
-            $this->getColumn(),
-            $sSlug
+            'JSON_EXTRACT(`%s`, %s) LIKE %s ESCAPE %s',
+            $sColumn,
+            $oDb->escape($sJsonPath),
+            $oDb->escape(Monitor::likePattern($sSlug)),
+            $oDb->escape(Monitor::LIKE_ESCAPE)
         );
     }
 
