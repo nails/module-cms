@@ -96,6 +96,7 @@ class Form
         $enabled = $version->getEnabledVersions();
         $active  = $version->getDefault();
 
+        $stylesheet = '';
         if (in_array(Version::V2, $enabled, true)) {
             /** @var \Nails\Common\Service\Asset $assets */
             $assets = Factory::service('Asset');
@@ -103,6 +104,15 @@ class Form
                 ->vue3()
                 ->load('admin.widget-editor.min.js', Constants::MODULE_SLUG)
                 ->load('admin.widget-editor.min.css', Constants::MODULE_SLUG);
+
+            // The field renders in the body, after the head has printed its stylesheets, so a queued
+            // stylesheet never reaches the page. Emit the link with the field.
+            foreach ($assets->getLoaded()->CSS as $url) {
+                if (is_string($url) && str_contains($url, 'admin.widget-editor.min.css')) {
+                    $stylesheet = '<link rel="stylesheet" href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '">';
+                    break;
+                }
+            }
         }
 
         $json = json_encode(
@@ -110,7 +120,7 @@ class Form
             JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP
         );
 
-        return '<script type="application/json" id="cms-widget-editor-config">' . $json . '</script>';
+        return $stylesheet . '<script type="application/json" id="cms-widget-editor-config">' . $json . '</script>';
     }
 
     // --------------------------------------------------------------------------

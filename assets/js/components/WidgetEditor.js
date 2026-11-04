@@ -1635,10 +1635,36 @@ class WidgetEditor {
 
         return {
             slug: slug,
-            label: button.textContent.replace(/\s+/g, ' ').trim() || slug,
+            label: this.areaLabel(button, slug),
             rules: rules,
             data: Array.isArray(data) ? data : []
         };
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * The widget button's caption is always "Open Widget Editor", so the area name comes from its field label.
+     * A page-area button already carries the area title.
+     * @param {HTMLElement} button
+     * @param {String} slug
+     * @return {String}
+     */
+    areaLabel(button, slug) {
+
+        if (button.classList.contains('open-editor')) {
+            let host = button.closest('label');
+            if (host) {
+                let copy = host.cloneNode(true);
+                copy.querySelectorAll('textarea, button, script, style').forEach((el) => el.remove());
+                let text = copy.textContent.replace(/\s+/g, ' ').trim().replace(/\*?\s*required\b.*/, '').trim();
+                if (text) {
+                    return text;
+                }
+            }
+        }
+
+        return button.textContent.replace(/\s+/g, ' ').trim() || slug;
     }
 
     // --------------------------------------------------------------------------
