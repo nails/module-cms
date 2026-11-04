@@ -64,17 +64,26 @@
                 </ol>
             </div>
 
-            <div class="cms-we__inspector">
-                <p v-if="!selectedNode">Select a widget to edit it.</p>
-                <div v-else-if="selectedNode.locked" class="cms-we__locked">
-                    <strong>{{ selectedNode.slug }}</strong>
-                    is kept as it was saved. It can be removed or reordered here, and edited in the editor that created it.
+            <div class="cms-we__centre">
+                <Canvas
+                    :items="canvasItems"
+                    :stylesheets="canvasStylesheets"
+                    :preview-url="endpoint('preview')"
+                    :area="view.active"
+                />
+
+                <div class="cms-we__inspector">
+                    <p v-if="!selectedNode">Select a widget to edit it.</p>
+                    <div v-else-if="selectedNode.locked" class="cms-we__locked">
+                        <strong>{{ selectedNode.slug }}</strong>
+                        is kept as it was saved. It can be removed or reordered here, and edited in the editor that created it.
+                    </div>
+                    <p v-else-if="inspector.type === 'fields'">
+                        This widget’s fields are not yet editable in the editor. It can be added, moved and removed, and its saved data is left as it is.
+                    </p>
+                    <p v-else-if="inspector.error">{{ inspector.error }}</p>
+                    <div v-else ref="formRoot" @input="onFormEvent" @change="onFormEvent"></div>
                 </div>
-                <p v-else-if="inspector.type === 'fields'">
-                    This widget’s fields are edited on the canvas. That arrives with the canvas; until then it can be added, moved and removed, and its saved data is left as it is.
-                </p>
-                <p v-else-if="inspector.error">{{ inspector.error }}</p>
-                <div v-else ref="formRoot" @input="onFormEvent" @change="onFormEvent"></div>
             </div>
 
             <div class="cms-we__organiser">
@@ -117,10 +126,11 @@ import { organiserGroups } from './rules.js';
 import { clearDraft, draftKey, loadDraft, saveDraft } from './draft.js';
 import { serialiseFields } from './serialise.js';
 import OutlineNode from './OutlineNode.vue';
+import Canvas from './Canvas.vue';
 
 export default {
     name: 'EditorApp',
-    components: { OutlineNode },
+    components: { Canvas, OutlineNode },
     props: {
         session: { type: Object, required: true },
     },
@@ -134,6 +144,7 @@ export default {
             active: '',
             selected: null,
             nodes: [],
+            stored: [],
             message: '',
             canUndo: false,
             canRedo: false,
@@ -154,6 +165,16 @@ export default {
         });
 
         const selectedNode = computed(() => findNode(view.value.nodes, view.value.selected));
+
+        // Top-level instances of the active area, with their stored data, for the canvas
+        const canvasItems = computed(() => view.value.nodes.map((node, index) => ({
+            uid: node.uid,
+            slug: node.slug,
+            locked: node.locked,
+            data: (view.value.stored[index] || {}).data || [],
+        })));
+
+        const canvasStylesheets = computed(() => catalogue.value.canvas_assets || []);
 
         const canSwitch = computed(() => {
             const config = readConfig();
@@ -447,6 +468,9 @@ export default {
             search,
             draftOffer,
             selectedNode,
+            canvasItems,
+            canvasStylesheets,
+            endpoint,
             canSwitch,
             setArea,
             select,
