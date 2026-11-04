@@ -80,9 +80,13 @@
                         <strong>{{ selectedNode.slug }}</strong>
                         is kept as it was saved. It can be removed or reordered here, and edited in the editor that created it.
                     </div>
-                    <p v-else-if="inspector.type === 'fields'">
-                        This widget’s fields are not yet editable in the editor. It can be added, moved and removed, and its saved data is left as it is.
-                    </p>
+                    <FieldsInspector
+                        v-else-if="inspector.type === 'fields'"
+                        class="cms-we__settings"
+                        :fields="selectedFields"
+                        :values="selectedNode.data || {}"
+                        @change="onFieldsChange"
+                    ></FieldsInspector>
                     <p v-else-if="inspector.error">{{ inspector.error }}</p>
                     <div v-else-if="inspector.type === 'html'" class="cms-we__settings">
                         <div class="cms-we__settings-tools">
@@ -146,10 +150,11 @@ import OutlineNode from './OutlineNode.vue';
 import Canvas from './Canvas.vue';
 import Modal from './Modal.vue';
 import RichTextModal from './RichTextModal.vue';
+import FieldsInspector from './FieldsInspector.vue';
 
 export default {
     name: 'EditorApp',
-    components: { Canvas, Modal, OutlineNode, RichTextModal },
+        components: { Canvas, FieldsInspector, Modal, OutlineNode, RichTextModal },
     props: {
         session: { type: Object, required: true },
     },
@@ -191,6 +196,15 @@ export default {
         });
 
         const selectedNode = computed(() => findNode(view.value.nodes, view.value.selected));
+
+        // The fields schema of the selected widget (only set when its inspector is a fields one)
+        const selectedFields = computed(() => {
+            const node = selectedNode.value;
+            const widget = node ? catalogue.value.widgets[node.slug] : null;
+            return widget && widget.inspector && Array.isArray(widget.inspector.fields)
+                ? widget.inspector.fields
+                : [];
+        });
 
         // Top-level instances of the active area, with their stored data, for the canvas
         const canvasItems = computed(() => view.value.nodes.map((node, index) => ({
@@ -431,6 +445,24 @@ export default {
             return true;
         }
 
+        /**
+         * One field changed in the fields inspector. It is merged with the node's current data, not with the data
+         * the inspector was rendered from, so two quick changes cannot overwrite each other.
+         */
+        function onFieldsChange({ key, value }) {
+            const uid = view.value.selected;
+            const found = uid ? editor.locate(uid) : null;
+            if (!found || found.node.locked) {
+                return;
+            }
+            const current = found.node.data || {};
+            if (JSON.stringify(current[key]) === JSON.stringify(value)) {
+                return;
+            }
+            editor.update(uid, { ...current, [key]: value }, true);
+            refresh();
+        }
+
         /** An inline text edit from the canvas. The canvas already shows the text, so it is not re-rendered. */
         function onCanvasEdit({ uid, path, field, value }) {
             const target = resolveNodeUid(view.value.nodes, uid, path);
@@ -577,6 +609,8 @@ export default {
             closeModal,
             onCanvasEdit,
             onCanvasRich,
+            onFieldsChange,
+            selectedFields,
             saveRich,
             closeRich,
             search,

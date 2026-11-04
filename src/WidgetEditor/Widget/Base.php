@@ -16,6 +16,7 @@ namespace Nails\Cms\WidgetEditor\Widget;
 
 use Nails\Cms\WidgetEditor\Exception\RegistryException;
 use Nails\Cms\WidgetEditor\Interfaces;
+use Nails\Cms\WidgetEditor\Service\Fields;
 use Nails\Cms\WidgetEditor\Service\Registry;
 use Nails\Cms\WidgetEditor\Status;
 
@@ -181,7 +182,10 @@ abstract class Base implements Interfaces\Widget
      */
     public function normalise(array $data): array
     {
-        return array_replace($this->getDefaults(), $data);
+        $data   = array_replace($this->getDefaults(), $data);
+        $fields = $this->getFields();
+
+        return is_array($fields) ? Fields::fill(Fields::normalise($fields), $data) : $data;
     }
 
     // --------------------------------------------------------------------------
