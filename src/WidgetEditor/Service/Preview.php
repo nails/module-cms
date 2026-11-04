@@ -13,6 +13,8 @@
 
 namespace Nails\Cms\WidgetEditor\Service;
 
+use Nails\Cms\WidgetEditor\Widget\Base;
+
 class Preview
 {
     public const MAX_ITEMS = 1000;
@@ -25,6 +27,9 @@ class Preview
      */
     public function render(Registry $registry, array $items, array $context = []): array
     {
+        //  Paths are set by the registry while it renders; a client must not be able to choose one
+        unset($context[Base::PATH_KEY]);
+
         $out = [];
 
         foreach ($items as $item) {
