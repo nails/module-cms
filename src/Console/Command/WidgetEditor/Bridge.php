@@ -52,6 +52,7 @@ class Bridge extends Base
 
         /** @var \Nails\Cms\Service\Widget $oWidgetService */
         $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
+        $oRegistry      = $oWidgetService->getRegistry();
 
         $aLines = [];
         $iWrote = 0;
@@ -76,8 +77,18 @@ class Bridge extends Base
                     continue;
                 }
 
+                // A v2 widget already claims this slug (a module ships it). The bridge then overrides that widget,
+                // rather than claiming the same alias, which would fail the whole catalogue
+                $sParent = null;
+                if ($oRegistry->knows($sSlug)) {
+                    $oClaimed = $oRegistry->resolve($sSlug);
+                    $sParent  = $oClaimed !== null ? get_class($oClaimed) : null;
+                }
+
+                $sNote = $sParent !== null ? ' (overrides ' . $sParent . ')' : '';
+
                 if ($bDryRun) {
-                    $aLines[] = '<info>would write</info> ' . $sSlug . ' -> ' . $sClass;
+                    $aLines[] = '<info>would write</info> ' . $sSlug . ' -> ' . $sClass . $sNote;
                     continue;
                 }
 
@@ -85,12 +96,12 @@ class Bridge extends Base
                     return $this->abort(self::EXIT_CODE_FAILURE, ['Could not create ' . $sDir]);
                 }
 
-                if (file_put_contents($sFile, $this->bridgeSource($sSlug, $sClass)) === false) {
+                if (file_put_contents($sFile, $this->bridgeSource($sSlug, $sClass, $sParent)) === false) {
                     return $this->abort(self::EXIT_CODE_FAILURE, ['Could not write ' . $sFile]);
                 }
 
                 $iWrote++;
-                $aLines[] = '<info>wrote</info>      ' . $sSlug . ' -> ' . $sClass;
+                $aLines[] = '<info>wrote</info>      ' . $sSlug . ' -> ' . $sClass . $sNote;
             }
         }
 
@@ -113,12 +124,23 @@ class Bridge extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * The source of a bridge class
+     * The source of a bridge class. With a parent, the bridge overrides that v2 widget (#[Overrides]) and keeps its
+     * render; the v1 class it delegates to still decides the editor, scripts and status.
      */
-    private function bridgeSource(string $sSlug, string $sLegacyClass): string
+    private function bridgeSource(string $sSlug, string $sLegacyClass, ?string $sParent = null): string
     {
         $sNamespace = self::BRIDGE_NAMESPACE;
         $sLegacy    = '\\' . ltrim($sLegacyClass, '\\');
+
+        if ($sParent === null) {
+            $sImports = 'use Nails\Cms\WidgetEditor\Traits\Legacy;' . PHP_EOL
+                . 'use Nails\Cms\WidgetEditor\Widget\Base;';
+            $sDeclare = 'final class ' . $sSlug . ' extends Base';
+        } else {
+            $sImports = 'use Nails\Cms\WidgetEditor\Attribute\Overrides;' . PHP_EOL
+                . 'use Nails\Cms\WidgetEditor\Traits\Legacy;';
+            $sDeclare = '#[Overrides]' . PHP_EOL . 'class ' . $sSlug . ' extends \\' . ltrim($sParent, '\\');
+        }
 
         return <<<PHP
 <?php
@@ -132,10 +154,9 @@ class Bridge extends Base
 
 namespace {$sNamespace};
 
-use Nails\Cms\WidgetEditor\Traits\Legacy;
-use Nails\Cms\WidgetEditor\Widget\Base;
+{$sImports}
 
-final class {$sSlug} extends Base
+{$sDeclare}
 {
     use Legacy;
 
