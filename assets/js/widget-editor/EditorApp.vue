@@ -64,17 +64,34 @@
                 </ol>
             </div>
 
-            <div class="cms-we__inspector">
-                <p v-if="!selectedNode">Select a widget to edit it.</p>
-                <div v-else-if="selectedNode.locked" class="cms-we__locked">
-                    <strong>{{ selectedNode.slug }}</strong>
-                    is kept as it was saved. It can be removed or reordered here, and edited in the editor that created it.
+            <div class="cms-we__centre">
+                <Canvas
+                    :items="canvasItems"
+                    :stylesheets="canvasStylesheets"
+                    :preview-url="endpoint('preview')"
+                    :area="view.active"
+                    @edit="onCanvasEdit"
+                    @rich="onCanvasRich"
+                />
+
+                <div class="cms-we__inspector">
+                    <p v-if="!selectedNode">Select a widget to edit it.</p>
+                    <div v-else-if="selectedNode.locked" class="cms-we__locked">
+                        <strong>{{ selectedNode.slug }}</strong>
+                        is kept as it was saved. It can be removed or reordered here, and edited in the editor that created it.
+                    </div>
+                    <p v-else-if="inspector.type === 'fields'">
+                        This widget’s fields are not yet editable in the editor. It can be added, moved and removed, and its saved data is left as it is.
+                    </p>
+                    <p v-else-if="inspector.error">{{ inspector.error }}</p>
+                    <div v-else-if="inspector.type === 'html'" class="cms-we__settings">
+                        <div class="cms-we__settings-tools">
+                            <button type="button" class="cms-we__tool" :disabled="modalOpen" @click="openModal">Open in modal</button>
+                            <span v-if="modalOpen" class="cms-we__rich-note">Editing in the modal.</span>
+                        </div>
+                        <div ref="panelHost"></div>
+                    </div>
                 </div>
-                <p v-else-if="inspector.type === 'fields'">
-                    This widget’s fields are edited on the canvas. That arrives with the canvas; until then it can be added, moved and removed, and its saved data is left as it is.
-                </p>
-                <p v-else-if="inspector.error">{{ inspector.error }}</p>
-                <div v-else ref="formRoot" @input="onFormEvent" @change="onFormEvent"></div>
             </div>
 
             <div class="cms-we__organiser">
@@ -107,6 +124,14 @@
                 </section>
             </div>
         </div>
+
+        <Modal v-if="modalOpen" title="Widget settings" @close="closeModal">
+            <div ref="modalHost"></div>
+        </Modal>
+
+        <Modal v-if="rich.open" :title="'Edit ' + rich.field" @close="closeRich">
+            <RichTextModal :value="rich.value" @save="saveRich" @cancel="closeRich"></RichTextModal>
+        </Modal>
     </div>
 </template>
 
@@ -116,11 +141,15 @@ import { createEditor } from './editor.js';
 import { organiserGroups } from './rules.js';
 import { clearDraft, draftKey, loadDraft, saveDraft } from './draft.js';
 import { serialiseFields } from './serialise.js';
+import { resolveNodeUid } from './canvas.js';
 import OutlineNode from './OutlineNode.vue';
+import Canvas from './Canvas.vue';
+import Modal from './Modal.vue';
+import RichTextModal from './RichTextModal.vue';
 
 export default {
     name: 'EditorApp',
-    components: { OutlineNode },
+    components: { Canvas, Modal, OutlineNode, RichTextModal },
     props: {
         session: { type: Object, required: true },
     },
@@ -134,6 +163,7 @@ export default {
             active: '',
             selected: null,
             nodes: [],
+            stored: [],
             message: '',
             canUndo: false,
             canRedo: false,
@@ -141,7 +171,14 @@ export default {
             maxInstances: 0,
         });
         const inspector = reactive({ type: null, error: '' });
-        const formRoot = ref(null);
+        // The HTML form lives in one element, which is moved between the inspector and the modal, so the values
+        // typed in it are kept when it moves
+        const formNode = document.createElement('div');
+        formNode.className = 'cms-we__form';
+        const panelHost = ref(null);
+        const modalHost = ref(null);
+        const modalOpen = ref(false);
+        const rich = reactive({ open: false, uid: null, field: '', value: '' });
         const search = ref(null);
         const draftOffer = ref('');
         let editor = null;
@@ -154,6 +191,16 @@ export default {
         });
 
         const selectedNode = computed(() => findNode(view.value.nodes, view.value.selected));
+
+        // Top-level instances of the active area, with their stored data, for the canvas
+        const canvasItems = computed(() => view.value.nodes.map((node, index) => ({
+            uid: node.uid,
+            slug: node.slug,
+            locked: node.locked,
+            data: (view.value.stored[index] || {}).data || [],
+        })));
+
+        const canvasStylesheets = computed(() => catalogue.value.canvas_assets || []);
 
         const canSwitch = computed(() => {
             const config = readConfig();
@@ -265,20 +312,35 @@ export default {
             }
             inspector.type = 'html';
             await nextTick();
-            if (!formRoot.value) {
-                return;
-            }
             applyingForm = true;
-            formRoot.value.innerHTML = item.html || '';
+            formNode.innerHTML = item.html || '';
             (item.assets || []).forEach(mountAsset);
             applyingForm = false;
+            await placeForm();
+        }
+
+        /** Puts the form in the modal while it is open, and in the inspector otherwise */
+        async function placeForm() {
+            await nextTick();
+            const host = modalOpen.value ? modalHost.value : panelHost.value;
+            if (host && formNode.parentNode !== host) {
+                host.appendChild(formNode);
+            }
+        }
+
+        function openModal() {
+            modalOpen.value = true;
+        }
+
+        function closeModal() {
+            modalOpen.value = false;
         }
 
         function onFormEvent() {
-            if (applyingForm || !formRoot.value || !view.value.selected) {
+            if (applyingForm || !view.value.selected) {
                 return;
             }
-            const fields = Array.from(formRoot.value.querySelectorAll('input, select, textarea')).map((element) => ({
+            const fields = Array.from(formNode.querySelectorAll('input, select, textarea')).map((element) => ({
                 name: element.name,
                 type: element.multiple ? 'select-multiple' : element.type,
                 value: element.multiple
@@ -301,14 +363,19 @@ export default {
             const meta = event.metaKey || event.ctrlKey;
 
             if (event.key === 'Escape') {
-                if (view.value.selected) {
+                if (rich.open) {
+                    closeRich();
+                } else if (modalOpen.value) {
+                    closeModal();
+                } else if (view.value.selected) {
                     select(null);
                 } else {
                     close();
                 }
                 return;
             }
-            if (typing) {
+            // While a modal is open its keys belong to it: Backspace in the rich text editor must not remove a widget
+            if (typing || rich.open || modalOpen.value) {
                 return;
             }
             if (event.key === '/' ) {
@@ -345,6 +412,57 @@ export default {
                 editor.nudge(view.value.selected, delta);
                 refresh();
             }
+        }
+
+        /**
+         * Writes one field of a node. Returns false when the value is unchanged, so a field the user did not
+         * change is never written back (D19).
+         */
+        function writeField(uid, field, value) {
+            const found = editor.locate(uid);
+            if (!found || found.node.locked) {
+                return false;
+            }
+            const current = found.node.data || {};
+            if (JSON.stringify(current[field]) === JSON.stringify(value)) {
+                return false;
+            }
+            editor.update(uid, { ...current, [field]: value }, true);
+            return true;
+        }
+
+        /** An inline text edit from the canvas. The canvas already shows the text, so it is not re-rendered. */
+        function onCanvasEdit({ uid, path, field, value }) {
+            const target = resolveNodeUid(view.value.nodes, uid, path);
+            if (target && writeField(target, field, value)) {
+                refresh();
+            }
+        }
+
+        /** A click on a rich text field in the canvas opens it in the rich text modal */
+        function onCanvasRich({ uid, path, field }) {
+            const target = resolveNodeUid(view.value.nodes, uid, path);
+            const found = target ? editor.locate(target) : null;
+            if (!found || found.node.locked) {
+                return;
+            }
+            rich.uid = target;
+            rich.field = field;
+            rich.value = String((found.node.data || {})[field] ?? '');
+            rich.open = true;
+        }
+
+        function saveRich(html) {
+            writeField(rich.uid, rich.field, html);
+            closeRich();
+            refresh();
+        }
+
+        function closeRich() {
+            rich.open = false;
+            rich.uid = null;
+            rich.field = '';
+            rich.value = '';
         }
 
         function setArea(slug) {
@@ -407,8 +525,14 @@ export default {
             loadInspector();
         });
 
+        watch(modalOpen, () => {
+            placeForm();
+        });
+
         onMounted(async () => {
             window.addEventListener('keydown', onKey);
+            formNode.addEventListener('input', onFormEvent);
+            formNode.addEventListener('change', onFormEvent);
             try {
                 catalogue.value = await loadCatalogue();
                 draft = loadDraft(window.localStorage, storageKey.value);
@@ -425,6 +549,8 @@ export default {
 
         onBeforeUnmount(() => {
             window.removeEventListener('keydown', onKey);
+            formNode.removeEventListener('input', onFormEvent);
+            formNode.removeEventListener('change', onFormEvent);
         });
 
         function currentAreas() {
@@ -443,10 +569,22 @@ export default {
             view,
             groups,
             inspector,
-            formRoot,
+            panelHost,
+            modalHost,
+            modalOpen,
+            rich,
+            openModal,
+            closeModal,
+            onCanvasEdit,
+            onCanvasRich,
+            saveRich,
+            closeRich,
             search,
             draftOffer,
             selectedNode,
+            canvasItems,
+            canvasStylesheets,
+            endpoint,
             canSwitch,
             setArea,
             select,

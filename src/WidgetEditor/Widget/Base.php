@@ -21,6 +21,12 @@ use Nails\Cms\WidgetEditor\Status;
 
 abstract class Base implements Interfaces\Widget
 {
+    /**
+     * The context key holding the path of the node being rendered, relative to its top-level instance.
+     * Each segment is a slot name or an index, e.g. ['columns', '1']. Top-level instances have an empty path.
+     */
+    public const PATH_KEY = '_cms_path';
+
     /** The widget's status; see Status */
     const STATUS = Status::ACTIVE;
 
@@ -236,15 +242,90 @@ abstract class Base implements Interfaces\Widget
         }
 
         $output = '';
-        foreach ((array) ($data[$name] ?? []) as $child) {
+        foreach (array_values((array) ($data[$name] ?? [])) as $index => $child) {
+            $context                = $this->context;
+            $context[self::PATH_KEY] = [...$this->nodePath(), $name, (string) $index];
+
             $output .= $this->registry->renderNode(
                 $child,
                 $this->mode,
                 $this->depth + 1,
-                $this->context
+                $context
             );
         }
 
         return $output;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Whether this instance is being rendered for the canvas (preview) rather than the public site
+     */
+    protected function isPreview(): bool
+    {
+        return $this->mode === Registry::MODE_PREVIEW;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * The path of this instance, relative to its top-level instance
+     *
+     * @return string[]
+     */
+    private function nodePath(): array
+    {
+        return array_values((array) ($this->context[self::PATH_KEY] ?? []));
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Renders a field's value in an element, and marks it for inline editing in the canvas
+     *
+     * Use it in render() so that the same markup serves the public site and the canvas. Outside the canvas
+     * the element carries no editor attributes. In the canvas it carries data-cms-field, data-cms-edit and
+     * data-cms-path, which the canvas uses to write edits back to the right instance.
+     *
+     * @param string               $field The data key the value is stored under
+     * @param string               $tag   The element to render, e.g. h2
+     * @param mixed                $value The field's value. For 'text' it is escaped; for 'rich' it is HTML
+     * @param array<string, mixed> $attrs Extra attributes for the element
+     * @param string               $edit  'text' (plain text, inline) or 'rich' (HTML, opens the rich text modal)
+     *
+     * @throws \InvalidArgumentException
+     */
+    protected function editable(
+        string $field,
+        string $tag,
+        mixed $value,
+        array $attrs = [],
+        string $edit = 'text'
+    ): string {
+        if (!in_array($edit, ['text', 'rich'], true)) {
+            throw new \InvalidArgumentException(sprintf('Unknown editable type "%s"', $edit));
+        }
+        if (!preg_match('/^[a-z][a-z0-9]*$/', $tag)) {
+            throw new \InvalidArgumentException(sprintf('Invalid tag "%s"', $tag));
+        }
+
+        $content = (string) $value;
+        if ($edit === 'text') {
+            $content = htmlspecialchars($content, ENT_QUOTES, 'UTF-8');
+        }
+
+        if ($this->isPreview()) {
+            $attrs['data-cms-field'] = $field;
+            $attrs['data-cms-edit']  = $edit;
+            $attrs['data-cms-path']  = implode('/', $this->nodePath());
+        }
+
+        $attributes = '';
+        foreach ($attrs as $name => $attrValue) {
+            $attributes .= ' ' . $name . '="' . htmlspecialchars((string) $attrValue, ENT_QUOTES, 'UTF-8') . '"';
+        }
+
+        return '<' . $tag . $attributes . '>' . $content . '</' . $tag . '>';
     }
 }

@@ -38,12 +38,32 @@
         min-height: 0;
     }
 
+    &__centre {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+    }
+
+    &__canvas {
+        flex: 1 1 60%;
+        width: 100%;
+        min-height: 200px;
+        border: 0;
+        border-bottom: 1px solid #e1e4e8;
+        background: #fff;
+    }
+
     &__outline,
     &__inspector,
     &__organiser {
         min-height: 0;
         overflow: auto;
         padding: 12px;
+    }
+
+    &__inspector {
+        flex: 1 1 40%;
     }
 
     &__outline,
@@ -165,5 +185,116 @@
     &__locked {
         padding: 12px;
         background: #fff3cd;
+    }
+
+    &__settings-tools {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    &__rich-note {
+        color: #627d98;
+        font-size: 12px;
+    }
+
+    // Modal: a dialog over the editor for wide controls and rich text (D18)
+    &__modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(15, 23, 42, 0.45);
+    }
+
+    &__modal {
+        display: flex;
+        flex-direction: column;
+        width: min(900px, 92vw);
+        max-height: 88vh;
+        background: #fff;
+        color: #222;
+        border-radius: 6px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    &__modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 14px;
+        border-bottom: 1px solid #d9e2ec;
+    }
+
+    &__modal-body {
+        padding: 14px;
+        overflow: auto;
+        min-height: 0;
+    }
+
+    &__rich {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__rich-tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+
+        .cms-we__tool {
+            background: #e4e7eb;
+            color: #222;
+
+            &.is-active {
+                background: #3e4c59;
+                color: #fff;
+            }
+        }
+    }
+
+    &__rich-content {
+        min-height: 220px;
+        padding: 12px;
+        border: 1px solid #bcccdc;
+        border-radius: 4px;
+        background: #fff;
+
+        .ProseMirror {
+            outline: none;
+            min-height: 200px;
+        }
+
+        .ProseMirror p {
+            margin: 0 0 0.75em;
+        }
+
+        .ProseMirror h2 {
+            font-size: 1.4em;
+        }
+
+        .ProseMirror h3 {
+            font-size: 1.2em;
+        }
+
+        .ProseMirror a {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+    }
+
+    &__rich-foot {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+
+        .cms-we__rich-note {
+            margin-right: auto;
+        }
     }
 }

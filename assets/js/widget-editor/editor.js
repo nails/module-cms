@@ -170,6 +170,7 @@ export function createEditor(areas, catalogue, hooks = {}) {
             active,
             selected,
             nodes: tree.view(active),
+            stored: active ? tree.toStored(active) : [],
             message,
             canUndo: tree.canUndo(),
             canRedo: tree.canRedo(),
