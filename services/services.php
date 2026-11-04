@@ -42,6 +42,13 @@ return [
                 return new Service\Template();
             }
         },
+        'WidgetEditorFavourite' => function (): \Nails\Cms\WidgetEditor\Service\Favourite {
+            if (class_exists('\App\Cms\WidgetEditor\Service\Favourite')) {
+                return new \App\Cms\WidgetEditor\Service\Favourite();
+            } else {
+                return new \Nails\Cms\WidgetEditor\Service\Favourite();
+            }
+        },
         'WidgetEditorRegistry' => function (): \Nails\Cms\WidgetEditor\Service\Registry {
             //  The registry is built per request; the depth cap comes from the (app-overridable) widget service
             $iMaxDepth = \Nails\Factory::service('Widget', \Nails\Cms\Constants::MODULE_SLUG)->getMaxDepth();
