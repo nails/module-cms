@@ -56,11 +56,12 @@ class Inspector
                 }
 
                 $out[] = [
-                    'slug'   => $slug,
-                    'type'   => 'html',
-                    'html'   => $widget->getEditorForm($data) ?? '',
-                    'assets' => array_values($widget->getAssets()['editor'] ?? []),
-                    'error'  => null,
+                    'slug'      => $slug,
+                    'type'      => 'html',
+                    'html'      => $widget->getEditorForm($data) ?? '',
+                    'assets'    => array_values($widget->getAssets()['editor'] ?? []),
+                    'callbacks' => $widget->getCallbacks(),
+                    'error'     => null,
                 ];
             } catch (\Throwable $e) {
                 $out[] = [
