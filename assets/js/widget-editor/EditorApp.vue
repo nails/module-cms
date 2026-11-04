@@ -1,52 +1,69 @@
 <template>
     <div class="cms-we" role="dialog" aria-label="Widget editor">
         <div class="cms-we__bar">
-            <nav class="cms-we__areas">
-                <button
-                    v-for="area in view.areas"
-                    :key="area.slug"
-                    type="button"
-                    class="cms-we__tab"
-                    :class="{ 'is-active': area.slug === view.active }"
-                    @click="setArea(area.slug)"
+            <div class="cms-we__title">
+                <select
+                    v-if="view.areas.length > 1"
+                    class="cms-we__area"
+                    :value="view.active"
+                    title="Switch field"
+                    @change="setArea($event.target.value)"
                 >
-                    {{ area.label }}
-                </button>
-            </nav>
+                    <option v-for="area in view.areas" :key="area.slug" :value="area.slug">{{ area.label }}</option>
+                </select>
+                <strong v-else class="cms-we__area">{{ activeLabel }}</strong>
+                <small :title="view.maxInstances ? 'At most ' + view.maxInstances : ''">
+                    {{ view.count }} {{ view.count === 1 ? 'widget' : 'widgets' }}
+                </small>
+            </div>
             <div class="cms-we__tools">
-                <button type="button" class="btn btn-default btn-sm" :disabled="!view.canUndo" @click="run('undo')">Undo</button>
-                <button type="button" class="btn btn-default btn-sm" :disabled="!view.canRedo" @click="run('redo')">Redo</button>
+                <button type="button" class="cms-we__btn is-icon" title="Undo (⌘Z)" :disabled="!view.canUndo" @click="run('undo')">
+                    <i class="fa fa-rotate-left"></i>
+                </button>
+                <button type="button" class="cms-we__btn is-icon" title="Redo (⇧⌘Z)" :disabled="!view.canRedo" @click="run('redo')">
+                    <i class="fa fa-rotate-right"></i>
+                </button>
                 <button
                     v-for="(action, index) in session.actions"
                     :key="index"
                     type="button"
-                    class="btn btn-default btn-sm"
+                    class="cms-we__btn"
                     @click="action.callback()"
                 >
                     {{ action.label }}
                 </button>
-                <button type="button" class="btn btn-primary btn-sm" @click="close">Done</button>
+                <button type="button" class="cms-we__btn" title="Insert a widget (/)" @click="openDrawer(null)">
+                    <i class="fa fa-plus"></i> Insert
+                </button>
+                <button type="button" class="cms-we__btn is-primary" @click="close">
+                    <i class="fa fa-check"></i> Done
+                </button>
             </div>
         </div>
 
-        <p v-if="draftOffer" class="cms-we__message">
-            Unsaved changes from {{ draftOffer }} were kept in this browser.
-            <button type="button" @click="restoreDraft">Restore</button>
-            <button type="button" @click="discardDraft">Discard</button>
-        </p>
-        <p v-if="view.message" class="cms-we__message">{{ view.message }}</p>
-        <p v-if="error" class="cms-we__message">{{ error }}</p>
+        <div v-if="draftOffer" class="cms-we__notice">
+            <i class="fa fa-clock-rotate-left"></i>
+            <span>Unsaved changes from {{ draftOffer }} were kept in this browser.</span>
+            <button type="button" class="btn btn-default btn-xs" @click="restoreDraft">Restore</button>
+            <button type="button" class="btn btn-default btn-xs" @click="discardDraft">Discard</button>
+        </div>
+        <div v-if="view.message" class="cms-we__notice is-warning"><i class="fa fa-triangle-exclamation"></i> {{ view.message }}</div>
+        <div v-if="error" class="cms-we__notice is-error"><i class="fa fa-circle-exclamation"></i> {{ error }}</div>
 
-        <div v-if="loading" class="cms-we__body">
-            <p>Loading widgets…</p>
+        <div v-if="loading" class="cms-we__body is-loading">
+            <p><i class="fa fa-spinner fa-spin"></i> Loading widgets…</p>
         </div>
         <div v-else class="cms-we__body">
-            <div class="cms-we__outline">
-                <p class="cms-we__slot-label">{{ view.count }} / {{ view.maxInstances }}</p>
+            <nav class="cms-we-outline" aria-label="Outline">
+                <header class="cms-we-outline__head">
+                    <span>Outline</span>
+                    <em>{{ view.count }}</em>
+                </header>
+                <p v-if="!view.nodes.length" class="cms-we-outline__empty">No widgets yet.</p>
                 <ol
-                    class="cms-we__tree"
+                    class="cms-we-outline__list"
                     @dragover.prevent
-                    @drop.stop="onMove({ uid: $event.dataTransfer.getData('text/plain'), parentUid: null, slot: null, index: view.nodes.length })"
+                    @drop.prevent="onDropEnd"
                 >
                     <OutlineNode
                         v-for="(node, index) in view.nodes"
@@ -55,40 +72,52 @@
                         :index="index"
                         :selected="view.selected"
                         :catalogue="catalogue"
+                        :drag="drag"
                         @select="select"
                         @move="onMove"
                         @insert="openDrawer"
                         @duplicate="duplicateNode"
-                        @remove="removeNode"
+                        @remove="requestRemove"
                     />
-                    <li>
-                        <button
-                            type="button"
-                            class="cms-we__insert"
-                            @click="openDrawer({ parentUid: null, slot: null, index: view.nodes.length })"
-                        >
-                            <i class="fa fa-plus"></i> Insert here
-                        </button>
-                    </li>
                 </ol>
-            </div>
+            </nav>
 
-            <div class="cms-we__centre">
+            <div class="cms-we__stage">
                 <Canvas
                     :items="canvasItems"
                     :stylesheets="canvasStylesheets"
                     :preview-url="endpoint('preview')"
                     :area="view.active"
+                    :selected="selectedTop"
+                    :label-for="labelFor"
+                    @select="onCanvasSelect"
                     @edit="onCanvasEdit"
                     @rich="onCanvasRich"
                     @insert-at="onCanvasInsert"
+                    @duplicate="duplicateNode"
+                    @remove="requestRemove"
                 />
             </div>
 
             <aside class="cms-we__inspector">
-                <header class="cms-we__inspector-head">{{ selectedLabel || 'Widget' }}</header>
+                <header v-if="selectedNode" class="cms-we__inspector-head">
+                    <div>
+                        <p v-if="selectedWidget && selectedWidget.groups && selectedWidget.groups.length" class="cms-we__kicker">
+                            {{ selectedWidget.groups[0] }}
+                        </p>
+                        <h2>{{ selectedLabel }}</h2>
+                    </div>
+                    <div class="cms-we__inspector-actions">
+                        <button type="button" title="Duplicate (⌘D)" @click="duplicateNode(selectedNode.uid)"><i class="fa fa-clone"></i></button>
+                        <button type="button" class="is-danger" title="Remove" @click="requestRemove(selectedNode.uid)"><i class="fa fa-trash"></i></button>
+                    </div>
+                </header>
+                <p v-if="selectedNode && selectedDescription" class="cms-we__inspector-desc">{{ selectedDescription }}</p>
                 <div class="cms-we__inspector-body">
-                    <p v-if="!selectedNode" class="cms-we__empty">Select a widget to edit it.</p>
+                    <div v-if="!selectedNode" class="cms-we__empty">
+                        <i class="fa fa-arrow-pointer"></i>
+                        <p>Select a widget on the page or in the outline to edit it.</p>
+                    </div>
                     <div v-else-if="selectedNode.locked" class="cms-we__locked">
                         <strong>{{ selectedNode.slug }}</strong>
                         is kept as it was saved. It can be removed or reordered here, and edited in the editor that created it.
@@ -103,6 +132,10 @@
                     <p v-else-if="inspector.error">{{ inspector.error }}</p>
                     <div v-else-if="inspector.type === 'html'" class="cms-we__settings">
                         <p v-if="inspector.warning" class="cms-we__warning">{{ inspector.warning }}</p>
+                        <div v-if="inspector.empty" class="cms-we__empty">
+                            <i class="fa fa-i-cursor"></i>
+                            <p>This widget has no settings. Click its text on the page to change it.</p>
+                        </div>
                         <div ref="panelHost"></div>
                     </div>
                 </div>
@@ -122,6 +155,18 @@
 
         <Modal v-if="rich.open" :title="'Edit ' + rich.field" @close="closeRich">
             <RichTextModal :value="rich.value" @save="saveRich" @cancel="closeRich"></RichTextModal>
+        </Modal>
+
+        <Modal v-if="confirm.open" title="Remove widget" @close="confirm.open = false">
+            <p>Remove <strong>{{ confirm.label }}</strong> from {{ activeLabel }}?</p>
+            <p v-if="confirm.children" class="cms-we__confirm-note">
+                The {{ confirm.children }} {{ confirm.children === 1 ? 'widget' : 'widgets' }} inside it will be removed too.
+            </p>
+            <p class="cms-we__confirm-note">Undo brings it back.</p>
+            <div class="cms-we__confirm-actions">
+                <button type="button" class="btn btn-default btn-sm" @click="confirm.open = false">Cancel</button>
+                <button ref="confirmButton" type="button" class="btn btn-danger btn-sm" @click="confirmRemove">Remove</button>
+            </div>
         </Modal>
     </div>
 </template>
@@ -165,15 +210,19 @@ export default {
             maxInstances: 0,
         });
         // callbacks, slug: the v1 scripts of the form in the inspector, and the widget they belong to
-        const inspector = reactive({ type: null, error: '', warning: '', slug: '', callbacks: null });
+        const inspector = reactive({ type: null, error: '', warning: '', slug: '', callbacks: null, empty: false });
         // The HTML form lives in one element, which is moved between the inspector and the modal, so the values
         // typed in it are kept when it moves
         const formNode = document.createElement('div');
         formNode.className = 'cms-we__form';
         const panelHost = ref(null);
-        /** Where the next insert lands. Set by an insert marker, cleared when the drawer closes. */
-        const drawer = reactive({ open: false, parentUid: null, slot: null, index: null });
+        /** Where the next insert lands. Set by an insert marker; `at` is null when it follows the selection. */
+        const drawer = reactive({ open: false, at: null });
         const rich = reactive({ open: false, uid: null, field: '', value: '' });
+        const confirm = reactive({ open: false, uid: null, label: '', children: 0 });
+        const confirmButton = ref(null);
+        /** Outline drag state, shared by every row */
+        const drag = reactive({ uid: null, over: null });
         const draftOffer = ref('');
         let editor = null;
         let draft = null;
@@ -205,14 +254,41 @@ export default {
 
         const canvasStylesheets = computed(() => catalogue.value.canvas_assets || []);
 
+        const selectedWidget = computed(() => {
+            const node = selectedNode.value;
+            return node ? catalogue.value.widgets[node.slug] || null : null;
+        });
+
         const selectedLabel = computed(() => {
             const node = selectedNode.value;
             if (!node) {
                 return '';
             }
-            const widget = catalogue.value.widgets[node.slug];
-            return widget ? widget.label : node.slug;
+            return selectedWidget.value ? selectedWidget.value.label : node.slug;
         });
+
+        const selectedDescription = computed(() => {
+            const widget = selectedWidget.value;
+            return widget ? widget.description || widget.summary || '' : '';
+        });
+
+        /** The top-level instance holding the selection, which is what the canvas highlights */
+        const selectedTop = computed(() => {
+            const uid = view.value.selected;
+            const top = uid ? view.value.nodes.find((node) => node.uid === uid || findNode([node], uid)) : null;
+            return top ? top.uid : null;
+        });
+
+        const activeLabel = computed(() => {
+            const area = view.value.areas.find((item) => item.slug === view.value.active);
+            return area ? area.label : '';
+        });
+
+        function labelFor(uid) {
+            const node = findNode(view.value.nodes, uid);
+            const widget = node ? catalogue.value.widgets[node.slug] : null;
+            return widget ? widget.label : (node ? node.slug : '');
+        }
 
         const storageKey = computed(() => draftKey((props.session.areas || []).map((area) => area.slug)));
 
@@ -287,6 +363,7 @@ export default {
             inspector.warning = '';
             inspector.callbacks = null;
             inspector.slug = '';
+            inspector.empty = false;
             const node = selectedNode.value;
             if (!node || node.locked) {
                 return;
@@ -328,6 +405,7 @@ export default {
                 window.jQuery(formNode).off();
             }
             formNode.innerHTML = item.html || '';
+            inspector.empty = !formNode.querySelector('input, select, textarea, button');
             (item.assets || []).forEach(mountAsset);
             applyingForm = false;
             await placeForm();
@@ -382,12 +460,15 @@ export default {
         }
 
         function onKey(event) {
-            const typing = event.target && /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName);
+            const typing = event.target
+                && (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName) || event.target.isContentEditable);
             const meta = event.metaKey || event.ctrlKey;
 
             const inModal = event.target && event.target.closest && event.target.closest('.modal');
             if (event.key === 'Escape') {
-                if (inModal || rich.open) {
+                if (confirm.open) {
+                    confirm.open = false;
+                } else if (inModal || rich.open) {
                     if (rich.open) {
                         closeRich();
                     }
@@ -401,12 +482,12 @@ export default {
                 return;
             }
             // While a modal is open its keys belong to it: Backspace in the rich text editor must not remove a widget
-            if (typing || rich.open || inModal || drawer.open) {
+            if (typing || rich.open || confirm.open || inModal || drawer.open) {
                 return;
             }
-            if (event.key === '/' ) {
+            if (event.key === '/') {
                 event.preventDefault();
-                openDrawer({ parentUid: null, slot: null, index: view.value.nodes.length });
+                openDrawer(null);
             } else if (meta && event.key.toLowerCase() === 'z') {
                 event.preventDefault();
                 run(event.shiftKey ? 'redo' : 'undo');
@@ -419,9 +500,9 @@ export default {
             } else if (event.altKey && event.key === 'ArrowDown') {
                 event.preventDefault();
                 nudge(1);
-            } else if (event.key === 'Delete' || event.key === 'Backspace') {
+            } else if ((event.key === 'Delete' || event.key === 'Backspace') && view.value.selected) {
                 event.preventDefault();
-                removeSelected();
+                requestRemove(view.value.selected);
             }
         }
 
@@ -519,10 +600,15 @@ export default {
             refresh();
         }
 
+        /** @param {?{parentUid: ?string, slot: ?string, index: number}} at Null to insert after the selection */
         function openDrawer(at) {
-            drawer.parentUid = at && at.parentUid ? at.parentUid : null;
-            drawer.slot = at && at.slot ? at.slot : null;
-            drawer.index = at && typeof at.index === 'number' ? at.index : view.value.nodes.length;
+            drawer.at = at
+                ? {
+                    parentUid: at.parentUid || null,
+                    slot: at.slot || null,
+                    index: typeof at.index === 'number' ? at.index : view.value.nodes.length,
+                }
+                : null;
             drawer.open = true;
             term.value = '';
         }
@@ -531,15 +617,17 @@ export default {
             openDrawer({ parentUid: null, slot: null, index });
         }
 
+        /** A click in the canvas selects the instance under it, or the nested instance that owns the field */
+        function onCanvasSelect(target) {
+            if (!target) {
+                select(null);
+                return;
+            }
+            select(resolveNodeUid(view.value.nodes, target.uid, target.path) || target.uid);
+        }
+
         function insert(slug) {
-            const at = drawer.open
-                ? {
-                    area: view.value.active,
-                    parentUid: drawer.parentUid,
-                    slot: drawer.slot,
-                    index: drawer.index,
-                }
-                : undefined;
+            const at = drawer.at ? { area: view.value.active, ...drawer.at } : undefined;
             editor.insert(slug, at);
             drawer.open = false;
             refresh();
@@ -550,12 +638,44 @@ export default {
             refresh();
         }
 
-        function removeNode(uid) {
+        /** Removal is confirmed first, even though it can be undone */
+        function requestRemove(uid) {
+            const node = findNode(view.value.nodes, uid);
+            if (!node) {
+                return;
+            }
+            confirm.uid = uid;
+            confirm.label = labelFor(uid);
+            confirm.children = countChildren(node);
+            confirm.open = true;
+            nextTick(() => {
+                if (confirmButton.value) {
+                    confirmButton.value.focus();
+                }
+            });
+        }
+
+        function confirmRemove() {
+            const uid = confirm.uid;
+            confirm.open = false;
+            if (!uid) {
+                return;
+            }
             if (view.value.selected !== uid) {
                 editor.select(uid);
                 refresh();
             }
             removeSelected();
+        }
+
+        /** Dropped on the outline below the last row: the widget goes to the end of the area */
+        function onDropEnd() {
+            const uid = drag.uid;
+            drag.uid = null;
+            drag.over = null;
+            if (uid) {
+                onMove({ uid, parentUid: null, slot: null, index: view.value.nodes.length });
+            }
         }
 
         async function toggleFavourite(slug) {
@@ -633,12 +753,24 @@ export default {
             panelHost,
             drawer,
             rich,
+            confirm,
+            confirmButton,
+            drag,
             onCanvasEdit,
             onCanvasRich,
             onCanvasInsert,
+            onCanvasSelect,
             onFieldsChange,
             selectedFields,
             selectedLabel,
+            selectedWidget,
+            selectedDescription,
+            selectedTop,
+            activeLabel,
+            labelFor,
+            requestRemove,
+            confirmRemove,
+            onDropEnd,
             removeSelected,
             saveRich,
             closeRich,
@@ -652,7 +784,6 @@ export default {
             insert,
             openDrawer,
             duplicateNode,
-            removeNode,
             toggleFavourite,
             onMove,
             run,
@@ -684,6 +815,16 @@ function findNode(nodes, uid) {
         }
     }
     return null;
+}
+
+function countChildren(node) {
+    let total = 0;
+    Object.values(node.slots || {}).forEach((children) => {
+        children.forEach((child) => {
+            total += 1 + countChildren(child);
+        });
+    });
+    return total;
 }
 
 function mountAsset(url) {
