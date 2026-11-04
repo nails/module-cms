@@ -11,6 +11,8 @@
 
 namespace Nails\Cms\Helper;
 
+use Nails\Cms\Constants;
+use Nails\Cms\WidgetEditor\Service\Version;
 use Nails\Common\Helper\ArrayHelper;
 use Nails\Factory;
 
@@ -20,6 +22,9 @@ class Form
      * The following constants represent the various field types available.
      */
     const FIELD_WIDGETS = 'cms_widgets';
+
+    /** The version config is emitted once per request, however many widget fields the page has */
+    private static bool $configEmitted = false;
 
     // --------------------------------------------------------------------------
 
@@ -36,13 +41,76 @@ class Form
         }
 
         $sDefault = htmlspecialchars(set_value($sKey, $sDefault, false));
+        $sRules   = static::rulesAttribute($aConfig);
 
         return <<<EOT
         <textarea class="widget-data hidden" name="$sKey" $sId>$sDefault</textarea>
-        <button type="button" class="btn btn-primary btn-sm open-editor" data-key="$sKey">
+        <button type="button" class="btn btn-primary btn-sm open-editor" data-key="$sKey"$sRules>
         <span class="fa $sButtonIcon">&nbsp;</span> $sButtonText
         </button>
-        EOT;
+        EOT
+            . static::editorConfig();
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * `data-cms-rules` for an area that limits which widgets can be inserted
+     *
+     * @param array{allowed?: mixed, disallowed?: mixed} $config
+     */
+    public static function rulesAttribute(array $config): string
+    {
+        $rules = [];
+        foreach (['allowed', 'disallowed'] as $key) {
+            if (isset($config[$key]) && is_array($config[$key])) {
+                $rules[$key] = array_values(array_filter($config[$key], 'is_string'));
+            }
+        }
+
+        if ($rules === []) {
+            return '';
+        }
+
+        return ' data-cms-rules="' . htmlspecialchars(
+            json_encode($rules, JSON_THROW_ON_ERROR),
+            ENT_QUOTES,
+            'UTF-8'
+        ) . '"';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * The editor versions this page should use, and the v2 bundle when that version is enabled
+     */
+    private static function editorConfig(): string
+    {
+        if (self::$configEmitted) {
+            return '';
+        }
+        self::$configEmitted = true;
+
+        /** @var Version $version */
+        $version = Factory::service('WidgetEditorVersion', Constants::MODULE_SLUG);
+        $enabled = $version->getEnabledVersions();
+        $active  = $version->getDefault();
+
+        if (in_array(Version::V2, $enabled, true)) {
+            /** @var \Nails\Common\Service\Asset $assets */
+            $assets = Factory::service('Asset');
+            $assets
+                ->vue3()
+                ->load('admin.widget-editor.min.js', Constants::MODULE_SLUG)
+                ->load('admin.widget-editor.min.css', Constants::MODULE_SLUG);
+        }
+
+        $json = json_encode(
+            ['enabled' => $enabled, 'active' => $active],
+            JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP
+        );
+
+        return '<script type="application/json" id="cms-widget-editor-config">' . $json . '</script>';
     }
 
     // --------------------------------------------------------------------------

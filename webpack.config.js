@@ -1,10 +1,13 @@
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
+const webpack = require('webpack');
+const { VueLoaderPlugin } = require('vue-loader');
 
 
 module.exports = {
     entry: {
-        'admin': './assets/js/admin.js'
+        'admin': './assets/js/admin.js',
+        'admin.widget-editor': './assets/js/widget-editor/main.js'
     },
     output: {
         filename: '[name].min.js',
@@ -12,6 +15,10 @@ module.exports = {
     },
     module: {
         rules: [
+            {
+                test: /\.vue$/,
+                loader: 'vue-loader'
+            },
             {
                 test: /\.(css|scss|sass)$/,
                 use: [
@@ -32,6 +39,15 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: '../css/[name].min.css'
         }),
+        new VueLoaderPlugin(),
+        new webpack.DefinePlugin({
+            __VUE_OPTIONS_API__: JSON.stringify(true),
+            __VUE_PROD_DEVTOOLS__: JSON.stringify(false),
+            __VUE_PROD_HYDRATE_MISMATCH_DETAILS__: JSON.stringify(false)
+        }),
     ],
+    externals: {
+        vue: 'Vue'
+    },
     mode: 'production'
 };

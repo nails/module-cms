@@ -90,7 +90,7 @@ class PageEditor {
                     this.submit('SAVE');
                 });
             })
-            .on('widgeteditor-close', () => {
+            .on('widgeteditor-close widgeteditor-change', () => {
                 this.syncTemplateData();
             });
 
