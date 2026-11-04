@@ -285,6 +285,11 @@ class WidgetEditor {
                 'search': $('<div>').addClass('widgeteditor-search'),
                 'widgets': $('<div>').addClass('widgeteditor-widgets'),
                 'body': $('<div>').addClass('widgeteditor-body').html(
+                    '<div class="locked-warning alert alert-warning hidden">' +
+                    '<i class="fa fa-lock"></i> ' +
+                    'This area contains widgets which cannot be edited here; they are saved unchanged. ' +
+                    'Widgets created in the new editor can only be edited there.' +
+                    '</div>' +
                     '<ul></ul><div class="no-widgets">Drag widgets from the left to here</div>'
                 ),
                 'widget': $('<div>').html(
@@ -434,13 +439,19 @@ class WidgetEditor {
             let $el = $(e.currentTarget);
             let domElement = $el.closest('.widget');
             let widget = this.getWidget(domElement.data('slug'));
+            let label = widget ? widget.label : domElement.data('slug');
 
-            this.confirm('Are you sure you wish to remove this "' + widget.label + '" widget from the interface?')
+            this.confirm('Are you sure you wish to remove this "' + $('<div>').text(label).html() + '" widget from the interface?')
                 .done(() => {
                     this.adminController.log('Removing Widget');
                     domElement.remove();
-                    widget.callbacks.removed.call(this, domElement);
+                    if (widget) {
+                        widget.callbacks.removed.call(this, domElement);
+                    }
+                    this.refreshLockedWarning();
                 });
+
+            return false;
         });
 
         this.sections.body.on('click', '.action-refresh-editor', (e) => {
@@ -823,7 +834,9 @@ class WidgetEditor {
                     //  Finally, call the "dropped" callback on each widget
                     for (i = 0; i < response.data.length; i++) {
                         widget = this.getWidget(response.data[i].slug);
-                        widget.callbacks.dropped.call(this, requestDom[i]);
+                        if (widget) {
+                            widget.callbacks.dropped.call(this, requestDom[i]);
+                        }
                     }
                 })
                 .fail((response) => {
@@ -841,6 +854,8 @@ class WidgetEditor {
                     this.adminController.warn('Failed to load widget editors from the server with error: ', data.error);
                 });
         }
+
+        this.refreshLockedWarning();
 
         //  Make things draggable and sortable
         this.draggableConstruct();
@@ -989,6 +1004,8 @@ class WidgetEditor {
      */
     addWidget(widget, data, widgetDom, skipSetup) {
 
+        let slug = widget;
+
         if (typeof widget === 'string') {
             widget = this.getWidget(widget);
         }
@@ -1016,19 +1033,54 @@ class WidgetEditor {
             }
 
         } else {
-            this.adminController.warn('Attempted to add an invalid widget');
-
-            //  Show user feedback
-            let $error = $('<p>')
-                .addClass('alert alert-danger')
-                .html('Widget "' + widget + '" does not exist. <a href="#" class="action-remove">Remove?</a>');
-
-            $(widgetDom)
-                .empty()
-                .addClass('editor-missing')
-                .append($error);
+            this.addLockedWidget(slug, data, widgetDom);
         }
 
+        return this;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Add a placeholder for an instance this editor cannot edit (unknown, hidden,
+     * disabled, or created by the new editor). Its slug and data are kept exactly
+     * as loaded so that saving the area does not drop it.
+     * @param  {String} slug      The instance's slug
+     * @param  {Object} data      The instance's data
+     * @param  {Object} widgetDom The widget's DOM element
+     * @return {WidgetEditor} The object itself, for chaining
+     */
+    addLockedWidget(slug, data, widgetDom) {
+
+        this.adminController.warn('Widget "' + slug + '" cannot be edited here, preserving it as-is');
+
+        let $message = $('<p>')
+            .addClass('alert alert-warning')
+            .append($('<i>').addClass('icon fa fa-lock'))
+            .append(document.createTextNode('"' + slug + '" cannot be edited in this editor and will be saved unchanged. '))
+            .append($('<a>').attr('href', '#').addClass('action-remove').text('Remove?'));
+
+        $(widgetDom)
+            .empty()
+            .data('original-data', data)
+            .data('loaded', false)
+            .data('slug', slug)
+            .addClass('editor-missing')
+            .append($message);
+
+        return this;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Show or hide the warning that the active area contains locked widgets
+     * @return {WidgetEditor} The object itself, for chaining
+     */
+    refreshLockedWarning() {
+        this.sections.body
+            .find('> .locked-warning')
+            .toggleClass('hidden', !this.sections.body.find('> ul > .editor-missing').length);
         return this;
     }
 
