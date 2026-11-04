@@ -230,6 +230,19 @@ abstract class Base implements Interfaces\Widget
     // --------------------------------------------------------------------------
 
     /**
+     * Scripts the editor runs around the inspector: ['dropped' => ..., 'removed' => ...]. Only v1 bridges have
+     * them (see Traits\Legacy); a v2 widget has none.
+     *
+     * @return array{dropped: string, removed: string}|array{}
+     */
+    public function getCallbacks(): array
+    {
+        return [];
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Renders the children stored in a named slot, in order, in the same mode as this call
      *
      * @param array<string, mixed> $data The widget's data, as passed to render() or preview()

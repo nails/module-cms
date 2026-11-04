@@ -117,4 +117,12 @@ interface Widget
      * @return array{render: array, editor: array}
      */
     public function getAssets(): array;
+
+    /**
+     * Scripts the editor runs around the inspector, as source: 'dropped' after the form is placed, 'removed' when
+     * the widget is removed. Empty for a v2 widget; a v1 bridge returns its legacy scripts.
+     *
+     * @return array{dropped?: string, removed?: string}
+     */
+    public function getCallbacks(): array;
 }
