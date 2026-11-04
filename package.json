@@ -12,11 +12,13 @@
         "postcss-loader": "^8.2",
         "sass": "^1.107",
         "sass-loader": "^17.1",
+        "vitest": "^3",
         "webpack": "^5.112",
         "webpack-cli": "^7.2"
     },
     "scripts": {
         "build": "webpack",
+        "test:js": "vitest run",
         "watch": "webpack --watch"
     }
 }
