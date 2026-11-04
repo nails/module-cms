@@ -63,11 +63,11 @@ class Area extends Entity implements ChangeLog
 
             foreach ($aWidgetData as $oWidgetData) {
 
-                $sSlug   = $oWidgetData->slug ?? '';
-                $oWidget = $oWidgetService->getBySlug($sSlug);
+                $sSlug = $oWidgetData->slug ?? '';
 
-                if (!empty($oWidget)) {
-                    $sOut .= $oWidget->render((array) $oWidgetData->data);
+                if ($oWidgetService->isKnownSlug($sSlug)) {
+                    //  Disabled widgets are known but render nothing
+                    $sOut .= $oWidgetService->renderSlug($sSlug, $oWidgetData->data ?? []);
 
                 } elseif (Environment::not(Environment::ENV_PROD)) {
                     throw new NotFoundException('"' . $sSlug . '" is not a valid widget');
