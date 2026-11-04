@@ -228,6 +228,32 @@ class Widget
     // --------------------------------------------------------------------------
 
     /**
+     * The WidgetEditor catalogue for one request
+     *
+     * Group order comes from getWidgetGroupOrder(), so an app override of that hook applies here.
+     *
+     * @param array{allowed?: string[], disallowed?: string[]} $rules
+     * @param string[]                                         $favourites
+     *
+     * @return array<string, mixed>
+     * @throws FactoryException
+     */
+    public function catalogue(array $rules, array $favourites): array
+    {
+        return (new \Nails\Cms\WidgetEditor\Service\Catalogue())->build(
+            $this->getRegistry(),
+            $rules,
+            $favourites,
+            fn(string $label): ?int => $this->getWidgetGroupOrder($label),
+            $this->getMaxDepth(),
+            $this->getMaxInstancesPerArea(),
+            $this->getCanvasAssets()
+        );
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * The WidgetEditor (v2) registry, for this request
      *
      * @throws FactoryException
