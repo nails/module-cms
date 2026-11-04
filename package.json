@@ -6,6 +6,9 @@
     "license": "MIT",
     "repository": "https://github.com/nails/module-cms",
     "devDependencies": {
+        "@tiptap/pm": "^3",
+        "@tiptap/starter-kit": "^3",
+        "@tiptap/vue-3": "^3",
         "autoprefixer": "^10.6",
         "css-loader": "^7.1",
         "mini-css-extract-plugin": "^2.10",
