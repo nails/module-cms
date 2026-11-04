@@ -59,10 +59,10 @@ class Widget
      */
     public function getAvailable(bool $bIncludeHidden = false): array
     {
-        if ($bIncludeHidden && !empty($this->aLoadedWidgetsIncHidden)) {
+        if ($bIncludeHidden && $this->aLoadedWidgetsIncHidden !== null) {
             return $this->aLoadedWidgetsIncHidden;
 
-        } elseif (!empty($this->aLoadedWidgets)) {
+        } elseif (!$bIncludeHidden && $this->aLoadedWidgets !== null) {
             return $this->aLoadedWidgets;
         }
 
