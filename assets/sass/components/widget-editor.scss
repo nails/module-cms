@@ -237,6 +237,10 @@
                     }
                 }
 
+                > .locked-warning {
+                    margin: 0.5em;
+                }
+
                 > .no-widgets {
                     position: absolute;
                     top: 0.5em;
@@ -331,6 +335,8 @@
             }
 
             &.editor-missing {
+                border-left-color: #f0ad4e;
+
                 .alert {
                     margin: 0;
                 }
