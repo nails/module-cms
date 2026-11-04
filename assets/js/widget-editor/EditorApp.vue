@@ -14,21 +14,18 @@
                 </button>
             </nav>
             <div class="cms-we__tools">
-                <button type="button" class="cms-we__tool" :disabled="!view.canUndo" @click="run('undo')">Undo</button>
-                <button type="button" class="cms-we__tool" :disabled="!view.canRedo" @click="run('redo')">Redo</button>
-                <button type="button" class="cms-we__tool" :disabled="!view.selected" @click="run('duplicate')">Duplicate</button>
-                <button type="button" class="cms-we__tool" :disabled="!view.selected" @click="removeSelected">Remove</button>
-                <button v-if="canSwitch" type="button" class="cms-we__tool" @click="switchBack">Use the previous editor</button>
+                <button type="button" class="btn btn-default btn-sm" :disabled="!view.canUndo" @click="run('undo')">Undo</button>
+                <button type="button" class="btn btn-default btn-sm" :disabled="!view.canRedo" @click="run('redo')">Redo</button>
                 <button
                     v-for="(action, index) in session.actions"
                     :key="index"
                     type="button"
-                    class="cms-we__tool"
+                    class="btn btn-default btn-sm"
                     @click="action.callback()"
                 >
                     {{ action.label }}
                 </button>
-                <button type="button" class="cms-we__tool" @click="close">Close</button>
+                <button type="button" class="btn btn-primary btn-sm" @click="close">Done</button>
             </div>
         </div>
 
@@ -60,7 +57,19 @@
                         :catalogue="catalogue"
                         @select="select"
                         @move="onMove"
+                        @insert="openDrawer"
+                        @duplicate="duplicateNode"
+                        @remove="removeNode"
                     />
+                    <li>
+                        <button
+                            type="button"
+                            class="cms-we__insert"
+                            @click="openDrawer({ parentUid: null, slot: null, index: view.nodes.length })"
+                        >
+                            <i class="fa fa-plus"></i> Insert here
+                        </button>
+                    </li>
                 </ol>
             </div>
 
@@ -72,10 +81,14 @@
                     :area="view.active"
                     @edit="onCanvasEdit"
                     @rich="onCanvasRich"
+                    @insert-at="onCanvasInsert"
                 />
+            </div>
 
-                <div class="cms-we__inspector">
-                    <p v-if="!selectedNode">Select a widget to edit it.</p>
+            <aside class="cms-we__inspector">
+                <header class="cms-we__inspector-head">{{ selectedLabel || 'Widget' }}</header>
+                <div class="cms-we__inspector-body">
+                    <p v-if="!selectedNode" class="cms-we__empty">Select a widget to edit it.</p>
                     <div v-else-if="selectedNode.locked" class="cms-we__locked">
                         <strong>{{ selectedNode.slug }}</strong>
                         is kept as it was saved. It can be removed or reordered here, and edited in the editor that created it.
@@ -90,49 +103,22 @@
                     <p v-else-if="inspector.error">{{ inspector.error }}</p>
                     <div v-else-if="inspector.type === 'html'" class="cms-we__settings">
                         <p v-if="inspector.warning" class="cms-we__warning">{{ inspector.warning }}</p>
-                        <div class="cms-we__settings-tools">
-                            <button type="button" class="cms-we__tool" :disabled="modalOpen" @click="openModal">Open in modal</button>
-                            <span v-if="modalOpen" class="cms-we__rich-note">Editing in the modal.</span>
-                        </div>
                         <div ref="panelHost"></div>
                     </div>
                 </div>
-            </div>
-
-            <div class="cms-we__organiser">
-                <input
-                    ref="search"
-                    v-model="term"
-                    class="cms-we__search"
-                    type="search"
-                    placeholder="Search widgets"
-                    @keydown.esc.stop
-                >
-                <section v-for="group in groups" :key="group.label" class="cms-we__group">
-                    <h3>{{ group.label }}</h3>
-                    <button
-                        v-for="slug in group.slugs"
-                        :key="group.label + slug"
-                        type="button"
-                        class="cms-we__widget"
-                        @click="insert(slug)"
-                    >
-                        {{ catalogue.widgets[slug].label }}
-                        <span v-if="catalogue.widgets[slug].status && catalogue.widgets[slug].status !== 'active'" class="cms-we__status">
-                            {{ catalogue.widgets[slug].status }}
-                        </span>
-                        <span
-                            class="cms-we__status"
-                            @click.stop="toggleFavourite(slug)"
-                        >{{ catalogue.favourites.includes(slug) ? '★' : '☆' }}</span>
-                    </button>
-                </section>
-            </div>
+            </aside>
         </div>
 
-        <Modal v-if="modalOpen" title="Widget settings" @close="closeModal">
-            <div ref="modalHost"></div>
-        </Modal>
+        <WidgetDrawer
+            :open="drawer.open"
+            :term="term"
+            :groups="groups"
+            :catalogue="catalogue"
+            @update:term="term = $event"
+            @close="drawer.open = false"
+            @insert="insert"
+            @favourite="toggleFavourite"
+        ></WidgetDrawer>
 
         <Modal v-if="rich.open" :title="'Edit ' + rich.field" @close="closeRich">
             <RichTextModal :value="rich.value" @save="saveRich" @cancel="closeRich"></RichTextModal>
@@ -152,11 +138,12 @@ import Canvas from './Canvas.vue';
 import Modal from './Modal.vue';
 import RichTextModal from './RichTextModal.vue';
 import FieldsInspector from './FieldsInspector.vue';
+import WidgetDrawer from './WidgetDrawer.vue';
 import { runLegacyCallback } from './legacy-callbacks.js';
 
 export default {
     name: 'EditorApp',
-        components: { Canvas, FieldsInspector, Modal, OutlineNode, RichTextModal },
+        components: { Canvas, FieldsInspector, Modal, OutlineNode, RichTextModal, WidgetDrawer },
     props: {
         session: { type: Object, required: true },
     },
@@ -184,10 +171,9 @@ export default {
         const formNode = document.createElement('div');
         formNode.className = 'cms-we__form';
         const panelHost = ref(null);
-        const modalHost = ref(null);
-        const modalOpen = ref(false);
+        /** Where the next insert lands. Set by an insert marker, cleared when the drawer closes. */
+        const drawer = reactive({ open: false, parentUid: null, slot: null, index: null });
         const rich = reactive({ open: false, uid: null, field: '', value: '' });
-        const search = ref(null);
         const draftOffer = ref('');
         let editor = null;
         let draft = null;
@@ -219,9 +205,13 @@ export default {
 
         const canvasStylesheets = computed(() => catalogue.value.canvas_assets || []);
 
-        const canSwitch = computed(() => {
-            const config = readConfig();
-            return config.enabled.includes('v1') && config.active === 'v2';
+        const selectedLabel = computed(() => {
+            const node = selectedNode.value;
+            if (!node) {
+                return '';
+            }
+            const widget = catalogue.value.widgets[node.slug];
+            return widget ? widget.label : node.slug;
         });
 
         const storageKey = computed(() => draftKey((props.session.areas || []).map((area) => area.slug)));
@@ -361,21 +351,12 @@ export default {
             run('remove');
         }
 
-        /** Puts the form in the modal while it is open, and in the inspector otherwise */
+        /** Puts the v1 form in the inspector */
         async function placeForm() {
             await nextTick();
-            const host = modalOpen.value ? modalHost.value : panelHost.value;
-            if (host && formNode.parentNode !== host) {
-                host.appendChild(formNode);
+            if (panelHost.value && formNode.parentNode !== panelHost.value) {
+                panelHost.value.appendChild(formNode);
             }
-        }
-
-        function openModal() {
-            modalOpen.value = true;
-        }
-
-        function closeModal() {
-            modalOpen.value = false;
         }
 
         function onFormEvent() {
@@ -404,11 +385,14 @@ export default {
             const typing = event.target && /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName);
             const meta = event.metaKey || event.ctrlKey;
 
+            const inModal = event.target && event.target.closest && event.target.closest('.modal');
             if (event.key === 'Escape') {
-                if (rich.open) {
-                    closeRich();
-                } else if (modalOpen.value) {
-                    closeModal();
+                if (inModal || rich.open) {
+                    if (rich.open) {
+                        closeRich();
+                    }
+                } else if (drawer.open) {
+                    drawer.open = false;
                 } else if (view.value.selected) {
                     select(null);
                 } else {
@@ -417,12 +401,12 @@ export default {
                 return;
             }
             // While a modal is open its keys belong to it: Backspace in the rich text editor must not remove a widget
-            if (typing || rich.open || modalOpen.value) {
+            if (typing || rich.open || inModal || drawer.open) {
                 return;
             }
             if (event.key === '/' ) {
                 event.preventDefault();
-                search.value && search.value.focus();
+                openDrawer({ parentUid: null, slot: null, index: view.value.nodes.length });
             } else if (meta && event.key.toLowerCase() === 'z') {
                 event.preventDefault();
                 run(event.shiftKey ? 'redo' : 'undo');
@@ -535,9 +519,43 @@ export default {
             refresh();
         }
 
+        function openDrawer(at) {
+            drawer.parentUid = at && at.parentUid ? at.parentUid : null;
+            drawer.slot = at && at.slot ? at.slot : null;
+            drawer.index = at && typeof at.index === 'number' ? at.index : view.value.nodes.length;
+            drawer.open = true;
+            term.value = '';
+        }
+
+        function onCanvasInsert(index) {
+            openDrawer({ parentUid: null, slot: null, index });
+        }
+
         function insert(slug) {
-            editor.insert(slug);
+            const at = drawer.open
+                ? {
+                    area: view.value.active,
+                    parentUid: drawer.parentUid,
+                    slot: drawer.slot,
+                    index: drawer.index,
+                }
+                : undefined;
+            editor.insert(slug, at);
+            drawer.open = false;
             refresh();
+        }
+
+        function duplicateNode(uid) {
+            editor.duplicate(uid);
+            refresh();
+        }
+
+        function removeNode(uid) {
+            if (view.value.selected !== uid) {
+                editor.select(uid);
+                refresh();
+            }
+            removeSelected();
         }
 
         async function toggleFavourite(slug) {
@@ -568,25 +586,8 @@ export default {
             }
         }
 
-        function switchBack() {
-            fetch(endpoint('version'), {
-                method: 'PUT',
-                credentials: 'same-origin',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ version: 'v1' }),
-            }).then((response) => {
-                if (response.ok) {
-                    window.location.reload();
-                }
-            });
-        }
-
         watch(() => view.value.selected, () => {
             loadInspector();
-        });
-
-        watch(modalOpen, () => {
-            placeForm();
         });
 
         onMounted(async () => {
@@ -630,51 +631,38 @@ export default {
             groups,
             inspector,
             panelHost,
-            modalHost,
-            modalOpen,
+            drawer,
             rich,
-            openModal,
-            closeModal,
             onCanvasEdit,
             onCanvasRich,
+            onCanvasInsert,
             onFieldsChange,
             selectedFields,
+            selectedLabel,
             removeSelected,
             saveRich,
             closeRich,
-            search,
             draftOffer,
             selectedNode,
             canvasItems,
             canvasStylesheets,
             endpoint,
-            canSwitch,
             setArea,
             select,
             insert,
+            openDrawer,
+            duplicateNode,
+            removeNode,
             toggleFavourite,
             onMove,
             run,
             close,
-            switchBack,
             restoreDraft,
             discardDraft,
             onFormEvent,
         };
     },
 };
-
-function readConfig() {
-    const el = document.getElementById('cms-widget-editor-config');
-    if (!el) {
-        return { enabled: ['v2'], active: 'v2' };
-    }
-    try {
-        return JSON.parse(el.textContent);
-    } catch (e) {
-        return { enabled: ['v2'], active: 'v2' };
-    }
-}
 
 function findNode(nodes, uid) {
     if (!uid) {

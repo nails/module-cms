@@ -82,9 +82,13 @@ export function renderSection(section) {
     return '<div class="cms-canvas-item" data-uid="' + uid + '">' + section.html + '</div>';
 }
 
-const CANVAS_STYLE = 'body{margin:0;padding:16px;background:#fff;color:#222}'
-    + '.cms-canvas-item{position:relative;margin:0 0 16px;outline:1px dashed transparent}'
-    + '.cms-canvas-item:hover{outline-color:#9fb3c8}'
+const CANVAS_STYLE = 'body{margin:0;padding:24px 32px 48px;background:#fff;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}'
+    + '.cms-canvas-item{position:relative;margin:0;outline:1px dashed transparent}'
+    + '.cms-canvas-item:hover,.cms-canvas-item:focus-within{outline-color:#9fb3c8}'
+    + '.cms-we-insert{display:flex;align-items:center;gap:8px;width:100%;margin:6px 0;padding:0;border:0;background:transparent;color:#829ab1;cursor:pointer;font:inherit;font-size:12px}'
+    + '.cms-we-insert:before,.cms-we-insert:after{content:"";flex:1;border-top:1px dashed #d9e2ec}'
+    + '.cms-we-insert:hover{color:#1f2933}'
+    + '.cms-we-insert:hover:before,.cms-we-insert:hover:after{border-top-color:#627d98}'
     + '.cms-canvas-error{padding:8px 12px;background:#fdecea;color:#611a15;border:1px solid #f5c2c0}'
     + '.cms-canvas-placeholder{padding:8px 12px;color:#627d98;border:1px dashed #bcccdc}'
     + '[data-cms-edit]{outline:1px dashed transparent;outline-offset:2px;cursor:text}'

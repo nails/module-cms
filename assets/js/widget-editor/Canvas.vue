@@ -57,7 +57,7 @@ export default {
         /** Area slug, passed to the preview context (D21) */
         area: { type: String, default: '' },
     },
-    emits: ['edit', 'rich'],
+    emits: ['edit', 'rich', 'insert-at'],
     setup(props, { emit }) {
         const frame = ref(null);
         const cache = new Map();
@@ -101,6 +101,7 @@ export default {
             }
 
             const root = doc.body;
+            clearMarkers(root);
             const wanted = new Set(props.items.map((item) => item.uid));
             Array.from(root.children).forEach((el) => {
                 const uid = el.getAttribute('data-uid');
@@ -132,6 +133,32 @@ export default {
                 }
                 previous = el;
             });
+
+            placeMarkers(doc, root);
+        }
+
+        /** Insert markers sit between the previews. They are rebuilt after the widgets are in order. */
+        function clearMarkers(root) {
+            Array.from(root.querySelectorAll('.cms-we-insert')).forEach((el) => el.remove());
+        }
+
+        function placeMarkers(doc, root) {
+            props.items.forEach((item, index) => {
+                const el = findItem(root, item.uid);
+                if (el) {
+                    root.insertBefore(marker(doc, index), el);
+                }
+            });
+            root.appendChild(marker(doc, props.items.length));
+        }
+
+        function marker(doc, index) {
+            const button = doc.createElement('button');
+            button.type = 'button';
+            button.className = 'cms-we-insert';
+            button.setAttribute('data-index', String(index));
+            button.textContent = 'Insert here';
+            return button;
         }
 
         async function refreshPreviews() {
@@ -254,6 +281,13 @@ export default {
         }
 
         function onClick(event) {
+            const markerEl = closestEl(event.target, '.cms-we-insert');
+            if (markerEl) {
+                event.preventDefault();
+                emit('insert-at', Number(markerEl.getAttribute('data-index')));
+                return;
+            }
+
             // Links in the canvas are not followed, which would navigate the frame away from the editor
             if (closestEl(event.target, 'a')) {
                 event.preventDefault();

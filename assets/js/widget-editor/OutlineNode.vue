@@ -1,5 +1,13 @@
 <template>
     <li>
+        <button
+            type="button"
+            class="cms-we__insert"
+            title="Insert widget here"
+            @click.stop="emit('insert', { parentUid, slot: slotName, index })"
+        >
+            <i class="fa fa-plus"></i> Insert here
+        </button>
         <div
             class="cms-we__row"
             :class="{ 'is-selected': node.uid === selected }"
@@ -9,8 +17,16 @@
             @dragover.prevent
             @drop.stop="onDropRow"
         >
-            <span>{{ label }}</span>
+            <span class="cms-we__row-label">{{ label }}</span>
             <span v-if="node.locked" class="cms-we__status">locked</span>
+            <span class="cms-we__row-actions">
+                <button type="button" class="btn btn-default btn-xs" title="Duplicate" @click.stop="emit('duplicate', node.uid)">
+                    <i class="fa fa-clone"></i>
+                </button>
+                <button type="button" class="btn btn-default btn-xs" title="Remove" @click.stop="emit('remove', node.uid)">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </span>
         </div>
         <div
             v-for="(children, slot) in node.slots"
@@ -34,7 +50,20 @@
                     :index="index"
                     @select="$emit('select', $event)"
                     @move="$emit('move', $event)"
+                    @insert="$emit('insert', $event)"
+                    @duplicate="$emit('duplicate', $event)"
+                    @remove="$emit('remove', $event)"
                 />
+                <li>
+                    <button
+                        type="button"
+                        class="cms-we__insert"
+                        title="Insert widget here"
+                        @click.stop="emit('insert', { parentUid: node.uid, slot, index: children.length })"
+                    >
+                        <i class="fa fa-plus"></i> Insert here
+                    </button>
+                </li>
             </ol>
         </div>
     </li>
@@ -53,7 +82,7 @@ export default {
         slotName: { type: String, default: null },
         index: { type: Number, required: true },
     },
-    emits: ['select', 'move'],
+    emits: ['select', 'move', 'insert', 'duplicate', 'remove'],
     setup(props, { emit }) {
         const label = computed(() => {
             const widget = props.catalogue.widgets[props.node.slug];
@@ -89,7 +118,7 @@ export default {
             });
         }
 
-        return { label, slotLabel, onDragStart, onDropRow, onDropSlot };
+        return { label, slotLabel, onDragStart, onDropRow, onDropSlot, emit };
     },
 };
 </script>
