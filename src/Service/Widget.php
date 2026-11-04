@@ -193,6 +193,102 @@ class Widget
     // --------------------------------------------------------------------------
 
     /**
+     * The deepest level at which WidgetEditor (v2) containers are rendered. Deeper nodes are skipped.
+     * This method is intended to be overridden by the App.
+     */
+    public function getMaxDepth(): int
+    {
+        return 8;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * The total number of widget instances an area may hold, counted at every depth.
+     * The WidgetEditor (v2) enforces this on insert and move. This method is intended to be overridden by the App.
+     */
+    public function getMaxInstancesPerArea(): int
+    {
+        return 200;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Stylesheet URLs the WidgetEditor canvas loads, so previews look like the site. Scripts are never loaded.
+     * This method is intended to be overridden by the App.
+     *
+     * @return string[]
+     */
+    public function getCanvasAssets(): array
+    {
+        return [];
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * The WidgetEditor (v2) registry, for this request
+     *
+     * @throws FactoryException
+     */
+    public function getRegistry(): \Nails\Cms\WidgetEditor\Service\Registry
+    {
+        return Factory::service('WidgetEditorRegistry', Constants::MODULE_SLUG);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Whether a stored slug (or alias) is known to either widget system, whatever its status
+     *
+     * Use this to decide whether an unknown slug is an error. A known widget which does not render
+     * (disabled) is not an error, and renders as an empty string.
+     *
+     * @throws FactoryException
+     * @throws NotFoundException
+     */
+    public function isKnownSlug(string $sSlug): bool
+    {
+        return $this->getRegistry()->knows($sSlug) || $this->getBySlug($sSlug) !== null;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Renders one stored instance, {slug, data}, through whichever widget system knows the slug
+     *
+     * WidgetEditor (v2) widgets handle their own assets and render events, including for their children.
+     * Legacy (v1) widgets get their render assets loaded here, as before. Returns an empty string for an
+     * unknown or disabled slug; use isKnownSlug() to tell them apart.
+     *
+     * @param string               $sSlug The stored slug, or an alias
+     * @param array|object|null    $mData The instance's data
+     *
+     * @throws FactoryException
+     * @throws NotFoundException
+     * @throws NailsException
+     */
+    public function renderSlug(string $sSlug, array|object|null $mData = []): string
+    {
+        $oRegistry = $this->getRegistry();
+
+        if ($oRegistry->knows($sSlug)) {
+            return $oRegistry->renderNode(['slug' => $sSlug, 'data' => $mData ?? []]);
+        }
+
+        $oWidget = $this->getBySlug($sSlug);
+        if ($oWidget === null) {
+            return '';
+        }
+
+        $this->loadRenderAssets([$oWidget]);
+        return $oWidget->render((array) $mData);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * Get an individual widget
      *
      * @param string $sSlug The widget's slug

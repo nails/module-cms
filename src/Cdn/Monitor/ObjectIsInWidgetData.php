@@ -11,7 +11,7 @@ use Nails\Cms\Helper\Monitor;
 use Nails\Cms\Service\Monitor\Cdn;
 use Nails\Common\Exception\FactoryException;
 use Nails\Common\Exception\ModelException;
-use Nails\Common\Helper\ArrayHelper;
+use Nails\Cms\WidgetEditor\Service\Registry;
 use Nails\Common\Helper\Model\Condition;
 use Nails\Common\Helper\Model\Select;
 use Nails\Common\Helper\Model\Sort;
@@ -125,7 +125,8 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
 
     protected function getJsonExtractPath(string $sSlug): string
     {
-        return $this->compileSlugCondition($this->getColumn(), '$[*].slug', $sSlug);
+        //  $**: widgets may be nested in slots, see D17
+        return $this->compileSlugCondition($this->getColumn(), '$**.slug', $sSlug);
     }
 
     // --------------------------------------------------------------------------
@@ -174,39 +175,73 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
         }
 
         $aDetails = [];
-        foreach ($aWidgetData as $iIndex => $oWidget) {
 
-            if (!in_array($oWidget->slug, $aWidgets)) {
-                continue;
-            }
+        //  Visit every instance, including those nested in slots; $sNodePath is e.g. "0.data.left.2"
+        Registry::walk(
+            $aWidgetData,
+            function (object|array $oNode, string $sNodePath) use (&$aDetails, $aWidgets, $aMappings, $oObject, $oEntity): void {
 
-            $aPaths = $aMappings[$oWidget->slug] ?? [];
+                $aNode = Registry::toArray($oNode);
+                $sSlug = $aNode['slug'];
 
-            foreach ($aPaths as $sPath) {
+                if (!in_array($sSlug, $aWidgets, true)) {
+                    return;
+                }
 
-                $aDataFlat = ArrayHelper::arrayFlattenWithDotNotation($oWidget->data);
+                $aPaths    = $aMappings[$sSlug] ?? [];
+                $aDataFlat = is_array($aNode['data'] ?? null) ? $this->flattenOwnData($aNode['data']) : [];
 
-                foreach ($aDataFlat as $sResolvedPath => $mValue) {
-                    if (preg_match('/' . str_replace('*', '\d+', $sPath) . '/', $sResolvedPath)) {
+                foreach ($aPaths as $sPath) {
+                    foreach ($aDataFlat as $sResolvedPath => $mValue) {
+                        if (preg_match('/' . str_replace('*', '\d+', $sPath) . '/', $sResolvedPath)) {
 
-                        $iValue = (int) $mValue ?: null;
+                            $iValue = (int) $mValue ?: null;
 
-                        if ($iValue === $oObject->id) {
-                            $aDetails[] = $this->createDetail(
-                                $oEntity,
-                                $this->getModel(),
-                                [
-                                    'widget' => $oWidget->slug,
-                                    'path'   => $iIndex . '.data.' . $sResolvedPath,
-                                ]
-                            );
+                            if ($iValue === $oObject->id) {
+                                $aDetails[] = $this->createDetail(
+                                    $oEntity,
+                                    $this->getModel(),
+                                    [
+                                        'widget' => $sSlug,
+                                        'path'   => $sNodePath . '.data.' . $sResolvedPath,
+                                    ]
+                                );
+                            }
                         }
                     }
                 }
             }
-        }
+        );
 
         return $aDetails;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Flattens a node's own data to dot paths, stopping at nested instances, which are visited on their own
+     *
+     * Without this a container's child would match twice: once under the container and once under itself.
+     *
+     * @return array<string, mixed>
+     */
+    private function flattenOwnData(array $aData, string $sPrefix = ''): array
+    {
+        $aOut = [];
+        foreach ($aData as $sKey => $mValue) {
+
+            $sPath = $sPrefix === '' ? (string) $sKey : $sPrefix . '.' . $sKey;
+
+            if (Registry::isNode($mValue)) {
+                continue;
+            } elseif (is_array($mValue) && !empty($mValue)) {
+                $aOut = array_merge($aOut, $this->flattenOwnData($mValue, $sPath));
+            } else {
+                $aOut[$sPath] = $mValue;
+            }
+        }
+
+        return $aOut;
     }
 
     // --------------------------------------------------------------------------
@@ -293,22 +328,25 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
     /**
      * @throws CdnException
      */
-    protected function setValueAtPath(string $sPath, $aData, ?int $mValue): void
+    protected function setValueAtPath(string $sPath, array|object &$aData, ?int $mValue): void
     {
-        $aKeys         = explode('.', $sPath);
-        $mCurrentValue = $aData;
+        $aKeys = explode('.', $sPath);
+        $iLast = count($aKeys) - 1;
 
-        for ($i = 0; $i < count($aKeys) - 1; $i++) {
+        //  Walk by reference: assigning an array to a variable copies it, and the write would be lost
+        $mCurrentValue = &$aData;
+
+        for ($i = 0; $i < $iLast; $i++) {
 
             if (is_array($mCurrentValue)) {
 
                 if (!isset($mCurrentValue[$aKeys[$i]])) {
                     $mCurrentValue[$aKeys[$i]] = [];
                 }
-                $mCurrentValue = $mCurrentValue[$aKeys[$i]];
+                $mCurrentValue = &$mCurrentValue[$aKeys[$i]];
 
-            } elseif (is_object($mCurrentValue)) {
-                $mCurrentValue = $mCurrentValue->{$aKeys[$i]};
+            } elseif (is_object($mCurrentValue) && isset($mCurrentValue->{$aKeys[$i]})) {
+                $mCurrentValue = &$mCurrentValue->{$aKeys[$i]};
 
             } else {
                 throw new CdnException('Unable to set value at path: ' . $sPath);
@@ -317,11 +355,11 @@ abstract class ObjectIsInWidgetData extends ObjectIsInColumn
 
         if (is_array($mCurrentValue)) {
             //  Set as string as that is how values from the UI will be set
-            $mCurrentValue[$aKeys[count($aKeys) - 1]] = (string) $mValue;
+            $mCurrentValue[$aKeys[$iLast]] = (string) $mValue;
 
         } elseif (is_object($mCurrentValue)) {
             //  Set as string as that is how values from the UI will be set
-            $mCurrentValue->{$aKeys[count($aKeys) - 1]} = (string) $mValue;
+            $mCurrentValue->{$aKeys[$iLast]} = (string) $mValue;
 
         } else {
             throw new CdnException('Unable to set value at path: ' . $sPath);

@@ -52,7 +52,8 @@ trait Widget
      */
     protected function getJsonPath(): string
     {
-        return '$[*].slug';
+        //  $**: widgets may be nested in slots, see D17
+        return '$**.slug';
     }
 
     // --------------------------------------------------------------------------

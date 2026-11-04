@@ -31,7 +31,8 @@ abstract class ObjectIsInTemplateWidgetData extends ObjectIsInWidgetData
 
     protected function getJsonExtractPath(string $sSlug): string
     {
-        return $this->compileSlugCondition($this->getDatabaseColumn(), '$.*[*].slug', $sSlug);
+        //  $**: widgets may be nested in slots, see D17
+        return $this->compileSlugCondition($this->getDatabaseColumn(), '$**.slug', $sSlug);
     }
 
     // --------------------------------------------------------------------------

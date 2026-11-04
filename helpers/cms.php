@@ -122,21 +122,23 @@ if (!function_exists('cmsWidget')) {
     /**
      * Returns a rendered CMS widget
      *
-     * @param string $sSlug The widget's slug
+     * Accepts a legacy slug, a WidgetEditor (v2) stored slug, or a v2 widget class name
+     * (e.g. `cmsWidget(Heading::class, [...])`).
+     *
+     * @param string $sSlug The widget's slug, or class name
      * @param array  $aData Data to pass to the widget's render function
      *
      * @return string
      */
     function cmsWidget($sSlug, $aData = []): string
     {
-        /** @var \Nails\Cms\Service\Widget $oWidgetService */
-        $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
-        $oWidget        = $oWidgetService->getBySlug($sSlug);
-
-        if ($oWidget) {
-            return $oWidget->render($aData);
+        if (str_contains($sSlug, '\\')) {
+            $sSlug = \Nails\Cms\WidgetEditor\Service\Registry::slugFor($sSlug);
         }
 
-        return '';
+        /** @var \Nails\Cms\Service\Widget $oWidgetService */
+        $oWidgetService = Factory::service('Widget', Constants::MODULE_SLUG);
+
+        return $oWidgetService->renderSlug($sSlug, $aData);
     }
 }

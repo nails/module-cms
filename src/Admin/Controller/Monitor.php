@@ -16,6 +16,7 @@ use Nails\Admin\Factory\Nav;
 use Nails\Cms\Admin\Permission;
 use Nails\Cms\Constants;
 use Nails\Cms\Service;
+use Nails\Cms\WidgetEditor\Monitor\Adapter;
 use Nails\Factory;
 
 /**
@@ -100,14 +101,24 @@ class Monitor extends Admin\Controller\Base
         if ($oUri->segment(5)) {
 
             $oItem = $oItemService->getBySlug($oUri->segment(5));
+
+            //  Not a legacy widget; the widget monitor also lists WidgetEditor (v2) widgets
+            if (empty($oItem) && $oService instanceof Service\Monitor\Widget) {
+                $oItem = $oService->getWidgetEditorBySlug($oUri->segment(5));
+            }
+
             if (empty($oItem)) {
                 show404();
             }
 
+            //  v2 adapters report deprecation per instance; the static v1 flags cannot see the widget
+            $bIsDeprecated = $oItem instanceof Adapter ? $oItem->isWidgetDeprecated() : $oItem::isDeprecated();
+            $sAlternative  = $oItem instanceof Adapter ? $oItem->getWidgetAlternative() : $oItem::alternative();
+
             $this
                 ->setData('aSummary', $oService->summariseItem($oItem))
-                ->setData('bIsDeprecated', $oItem::isDeprecated())
-                ->setData('sAlternative', $oItem::alternative())
+                ->setData('bIsDeprecated', $bIsDeprecated)
+                ->setData('sAlternative', $sAlternative)
                 ->setTitles(['CMS Monitor', $sLabel, $oItem->getLabel()])
                 ->loadView('details');
 

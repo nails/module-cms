@@ -42,6 +42,14 @@ return [
                 return new Service\Template();
             }
         },
+        'WidgetEditorRegistry' => function (): \Nails\Cms\WidgetEditor\Service\Registry {
+            //  The registry is built per request; the depth cap comes from the (app-overridable) widget service
+            $iMaxDepth = \Nails\Factory::service('Widget', \Nails\Cms\Constants::MODULE_SLUG)->getMaxDepth();
+            return new \Nails\Cms\WidgetEditor\Service\Registry(
+                \Nails\Cms\WidgetEditor\Service\Registry::discover(),
+                $iMaxDepth
+            );
+        },
     ],
     'models'    => [
         'Area'        => function (): Model\Area {
@@ -207,6 +215,17 @@ return [
                 return new \App\Cms\Widget\WidgetGroup();
             } else {
                 return new \Nails\Cms\Widget\WidgetGroup();
+            }
+        },
+        'WidgetEditorMonitorAdapter' => function (
+            \Nails\Cms\WidgetEditor\Interfaces\Widget $oWidget,
+            string $sSlug,
+            array $aAliases = []
+        ): \Nails\Cms\WidgetEditor\Monitor\Adapter {
+            if (class_exists('\App\Cms\WidgetEditor\Monitor\Adapter')) {
+                return new \App\Cms\WidgetEditor\Monitor\Adapter($oWidget, $sSlug, $aAliases);
+            } else {
+                return new \Nails\Cms\WidgetEditor\Monitor\Adapter($oWidget, $sSlug, $aAliases);
             }
         },
     ],

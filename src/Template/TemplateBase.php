@@ -458,12 +458,11 @@ abstract class TemplateBase implements Template
                     $oWidgetData->data = [];
                 }
 
-                $oWidget = $oWidgetService->getBySlug($oWidgetData->slug);
-
-                if ($oWidget) {
-                    $oWidgetService->loadRenderAssets([$oWidget]);
-                    $aRenderedData[$sAreaSlug] .= $oWidget->render((array) $oWidgetData->data);
-                }
+                //  Unknown and disabled slugs render as '' (the template skips them silently)
+                $aRenderedData[$sAreaSlug] .= $oWidgetService->renderSlug(
+                    $oWidgetData->slug,
+                    $oWidgetData->data
+                );
             }
         }
 
