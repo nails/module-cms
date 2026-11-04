@@ -3,7 +3,8 @@ on:
     push:
         branches: [ main, develop ]
     pull_request:
-        branches: [ main, develop ]
+        # TEMPORARY: feature/widget-editor-v2-* covers the WidgetEditor v2 stacked PRs. Revert at the end of the stack.
+        branches: [ main, develop, 'feature/widget-editor-v2-*' ]
 
 jobs:
     test:
