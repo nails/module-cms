@@ -178,6 +178,14 @@ class WidgetEditor {
         //  Populate the editor with existing areas
         this.populateWidgetDataFromButtons(this.$btns);
 
+        let versions = this.editorConfig();
+        if (versions.enabled.indexOf('v1') !== -1 && versions.enabled.indexOf('v2') !== -1 && versions.active === 'v1') {
+            this.addAction('Try the new editor', 'default', () => {
+                this.actionClose();
+                this.switchVersion('v2');
+            });
+        }
+
         return this;
     }
 
@@ -490,6 +498,9 @@ class WidgetEditor {
 
         //  Keyboard shortcuts
         $(document).on('keyup', (e) => {
+            if (this.v2Open) {
+                return;
+            }
             if (this.isOpen() && !this.ignoreCloseOnEsc && e.which === this.keymap.ESC) {
                 this.actionClose();
             }
@@ -766,6 +777,14 @@ class WidgetEditor {
     show(area) {
 
         area = area || this.defaultArea;
+
+        if (this.usesV2()) {
+            if (window.NAILS_CMS_WIDGET_EDITOR) {
+                this.openV2(area);
+                return this;
+            }
+            this.adminController.warn('The new editor failed to load; opening the current one');
+        }
 
         this.adminController.log('Showing Editor for "' + area + '"');
 
@@ -1253,7 +1272,7 @@ class WidgetEditor {
         this.adminController.log('Getting editor data for area "' + area + '"');
 
         //  If the editor is open then refresh the area
-        if (this.isOpen() && area === this.activeArea) {
+        if (this.isOpen() && area === this.activeArea && !this.v2Open) {
             this.adminController.log('Editor is open with selected area, refreshing data');
             this.widgetData[area] = this.getActiveData();
         }
@@ -1518,8 +1537,196 @@ class WidgetEditor {
      * @return {void}
      */
     actionClose() {
+        if (this.v2Open && window.NAILS_CMS_WIDGET_EDITOR) {
+            window.NAILS_CMS_WIDGET_EDITOR.close();
+            return;
+        }
         this.widgetData[this.activeArea] = this.getActiveData();
         this.close();
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Versions enabled for this app, and the one this session opens
+     * @return {{enabled: string[], active: string}}
+     */
+    editorConfig() {
+
+        if (this.versionConfig) {
+            return this.versionConfig;
+        }
+
+        let config = {enabled: ['v1'], active: 'v1'};
+        let el = document.getElementById('cms-widget-editor-config');
+
+        if (el) {
+            try {
+                let parsed = JSON.parse(el.textContent);
+                if (parsed && Array.isArray(parsed.enabled) && parsed.enabled.length) {
+                    config.enabled = parsed.enabled;
+                }
+                if (parsed && typeof parsed.active === 'string') {
+                    config.active = parsed.active;
+                }
+            } catch (e) {
+                this.adminController.warn('Could not read the widget editor config');
+            }
+        }
+
+        this.versionConfig = config;
+        return config;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @return {Boolean}
+     */
+    usesV2() {
+        let config = this.editorConfig();
+        return config.active === 'v2' && config.enabled.indexOf('v2') !== -1;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Areas open together in one v2 session: every widget field, or the visible page areas
+     * @return {Array}
+     */
+    areasForV2() {
+
+        let buttons = Array.from(document.querySelectorAll('.open-editor'));
+        if (buttons.length) {
+            return buttons.map((button) => this.describeAreaButton(button, button.dataset.key));
+        }
+
+        let pageButtons = Array.from(document.querySelectorAll('.js-cms-page-area')).filter((button) => {
+            let group = button.closest('.template-area');
+            return !group || group.style.display !== 'none';
+        });
+
+        if (pageButtons.length) {
+            return pageButtons.map((button) => this.describeAreaButton(button, button.dataset.area));
+        }
+
+        return [];
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @param {HTMLElement} button
+     * @param {String} slug
+     * @return {Object}
+     */
+    describeAreaButton(button, slug) {
+
+        let rules = {};
+        if (button.dataset.cmsRules) {
+            try {
+                rules = JSON.parse(button.dataset.cmsRules);
+            } catch (e) {
+                rules = {};
+            }
+        }
+
+        let data = this.widgetData[slug];
+
+        return {
+            slug: slug,
+            label: button.textContent.replace(/\s+/g, ' ').trim() || slug,
+            rules: rules,
+            data: Array.isArray(data) ? data : []
+        };
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * @param {String} area
+     */
+    openV2(area) {
+
+        let areas = this.areasForV2();
+        if (!areas.some((item) => item.slug === area) && area) {
+            let data = this.widgetData[area];
+            areas.push({
+                slug: area,
+                label: area,
+                rules: {},
+                data: Array.isArray(data) ? data : []
+            });
+        }
+
+        this.activeArea = area;
+        this.isEditorOpen = true;
+        this.v2Open = true;
+
+        window.NAILS_CMS_WIDGET_EDITOR.open({
+            area: area,
+            areas: areas,
+            actions: this.actions.filter((action) => {
+                return action.label !== '<i class="fa fa-lg fa-check"></i>' && action.label !== 'Try the new editor';
+            }),
+            onChange: (slug, data) => {
+                let stored = Array.isArray(data) && data.length === 0 ? null : data;
+                this.setAreaData(slug, stored);
+                this.writeAreaInput(slug, stored);
+                $(this).trigger('widgeteditor-change');
+            },
+            onClose: () => {
+                this.v2Open = false;
+                this.isEditorOpen = false;
+                $(this).trigger('widgeteditor-close');
+            }
+        });
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Writes one area back to its widget field, when it has one
+     * @param {String} slug
+     * @param {Array|null} data
+     */
+    writeAreaInput(slug, data) {
+
+        let button = document.querySelector('.open-editor[data-key="' + CSS.escape(slug) + '"]');
+        if (!button) {
+            return;
+        }
+
+        let input = button.previousElementSibling;
+        if (!input || !input.classList.contains('widget-data')) {
+            return;
+        }
+
+        let next = JSON.stringify(data);
+        if (input.value !== next) {
+            input.value = next;
+            input.dispatchEvent(new Event('change', {bubbles: true}));
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Stores the editor version for this session and reloads so the other editor opens
+     * @param {String} version
+     */
+    switchVersion(version) {
+
+        $.ajax({
+            url: window.SITE_URL + 'api/cms/widgeteditor/version',
+            method: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify({version: version})
+        }).done(() => {
+            window.location.reload();
+        }).fail(() => {
+            this.adminController.warn('Could not switch editor version');
+        });
     }
 
     // --------------------------------------------------------------------------
