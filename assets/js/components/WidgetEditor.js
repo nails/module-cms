@@ -178,13 +178,7 @@ class WidgetEditor {
         //  Populate the editor with existing areas
         this.populateWidgetDataFromButtons(this.$btns);
 
-        let versions = this.editorConfig();
-        if (versions.enabled.indexOf('v1') !== -1 && versions.enabled.indexOf('v2') !== -1 && versions.active === 'v1') {
-            this.addAction('Try the new editor', 'default', () => {
-                this.actionClose();
-                this.switchVersion('v2');
-            });
-        }
+        // The version switch is paused. It forced a reload, and the two editors are not ready to be offered side by side.
 
         return this;
     }

@@ -102,7 +102,11 @@ export function createEditor(areas, catalogue, hooks = {}) {
         });
     }
 
-    function insert(slug) {
+    /**
+     * @param {string} slug
+     * @param {{area: string, parentUid: ?string, slot: ?string, index: number}} [at] Where to insert. Omit to use the selection.
+     */
+    function insert(slug, at) {
         const widget = catalogue.widgets[slug];
         if (!widget) {
             return apply({ ok: false, error: '"' + slug + '" cannot be edited here, so it cannot be added' });
@@ -111,7 +115,7 @@ export function createEditor(areas, catalogue, hooks = {}) {
             return apply({ ok: false, error: '"' + (widget.label || slug) + '" is not allowed in this area' });
         }
 
-        const dest = destination();
+        const dest = at || destination();
         const result = tree.insert(dest.area, dest.parentUid, dest.slot, dest.index, slug, widget.defaults || {});
         if (result.ok) {
             selected = result.uid;

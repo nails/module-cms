@@ -5,7 +5,7 @@
                 v-for="tool in tools"
                 :key="tool.label"
                 type="button"
-                class="cms-we__tool"
+                class="btn btn-default btn-sm"
                 :class="{ 'is-active': isActive(tool.name, tool.attrs) }"
                 :aria-pressed="isActive(tool.name, tool.attrs) ? 'true' : 'false'"
                 :title="tool.label"
@@ -19,8 +19,8 @@
 
         <footer class="cms-we__rich-foot">
             <span v-if="!dirty" class="cms-we__rich-note">No changes yet.</span>
-            <button type="button" class="cms-we__tool" :disabled="!dirty" @click="save">Save</button>
-            <button type="button" class="cms-we__tool" @click="$emit('cancel')">Cancel</button>
+            <button type="button" class="btn btn-primary btn-sm" :disabled="!dirty" @click="save">Save</button>
+            <button type="button" class="btn btn-default btn-sm" @click="$emit('cancel')">Cancel</button>
         </footer>
     </div>
 </template>

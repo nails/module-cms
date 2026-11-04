@@ -16,8 +16,10 @@ describe('buildCanvasShell', () => {
         expect(doc).toContain('<link rel="stylesheet" href="/a.css">');
     });
 
-    it('styles inline editable fields', () => {
-        expect(buildCanvasShell({ stylesheets: [] })).toContain('[data-cms-edit="text"]:focus');
+    it('has no scrollbar of its own, as the editor sizes the frame to its content', () => {
+        const doc = buildCanvasShell({ stylesheets: [] });
+        expect(doc).toContain('html{overflow:hidden}');
+        expect(doc).toContain('display:flow-root');
     });
 });
 

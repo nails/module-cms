@@ -82,15 +82,17 @@ export function renderSection(section) {
     return '<div class="cms-canvas-item" data-uid="' + uid + '">' + section.html + '</div>';
 }
 
-const CANVAS_STYLE = 'body{margin:0;padding:16px;background:#fff;color:#222}'
-    + '.cms-canvas-item{position:relative;margin:0 0 16px;outline:1px dashed transparent}'
-    + '.cms-canvas-item:hover{outline-color:#9fb3c8}'
-    + '.cms-canvas-error{padding:8px 12px;background:#fdecea;color:#611a15;border:1px solid #f5c2c0}'
-    + '.cms-canvas-placeholder{padding:8px 12px;color:#627d98;border:1px dashed #bcccdc}'
-    + '[data-cms-edit]{outline:1px dashed transparent;outline-offset:2px;cursor:text}'
-    + '[data-cms-edit]:hover{outline-color:#9fb3c8}'
-    + '[data-cms-edit="rich"]{cursor:pointer}'
-    + '[data-cms-edit="text"]:focus{outline:2px solid #3b82f6;border-radius:2px}';
+/*
+ * The frame is as tall as its content and the editor page scrolls it, so the frame has no scrollbar of its own.
+ * Events do not reach a frame that cannot run script, so hover, selection and editing are drawn by the editor
+ * over the frame, and nothing here reacts to the pointer.
+ */
+const CANVAS_STYLE = 'html{overflow:hidden}'
+    + 'body{display:flow-root;margin:0;padding:0;background:#fff;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}'
+    + '.cms-canvas-item{position:relative;margin:0}'
+    + '.cms-we-gap{height:24px}'
+    + '.cms-canvas-error{padding:10px 14px;background:#fdf2f2;color:#7a1f1f;border:1px solid #f1caca;font-size:13px}'
+    + '.cms-canvas-placeholder{padding:18px 14px;color:#8a837d;border:1px dashed #d8d2cb;font-size:12px;letter-spacing:.06em;text-align:center;text-transform:uppercase}';
 
 /**
  * The canvas document with no sections. The canvas loads this once and patches instances into it, so a
