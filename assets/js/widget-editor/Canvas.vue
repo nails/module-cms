@@ -1,15 +1,17 @@
 <template>
     <iframe
+        ref="frame"
         class="cms-we__canvas"
         title="Canvas"
         sandbox="allow-same-origin"
-        :srcdoc="doc"
+        :srcdoc="shell"
+        @load="onLoad"
     ></iframe>
 </template>
 
 <script>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { buildCanvasDocument } from './canvas.js';
+import { buildCanvasShell, renderSection } from './canvas.js';
 
 /** Changes settle for this long before previews are requested again (D5) */
 const DEBOUNCE_MS = 300;
@@ -20,6 +22,27 @@ const DEBOUNCE_MS = 300;
  */
 function keyOf(item) {
     return JSON.stringify([item.slug, item.data]);
+}
+
+/**
+ * Builds an element from a section's HTML inside the canvas document, and makes its inline fields editable
+ */
+function parseItem(doc, html) {
+    const holder = doc.createElement('div');
+    holder.innerHTML = html;
+    const el = holder.firstElementChild;
+    el.querySelectorAll('[data-cms-edit="text"]').forEach((field) => {
+        field.setAttribute('contenteditable', 'true');
+    });
+    return el;
+}
+
+function findItem(root, uid) {
+    return Array.from(root.children).find((el) => el.getAttribute('data-uid') === uid) || null;
+}
+
+function closestEl(target, selector) {
+    return target && typeof target.closest === 'function' ? target.closest(selector) : null;
 }
 
 export default {
@@ -34,12 +57,82 @@ export default {
         /** Area slug, passed to the preview context (D21) */
         area: { type: String, default: '' },
     },
-    setup(props) {
+    emits: ['edit', 'rich'],
+    setup(props, { emit }) {
+        const frame = ref(null);
         const cache = new Map();
-        const version = ref(0);
+        /** The HTML last written into the frame for each instance, so unchanged instances are not touched */
+        const rendered = new Map();
+        /** Top-level uids edited inline since the last change to items. Their previews are not requested. */
+        const inline = new Set();
+        const shell = computed(() => buildCanvasShell({ stylesheets: props.stylesheets }));
+
         let timer = null;
         let sequence = 0;
         let mounted = false;
+        let loaded = false;
+
+        function sectionFor(item) {
+            if (item.locked) {
+                return { uid: item.uid, html: '', error: null, locked: true, pending: false };
+            }
+            const entry = cache.get(item.uid);
+            if (!entry) {
+                return { uid: item.uid, html: '', error: null, locked: false, pending: true };
+            }
+            return {
+                uid: item.uid,
+                html: entry.html,
+                error: entry.error,
+                locked: false,
+                pending: false,
+            };
+        }
+
+        /**
+         * Makes the frame match the items: removes instances which have gone, adds new ones, reorders, and
+         * replaces the HTML of any instance whose preview has changed. An instance with focus is left alone,
+         * so typing is not interrupted; it is patched on the next sync after focus leaves.
+         */
+        function sync() {
+            const doc = frame.value && frame.value.contentDocument;
+            if (!loaded || !doc || !doc.body) {
+                return;
+            }
+
+            const root = doc.body;
+            const wanted = new Set(props.items.map((item) => item.uid));
+            Array.from(root.children).forEach((el) => {
+                const uid = el.getAttribute('data-uid');
+                if (uid !== null && !wanted.has(uid)) {
+                    el.remove();
+                    rendered.delete(uid);
+                }
+            });
+
+            let previous = null;
+            props.items.forEach((item) => {
+                const html = renderSection(sectionFor(item));
+                let el = findItem(root, item.uid);
+
+                if (!el) {
+                    el = parseItem(doc, html);
+                    rendered.set(item.uid, html);
+                    root.insertBefore(el, previous ? previous.nextElementSibling : root.firstElementChild);
+                } else if (rendered.get(item.uid) !== html && !el.contains(doc.activeElement)) {
+                    const next = parseItem(doc, html);
+                    el.replaceWith(next);
+                    rendered.set(item.uid, html);
+                    el = next;
+                }
+
+                const expected = previous ? previous.nextElementSibling : root.firstElementChild;
+                if (el !== expected) {
+                    root.insertBefore(el, expected);
+                }
+                previous = el;
+            });
+        }
 
         async function refreshPreviews() {
             const stale = props.items.filter((item) => {
@@ -59,7 +152,7 @@ export default {
             });
 
             if (stale.length === 0) {
-                version.value++;
+                sync();
                 return;
             }
 
@@ -104,7 +197,7 @@ export default {
                 });
             }
 
-            version.value++;
+            sync();
         }
 
         function schedule() {
@@ -112,35 +205,98 @@ export default {
             timer = setTimeout(refreshPreviews, DEBOUNCE_MS);
         }
 
-        const doc = computed(() => {
-            // Reading version makes the document recompute when previews arrive
-            // eslint-disable-next-line no-unused-expressions
-            version.value;
-
-            const sections = props.items.map((item) => {
-                if (item.locked) {
-                    return { uid: item.uid, html: '', error: null, locked: true, pending: false };
+        /** Inline edits are already on screen, so their instance's cached preview is kept as it is */
+        function acceptInlineEdits() {
+            inline.forEach((uid) => {
+                const item = props.items.find((candidate) => candidate.uid === uid);
+                const entry = cache.get(uid);
+                if (item && entry && entry.key !== null) {
+                    cache.set(uid, { ...entry, key: keyOf(item) });
                 }
-                const entry = cache.get(item.uid);
-                if (!entry || entry.key !== keyOf(item)) {
-                    return { uid: item.uid, html: '', error: null, locked: false, pending: true };
-                }
-                return {
-                    uid: item.uid,
-                    html: entry.html,
-                    error: entry.error,
-                    locked: false,
-                    pending: false,
-                };
             });
+            inline.clear();
+        }
 
-            return buildCanvasDocument({ stylesheets: props.stylesheets, sections });
-        });
+        // --------------------------------------------------------------------------
+        // Events inside the frame. The frame runs no scripts, so these listeners are attached from here.
+
+        function onInput(event) {
+            const field = closestEl(event.target, '[data-cms-field]');
+            const item = closestEl(event.target, '.cms-canvas-item');
+            if (!field || !item || field.getAttribute('data-cms-edit') !== 'text') {
+                return;
+            }
+            const uid = item.getAttribute('data-uid');
+            inline.add(uid);
+            emit('edit', {
+                uid,
+                path: field.getAttribute('data-cms-path') || '',
+                field: field.getAttribute('data-cms-field'),
+                value: field.textContent,
+            });
+        }
+
+        function onKeydown(event) {
+            // Text fields are single line
+            if (event.key === 'Enter' && closestEl(event.target, '[data-cms-edit="text"]')) {
+                event.preventDefault();
+            }
+        }
+
+        function onPaste(event) {
+            if (!closestEl(event.target, '[data-cms-edit="text"]')) {
+                return;
+            }
+            event.preventDefault();
+            const text = (event.clipboardData ? event.clipboardData.getData('text/plain') : '')
+                .replace(/\s*\n+\s*/g, ' ');
+            frame.value.contentDocument.execCommand('insertText', false, text);
+        }
+
+        function onClick(event) {
+            // Links in the canvas are not followed, which would navigate the frame away from the editor
+            if (closestEl(event.target, 'a')) {
+                event.preventDefault();
+            }
+
+            const rich = closestEl(event.target, '[data-cms-edit="rich"]');
+            const item = rich ? closestEl(rich, '.cms-canvas-item') : null;
+            if (rich && item) {
+                emit('rich', {
+                    uid: item.getAttribute('data-uid'),
+                    path: rich.getAttribute('data-cms-path') || '',
+                    field: rich.getAttribute('data-cms-field'),
+                    value: rich.innerHTML,
+                });
+            }
+        }
+
+        function onFocusOut() {
+            // Focus has not moved yet; sync once it has, so an instance changed while focused is patched
+            setTimeout(sync, 0);
+        }
+
+        function onLoad() {
+            const doc = frame.value && frame.value.contentDocument;
+            if (!doc) {
+                return;
+            }
+            loaded = true;
+            rendered.clear();
+            doc.addEventListener('input', onInput);
+            doc.addEventListener('keydown', onKeydown);
+            doc.addEventListener('paste', onPaste);
+            doc.addEventListener('click', onClick);
+            doc.addEventListener('focusout', onFocusOut);
+            sync();
+        }
 
         watch(() => props.items, () => {
             if (!mounted) {
                 return;
             }
+            acceptInlineEdits();
+            sync();
             schedule();
         }, { deep: true });
 
@@ -161,7 +317,7 @@ export default {
             clearTimeout(timer);
         });
 
-        return { doc };
+        return { frame, shell, onLoad };
     },
 };
 </script>

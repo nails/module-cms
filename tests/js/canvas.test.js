@@ -1,10 +1,71 @@
 import { describe, expect, it } from 'vitest';
 import {
     buildCanvasDocument,
+    buildCanvasShell,
     canvasStylesheets,
     escapeHtml,
     renderSection,
+    resolveNodeUid,
 } from '../../assets/js/widget-editor/canvas.js';
+
+describe('buildCanvasShell', () => {
+
+    it('has an empty body, so instances are patched in rather than reloading the frame', () => {
+        const doc = buildCanvasShell({ stylesheets: ['/a.css'] });
+        expect(doc).toContain('<body></body></html>');
+        expect(doc).toContain('<link rel="stylesheet" href="/a.css">');
+    });
+
+    it('styles inline editable fields', () => {
+        expect(buildCanvasShell({ stylesheets: [] })).toContain('[data-cms-edit="text"]:focus');
+    });
+});
+
+describe('buildCanvasDocument with inline fields', () => {
+
+    it('places sections inside the body', () => {
+        const doc = buildCanvasDocument({
+            stylesheets: [],
+            sections: [{ uid: 'n1', html: '<h2 data-cms-field="sTitle">Hi</h2>', error: null, locked: false, pending: false }],
+        });
+        expect(doc).toContain('<body><div class="cms-canvas-item" data-uid="n1"><h2 data-cms-field="sTitle">Hi</h2></div></body>');
+    });
+});
+
+describe('resolveNodeUid', () => {
+
+    const nodes = [
+        { uid: 'n1', slots: {} },
+        {
+            uid: 'n2',
+            slots: {
+                items: [
+                    { uid: 'n3', slots: {} },
+                    { uid: 'n4', slots: { inner: [{ uid: 'n5', slots: {} }] } },
+                ],
+            },
+        },
+    ];
+
+    it('returns the top-level instance for an empty path', () => {
+        expect(resolveNodeUid(nodes, 'n2', '')).toBe('n2');
+    });
+
+    it('walks slots and indexes', () => {
+        expect(resolveNodeUid(nodes, 'n2', 'items/0')).toBe('n3');
+        expect(resolveNodeUid(nodes, 'n2', 'items/1')).toBe('n4');
+    });
+
+    it('walks deeper nesting', () => {
+        expect(resolveNodeUid(nodes, 'n2', 'items/1/inner/0')).toBe('n5');
+    });
+
+    it('returns null when the path no longer exists', () => {
+        expect(resolveNodeUid(nodes, 'n2', 'items/9')).toBeNull();
+        expect(resolveNodeUid(nodes, 'n2', 'missing/0')).toBeNull();
+        expect(resolveNodeUid(nodes, 'gone', '')).toBeNull();
+    });
+});
 
 describe('canvasStylesheets', () => {
 
