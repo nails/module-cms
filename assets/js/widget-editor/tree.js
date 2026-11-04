@@ -98,14 +98,22 @@ export function createTree(options = {}, areas = {}) {
 
         if (editable) {
             const slotNames = Object.keys(opts.slotsFor(slug));
-            const slotCandidates = slotNames.filter((name) => Array.isArray(data[name]) && data[name].every(isStoredInstance));
+            const slots = {};
+            let taken = false;
 
-            if (slotCandidates.length) {
-                node.slots = {};
-                slotCandidates.forEach((name) => {
-                    node.slots[name] = data[name].map((child) => fromStored(child));
-                    delete node.data[name];
-                });
+            slotNames.forEach((name) => {
+                const children = data[name];
+                const valid = children === undefined || (Array.isArray(children) && children.every(isStoredInstance));
+                if (!valid) {
+                    return;
+                }
+                slots[name] = Array.isArray(children) ? children.map((child) => fromStored(child)) : [];
+                delete node.data[name];
+                taken = true;
+            });
+
+            if (taken) {
+                node.slots = slots;
             }
         }
 
@@ -455,11 +463,34 @@ export function createTree(options = {}, areas = {}) {
     }
 
     /**
+     * Moves an instance one place up or down within its own list
+     * @param {string} uid
+     * @param {number} delta -1 for up, 1 for down
+     */
+    function nudge(uid, delta) {
+
+        const found = locate(uid);
+        if (!found) {
+            return fail('That widget no longer exists');
+        }
+        if (delta < 0 && found.index === 0) {
+            return fail('Already first');
+        }
+        if (delta > 0 && found.index >= found.list.length - 1) {
+            return fail('Already last');
+        }
+
+        // move() treats the index as the position before the item is removed
+        const index = delta < 0 ? found.index - 1 : found.index + 2;
+        return move(uid, found.area, found.parent ? found.parent.uid : null, found.slot, index);
+    }
+
+    /**
      * Changes an instance's own data. Slot children are not changed here.
      * @param {string} uid
      * @param {Object} patch
      */
-    function update(uid, patch) {
+    function update(uid, patch, replace = false) {
 
         const found = locate(uid);
         if (!found) {
@@ -477,7 +508,11 @@ export function createTree(options = {}, areas = {}) {
         });
 
         return commit('update:' + uid, () => {
-            Object.assign(found.node.data, clone(changes));
+            if (replace) {
+                found.node.data = clone(changes);
+            } else {
+                Object.assign(found.node.data, clone(changes));
+            }
             found.node.touched = true;
         }, true);
     }
@@ -565,8 +600,16 @@ export function createTree(options = {}, areas = {}) {
         view,
         locate: (uid) => {
             const found = locate(uid);
-            return found ? { node: clone(found.node), area: found.area, depth: found.depth } : null;
+            return found ? {
+                node: clone(found.node),
+                area: found.area,
+                depth: found.depth,
+                parentUid: found.parent ? found.parent.uid : null,
+                slot: found.slot,
+                index: found.index,
+            } : null;
         },
+        nudge,
         count: areaCount,
         areas: areaSlugs,
         maxDepth: () => opts.maxDepth,

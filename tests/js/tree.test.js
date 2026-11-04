@@ -231,6 +231,53 @@ describe('tree: duplicate, remove and move', () => {
     });
 });
 
+describe('tree: slots and nudge', () => {
+
+    it('creates an empty slot the stored data does not mention', () => {
+        const tree = createTree(options(), {
+            main: [{ slug: 'Columns', data: { left: [{ slug: 'Note', data: { body: 'L' } }] } }],
+        });
+        const columns = tree.view('main')[0];
+
+        expect(columns.slots.right).toEqual([]);
+        expect(tree.insert('main', columns.uid, 'right', 0, 'Note', { body: 'R' }).ok).toBe(true);
+    });
+
+    it('leaves a slot value alone when it is not a list of widgets', () => {
+        const input = { main: [{ slug: 'Columns', data: { left: 'not-widgets', right: [] } }] };
+        const tree = createTree(options(), input);
+
+        expect(tree.view('main')[0].slots.left).toBeUndefined();
+        expect(tree.toStored('main')[0]).toBe(input.main[0]);
+    });
+
+    it('reports the parent, slot and index of a nested instance', () => {
+        const tree = createTree(options(), stored());
+        const note = tree.view('main')[1].slots.left[0];
+        const found = tree.locate(note.uid);
+
+        expect(found.parentUid).toBe(tree.view('main')[1].uid);
+        expect(found.slot).toBe('left');
+        expect(found.index).toBe(0);
+        expect(found.area).toBe('main');
+    });
+
+    it('nudges an instance one place within its list', () => {
+        const tree = createTree(options(), {
+            main: [
+                { slug: 'Heading', data: { text: 'a' } },
+                { slug: 'Heading', data: { text: 'b' } },
+                { slug: 'Heading', data: { text: 'c' } },
+            ],
+        });
+        const [a] = tree.view('main');
+
+        expect(tree.nudge(a.uid, -1).ok).toBe(false);
+        expect(tree.nudge(a.uid, 1).ok).toBe(true);
+        expect(tree.toStored('main').map((item) => item.data.text)).toEqual(['b', 'a', 'c']);
+    });
+});
+
 describe('tree: undo and redo', () => {
 
     it('restores the exact previous serialisation', () => {
