@@ -222,7 +222,18 @@ HTML;
 
                     foreach ($aWidgetAreas as $sWidgetSlug => $oWidgetArea) {
                         echo '<button type="button" class="btn btn-default js-cms-page-area" disabled';
-                        echo ' data-area="' . htmlspecialchars($sWidgetSlug, ENT_QUOTES, 'UTF-8') . '">';
+                        echo ' data-area="' . htmlspecialchars($sWidgetSlug, ENT_QUOTES, 'UTF-8') . '"';
+                        $aAreaRules = [];
+                        if (method_exists($oWidgetArea, 'getAllowed') && $oWidgetArea->getAllowed() !== null) {
+                            $aAreaRules['allowed'] = $oWidgetArea->getAllowed();
+                        }
+                        if (method_exists($oWidgetArea, 'getDisallowed') && $oWidgetArea->getDisallowed() !== null) {
+                            $aAreaRules['disallowed'] = $oWidgetArea->getDisallowed();
+                        }
+                        if ($aAreaRules) {
+                            echo ' data-cms-rules="' . htmlspecialchars(json_encode($aAreaRules), ENT_QUOTES, 'UTF-8') . '"';
+                        }
+                        echo '>';
                         echo '<span class="fa fa-pencil"></span> ';
                         echo htmlspecialchars($oWidgetArea->getTitle(), ENT_QUOTES, 'UTF-8');
                         echo '</button>';

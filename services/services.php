@@ -42,6 +42,14 @@ return [
                 return new Service\Template();
             }
         },
+        'WidgetEditorVersion' => function (): \Nails\Cms\WidgetEditor\Service\Version {
+            $session = \Nails\Factory::service('Session');
+            if (class_exists('\App\Cms\WidgetEditor\Service\Version')) {
+                return \App\Cms\WidgetEditor\Service\Version::fromConfig($session);
+            }
+
+            return \Nails\Cms\WidgetEditor\Service\Version::fromConfig($session);
+        },
         'WidgetEditorFavourite' => function (): \Nails\Cms\WidgetEditor\Service\Favourite {
             if (class_exists('\App\Cms\WidgetEditor\Service\Favourite')) {
                 return new \App\Cms\WidgetEditor\Service\Favourite();
