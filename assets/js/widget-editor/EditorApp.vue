@@ -17,7 +17,7 @@
                 <button type="button" class="cms-we__tool" :disabled="!view.canUndo" @click="run('undo')">Undo</button>
                 <button type="button" class="cms-we__tool" :disabled="!view.canRedo" @click="run('redo')">Redo</button>
                 <button type="button" class="cms-we__tool" :disabled="!view.selected" @click="run('duplicate')">Duplicate</button>
-                <button type="button" class="cms-we__tool" :disabled="!view.selected" @click="run('remove')">Remove</button>
+                <button type="button" class="cms-we__tool" :disabled="!view.selected" @click="removeSelected">Remove</button>
                 <button v-if="canSwitch" type="button" class="cms-we__tool" @click="switchBack">Use the previous editor</button>
                 <button
                     v-for="(action, index) in session.actions"
@@ -89,6 +89,7 @@
                     ></FieldsInspector>
                     <p v-else-if="inspector.error">{{ inspector.error }}</p>
                     <div v-else-if="inspector.type === 'html'" class="cms-we__settings">
+                        <p v-if="inspector.warning" class="cms-we__warning">{{ inspector.warning }}</p>
                         <div class="cms-we__settings-tools">
                             <button type="button" class="cms-we__tool" :disabled="modalOpen" @click="openModal">Open in modal</button>
                             <span v-if="modalOpen" class="cms-we__rich-note">Editing in the modal.</span>
@@ -151,6 +152,7 @@ import Canvas from './Canvas.vue';
 import Modal from './Modal.vue';
 import RichTextModal from './RichTextModal.vue';
 import FieldsInspector from './FieldsInspector.vue';
+import { runLegacyCallback } from './legacy-callbacks.js';
 
 export default {
     name: 'EditorApp',
@@ -175,7 +177,8 @@ export default {
             count: 0,
             maxInstances: 0,
         });
-        const inspector = reactive({ type: null, error: '' });
+        // callbacks, slug: the v1 scripts of the form in the inspector, and the widget they belong to
+        const inspector = reactive({ type: null, error: '', warning: '', slug: '', callbacks: null });
         // The HTML form lives in one element, which is moved between the inspector and the modal, so the values
         // typed in it are kept when it moves
         const formNode = document.createElement('div');
@@ -291,6 +294,9 @@ export default {
         async function loadInspector() {
             inspector.type = null;
             inspector.error = '';
+            inspector.warning = '';
+            inspector.callbacks = null;
+            inspector.slug = '';
             const node = selectedNode.value;
             if (!node || node.locked) {
                 return;
@@ -327,10 +333,32 @@ export default {
             inspector.type = 'html';
             await nextTick();
             applyingForm = true;
+            // The form root is reused between widgets, so the last widget's handlers on it are removed first
+            if (window.jQuery) {
+                window.jQuery(formNode).off();
+            }
             formNode.innerHTML = item.html || '';
             (item.assets || []).forEach(mountAsset);
             applyingForm = false;
             await placeForm();
+
+            // A v1 bridge's "dropped" script runs once the form is in the page, as it does in v1
+            inspector.slug = node.slug;
+            inspector.callbacks = item.callbacks || {};
+            const warning = runLegacyCallback('dropped', inspector.callbacks.dropped, formNode);
+            inspector.warning = warning ? 'This widget’s script could not run: ' + warning : '';
+        }
+
+        /** Removes the selected widget. A v1 bridge's "removed" script runs first, with the form it had. */
+        function removeSelected() {
+            const node = selectedNode.value;
+            if (node && !node.locked && inspector.type === 'html' && inspector.slug === node.slug) {
+                const warning = runLegacyCallback('removed', (inspector.callbacks || {}).removed, formNode);
+                if (warning) {
+                    console.warn('The removed script for ' + node.slug + ' failed: ' + warning);
+                }
+            }
+            run('remove');
         }
 
         /** Puts the form in the modal while it is open, and in the inspector otherwise */
@@ -409,7 +437,7 @@ export default {
                 nudge(1);
             } else if (event.key === 'Delete' || event.key === 'Backspace') {
                 event.preventDefault();
-                run('remove');
+                removeSelected();
             }
         }
 
@@ -611,6 +639,7 @@ export default {
             onCanvasRich,
             onFieldsChange,
             selectedFields,
+            removeSelected,
             saveRich,
             closeRich,
             search,
