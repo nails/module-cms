@@ -38,6 +38,8 @@ export function createEditor(areas, catalogue, hooks = {}) {
     let active = areaList[0] ? areaList[0].slug : '';
     let selected = null;
     let message = '';
+    /** Bumps whenever a command sets the message, including a repeat of the same text */
+    let messageId = 0;
 
     function current() {
         return areaList.find((area) => area.slug === active) || null;
@@ -87,6 +89,7 @@ export function createEditor(areas, catalogue, hooks = {}) {
 
     function apply(result) {
         message = result.ok ? '' : (result.error || 'That change was not made');
+        messageId += 1;
         if (result.ok) {
             publish();
         }
@@ -176,6 +179,7 @@ export function createEditor(areas, catalogue, hooks = {}) {
             nodes: tree.view(active),
             stored: active ? tree.toStored(active) : [],
             message,
+            messageId,
             canUndo: tree.canUndo(),
             canRedo: tree.canRedo(),
             count: active ? tree.count(active) : 0,
@@ -195,6 +199,9 @@ export function createEditor(areas, catalogue, hooks = {}) {
         },
         select(uid) {
             selected = uid;
+        },
+        clearMessage() {
+            message = '';
         },
         insert,
         remove,

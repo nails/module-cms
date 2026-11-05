@@ -43,8 +43,20 @@
             <button type="button" class="btn btn-default btn-xs" @click="restoreDraft">Restore</button>
             <button type="button" class="btn btn-default btn-xs" @click="discardDraft">Discard</button>
         </div>
-        <div v-if="view.message" class="cms-we__notice is-warning"><i class="fa fa-triangle-exclamation"></i> {{ view.message }}</div>
-        <div v-if="error" class="cms-we__notice is-error"><i class="fa fa-circle-exclamation"></i> {{ error }}</div>
+        <div v-if="view.message" class="cms-we__notice is-warning">
+            <i class="fa fa-triangle-exclamation"></i>
+            <span>{{ view.message }}</span>
+            <button type="button" class="cms-we__notice-close" title="Dismiss" @click="dismissMessage">
+                <i class="fa fa-xmark"></i>
+            </button>
+        </div>
+        <div v-if="error" class="cms-we__notice is-error">
+            <i class="fa fa-circle-exclamation"></i>
+            <span>{{ error }}</span>
+            <button type="button" class="cms-we__notice-close" title="Dismiss" @click="dismissError">
+                <i class="fa fa-xmark"></i>
+            </button>
+        </div>
 
         <div v-if="loading" class="cms-we__body is-loading">
             <p><i class="fa fa-spinner fa-spin"></i> Loading widgets…</p>
@@ -198,9 +210,9 @@
 
         <Modal v-if="confirm.open" title="Remove widget" @close="confirm.open = false">
             <p>Remove <strong>{{ confirm.label }}</strong> from {{ activeLabel }}?</p>
-            <p v-if="confirm.children" class="cms-we__confirm-note">
-                The {{ confirm.children }} {{ confirm.children === 1 ? 'widget' : 'widgets' }} inside it will be removed too.
-            </p>
+            <div v-if="confirm.children" class="alert alert--warning alert-warning">
+                <p>The {{ confirm.children }} {{ confirm.children === 1 ? 'widget' : 'widgets' }} inside it will be removed too.</p>
+            </div>
             <template #actions>
                 <button type="button" class="btn btn-default btn-sm" @click="confirm.open = false">Cancel</button>
                 <button ref="confirmButton" type="button" class="btn btn-danger btn-sm" @click="confirmRemove">Remove</button>
@@ -211,6 +223,9 @@
 
 <script>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+
+/** A refused change stays up this long, then goes away on its own */
+const NOTICE_MS = 5000;
 import { createEditor } from './editor.js';
 import { organiserGroups } from './rules.js';
 import { clearDraft, draftKey, loadDraft, saveDraft } from './draft.js';
@@ -243,6 +258,7 @@ export default {
             nodes: [],
             stored: [],
             message: '',
+            messageId: 0,
             canUndo: false,
             canRedo: false,
             count: 0,
@@ -268,6 +284,8 @@ export default {
         const confirmButton = ref(null);
         /** Outline drag state, shared by every row */
         const drag = reactive({ uid: null, over: null, blocked: [] });
+        let noticeTimer = null;
+        let errorTimer = null;
         const outlineOpen = ref(true);
         const inspectorOpen = ref(true);
         const folded = reactive({});
@@ -744,6 +762,21 @@ export default {
 
         const tailKey = computed(() => placeKey(null, null, view.value.nodes.length));
 
+        function dismissMessage() {
+            window.clearTimeout(noticeTimer);
+            if (editor) {
+                editor.clearMessage();
+            }
+            if (view.value.message) {
+                view.value = { ...view.value, message: '' };
+            }
+        }
+
+        function dismissError() {
+            window.clearTimeout(errorTimer);
+            error.value = '';
+        }
+
         function toggleFold(uid) {
             folded[uid] = !folded[uid];
         }
@@ -815,6 +848,28 @@ export default {
             loadInspector();
         });
 
+        watch(() => view.value.message, (message) => {
+            window.clearTimeout(noticeTimer);
+            if (message) {
+                noticeTimer = window.setTimeout(dismissMessage, NOTICE_MS);
+            }
+        });
+
+        watch(() => view.value.messageId, () => {
+            if (!view.value.message) {
+                return;
+            }
+            window.clearTimeout(noticeTimer);
+            noticeTimer = window.setTimeout(dismissMessage, NOTICE_MS);
+        });
+
+        watch(error, (message) => {
+            window.clearTimeout(errorTimer);
+            if (message) {
+                errorTimer = window.setTimeout(dismissError, NOTICE_MS);
+            }
+        });
+
         onMounted(async () => {
             window.addEventListener('keydown', onKey);
             formNode.addEventListener('input', onFormEvent);
@@ -834,6 +889,8 @@ export default {
         });
 
         onBeforeUnmount(() => {
+            window.clearTimeout(noticeTimer);
+            window.clearTimeout(errorTimer);
             window.removeEventListener('keydown', onKey);
             formNode.removeEventListener('input', onFormEvent);
             formNode.removeEventListener('change', onFormEvent);
@@ -885,6 +942,8 @@ export default {
             requestRemove,
             confirmRemove,
             onDropEnd,
+            dismissMessage,
+            dismissError,
             removeSelected,
             saveRich,
             closeRich,

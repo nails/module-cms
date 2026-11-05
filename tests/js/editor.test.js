@@ -141,6 +141,13 @@ describe('createEditor', () => {
         expect(result.ok).toBe(false);
         expect(editor.snapshot().nodes).toHaveLength(1);
         expect(editor.snapshot().message).toMatch(/not allowed/);
+
+        const first = editor.snapshot().messageId;
+        editor.clearMessage();
+        expect(editor.snapshot().message).toBe('');
+
+        editor.insert('Note');
+        expect(editor.snapshot().messageId).toBeGreaterThan(first);
     });
 
     it('inserts into the first slot of the selected container', () => {
