@@ -33,7 +33,7 @@ class Form
         $sKey        = ArrayHelper::get('key', $aConfig, []);
         $sId         = ArrayHelper::get('id', $aConfig, '');
         $sDefault    = ArrayHelper::get('default', $aConfig, []);
-        $sButtonIcon = ArrayHelper::get('button_text', $aConfig, 'fa-cogs');
+        $sButtonIcon = ArrayHelper::get('button_icon', $aConfig, 'fa-puzzle-piece');
         $sButtonText = ArrayHelper::get('button_text', $aConfig, 'Open Widget Editor');
 
         if (!is_string($sDefault)) {
