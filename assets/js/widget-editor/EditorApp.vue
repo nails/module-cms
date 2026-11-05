@@ -13,9 +13,6 @@
                     <option v-for="area in view.areas" :key="area.slug" :value="area.slug">{{ area.label }}</option>
                 </select>
                 <strong v-else class="cms-we__area">{{ activeLabel }}</strong>
-                <small :title="view.maxInstances ? 'At most ' + view.maxInstances : ''">
-                    {{ view.count }} {{ view.count === 1 ? 'widget' : 'widgets' }}
-                </small>
             </div>
             <div class="cms-we__tools">
                 <button type="button" class="cms-we__btn is-icon" title="Undo (⌘Z)" :disabled="!view.canUndo" @click="run('undo')">
@@ -52,11 +49,9 @@
         <div v-if="loading" class="cms-we__body is-loading">
             <p><i class="fa fa-spinner fa-spin"></i> Loading widgets…</p>
         </div>
-        <div v-else class="cms-we__body" :class="{ 'is-outline-closed': !outlineOpen }">
+        <div v-else class="cms-we__body" :class="{ 'is-outline-closed': !outlineOpen, 'is-inspector-closed': !inspectorOpen }">
             <nav class="cms-we-outline" aria-label="Outline">
                 <header class="cms-we-outline__head">
-                    <span v-if="outlineOpen">Outline</span>
-                    <em v-if="outlineOpen">{{ view.count }}</em>
                     <button
                         type="button"
                         class="cms-we-outline__collapse"
@@ -65,6 +60,8 @@
                     >
                         <i class="fa" :class="outlineOpen ? 'fa-angles-left' : 'fa-angles-right'"></i>
                     </button>
+                    <span v-if="outlineOpen">Outline</span>
+                    <em v-if="outlineOpen">{{ view.count }}</em>
                 </header>
                 <template v-if="outlineOpen">
                     <p v-if="!view.nodes.length" class="cms-we-outline__empty">No widgets yet.</p>
@@ -124,20 +121,25 @@
             </div>
 
             <aside class="cms-we__inspector">
-                <header v-if="selectedNode" class="cms-we__inspector-head">
-                    <div>
+                <header class="cms-we__inspector-head">
+                    <span v-if="inspectorOpen">Inspector</span>
+                    <button
+                        type="button"
+                        class="cms-we__inspector-collapse"
+                        :title="inspectorOpen ? 'Hide inspector' : 'Show inspector'"
+                        @click="inspectorOpen = !inspectorOpen"
+                    >
+                        <i class="fa" :class="inspectorOpen ? 'fa-angles-right' : 'fa-angles-left'"></i>
+                    </button>
+                </header>
+                <div v-show="inspectorOpen" class="cms-we__inspector-body">
+                    <div v-if="selectedNode" class="cms-we__inspector-title">
                         <p v-if="selectedWidget && selectedWidget.groups && selectedWidget.groups.length" class="cms-we__kicker">
                             {{ selectedWidget.groups[0] }}
                         </p>
                         <h2>{{ selectedLabel }}</h2>
+                        <p v-if="selectedDescription" class="cms-we__inspector-desc">{{ selectedDescription }}</p>
                     </div>
-                    <div class="cms-we__inspector-actions">
-                        <button type="button" title="Duplicate (⌘D)" @click="duplicateNode(selectedNode.uid)"><i class="fa fa-clone"></i></button>
-                        <button type="button" class="is-danger" title="Remove" @click="requestRemove(selectedNode.uid)"><i class="fa fa-trash"></i></button>
-                    </div>
-                </header>
-                <p v-if="selectedNode && selectedDescription" class="cms-we__inspector-desc">{{ selectedDescription }}</p>
-                <div class="cms-we__inspector-body">
                     <div v-if="!selectedNode" class="cms-we__empty">
                         <i class="fa fa-arrow-pointer"></i>
                         <p>Select a widget on the page or in the outline to edit it.</p>
@@ -267,6 +269,7 @@ export default {
         /** Outline drag state, shared by every row */
         const drag = reactive({ uid: null, over: null, blocked: [] });
         const outlineOpen = ref(true);
+        const inspectorOpen = ref(true);
         const folded = reactive({});
         const draftOffer = ref('');
         let editor = null;
@@ -863,6 +866,7 @@ export default {
             discardKeep,
             drag,
             outlineOpen,
+            inspectorOpen,
             folded,
             tailKey,
             toggleFold,
