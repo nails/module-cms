@@ -7,6 +7,8 @@
  * the form.
  */
 
+import { writeJsonField } from './json-field.js';
+
 class PageEditor {
 
     /**
@@ -161,12 +163,7 @@ class PageEditor {
             });
         }
 
-        let next = JSON.stringify(data);
-
-        if (input.value !== next) {
-            input.value = next;
-            input.dispatchEvent(new Event('change', {bubbles: true}));
-        }
+        writeJsonField(input, data);
 
         return this;
     }

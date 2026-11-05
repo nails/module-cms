@@ -1,3 +1,5 @@
+import { writeJsonField } from './json-field.js';
+
 class WidgetEditor {
 
     /**
@@ -231,10 +233,9 @@ class WidgetEditor {
                     this.adminController.log('Editor Closing, getting area data and saving to input');
                     let input = this.activeButton.siblings('textarea.widget-data');
                     let data = this.getAreaData(this.activeButton.data('key'));
-                    let dataString = JSON.stringify(data);
 
                     if (input.length) {
-                        input.val(dataString).trigger('change');
+                        writeJsonField(input.get(0), data);
                     }
                 }
             });
@@ -1722,11 +1723,7 @@ class WidgetEditor {
             return;
         }
 
-        let next = JSON.stringify(data);
-        if (input.value !== next) {
-            input.value = next;
-            input.dispatchEvent(new Event('change', {bubbles: true}));
-        }
+        writeJsonField(input, data);
     }
 
     // --------------------------------------------------------------------------
