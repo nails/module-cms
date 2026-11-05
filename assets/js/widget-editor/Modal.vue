@@ -6,6 +6,9 @@
             <div class="modal__body">
                 <slot></slot>
             </div>
+            <div v-if="$slots.actions" class="modal__actions">
+                <slot name="actions"></slot>
+            </div>
         </div>
     </div>
 </template>

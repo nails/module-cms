@@ -56,21 +56,19 @@
         color: #fff;
     }
 
+    &__mark {
+        flex: 0 0 auto;
+        align-self: center;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 14px;
+    }
+
     &__title {
         display: flex;
         flex: 1;
         gap: 10px;
-        align-items: baseline;
+        align-items: center;
         min-width: 0;
-
-        &::before {
-            content: '';
-            flex: 0 0 auto;
-            align-self: center;
-            width: 10px;
-            height: 10px;
-            background: var(--we-accent);
-        }
 
         small {
             color: rgba(255, 255, 255, 0.55);
@@ -197,6 +195,10 @@
             align-items: center;
             justify-content: center;
             color: var(--we-muted);
+        }
+
+        &.is-outline-closed {
+            grid-template-columns: 44px minmax(0, 1fr) 380px;
         }
     }
 
@@ -425,13 +427,6 @@
         font-size: 13px;
     }
 
-    &__confirm-actions {
-        display: flex;
-        gap: 8px;
-        justify-content: flex-end;
-        margin-top: 20px;
-    }
-
     // Rich text modal
     &__rich {
         display: flex;
@@ -471,17 +466,6 @@
         }
     }
 
-    &__rich-foot {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        justify-content: flex-end;
-
-        .cms-we__rich-note {
-            margin: 0 auto 0 0;
-        }
-    }
-
     .modal {
         z-index: 1300;
     }
@@ -515,9 +499,45 @@
         text-transform: uppercase;
 
         em {
+            flex: 1;
             color: var(--we-faint);
             font-style: normal;
+            text-align: right;
         }
+    }
+
+    &__collapse {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        margin-left: 8px;
+        padding: 0;
+        border: 0;
+        border-radius: 2px;
+        background: transparent;
+        color: var(--we-muted);
+        font-size: 11px;
+        cursor: pointer;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.7);
+            color: var(--we-ink);
+        }
+    }
+
+    .cms-we__body.is-outline-closed &__head {
+        justify-content: center;
+        padding: 16px 0;
+    }
+
+    .cms-we__body.is-outline-closed &__collapse {
+        margin-left: 0;
+    }
+
+    &__node {
+        position: relative;
     }
 
     &__empty {
@@ -536,11 +556,17 @@
     &__item {
         position: relative;
         display: grid;
-        grid-template-columns: 22px minmax(0, 1fr) auto;
-        gap: 8px;
+        grid-template-columns: 20px minmax(0, 1fr) auto;
+        gap: 6px;
         align-items: center;
         height: 48px;
         padding-right: 8px;
+        padding-left: 10px;
+
+        &.is-nested {
+            grid-template-columns: minmax(0, 1fr) auto;
+            padding-left: 10px;
+        }
         border-left: 2px solid transparent;
         cursor: pointer;
 
@@ -553,29 +579,90 @@
             background: var(--we-paper);
         }
 
+        &.is-nested.is-selected {
+            margin-left: -1px;
+        }
+
         &.is-dragging {
             opacity: 0.4;
         }
+    }
 
-        // Where a dragged row will land
-        &.is-drop-before::before,
-        &.is-drop-after::after {
+    // Sits on the boundary between rows and takes no space, so the list never jumps
+    &__gap {
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        right: 8px;
+        height: 22px;
+        margin-top: -11px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        opacity: 0;
+        cursor: pointer;
+
+        &::before {
             content: '';
             position: absolute;
-            z-index: 1;
-            right: 8px;
-            left: 8px;
+            top: 10px;
+            right: 0;
+            left: 0;
+            height: 1px;
+            background: var(--we-line-strong);
+        }
+
+        // Nested rows sit against the guide, so the line starts inside it instead of crossing it
+        &.is-nested::before,
+        &.is-tail::before {
+            left: 10px;
+        }
+
+        .fa {
+            position: absolute;
+            top: 4px;
+            left: 50%;
+            width: 14px;
+            height: 14px;
+            border: 1px solid var(--we-line-strong);
+            border-radius: 50%;
+            background: var(--we-outline);
+            color: var(--we-muted);
+            font-size: 8px;
+            line-height: 12px;
+            text-align: center;
+            transform: translateX(-50%);
+        }
+
+        &:hover,
+        &.is-drop {
+            opacity: 1;
+        }
+
+        &.is-drop::before {
+            top: 10px;
             height: 2px;
             background: var(--we-accent);
         }
 
-        &.is-drop-before::before {
-            top: -1px;
+        &.is-drop .fa {
+            border-color: var(--we-accent);
+            color: var(--we-accent);
         }
 
-        &.is-drop-after::after {
-            bottom: -1px;
+        &.is-tail {
+            position: relative;
+            top: auto;
+            right: auto;
+            display: block;
+            width: calc(100% - 8px);
+            margin: 0;
         }
+    }
+
+    &__tail {
+        position: relative;
+        height: 12px;
     }
 
     &__num {
@@ -666,35 +753,65 @@
         color: var(--we-faint);
     }
 
-    &__slot-label {
-        padding-top: 4px;
-        color: var(--we-faint);
-        font-size: 9px;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
+    &__slot {
+        position: relative;
+
+        // The bar sits in the gutter. Nested rows start 1px in, so a hover fill meets it instead of covering it.
+        // A selected row shifts back over the bar and its accent takes that stretch.
+        // It runs down to the last insert line, which sits 2px above the slot.
+        &::before {
+            content: '';
+            position: absolute;
+            top: 11px;
+            bottom: 2px;
+            left: var(--guide);
+            width: 1px;
+            background: rgba(36, 36, 36, 0.16);
+        }
+
+        &.is-folded::before {
+            content: none;
+        }
     }
 
-    &__add {
+    &__slot-body {
+        margin-left: var(--guide);
+        padding-left: 1px;
+    }
+
+    &__slot-label {
         display: flex;
         gap: 6px;
         align-items: center;
-        width: 100%;
-        height: 28px;
+        height: 22px;
+        padding: 0 8px;
         border: 0;
         background: transparent;
         color: var(--we-faint);
         font: inherit;
-        font-size: 11px;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
         cursor: pointer;
 
-        .fa {
-            font-size: 9px;
+        .cms-we-outline__caret {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 12px;
+            height: 12px;
+            font-size: 8px;
+            line-height: 12px;
+            transform-origin: center;
+
+            &.is-open {
+                transform: rotate(90deg);
+            }
         }
 
-        &:hover,
-        &.is-drop {
-            color: var(--we-accent);
+        &:hover {
+            color: var(--we-ink);
         }
 
         &.is-drop {

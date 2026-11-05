@@ -2,6 +2,7 @@
     <div class="cms-we" role="dialog" aria-label="Widget editor">
         <div class="cms-we__bar">
             <div class="cms-we__title">
+                <i class="fa fa-puzzle-piece cms-we__mark" title="Widgets"></i>
                 <select
                     v-if="view.areas.length > 1"
                     class="cms-we__area"
@@ -32,9 +33,7 @@
                 >
                     {{ action.label }}
                 </button>
-                <button type="button" class="cms-we__btn" title="Insert a widget (/)" @click="openDrawer(null)">
-                    <i class="fa fa-plus"></i> Insert
-                </button>
+                <button type="button" class="cms-we__btn" @click="requestCancel">Cancel</button>
                 <button type="button" class="cms-we__btn is-primary" @click="close">
                     <i class="fa fa-check"></i> Done
                 </button>
@@ -53,33 +52,58 @@
         <div v-if="loading" class="cms-we__body is-loading">
             <p><i class="fa fa-spinner fa-spin"></i> Loading widgets…</p>
         </div>
-        <div v-else class="cms-we__body">
+        <div v-else class="cms-we__body" :class="{ 'is-outline-closed': !outlineOpen }">
             <nav class="cms-we-outline" aria-label="Outline">
                 <header class="cms-we-outline__head">
-                    <span>Outline</span>
-                    <em>{{ view.count }}</em>
+                    <span v-if="outlineOpen">Outline</span>
+                    <em v-if="outlineOpen">{{ view.count }}</em>
+                    <button
+                        type="button"
+                        class="cms-we-outline__collapse"
+                        :title="outlineOpen ? 'Hide outline' : 'Show outline'"
+                        @click="outlineOpen = !outlineOpen"
+                    >
+                        <i class="fa" :class="outlineOpen ? 'fa-angles-left' : 'fa-angles-right'"></i>
+                    </button>
                 </header>
-                <p v-if="!view.nodes.length" class="cms-we-outline__empty">No widgets yet.</p>
-                <ol
-                    class="cms-we-outline__list"
-                    @dragover.prevent
-                    @drop.prevent="onDropEnd"
-                >
-                    <OutlineNode
-                        v-for="(node, index) in view.nodes"
-                        :key="node.uid"
-                        :node="node"
-                        :index="index"
-                        :selected="view.selected"
-                        :catalogue="catalogue"
-                        :drag="drag"
-                        @select="select"
-                        @move="onMove"
-                        @insert="openDrawer"
-                        @duplicate="duplicateNode"
-                        @remove="requestRemove"
-                    />
-                </ol>
+                <template v-if="outlineOpen">
+                    <p v-if="!view.nodes.length" class="cms-we-outline__empty">No widgets yet.</p>
+                    <ol
+                        class="cms-we-outline__list"
+                        @dragover.prevent
+                        @drop.prevent="onDropEnd"
+                    >
+                        <OutlineNode
+                            v-for="(node, index) in view.nodes"
+                            :key="node.uid"
+                            :node="node"
+                            :index="index"
+                            :selected="view.selected"
+                            :catalogue="catalogue"
+                            :drag="drag"
+                            :folded-ids="folded"
+                            @select="select"
+                            @toggle="toggleFold"
+                            @move="onMove"
+                            @insert="openDrawer"
+                            @duplicate="duplicateNode"
+                            @remove="requestRemove"
+                        />
+                        <li class="cms-we-outline__tail" style="padding-left: 8px">
+                            <button
+                                type="button"
+                                class="cms-we-outline__gap is-tail"
+                                :class="{ 'is-drop': drag.uid && drag.over === tailKey }"
+                                title="Insert a widget here"
+                                @click="openDrawer({ parentUid: null, slot: null, index: view.nodes.length })"
+                                @dragover.prevent="drag.over = tailKey"
+                                @drop.prevent.stop="onDropEnd"
+                            >
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </li>
+                    </ol>
+                </template>
             </nav>
 
             <div class="cms-we__stage">
@@ -154,7 +178,20 @@
         ></WidgetDrawer>
 
         <Modal v-if="rich.open" :title="'Edit ' + rich.field" @close="closeRich">
-            <RichTextModal :value="rich.value" @save="saveRich" @cancel="closeRich"></RichTextModal>
+            <RichTextModal ref="richEditor" :value="rich.value" @save="saveRich" @dirty="richDirty = $event"></RichTextModal>
+            <template #actions>
+                <span v-if="!richDirty" class="cms-we__rich-note">No changes yet.</span>
+                <button type="button" class="btn btn-primary btn-sm" :disabled="!richDirty" @click="richEditor.save()">Save</button>
+                <button type="button" class="btn btn-default btn-sm" @click="closeRich">Cancel</button>
+            </template>
+        </Modal>
+
+        <Modal v-if="discard.open" title="Discard changes" @close="discard.open = false">
+            <p>Close the editor without saving your changes?</p>
+            <template #actions>
+                <button ref="discardKeep" type="button" class="btn btn-default btn-sm" @click="discard.open = false">Keep editing</button>
+                <button type="button" class="btn btn-danger btn-sm" @click="confirmDiscard">Discard changes</button>
+            </template>
         </Modal>
 
         <Modal v-if="confirm.open" title="Remove widget" @close="confirm.open = false">
@@ -162,11 +199,10 @@
             <p v-if="confirm.children" class="cms-we__confirm-note">
                 The {{ confirm.children }} {{ confirm.children === 1 ? 'widget' : 'widgets' }} inside it will be removed too.
             </p>
-            <p class="cms-we__confirm-note">Undo brings it back.</p>
-            <div class="cms-we__confirm-actions">
+            <template #actions>
                 <button type="button" class="btn btn-default btn-sm" @click="confirm.open = false">Cancel</button>
                 <button ref="confirmButton" type="button" class="btn btn-danger btn-sm" @click="confirmRemove">Remove</button>
-            </div>
+            </template>
         </Modal>
     </div>
 </template>
@@ -178,6 +214,7 @@ import { organiserGroups } from './rules.js';
 import { clearDraft, draftKey, loadDraft, saveDraft } from './draft.js';
 import { serialiseFields } from './serialise.js';
 import { resolveNodeUid } from './canvas.js';
+import { placeKey } from './outline.js';
 import OutlineNode from './OutlineNode.vue';
 import Canvas from './Canvas.vue';
 import Modal from './Modal.vue';
@@ -219,10 +256,18 @@ export default {
         /** Where the next insert lands. Set by an insert marker; `at` is null when it follows the selection. */
         const drawer = reactive({ open: false, at: null });
         const rich = reactive({ open: false, uid: null, field: '', value: '' });
+        const richDirty = ref(false);
+        const richEditor = ref(null);
         const confirm = reactive({ open: false, uid: null, label: '', children: 0 });
+        const discard = reactive({ open: false });
+        const discardKeep = ref(null);
+        let baseline = null;
+        let baselineData = null;
         const confirmButton = ref(null);
         /** Outline drag state, shared by every row */
-        const drag = reactive({ uid: null, over: null });
+        const drag = reactive({ uid: null, over: null, blocked: [] });
+        const outlineOpen = ref(true);
+        const folded = reactive({});
         const draftOffer = ref('');
         let editor = null;
         let draft = null;
@@ -342,6 +387,32 @@ export default {
                 editor.setActive(preferred);
             }
             refresh();
+            if (!baseline) {
+                baseline = {};
+                baselineData = {};
+                editor.snapshot().areas.forEach((area) => {
+                    const stored = editor.stored(area.slug);
+                    baseline[area.slug] = JSON.stringify(stored);
+                    baselineData[area.slug] = JSON.parse(baseline[area.slug]);
+                });
+            }
+        }
+
+        function isDirty() {
+            if (!editor || !baseline) {
+                return false;
+            }
+            return editor.snapshot().areas.some((area) => JSON.stringify(editor.stored(area.slug)) !== baseline[area.slug]);
+        }
+
+        /** Writes every area back to the data the editor opened with */
+        function revertAreas() {
+            if (!baselineData || typeof props.session.onChange !== 'function') {
+                return;
+            }
+            Object.keys(baselineData).forEach((slug) => {
+                props.session.onChange(slug, baselineData[slug]);
+            });
         }
 
         function restoreDraft() {
@@ -466,7 +537,9 @@ export default {
 
             const inModal = event.target && event.target.closest && event.target.closest('.modal');
             if (event.key === 'Escape') {
-                if (confirm.open) {
+                if (discard.open) {
+                    discard.open = false;
+                } else if (confirm.open) {
                     confirm.open = false;
                 } else if (inModal || rich.open) {
                     if (rich.open) {
@@ -477,18 +550,15 @@ export default {
                 } else if (view.value.selected) {
                     select(null);
                 } else {
-                    close();
+                    requestCancel();
                 }
                 return;
             }
             // While a modal is open its keys belong to it: Backspace in the rich text editor must not remove a widget
-            if (typing || rich.open || confirm.open || inModal || drawer.open) {
+            if (typing || rich.open || confirm.open || discard.open || inModal || drawer.open) {
                 return;
             }
-            if (event.key === '/') {
-                event.preventDefault();
-                openDrawer(null);
-            } else if (meta && event.key.toLowerCase() === 'z') {
+            if (meta && event.key.toLowerCase() === 'z') {
                 event.preventDefault();
                 run(event.shiftKey ? 'redo' : 'undo');
             } else if (meta && event.key.toLowerCase() === 'd') {
@@ -574,6 +644,7 @@ export default {
             rich.uid = target;
             rich.field = field;
             rich.value = String((found.node.data || {})[field] ?? '');
+            richDirty.value = false;
             rich.open = true;
         }
 
@@ -668,11 +739,18 @@ export default {
             removeSelected();
         }
 
+        const tailKey = computed(() => placeKey(null, null, view.value.nodes.length));
+
+        function toggleFold(uid) {
+            folded[uid] = !folded[uid];
+        }
+
         /** Dropped on the outline below the last row: the widget goes to the end of the area */
         function onDropEnd() {
             const uid = drag.uid;
             drag.uid = null;
             drag.over = null;
+            drag.blocked = [];
             if (uid) {
                 onMove({ uid, parentUid: null, slot: null, index: view.value.nodes.length });
             }
@@ -696,14 +774,38 @@ export default {
             refresh();
         }
 
-        function close() {
-            clearDraft(window.localStorage, storageKey.value);
+        function shutdown() {
             if (typeof props.session.onClose === 'function') {
                 props.session.onClose();
             }
             if (window.NAILS_CMS_WIDGET_EDITOR) {
                 window.NAILS_CMS_WIDGET_EDITOR.close();
             }
+        }
+
+        function close() {
+            clearDraft(window.localStorage, storageKey.value);
+            shutdown();
+        }
+
+        function requestCancel() {
+            if (isDirty()) {
+                discard.open = true;
+                nextTick(() => {
+                    if (discardKeep.value) {
+                        discardKeep.value.focus();
+                    }
+                });
+                return;
+            }
+            shutdown();
+        }
+
+        function confirmDiscard() {
+            discard.open = false;
+            revertAreas();
+            clearDraft(window.localStorage, storageKey.value);
+            shutdown();
         }
 
         watch(() => view.value.selected, () => {
@@ -753,9 +855,17 @@ export default {
             panelHost,
             drawer,
             rich,
+            richDirty,
+            richEditor,
             confirm,
             confirmButton,
+            discard,
+            discardKeep,
             drag,
+            outlineOpen,
+            folded,
+            tailKey,
+            toggleFold,
             onCanvasEdit,
             onCanvasRich,
             onCanvasInsert,
@@ -788,6 +898,8 @@ export default {
             onMove,
             run,
             close,
+            requestCancel,
+            confirmDiscard,
             restoreDraft,
             discardDraft,
             onFormEvent,

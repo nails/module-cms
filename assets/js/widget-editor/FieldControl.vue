@@ -36,9 +36,14 @@
             <span class="input">
             <template v-if="field.type === 'richtext'">
                 <p class="cms-we__rich-note">{{ summary || 'Nothing yet' }}</p>
-                <button type="button" class="btn btn-default btn-sm" @click="richOpen = true">Edit text</button>
+                <button type="button" class="btn btn-default btn-sm" @click="openRich">Edit text</button>
                 <Modal v-if="richOpen" :title="field.label" @close="richOpen = false">
-                    <RichTextModal :value="value || ''" @save="saveRich" @cancel="richOpen = false"></RichTextModal>
+                    <RichTextModal ref="richEditor" :value="value || ''" @save="saveRich" @dirty="richDirty = $event"></RichTextModal>
+                    <template #actions>
+                        <span v-if="!richDirty" class="cms-we__rich-note">No changes yet.</span>
+                        <button type="button" class="btn btn-primary btn-sm" :disabled="!richDirty" @click="richEditor.save()">Save</button>
+                        <button type="button" class="btn btn-default btn-sm" @click="richOpen = false">Cancel</button>
+                    </template>
                 </Modal>
             </template>
 
@@ -146,6 +151,8 @@ export default {
     setup(props, { emit }) {
         const wideOpen = ref(false);
         const richOpen = ref(false);
+        const richDirty = ref(false);
+        const richEditor = ref(null);
         const picker = ref(null);
 
         const empty = computed(() => isEmpty(props.field, props.value));
@@ -181,6 +188,11 @@ export default {
 
         function setChild(index, key, value) {
             emit('update', setRowValue(rows.value, index, key, value));
+        }
+
+        function openRich() {
+            richDirty.value = false;
+            richOpen.value = true;
         }
 
         function saveRich(html) {
@@ -256,6 +268,9 @@ export default {
         return {
             wideOpen,
             richOpen,
+            richDirty,
+            richEditor,
+            openRich,
             picker,
             summary,
             empty,

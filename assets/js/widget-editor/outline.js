@@ -104,6 +104,48 @@ export function dropTarget(index, offsetY, height) {
 }
 
 /**
+ * A drop position the outline can mark: which list, and the index in it.
+ *
+ * @param {string|null} parentUid
+ * @param {string|null} slot
+ * @param {number} index
+ * @return {string}
+ */
+export function placeKey(parentUid, slot, index) {
+    return (parentUid || '') + '|' + (slot || '') + '|' + index;
+}
+
+/**
+ * Where a drag over a row really lands.
+ *
+ * The upper half is the place before this row, in its own list. The lower half of a leaf, or of a container
+ * whose children are hidden, is the place after it. The lower half of an open container is the start of its
+ * first slot: a line under the header would sit in front of the children, and nothing can be inserted there.
+ * A container cannot be dropped into itself, so that case uses the place after the container instead, which
+ * the outline draws below its children.
+ *
+ * @param {object} row
+ * @param {string} row.uid
+ * @param {number} row.index
+ * @param {number} row.offsetY
+ * @param {number} row.height
+ * @param {string|null} row.parentUid
+ * @param {string|null} row.slot
+ * @param {string|null} row.firstSlot  Set when the container's children are visible
+ * @param {boolean} row.blocked        The dragged widget contains this row, so it cannot enter the slot
+ * @return {{parentUid: string|null, slot: string|null, index: number}}
+ */
+export function rowDrop(row) {
+    if (row.offsetY < row.height / 2) {
+        return { parentUid: row.parentUid || null, slot: row.slot || null, index: row.index };
+    }
+    if (row.firstSlot && !row.blocked) {
+        return { parentUid: row.uid, slot: row.firstSlot, index: 0 };
+    }
+    return { parentUid: row.parentUid || null, slot: row.slot || null, index: row.index + 1 };
+}
+
+/**
  * Two-digit row numbers, as on the outline
  * @param {number} value
  * @return {string}

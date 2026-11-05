@@ -16,12 +16,6 @@
         </div>
 
         <editor-content :editor="editor" class="cms-we__rich-content"></editor-content>
-
-        <footer class="cms-we__rich-foot">
-            <span v-if="!dirty" class="cms-we__rich-note">No changes yet.</span>
-            <button type="button" class="btn btn-primary btn-sm" :disabled="!dirty" @click="save">Save</button>
-            <button type="button" class="btn btn-default btn-sm" @click="$emit('cancel')">Cancel</button>
-        </footer>
     </div>
 </template>
 
@@ -54,7 +48,7 @@ export default {
         /** The field's stored HTML */
         value: { type: String, default: '' },
     },
-    emits: ['save', 'cancel'],
+    emits: ['save', 'dirty'],
     setup(props, { emit }) {
         const editor = shallowRef(null);
         const dirty = ref(false);
@@ -97,7 +91,6 @@ export default {
 
         function save() {
             if (!dirty.value || !editor.value) {
-                emit('cancel');
                 return;
             }
             emit('save', editor.value.getHTML());
@@ -109,6 +102,7 @@ export default {
                 extensions: [schemaKit()],
                 onUpdate: () => {
                     dirty.value = true;
+                    emit('dirty', true);
                 },
                 onTransaction: () => {
                     version.value++;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dropTarget, pad, snippet } from '../../assets/js/widget-editor/outline.js';
+import { dropTarget, pad, placeKey, rowDrop, snippet } from '../../assets/js/widget-editor/outline.js';
 
 describe('snippet', () => {
 
@@ -44,6 +44,43 @@ describe('dropTarget', () => {
 
     it('places after the row in its lower half', () => {
         expect(dropTarget(2, 30, 40)).toEqual({ index: 3, edge: 'after' });
+    });
+});
+
+describe('rowDrop', () => {
+
+    const row = { uid: 'stack', index: 1, height: 48, parentUid: null, slot: null };
+
+    it('places before the row in its upper half', () => {
+        expect(rowDrop({ ...row, offsetY: 10, firstSlot: 'items', blocked: false })).toEqual({
+            parentUid: null, slot: null, index: 1,
+        });
+    });
+
+    it('places inside an open container from its lower half, not after the header', () => {
+        expect(rowDrop({ ...row, offsetY: 30, firstSlot: 'items', blocked: false })).toEqual({
+            parentUid: 'stack', slot: 'items', index: 0,
+        });
+    });
+
+    it('places after a container that cannot take the drop, which is below its children', () => {
+        expect(rowDrop({ ...row, offsetY: 30, firstSlot: 'items', blocked: true })).toEqual({
+            parentUid: null, slot: null, index: 2,
+        });
+    });
+
+    it('places after a collapsed container', () => {
+        expect(rowDrop({ ...row, offsetY: 30, firstSlot: null, blocked: false })).toEqual({
+            parentUid: null, slot: null, index: 2,
+        });
+    });
+});
+
+describe('placeKey', () => {
+
+    it('distinguishes a nested list from the top level', () => {
+        expect(placeKey(null, null, 0)).toBe('||0');
+        expect(placeKey('stack', 'items', 0)).toBe('stack|items|0');
     });
 });
 
