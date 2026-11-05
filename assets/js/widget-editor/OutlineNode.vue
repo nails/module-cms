@@ -1,23 +1,22 @@
 <template>
-    <li class="cms-we-outline__node">
+    <li class="cms-we-outline__node" :class="{ 'is-dragging': drag.uid === node.uid }">
         <button
             type="button"
             class="cms-we-outline__gap"
-            :class="{ 'is-drop': marked(beforeKey), 'is-nested': depth > 0 }"
+            :class="[marker(beforeKey).state, { 'is-nested': depth > 0 }]"
             :style="{ left: depth === 0 ? '8px' : '0' }"
-            title="Insert a widget here"
+            :title="marker(beforeKey).title"
             @click.stop="insertAt(parentUid, slotName, index)"
-            @dragover.prevent="mark(parentUid, slotName, index)"
+            @dragover.prevent="mark($event, parentUid, slotName, index)"
             @drop.prevent.stop="dropAt(parentUid, slotName, index)"
         >
-            <i class="fa fa-plus"></i>
+            <i class="fa" :class="marker(beforeKey).icon"></i>
         </button>
 
         <div
             class="cms-we-outline__item"
             :class="{
                 'is-selected': node.uid === selected,
-                'is-dragging': drag.uid === node.uid,
                 'is-nested': depth > 0,
             }"
             draggable="true"
@@ -55,10 +54,13 @@
                 <button
                     type="button"
                     class="cms-we-outline__slot-label"
-                    :class="{ 'is-drop': slotFolded(slot) && marked(placeKey(node.uid, slot, 0)) }"
-                    :title="slotFolded(slot) ? 'Expand' : 'Collapse'"
+                    :class="{
+                        'is-drop': slotFolded(slot) && marked(placeKey(node.uid, slot, 0)),
+                        'is-invalid': slotFolded(slot) && rejected(placeKey(node.uid, slot, 0)),
+                    }"
+                    :title="slotTitle(slot)"
                     @click.stop="$emit('toggle', slotKey(slot))"
-                    @dragover.prevent="mark(node.uid, slot, 0)"
+                    @dragover.prevent="mark($event, node.uid, slot, 0)"
                     @drop.prevent.stop="dropAt(node.uid, slot, 0)"
                 >
                     <i class="fa fa-chevron-right cms-we-outline__caret" :class="{ 'is-open': !slotFolded(slot) }"></i>
@@ -90,13 +92,13 @@
                         <button
                             type="button"
                             class="cms-we-outline__gap is-tail"
-                            :class="{ 'is-drop': marked(placeKey(node.uid, slot, children.length)) }"
-                            title="Insert a widget here"
+                            :class="marker(placeKey(node.uid, slot, children.length)).state"
+                            :title="marker(placeKey(node.uid, slot, children.length)).title"
                             @click.stop="insertAt(node.uid, slot, children.length)"
-                            @dragover.prevent="mark(node.uid, slot, children.length)"
+                            @dragover.prevent="mark($event, node.uid, slot, children.length)"
                             @drop.prevent.stop="dropAt(node.uid, slot, children.length)"
                         >
-                            <i class="fa fa-plus"></i>
+                            <i class="fa" :class="marker(placeKey(node.uid, slot, children.length)).icon"></i>
                         </button>
                     </div>
                 </template>
@@ -154,7 +156,33 @@ export default {
         }
 
         function marked(key) {
-            return Boolean(props.drag.uid) && props.drag.over === key;
+            return Boolean(props.drag.uid) && props.drag.over === key && !props.drag.invalid;
+        }
+
+        function rejected(key) {
+            return Boolean(props.drag.uid) && props.drag.over === key && props.drag.invalid;
+        }
+
+        /** A gap shows + to insert. While a drag is over it, the icon says move, or that the place is refused. */
+        function marker(key) {
+            const invalid = rejected(key);
+            const active = marked(key);
+            return {
+                state: { 'is-drop': active, 'is-invalid': invalid },
+                icon: invalid ? 'fa-ban' : (active ? 'fa-arrow-down' : 'fa-plus'),
+                title: invalid ? 'Cannot drop here' : (active ? 'Move here' : 'Insert a widget here'),
+            };
+        }
+
+        function slotTitle(slot) {
+            const key = placeKey(props.node.uid, slot, 0);
+            if (rejected(key)) {
+                return 'Cannot drop here';
+            }
+            if (marked(key)) {
+                return 'Move here';
+            }
+            return slotFolded(slot) ? 'Expand' : 'Collapse';
         }
 
         function contained(node) {
@@ -173,12 +201,23 @@ export default {
             event.dataTransfer.effectAllowed = 'move';
             props.drag.uid = props.node.uid;
             props.drag.blocked = contained(props.node);
+            props.drag.invalid = false;
         }
 
         function onDragEnd() {
             props.drag.uid = null;
             props.drag.over = null;
             props.drag.blocked = [];
+            props.drag.invalid = false;
+        }
+
+        function aim(event, parentUid, slot, index) {
+            const invalid = Boolean(parentUid) && props.drag.blocked.includes(parentUid);
+            props.drag.over = placeKey(parentUid, slot, index);
+            props.drag.invalid = invalid;
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = invalid ? 'none' : 'move';
+            }
         }
 
         /** The slot a drop in the lower half enters, when this container's children are open */
@@ -209,22 +248,23 @@ export default {
                 return;
             }
             const target = targetFrom(event);
-            props.drag.over = placeKey(target.parentUid, target.slot, target.index);
+            aim(event, target.parentUid, target.slot, target.index);
         }
 
         function onDrop(event) {
             const uid = props.drag.uid;
             const target = targetFrom(event);
+            const invalid = Boolean(target.parentUid) && props.drag.blocked.includes(target.parentUid);
             onDragEnd();
-            if (uid && uid !== props.node.uid) {
+            if (uid && uid !== props.node.uid && !invalid) {
                 emit('move', { uid, parentUid: target.parentUid, slot: target.slot, index: target.index });
             }
         }
 
-        /** A container cannot be dropped into itself, so those places are never marked */
-        function mark(parentUid, slot, index) {
-            if (props.drag.uid && !props.drag.blocked.includes(parentUid)) {
-                props.drag.over = placeKey(parentUid, slot, index);
+        /** A place inside the dragged widget is marked, and shown as refused */
+        function mark(event, parentUid, slot, index) {
+            if (props.drag.uid) {
+                aim(event, parentUid, slot, index);
             }
         }
 
@@ -250,6 +290,9 @@ export default {
             slotFolded,
             slotLabel,
             marked,
+            rejected,
+            marker,
+            slotTitle,
             pad,
             placeKey,
             onDragStart,

@@ -566,6 +566,13 @@
 
     &__node {
         position: relative;
+
+        // The row and the rows inside its slots fade. The insert lines stay solid, so a refused place stays readable.
+        &.is-dragging > .cms-we-outline__item,
+        &.is-dragging .cms-we-outline__slot-label,
+        &.is-dragging .cms-we-outline__item {
+            opacity: 0.4;
+        }
     }
 
     &__empty {
@@ -609,10 +616,6 @@
 
         &.is-nested.is-selected {
             margin-left: -1px;
-        }
-
-        &.is-dragging {
-            opacity: 0.4;
         }
     }
 
@@ -663,19 +666,26 @@
         }
 
         &:hover,
-        &.is-drop {
+        &.is-drop,
+        &.is-invalid {
             opacity: 1;
         }
 
-        &.is-drop::before {
+        &.is-drop::before,
+        &.is-invalid::before {
             top: 10px;
             height: 2px;
             background: var(--we-accent);
         }
 
-        &.is-drop .fa {
+        &.is-drop .fa,
+        &.is-invalid .fa {
             border-color: var(--we-accent);
             color: var(--we-accent);
+        }
+
+        &.is-invalid {
+            cursor: not-allowed;
         }
 
         &.is-tail {
@@ -842,8 +852,14 @@
             color: var(--we-ink);
         }
 
-        &.is-drop {
+        &.is-drop,
+        &.is-invalid {
             box-shadow: inset 0 -2px 0 var(--we-accent);
+        }
+
+        &.is-invalid {
+            color: var(--we-accent);
+            cursor: not-allowed;
         }
     }
 }

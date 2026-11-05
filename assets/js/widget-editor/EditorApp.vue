@@ -102,13 +102,16 @@
                             <button
                                 type="button"
                                 class="cms-we-outline__gap is-tail"
-                                :class="{ 'is-drop': drag.uid && drag.over === tailKey }"
-                                title="Insert a widget here"
+                                :class="{
+                                    'is-drop': drag.uid && drag.over === tailKey && !drag.invalid,
+                                    'is-invalid': drag.uid && drag.over === tailKey && drag.invalid,
+                                }"
+                                :title="tailTitle"
                                 @click="openDrawer({ parentUid: null, slot: null, index: view.nodes.length })"
-                                @dragover.prevent="drag.over = tailKey"
+                                @dragover.prevent="markTail"
                                 @drop.prevent.stop="onDropEnd"
                             >
-                                <i class="fa fa-plus"></i>
+                                <i class="fa" :class="tailIcon"></i>
                             </button>
                         </li>
                     </ol>
@@ -283,7 +286,7 @@ export default {
         let baselineData = null;
         const confirmButton = ref(null);
         /** Outline drag state, shared by every row */
-        const drag = reactive({ uid: null, over: null, blocked: [] });
+        const drag = reactive({ uid: null, over: null, blocked: [], invalid: false });
         let noticeTimer = null;
         let errorTimer = null;
         const outlineOpen = ref(true);
@@ -761,6 +764,27 @@ export default {
         }
 
         const tailKey = computed(() => placeKey(null, null, view.value.nodes.length));
+        const tailActive = computed(() => Boolean(drag.uid) && drag.over === tailKey.value);
+        const tailIcon = computed(() => {
+            if (!tailActive.value) {
+                return 'fa-plus';
+            }
+            return drag.invalid ? 'fa-ban' : 'fa-arrow-down';
+        });
+        const tailTitle = computed(() => {
+            if (tailActive.value && drag.invalid) {
+                return 'Cannot drop here';
+            }
+            return tailActive.value ? 'Move here' : 'Insert a widget here';
+        });
+
+        function markTail(event) {
+            drag.over = tailKey.value;
+            drag.invalid = false;
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = 'move';
+            }
+        }
 
         function dismissMessage() {
             window.clearTimeout(noticeTimer);
@@ -787,6 +811,7 @@ export default {
             drag.uid = null;
             drag.over = null;
             drag.blocked = [];
+            drag.invalid = false;
             if (uid) {
                 onMove({ uid, parentUid: null, slot: null, index: view.value.nodes.length });
             }
@@ -942,6 +967,9 @@ export default {
             requestRemove,
             confirmRemove,
             onDropEnd,
+            markTail,
+            tailIcon,
+            tailTitle,
             dismissMessage,
             dismissError,
             removeSelected,
