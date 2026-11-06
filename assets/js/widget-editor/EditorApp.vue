@@ -244,6 +244,7 @@ import { organiserGroups } from './rules.js';
 import { clearDraft, draftKey, loadDraft, saveDraft } from './draft.js';
 import { serialiseFields } from './serialise.js';
 import { placeOf, resolveNodeUid } from './canvas.js';
+import { setAt, valueAt } from './fields.js';
 import { placeKey } from './outline.js';
 import OutlineNode from './OutlineNode.vue';
 import Canvas from './Canvas.vue';
@@ -652,11 +653,12 @@ export default {
             if (!found || found.node.locked) {
                 return false;
             }
-            const current = found.node.data || {};
-            if (JSON.stringify(current[field]) === JSON.stringify(value)) {
+            const current = editData(uid, found.node);
+            if (JSON.stringify(valueAt(current, field)) === JSON.stringify(value)) {
                 return false;
             }
-            editor.update(uid, { ...current, [field]: value }, true);
+            editor.update(uid, setAt(current, field, value), true);
+            dropUpgraded(uid);
             return true;
         }
 
@@ -714,7 +716,7 @@ export default {
             }
             rich.uid = target;
             rich.field = field;
-            rich.value = String((found.node.data || {})[field] ?? '');
+            rich.value = String(valueAt(editData(target, found.node), field) ?? '');
             richDirty.value = false;
             rich.open = true;
         }

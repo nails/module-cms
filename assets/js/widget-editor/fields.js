@@ -175,6 +175,56 @@ export function setRowValue(rows, index, key, value) {
 }
 
 /**
+ * The value at a slash path. A path with no slash is a top-level key. `panels/0/title` is a repeater row.
+ *
+ * @param {Object<string, unknown>|unknown[]} data
+ * @param {string} path
+ * @return {unknown}
+ */
+export function valueAt(data, path) {
+    const parts = String(path).split('/');
+    let node = data;
+
+    for (let i = 0; i < parts.length; i++) {
+        if (node === null || node === undefined || typeof node !== 'object') {
+            return undefined;
+        }
+        node = node[parts[i]];
+    }
+
+    return node;
+}
+
+/**
+ * A copy of data with the value at path replaced. Arrays along the path stay arrays.
+ *
+ * @param {Object<string, unknown>|unknown[]} data
+ * @param {string} path
+ * @param {unknown} value
+ * @return {Object<string, unknown>|unknown[]}
+ */
+export function setAt(data, path, value) {
+    const parts = String(path).split('/');
+    const root = Array.isArray(data) ? data.slice() : { ...(data || {}) };
+
+    if (parts.length === 1) {
+        root[parts[0]] = value;
+        return root;
+    }
+
+    let cursor = root;
+    for (let i = 0; i < parts.length - 1; i++) {
+        const child = cursor[parts[i]];
+        const copy = Array.isArray(child) ? child.slice() : { ...(child && typeof child === 'object' ? child : {}) };
+        cursor[parts[i]] = copy;
+        cursor = copy;
+    }
+
+    cursor[parts[parts.length - 1]] = value;
+    return root;
+}
+
+/**
  * The row's heading: the first field's text, or its selected option. Empty falls back to "Item N".
  *
  * @param {Field} field A repeater

@@ -14,6 +14,7 @@
 
 namespace Nails\Cms\WidgetEditor\Widget;
 
+use Nails\Cms\Cms\Fields\Repeater;
 use Nails\Cms\WidgetEditor\Exception\RegistryException;
 use Nails\Cms\WidgetEditor\Interfaces;
 use Nails\Cms\WidgetEditor\Service\Fields;
@@ -309,7 +310,7 @@ abstract class Base implements Interfaces\Widget
      *
      * @return string[]
      */
-    private function nodePath(): array
+    protected function nodePath(): array
     {
         return array_values((array) ($this->context[self::PATH_KEY] ?? []));
     }
@@ -327,7 +328,8 @@ abstract class Base implements Interfaces\Widget
      * type that is not edited on the canvas (a textarea, a select), or an $edit that disagrees with the type,
      * throws.
      *
-     * @param string               $field The data key the value is stored under
+     * @param string               $field The data key the value is stored under. A repeater row is
+     *                                    `list/0/child`: the repeater key, the row index, and the child's key.
      * @param string               $tag   The element to render, e.g. h2
      * @param mixed                $value The field's value. For 'text' it is escaped; for 'rich' it is HTML
      * @param array<string, mixed> $attrs Extra attributes for the element
@@ -380,7 +382,7 @@ abstract class Base implements Interfaces\Widget
     private function canvasEdit(string $key, ?string $edit): string
     {
         $fields   = $this->getFields();
-        $declared = is_array($fields) ? Fields::find(Fields::validate($fields), $key) : null;
+        $declared = is_array($fields) ? $this->declaredField(Fields::validate($fields), $key) : null;
 
         if ($declared === null) {
             return $edit ?? 'text';
@@ -405,5 +407,39 @@ abstract class Base implements Interfaces\Widget
         }
 
         return $mode;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * The field $key names. A path `list/0/child` is that child of a repeater row.
+     *
+     * @param \Nails\Cms\WidgetEditor\Interfaces\Field[] $fields
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function declaredField(array $fields, string $key): ?Interfaces\Field
+    {
+        $parts = explode('/', $key);
+        $field = Fields::find($fields, $parts[0]);
+
+        if (count($parts) === 1) {
+            return $field;
+        }
+
+        if (!$field instanceof Repeater || count($parts) !== 3 || !preg_match('/^\d+$/', $parts[1])) {
+            throw new \InvalidArgumentException(sprintf('Field "%s" is not a repeater row', $key));
+        }
+
+        $child = Fields::find($field->getChildren(), $parts[2]);
+        if ($child === null) {
+            throw new \InvalidArgumentException(sprintf(
+                'Field "%s" is not a field of "%s"',
+                $parts[2],
+                $parts[0]
+            ));
+        }
+
+        return $child;
     }
 }

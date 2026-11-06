@@ -14,8 +14,10 @@ import {
     plainText,
     removeRow,
     rowTitle,
+    setAt,
     setRowValue,
     summary,
+    valueAt,
     visibleFields,
 } from '../../assets/js/widget-editor/fields.js';
 
@@ -136,6 +138,18 @@ describe('repeater rows', () => {
             ],
         };
         expect(rowTitle(selectFirst, { sTone: 'dark', sText: 'ignored' }, 0)).toBe('Dark');
+    });
+
+    it('reads and writes a repeater row without changing the other rows', () => {
+        const data = { panels: [{ title: 'One', body: '' }, { title: 'Two', body: '<p>b</p>' }] };
+        expect(valueAt(data, 'panels/1/body')).toBe('<p>b</p>');
+        expect(valueAt(data, 'title')).toBeUndefined();
+
+        const next = setAt(data, 'panels/0/title', 'Edited');
+        expect(next.panels[0]).toEqual({ title: 'Edited', body: '' });
+        expect(next.panels[1]).toBe(data.panels[1]);
+        expect(data.panels[0].title).toBe('One');
+        expect(setAt(data, 'label', 'Hi').label).toBe('Hi');
     });
 
     it('changes one child without touching the others', () => {

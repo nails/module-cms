@@ -187,6 +187,57 @@ class EditableTest extends TestCase
         $oWidget->render([]);
     }
 
+    public function testARepeaterRowUsesTheChildField(): void
+    {
+        $oWidget = new class() extends Base {
+            public function getFields(): ?array
+            {
+                return [
+                    Fields\Repeater::make('panels')->fields([
+                        Fields\Text::make('title'),
+                        Fields\Richtext::make('body'),
+                    ]),
+                ];
+            }
+
+            public function render(array $data): string
+            {
+                return $this->editable('panels/0/title', 'span', 'T')
+                    . $this->editable('panels/0/body', 'div', '<p>B</p>');
+            }
+        };
+        $oWidget->attach(new Registry(), 'fixture', Registry::MODE_PREVIEW, 0, []);
+
+        $sHtml = $oWidget->render([]);
+
+        self::assertStringContainsString('data-cms-field="panels/0/title" data-cms-edit="text"', $sHtml);
+        self::assertStringContainsString('data-cms-field="panels/0/body" data-cms-edit="rich"', $sHtml);
+    }
+
+    public function testARepeaterPathThatIsNotARowThrows(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('not a repeater row');
+
+        $oWidget = new class() extends Base {
+            public function getFields(): ?array
+            {
+                return [
+                    Fields\Repeater::make('panels')->fields([
+                        Fields\Text::make('title'),
+                    ]),
+                ];
+            }
+
+            public function render(array $data): string
+            {
+                return $this->editable('panels/title', 'span', 'T');
+            }
+        };
+
+        $oWidget->render([]);
+    }
+
     public function testAnEditModeThatDisagreesWithTheFieldThrows(): void
     {
         $this->expectException(\InvalidArgumentException::class);

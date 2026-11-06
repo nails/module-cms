@@ -41,6 +41,14 @@ class Repeater extends Base
         return $this;
     }
 
+    /**
+     * @return Field[]
+     */
+    public function getChildren(): array
+    {
+        return $this->fields;
+    }
+
     public function min(int $min): static
     {
         $this->min = $min;
