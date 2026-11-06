@@ -11,8 +11,9 @@
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, provide, toRef } from 'vue';
 import FieldControl from './FieldControl.vue';
+import { INSTANCE_VALUES } from './field-types.js';
 import { visibleFields } from './fields.js';
 
 export default {
@@ -27,6 +28,7 @@ export default {
     emits: ['change'], // ({key, value}) one field changed
     setup(props, { emit }) {
         const shown = computed(() => visibleFields(props.fields, props.values));
+        provide(INSTANCE_VALUES, toRef(props, 'values'));
 
         // A single-key patch, merged with the widget's current data by the editor (not with props.values)
         function onUpdate(key, value) {

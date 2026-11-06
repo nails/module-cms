@@ -29,6 +29,12 @@
 
 export const QUEUE = 'NAILS_CMS_WIDGET_EDITOR_FIELDS';
 
+/**
+ * A control that depends on another field of the same instance injects this: a ref to the instance's data.
+ * It is read-only; a control still changes only its own value, with `update`.
+ */
+export const INSTANCE_VALUES = 'cmsWidgetEditorInstanceValues';
+
 /** @type {Map<string, FieldTypeDefinition>} */
 const types = new Map();
 
