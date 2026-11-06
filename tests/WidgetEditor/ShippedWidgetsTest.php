@@ -16,8 +16,8 @@ use Nails\Cms\WidgetEditor\Traits\Legacy;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The shipped widgets ported to WidgetEditor (v2). The native ports must render what their v1 views rendered, keep
- * the v1 data keys and slugs, and declare a valid fields schema. The bridges keep the v1 class behind the v2 surface.
+ * The shipped widgets ported to WidgetEditor (v2). They are native: each answers to its v1 slug, declares a valid
+ * fields schema, upgrades data stored by its v1 widget, and renders what its v1 view rendered.
  */
 class ShippedWidgetsTest extends TestCase
 {
@@ -167,7 +167,7 @@ class ShippedWidgetsTest extends TestCase
             }
         }
 
-        $aExpected = ['cdn_object', 'number', 'repeater', 'richtext', 'select', 'text', 'textarea', 'toggle'];
+        $aExpected = ['cdn_object', 'number', 'repeater', 'richtext', 'select', 'table', 'text', 'textarea', 'toggle'];
         $this->assertSame([], array_values(array_diff($aExpected, $aTypes)));
     }
 
@@ -196,10 +196,248 @@ class ShippedWidgetsTest extends TestCase
         $this->assertStringContainsString('<dt>label</dt><dd>One</dd>', $html);
     }
 
-    public function testBridgesUseTheLegacyTrait(): void
+    public function testShippedWidgetsAreNative(): void
     {
-        foreach ([Table::class, Tabs::class, Accordion::class, Area::class] as $sClass) {
-            $this->assertContains(Legacy::class, (new \ReflectionClass($sClass))->getTraitNames(), $sClass);
+        foreach (glob(dirname(__DIR__, 2) . '/src/Cms/Widgets/*.php') as $file) {
+            $class = 'Nails\\Cms\\Cms\\Widgets\\' . basename($file, '.php');
+            $this->assertNotContains(Legacy::class, (new \ReflectionClass($class))->getTraitNames(), $class);
         }
+    }
+
+    public function testPortsAnswerToTheirV1Slugs(): void
+    {
+        $this->assertSame(['table'], Table::ALIASES);
+        $this->assertSame(['tabs'], Tabs::ALIASES);
+        $this->assertSame(['accordion'], Accordion::ALIASES);
+        $this->assertSame(['Area'], Area::ALIASES);
+    }
+
+    public function testPortsDeclareValidFieldSchemas(): void
+    {
+        foreach ([new Table(), new Tabs(), new Accordion(), $this->area(['3' => 'Footer'])] as $widget) {
+            $this->assertNotEmpty(Fields::describe($widget->getFields()), get_class($widget));
+        }
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function testAccordionUpgradesTheV1Lists(): void
+    {
+        $data = (new Accordion())->upgrade([
+            'title' => ['One', 'Two'],
+            'body'  => ['<p>1</p>'],
+        ]);
+
+        $this->assertSame([
+            'panels' => [
+                ['title' => 'One', 'body' => '<p>1</p>', 'open' => true],
+                ['title' => 'Two', 'body' => '', 'open' => false],
+            ],
+        ], $data);
+    }
+
+    public function testAccordionKeepsAStoredOpenStateAndReadsV1Collapsed(): void
+    {
+        $widget = new Accordion();
+
+        $this->assertSame(
+            ['panels' => [['title' => 'A', 'body' => '', 'open' => false]]],
+            $widget->upgrade(['panels' => [['title' => 'A', 'body' => '', 'open' => false]]])
+        );
+        $this->assertSame(
+            [
+                'panels' => [
+                    ['title' => 'A', 'body' => '', 'collapsed' => true, 'open' => false],
+                    ['title' => 'B', 'body' => '', 'collapsed' => false, 'open' => true],
+                ],
+            ],
+            $widget->upgrade([
+                'panels' => [
+                    ['title' => 'A', 'body' => '', 'collapsed' => true],
+                    ['title' => 'B', 'body' => '', 'collapsed' => false],
+                ],
+            ])
+        );
+    }
+
+    public function testUpgradeLeavesTheCurrentShapeAlone(): void
+    {
+        $panels = ['panels' => [['title' => 'One', 'body' => '', 'open' => false]], 'title' => ['Stale']];
+
+        $this->assertSame($panels, (new Accordion())->upgrade($panels));
+        $this->assertSame(['tabs' => []], (new Tabs())->upgrade(['tabs' => []]));
+        $this->assertSame(['rows' => [['a']], 'attributes' => ''], (new Table())->upgrade(['rows' => [['a']], 'attributes' => '']));
+        $this->assertSame(['areaId' => '4'], $this->area([])->upgrade(['areaId' => '4']));
+    }
+
+    public function testAccordionRendersPanelsWithTheFirstOpen(): void
+    {
+        $widget = new Accordion();
+        $html   = $widget->render($widget->normalise([
+            'title' => ['One & two', 'Three'],
+            'body'  => ['<p>First</p>', '<p>Second</p>'],
+        ]));
+
+        $this->assertStringContainsString('class="cms-widget cms-widget-accordion"', $html);
+        $this->assertStringContainsString('One &amp; two', $html);
+        $this->assertStringContainsString('<div class="panel-body"><p>Second</p></div>', $html);
+        $this->assertSame(1, substr_count($html, 'collapse in'));
+        $this->assertStringNotContainsString('data-cms-', $html);
+        $this->assertSame('', $widget->render(['panels' => []]));
+
+        $closed = $widget->render($widget->normalise([
+            'panels' => [
+                ['title' => 'A', 'body' => '<p>a</p>', 'open' => false],
+                ['title' => 'B', 'body' => '<p>b</p>', 'open' => true],
+            ],
+        ]));
+        $this->assertSame(1, substr_count($closed, 'collapse in'));
+        $this->assertStringContainsString('<div class="panel-body"><p>b</p></div>', $closed);
+    }
+
+    public function testAccordionPreviewAsksForAPanelAndEditsItsFields(): void
+    {
+        $registry = new Registry([Accordion::class => 1]);
+        $slug     = Registry::slugFor(Accordion::class);
+
+        $empty = $registry->renderNode(
+            ['slug' => $slug, 'data' => ['panels' => []]],
+            Registry::MODE_PREVIEW
+        );
+        $this->assertStringContainsString('Add a panel in the inspector.', $empty);
+        $this->assertStringNotContainsString('data-cms-edit', $empty);
+
+        $html = $registry->renderNode(
+            ['slug' => $slug, 'data' => ['panels' => [['title' => '', 'body' => '', 'open' => true]]]],
+            Registry::MODE_PREVIEW
+        );
+        $this->assertStringContainsString('data-cms-field="panels/0/title" data-cms-edit="text"', $html);
+        $this->assertStringContainsString('data-cms-field="panels/0/body" data-cms-edit="rich"', $html);
+        $this->assertStringContainsString('data-cms-action="toggle"', $html);
+        $this->assertStringContainsString('data-cms-field="panels/0/open"', $html);
+        $this->assertStringContainsString('Add a title', $html);
+        $this->assertStringContainsString('Write something…', $html);
+        $this->assertStringContainsString('collapse in', $html);
+    }
+
+    public function testTabsRenderWithTheFirstActive(): void
+    {
+        $widget = new Tabs();
+        $html   = $widget->render($widget->normalise(['title' => ['A', 'B'], 'body' => ['<p>a</p>', '<p>b</p>']]));
+
+        $this->assertStringContainsString('<ul class="nav nav-tabs" role="tablist">', $html);
+        $this->assertSame(1, substr_count($html, 'tab-item active'));
+        $this->assertSame(1, substr_count($html, 'tab-pane active'));
+        $this->assertStringContainsString('<p>b</p>', $html);
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function testTableUpgradesTheV1JsonAndAttributes(): void
+    {
+        $data = (new Table())->upgrade(['tblData' => '[["a","b"],["c","d"]]', 'tblAttr' => 'id="x"']);
+
+        $this->assertSame(['rows' => [['a', 'b'], ['c', 'd']], 'attributes' => 'id="x"'], $data);
+        $this->assertSame(['rows' => []], (new Table())->upgrade(['tblData' => 'not json']));
+    }
+
+    public function testTableRendersCellsAsStored(): void
+    {
+        $widget = new Table();
+        $html   = $widget->render($widget->normalise(['tblData' => '[["<b>a</b>","b"],["c"]]', 'tblAttr' => 'id="x"']));
+
+        $this->assertStringContainsString('<table class="table" id="x"><tbody>', $html);
+        $this->assertStringContainsString('<td data-row="0" class="cms-widget-table-cell"><b>a</b></td>', $html);
+        // The short row is padded by the field
+        $this->assertSame(4, substr_count($html, '<td '));
+    }
+
+    public function testTableDefaultsToAnEmptyGrid(): void
+    {
+        $defaults = (new Table())->getDefaults();
+
+        $this->assertCount(4, $defaults['rows']);
+        $this->assertSame(['', '', ''], $defaults['rows'][0]);
+        $this->assertSame('', (new Table())->render(['rows' => []]));
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function testAreaUpgradesTheV1Id(): void
+    {
+        $this->assertSame(['areaId' => '7'], $this->area([])->upgrade(['iAreaId' => 7]));
+    }
+
+    public function testAreaOffersTheAreasOrSaysThereAreNone(): void
+    {
+        $options = Fields::describe($this->area(['3' => 'Footer'])->getFields())[0]['options'];
+        $this->assertSame(['' => 'Choose an area', '3' => 'Footer'], $options);
+
+        $none = Fields::describe($this->area([])->getFields())[0];
+        $this->assertSame(['' => 'No areas available'], $none['options']);
+        $this->assertSame('alert alert-warning', $none['infoClass']);
+    }
+
+    public function testAreaRendersTheChosenAreaAndCannotIncludeItself(): void
+    {
+        $widget = $this->area(['3' => 'Footer'], function (int $id, $widget) {
+            return '[' . $id . ':' . $widget->render(['areaId' => (string) $id]) . ']';
+        });
+
+        $this->assertSame('[3:]', $widget->render(['areaId' => '3']));
+        $this->assertSame('', $widget->render(['areaId' => '']));
+    }
+
+    public function testAreaPreviewNamesTheAreaAndDoesNotRenderIt(): void
+    {
+        $rendered = false;
+        $widget   = $this->area(['3' => 'Footer'], function (int $id) use (&$rendered) {
+            $rendered = true;
+
+            return 'area ' . $id;
+        });
+
+        $html = $widget->preview(['areaId' => '3']);
+
+        $this->assertFalse($rendered);
+        $this->assertStringContainsString('cms-we-area', $html);
+        $this->assertStringContainsString('Footer', $html);
+        $this->assertStringContainsString('This area will be rendered here.', $html);
+        $this->assertStringNotContainsString('area 3', $html);
+
+        $empty = $widget->preview(['areaId' => '']);
+        $this->assertStringContainsString('Choose an area in the inspector.', $empty);
+        $this->assertStringNotContainsString('cms-we-area', $empty);
+
+        $missing = $widget->preview(['areaId' => '9']);
+        $this->assertStringContainsString('Unknown area', $missing);
+        $this->assertStringContainsString('This area is no longer available.', $missing);
+        $this->assertFalse($rendered);
+    }
+
+    /**
+     * An Area widget with fixed areas, whose area renders through $render
+     *
+     * @param array<string, string> $areas
+     */
+    private function area(array $areas, ?\Closure $render = null): Area
+    {
+        $render ??= fn(int $id) => 'area ' . $id;
+
+        return new class ($areas, $render) extends Area {
+            public function __construct(private array $fixed, private \Closure $renderer)
+            {
+            }
+
+            protected function areaOptions(): array
+            {
+                return $this->fixed;
+            }
+
+            protected function renderArea(int $areaId): string
+            {
+                return ($this->renderer)($areaId, $this);
+            }
+        };
     }
 }
