@@ -388,6 +388,8 @@ export default {
         const rendered = new Map();
         /** Top-level uids edited inline since the last change to items. Their previews are not requested. */
         const inline = new Set();
+        /** Which tab is showing, per instance. The preview always starts on the first; a click is not stored. */
+        const selectedTabs = new Map();
         const shell = computed(() => buildCanvasShell({ stylesheets: props.stylesheets }));
 
         const height = ref(0);
@@ -460,6 +462,7 @@ export default {
                 if (uid !== null && !wanted.has(uid)) {
                     el.remove();
                     rendered.delete(uid);
+                    selectedTabs.delete(uid);
                 }
             });
 
@@ -482,6 +485,10 @@ export default {
                 const expected = previous ? previous.nextElementSibling : root.firstElementChild;
                 if (el !== expected) {
                     root.insertBefore(el, expected);
+                }
+                // A fresh preview starts on the first tab. Put back the one the user was looking at.
+                if (!(editTarget && el.contains(editTarget))) {
+                    restoreTab(el, item.uid);
                 }
                 previous = el;
             });
@@ -721,7 +728,7 @@ export default {
             return {
                 item: closestEl(el, '.cms-canvas-item'),
                 field: closestEl(el, '[data-cms-edit]'),
-                action: closestEl(el, '[data-cms-action="toggle"]'),
+                action: closestEl(el, '[data-cms-action]'),
             };
         }
 
@@ -737,7 +744,7 @@ export default {
                 const uid = item ? item.getAttribute('data-uid') : null;
                 const locked = uid ? Boolean((props.items.find((entry) => entry.uid === uid) || {}).locked) : false;
                 publishHover(item, locked ? null : field);
-                if (field && !locked) {
+                if (field && !locked && !inactiveTab(field)) {
                     const kind = field.getAttribute('data-cms-edit');
                     cursor.value = kind === 'text' || kind === 'rich' || kind === 'rich-basic' ? 'text' : 'pointer';
                 } else {
@@ -804,6 +811,13 @@ export default {
 
             emit('select', { uid, path: locked ? '' : path });
 
+            // A tab that is not showing is selected first. Its title is edited only once it is the one on show.
+            if (!locked && action && item.contains(action) && action.getAttribute('data-cms-action') === 'tab') {
+                if (selectTab(action, uid)) {
+                    return;
+                }
+            }
+
             if (field && !locked && !justEnded) {
                 const edit = field.getAttribute('data-cms-edit');
                 if (edit === 'rich' || edit === 'rich-basic') {
@@ -815,9 +829,71 @@ export default {
             }
 
             // The heading writes the panel's Starts open value. The canvas already shows it.
-            if (!locked && action && item.contains(action)) {
+            if (!locked && action && item.contains(action) && action.getAttribute('data-cms-action') === 'toggle') {
                 togglePanel(action, uid);
             }
+        }
+
+        /** A title sits inside its tab. It is a tab click until that tab is the one on show. */
+        function inactiveTab(field) {
+            const tab = closestEl(field, '[data-cms-action="tab"]');
+            return Boolean(tab) && tab.getAttribute('aria-selected') !== 'true';
+        }
+
+        /**
+         * Shows the pane for the tab that was clicked. Returns whether the pane changed.
+         * The choice is remembered for this instance so the next preview keeps it, and it is not saved.
+         */
+        function selectTab(action, uid) {
+            const widget = closestEl(action, '.nails-cms-widget-tabs');
+            const raw = action.getAttribute('data-cms-tab');
+            if (!widget || raw === null || !/^\d+$/.test(raw)) {
+                return false;
+            }
+            const index = Number(raw);
+            const items = tabItems(widget);
+            const current = items.findIndex((item) => item.classList.contains('active'));
+            if (index >= items.length || index === current) {
+                return false;
+            }
+            selectedTabs.set(uid, index);
+            showTab(widget, index);
+            measure();
+            return true;
+        }
+
+        /** The preview HTML starts on the first tab. This puts back the tab the user clicked. */
+        function restoreTab(el, uid) {
+            if (!selectedTabs.has(uid)) {
+                return;
+            }
+            const widget = el.querySelector('.nails-cms-widget-tabs');
+            const items = widget ? tabItems(widget) : [];
+            if (!items.length) {
+                selectedTabs.delete(uid);
+                return;
+            }
+            const index = Math.min(selectedTabs.get(uid), items.length - 1);
+            selectedTabs.set(uid, index);
+            showTab(widget, index);
+        }
+
+        function tabItems(widget) {
+            return Array.from(widget.querySelectorAll('.nav-tabs > .tab-item'));
+        }
+
+        function showTab(widget, index) {
+            tabItems(widget).forEach((item, i) => {
+                const on = i === index;
+                item.classList.toggle('active', on);
+                const link = item.querySelector('[data-cms-action="tab"]');
+                if (link) {
+                    link.setAttribute('aria-selected', on ? 'true' : 'false');
+                }
+            });
+            Array.from(widget.querySelectorAll('.tab-content > .tab-pane')).forEach((pane, i) => {
+                pane.classList.toggle('active', i === index);
+            });
         }
 
         /** Opens or closes the panel and stores that as Starts open. */
