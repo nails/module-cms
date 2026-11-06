@@ -176,6 +176,22 @@ function cssProp(name) {
     return name.replace(/[A-Z]/g, (letter) => '-' + letter.toLowerCase());
 }
 
+/**
+ * A margin reset that beats the sampled tag rule.
+ * `.ProseMirror p` sets margin with !important, so a bare `:first-child` reset never applies.
+ *
+ * @param {string} pseudo `first-child` or `last-child`
+ * @param {string} property `margin-top` or `margin-bottom`
+ * @return {string}
+ */
+function marginEdge(pseudo, property) {
+    const selectors = SAMPLE_TAGS
+        .map((tag) => '.cms-we-canvas__rich .ProseMirror > ' + tag + ':' + pseudo)
+        .join(',');
+
+    return selectors + '{' + property + ':0 !important}';
+}
+
 /** True when a child's margin collapses through the field, so the text sits on the field's edge. */
 function marginCollapsed(field, el, edge) {
     const fieldRect = field.getBoundingClientRect();
@@ -186,7 +202,7 @@ function marginCollapsed(field, el, edge) {
 
 /**
  * The preview's computed type for each block, as rules for the editor.
- * Probes are not the first child, so a widget's first-child margin rule is recorded on its own.
+ * Probes sit between two spacers, so a first-child or last-child margin rule is recorded on its own.
  *
  * @param {HTMLElement} field
  * @param {Window} win
@@ -197,12 +213,16 @@ function previewTypeCss(field, win) {
     const blocks = Array.from(field.children).filter((el) => !el.classList.contains('cms-we-hint'));
     const first = blocks[0] || null;
     const last = blocks[blocks.length - 1] || null;
-    // A margin that collapses out of the field is not part of the field's box. The editor is a
-    // flow root, so it would pull that margin inside and the text would jump. Drop it there.
+    // A margin that collapses out of the field, or one the preview's first or last child does not
+    // have, is not part of the text's box. The editor is a flow root, so it would pull that margin
+    // inside and the text would jump. Drop it there.
     let zeroTop = Boolean(first && (win.getComputedStyle(first).marginTop === '0px' || marginCollapsed(field, first, 'top')));
-    let zeroBottom = Boolean(last && marginCollapsed(field, last, 'bottom'));
-    const spacer = owner.createElement('div');
-    field.appendChild(spacer);
+    let zeroBottom = Boolean(last && (win.getComputedStyle(last).marginBottom === '0px' || marginCollapsed(field, last, 'bottom')));
+    // Probes sit between these, so a first-child or last-child margin rule is not what gets copied.
+    const lead = owner.createElement('div');
+    const tail = owner.createElement('div');
+    field.appendChild(lead);
+    field.appendChild(tail);
     const rules = [];
 
     try {
@@ -239,7 +259,7 @@ function previewTypeCss(field, win) {
                 host = node;
             }
             node.textContent = 'a';
-            field.appendChild(host);
+            field.insertBefore(host, tail);
             try {
                 const style = win.getComputedStyle(node);
                 const decls = SAMPLE_PROPS
@@ -268,23 +288,39 @@ function previewTypeCss(field, win) {
             }
         });
     } finally {
-        spacer.remove();
+        lead.remove();
+        tail.remove();
     }
 
+    // An empty field shows a hint, and the editor's empty document is one paragraph. Probe that
+    // paragraph on its own, which is where the caret will be.
     if (!first) {
-        const probe = owner.createElement('h2');
+        const hint = field.querySelector(':scope > .cms-we-hint');
+        if (hint) {
+            hint.remove();
+        }
+        const probe = owner.createElement('p');
         probe.textContent = 'a';
-        field.insertBefore(probe, field.firstChild);
-        zeroTop = win.getComputedStyle(probe).marginTop === '0px' || marginCollapsed(field, probe, 'top');
-        zeroBottom = marginCollapsed(field, probe, 'bottom');
-        probe.remove();
+        field.appendChild(probe);
+        try {
+            const style = win.getComputedStyle(probe);
+            zeroTop = style.marginTop === '0px' || marginCollapsed(field, probe, 'top');
+            zeroBottom = style.marginBottom === '0px' || marginCollapsed(field, probe, 'bottom');
+        } finally {
+            probe.remove();
+            if (hint) {
+                field.appendChild(hint);
+            }
+        }
     }
 
+    // The tag rule above sets margin with !important. A plain :first-child rule loses to it, and the
+    // first line then sits below the placeholder. Name the tag so this one wins.
     if (zeroTop) {
-        rules.push('.cms-we-canvas__rich .ProseMirror > :first-child{margin-top:0 !important}');
+        rules.push(marginEdge('first-child', 'margin-top'));
     }
     if (zeroBottom) {
-        rules.push('.cms-we-canvas__rich .ProseMirror > :last-child{margin-bottom:0 !important}');
+        rules.push(marginEdge('last-child', 'margin-bottom'));
     }
 
     // all:revert sets -webkit-user-modify back to read-only, which drops the caret and ignores typing.
@@ -766,12 +802,20 @@ export default {
         async function startInline(field, uid, path, name, event) {
             finishRich();
             const win = doc().defaultView;
+            // An empty field shows a hint. Read the real type before copying it, then put the hint back.
+            const empty = field.getAttribute('data-cms-empty') === '1';
+            if (empty) {
+                field.removeAttribute('data-cms-empty');
+            }
             const style = win.getComputedStyle(field);
             const rect = field.getBoundingClientRect();
             const copied = {};
             COPIED_STYLES.forEach((property) => {
                 copied[property] = style[property];
             });
+            if (empty) {
+                field.setAttribute('data-cms-empty', '1');
+            }
 
             editTarget = field;
             editing.uid = uid;
@@ -792,7 +836,7 @@ export default {
             if (!inlineEl.value) {
                 return;
             }
-            inlineEl.value.textContent = field.textContent;
+            inlineEl.value.textContent = empty ? '' : field.textContent;
             field.style.visibility = 'hidden';
             inlineEl.value.focus();
             placeCaret(inlineEl.value, event.clientX, event.clientY);
@@ -803,7 +847,16 @@ export default {
                 return;
             }
             const value = oneLine(inlineEl.value.textContent);
-            editTarget.textContent = value;
+            const placeholder = editTarget.getAttribute('data-cms-placeholder');
+            if (value === '' && placeholder) {
+                editTarget.textContent = placeholder;
+                editTarget.setAttribute('data-cms-empty', '1');
+            } else {
+                editTarget.textContent = value;
+                if (placeholder) {
+                    editTarget.removeAttribute('data-cms-empty');
+                }
+            }
             inline.add(editing.uid);
             emit('edit', { uid: editing.uid, path: editing.path, field: editing.field, value });
         }
@@ -892,6 +945,9 @@ export default {
                 field.style.marginBottom = holdBottom;
             }
             field.style.visibility = 'hidden';
+            // min-height is the border box we measured. A content-box field would add its padding
+            // on top of that and the panel would grow as soon as the field is edited.
+            field.style.boxSizing = 'border-box';
             field.style.minHeight = rect.height + 'px';
             field.innerHTML = '';
             if (richEl.value && typeof richEl.value.focus === 'function') {
@@ -944,6 +1000,7 @@ export default {
             if (editTarget) {
                 editTarget.style.visibility = '';
                 editTarget.style.minHeight = '';
+                editTarget.style.boxSizing = '';
                 editTarget.style.marginTop = '';
                 editTarget.style.marginBottom = '';
                 editTarget.innerHTML = richLast === ''

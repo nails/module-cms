@@ -2,7 +2,6 @@
     <div class="cms-we-rich-surface">
         <div class="cms-we-rich-surface__body">
             <editor-content :editor="editor"></editor-content>
-            <p v-if="isEmpty" class="cms-we-rich-surface__hint">Write something…</p>
         </div>
         <BubbleMenu
             v-if="editor"
@@ -18,7 +17,7 @@
 </template>
 
 <script>
-import { onBeforeUnmount, onMounted, ref, shallowRef } from 'vue';
+import { onBeforeUnmount, onMounted, shallowRef } from 'vue';
 import { Editor, EditorContent } from '@tiptap/vue-3';
 import { BubbleMenu } from '@tiptap/vue-3/menus';
 import RichMenu from './RichMenu.vue';
@@ -38,7 +37,6 @@ export default {
     emits: ['update'],
     setup(props, { emit }) {
         const editor = shallowRef(null);
-        const isEmpty = ref(true);
 
         function focus() {
             if (editor.value) {
@@ -60,15 +58,8 @@ export default {
                         'aria-label': 'Rich text',
                     },
                 },
-                onCreate: ({ editor: instance }) => {
-                    isEmpty.value = instance.isEmpty;
-                },
                 onUpdate: ({ editor: instance }) => {
-                    isEmpty.value = instance.isEmpty;
                     emit('update', instance.getHTML());
-                },
-                onTransaction: ({ editor: instance }) => {
-                    isEmpty.value = instance.isEmpty;
                 },
             });
         });
@@ -79,7 +70,7 @@ export default {
             }
         });
 
-        return { editor, isEmpty, focus, bubbleParent };
+        return { editor, focus, bubbleParent };
     },
 };
 </script>

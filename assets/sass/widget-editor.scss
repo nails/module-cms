@@ -1343,6 +1343,21 @@
             line-height: 1.45;
             white-space: pre-wrap;
         }
+
+        // The placeholder sits on the empty paragraph's first line, so the caret and the first
+        // character land on it. A hint drawn on the field's edge sits above that line.
+        .ProseMirror > p:only-child:has(> br:only-child) {
+            position: relative;
+        }
+
+        .ProseMirror > p:only-child:has(> br:only-child)::before {
+            content: 'Write something…';
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: #8a837d;
+            pointer-events: none;
+        }
     }
 
     &__inline {
@@ -1556,15 +1571,6 @@
 
 .cms-we-rich-surface__body {
     position: relative;
-}
-
-.cms-we-rich-surface__hint {
-    position: absolute;
-    top: 0;
-    left: 0;
-    margin: 0;
-    color: #8a837d;
-    pointer-events: none;
 }
 
 // ------------------------------------------------------------------------------
