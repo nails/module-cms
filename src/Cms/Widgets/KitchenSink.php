@@ -62,6 +62,7 @@ class KitchenSink extends Base
             Fields\Number::make('count')->label('Count')->min(0)->max(10)->tip('0 to 10, not enforced'),
             Fields\Number::make('ratio')->label('Ratio'),
             ObjectPicker::make('image')->label('Image')->required(),
+            Fields\Table::make('grid')->label('Grid')->size(2, 2)->wide(),
             Fields\Repeater::make('items')
                 ->label('Items')
                 ->max(4)
@@ -90,6 +91,16 @@ class KitchenSink extends Base
         foreach (['aside', 'caption'] as $key) {
             $rows .= '<dt>' . $key . '</dt><dd>' . (string) ($data[$key] ?? '') . '</dd>';
         }
+
+        $grid = '';
+        foreach ((array) ($data['grid'] ?? []) as $cells) {
+            $grid .= '<tr>';
+            foreach ((array) $cells as $cell) {
+                $grid .= '<td>' . htmlspecialchars((string) $cell, ENT_QUOTES, 'UTF-8') . '</td>';
+            }
+            $grid .= '</tr>';
+        }
+        $rows .= '<dt>grid</dt><dd><table>' . $grid . '</table></dd>';
 
         $items = '';
         foreach ((array) ($data['items'] ?? []) as $item) {
