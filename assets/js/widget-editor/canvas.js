@@ -88,6 +88,27 @@ export function renderSection(section) {
     return '<div class="cms-canvas-item" data-uid="' + uid + '">' + section.html + '</div>';
 }
 
+/**
+ * Instances whose cached preview is out of date.
+ *
+ * A first preview has no cache entry, so it is left out: the canvas shows its loading placeholder instead of
+ * dimming an empty box. Locked instances are left out too.
+ *
+ * @param {Array<{uid: string, locked?: boolean}>} items
+ * @param {Map<string, {key: ?string}>} cache
+ * @param {(item: {uid: string}) => string} keyOf
+ * @return {string[]}
+ */
+export function refreshingUids(items, cache, keyOf) {
+    return (items || []).filter((item) => {
+        if (!item || item.locked) {
+            return false;
+        }
+        const entry = cache.get(item.uid);
+        return Boolean(entry) && entry.key !== keyOf(item);
+    }).map((item) => item.uid);
+}
+
 /*
  * The frame is as tall as its content and the editor page scrolls it, so the frame has no scrollbar of its own.
  * Events do not reach a frame that cannot run script, so hover, selection and editing are drawn by the editor

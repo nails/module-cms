@@ -8,6 +8,7 @@ import {
     fontFaceRules,
     inlineFieldKeys,
     placeOf,
+    refreshingUids,
     resolveNodeUid,
 } from '../../assets/js/widget-editor/canvas.js';
 
@@ -182,6 +183,26 @@ describe('renderSection', () => {
 
     it('shows a placeholder when there is no HTML and no error', () => {
         expect(renderSection({ uid: 'n1', html: '', error: null, locked: false })).toContain('Nothing to preview');
+    });
+});
+
+describe('refreshingUids', () => {
+
+    const keyOf = (item) => JSON.stringify(item.data);
+
+    it('dims an instance whose cached preview is out of date, and not a first load or a locked one', () => {
+        const cache = new Map([
+            ['a', { key: '"old"' }],
+            ['b', { key: '"same"' }],
+        ]);
+        const items = [
+            { uid: 'a', data: 'new' },
+            { uid: 'b', data: 'same' },
+            { uid: 'c', data: 'first' },
+            { uid: 'd', data: 'locked', locked: true },
+        ];
+
+        expect(refreshingUids(items, cache, keyOf)).toEqual(['a']);
     });
 });
 

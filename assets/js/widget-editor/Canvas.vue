@@ -35,6 +35,14 @@
                 ></div>
 
                 <div
+                    v-for="uid in refreshing"
+                    :key="'generating-' + uid"
+                    class="cms-we-canvas__generating"
+                    role="status"
+                    :style="boxStyle(uid)"
+                >Generating preview</div>
+
+                <div
                     v-for="gap in gaps"
                     :key="'gap-' + gap.index"
                     class="cms-we-canvas__gap"
@@ -85,7 +93,7 @@
 
 <script>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
-import { buildCanvasShell, canvasStylesheets, fontFaceRules, inlineFieldKeys, renderSection } from './canvas.js';
+import { buildCanvasShell, canvasStylesheets, fontFaceRules, inlineFieldKeys, refreshingUids, renderSection } from './canvas.js';
 import { isBlankHtml } from './rich-schema.js';
 import RichTextSurface from './RichTextSurface.vue';
 
@@ -384,6 +392,8 @@ export default {
 
         const height = ref(0);
         const rects = ref({});
+        /** Uids whose cached preview is out of date and a new one is on its way */
+        const refreshing = ref([]);
         /** Bounding boxes of `[data-cms-path]` regions, keyed `topUid\\npath` */
         const pathRects = ref({});
         const gaps = ref([]);
@@ -623,6 +633,8 @@ export default {
                 }
             });
 
+            markRefreshing();
+
             if (stale.length === 0) {
                 sync();
                 return;
@@ -669,7 +681,13 @@ export default {
                 });
             }
 
+            markRefreshing();
             sync();
+        }
+
+        /** Dims any instance whose cached preview no longer matches what is stored */
+        function markRefreshing() {
+            refreshing.value = refreshingUids(props.items, cache, keyOf);
         }
 
         function schedule() {
@@ -1123,6 +1141,7 @@ export default {
             }
             acceptInlineEdits();
             sync();
+            markRefreshing();
             schedule();
         }, { deep: true });
 
@@ -1184,6 +1203,20 @@ export default {
             }
         });
 
+        /** Covers one widget while its preview is rendering again */
+        function boxStyle(uid) {
+            const box = rects.value[uid];
+            if (!box) {
+                return { display: 'none' };
+            }
+            return {
+                top: box.top + 'px',
+                left: box.left + 'px',
+                width: box.width + 'px',
+                height: box.height + 'px',
+            };
+        }
+
         return {
             frame,
             overlay,
@@ -1209,6 +1242,8 @@ export default {
             onInlinePaste,
             finishInline,
             lineStyle,
+            refreshing,
+            boxStyle,
         };
     },
 };
