@@ -128,7 +128,40 @@ const CANVAS_STYLE = 'html{overflow:hidden}'
     + '.cms-canvas-error{padding:10px 14px;background:#fdf2f2;color:#7a1f1f;border:1px solid #f1caca;font-size:13px}'
     + '.cms-canvas-warning{display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:#fdf8e8;color:#6b5417;border:1px solid #ecd9a0;font-size:13px;line-height:1.45;text-align:left}'
     + '.cms-canvas-warning__mark{margin-right:6px}'
-    + '.cms-canvas-placeholder{padding:18px 14px;color:#8a837d;border:1px dashed #d8d2cb;font-size:12px;letter-spacing:.06em;text-align:center;text-transform:uppercase}';
+    + '.cms-canvas-placeholder{padding:18px 14px;color:#8a837d;border:1px dashed #d8d2cb;font-size:12px;letter-spacing:.06em;text-align:center;text-transform:uppercase}'
+    // Accordion panels have no script here, so the open panel is the one carrying .in.
+    // The editor writes that open state when the heading is clicked.
+    + '.cms-widget-accordion .panel-group{margin:0}'
+    + '.cms-widget-accordion .panel{margin:0 0 8px;border:1px solid #e4dfd8;border-radius:3px;background:#fff;box-shadow:none}'
+    + '.cms-widget-accordion .panel:last-child{margin-bottom:0}'
+    + '.cms-widget-accordion .panel-heading{padding:9px 12px;background:#faf8f6;border:0;border-radius:3px}'
+    + '.cms-widget-accordion .panel:has(.panel-collapse.in)>.panel-heading{border-bottom:1px solid #e4dfd8;border-radius:3px 3px 0 0}'
+    + '.cms-widget-accordion .panel-title{display:flex;align-items:center;gap:8px;margin:0;font-size:15px;font-weight:600;line-height:1.35}'
+    + '.cms-widget-accordion .cms-accordion-title{flex:1;min-width:0}'
+    + '.cms-widget-accordion .cms-accordion-title[data-cms-empty]{color:#8a837d;font-weight:400}'
+    + '.cms-widget-accordion .cms-accordion-mark{display:flex;flex:none;align-items:center;justify-content:center;width:28px;height:28px;color:#6f675f}'
+    + '.cms-widget-accordion .cms-accordion-mark::before{content:"";width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px)}'
+    + '.cms-widget-accordion .panel:has(.panel-collapse.in) .cms-accordion-mark::before{transform:rotate(-135deg) translateY(-2px)}'
+    + '.cms-widget-accordion .panel-body{padding:10px 12px}'
+    // The padding is the inset. A paragraph's own margin would drop the text below the empty hint
+    // the moment editing starts, and again when the first character replaces that hint.
+    // An empty block quote is the same fields, with placeholders. A paragraph's margin would drop the
+    // quotation below its placeholder the moment editing starts.
+    + '.cms-widget-blockquote blockquote{margin:0}'
+    + '.cms-widget-blockquote [data-cms-field=quote]>:first-child{margin-top:0}'
+    + '.cms-widget-blockquote [data-cms-field=quote]>:last-child{margin-bottom:0}'
+    + '.cms-widget-blockquote footer{margin-top:.65em;font-size:.92em;font-style:italic}'
+    + '.cms-widget-blockquote footer a{color:#000}'
+    + '.cms-widget-blockquote footer a[data-cms-empty]{text-decoration:none}'
+    + '.cms-widget-blockquote [data-cms-empty]{color:#8a837d}'
+    + '.cms-widget-accordion .panel-body>:first-child{margin-top:0}'
+    + '.cms-widget-accordion .panel-body>:last-child{margin-bottom:0}'
+    + '.cms-widget-accordion .panel-collapse{display:none}'
+    + '.cms-widget-accordion .panel-collapse.in{display:block}'
+    // An Area widget is not rendered on the canvas. The box names the area the page will render.
+    + '.cms-we-area{padding:16px 18px;border:1px dotted #cfc9c2;border-radius:3px;background:#faf8f6}'
+    + '.cms-we-area__name{margin:0;color:#242424;font-size:15px;font-weight:600;line-height:1.35}'
+    + '.cms-we-area__note{margin:4px 0 0;color:#8a837d;font-size:13px;line-height:1.4}';
 
 /**
  * The canvas document with no sections. The canvas loads this once and patches instances into it, so a

@@ -33,6 +33,32 @@ describe('buildCanvasShell', () => {
         expect(doc).toContain(':where(h1,h2,h3,h4,h5,h6){line-height:1.3}');
         expect(doc).toContain('.cms-canvas-item{display:flow-root;position:relative;margin:0;padding:12px 28px}');
     });
+
+    it('keeps an accordion paragraph on the same line as its empty hint', () => {
+        const doc = buildCanvasShell({ stylesheets: [] });
+        expect(doc).toContain('.cms-widget-accordion .panel-body{padding:10px 12px}');
+        expect(doc).toContain('.cms-widget-accordion .panel-body>:first-child{margin-top:0}');
+        expect(doc).toContain('.cms-widget-accordion .panel-body>:last-child{margin-bottom:0}');
+    });
+
+    it('keeps a block quote paragraph on the same line as its empty placeholder', () => {
+        const doc = buildCanvasShell({ stylesheets: [] });
+        expect(doc).toContain('.cms-widget-blockquote [data-cms-field=quote]>:first-child{margin-top:0}');
+        expect(doc).toContain('.cms-widget-blockquote [data-cms-field=quote]>:last-child{margin-bottom:0}');
+        expect(doc).toContain('.cms-widget-blockquote [data-cms-empty]{color:#8a837d}');
+    });
+
+    it('sets the citation in italics, with a black link and no underline on its placeholder', () => {
+        const doc = buildCanvasShell({ stylesheets: [] });
+        expect(doc).toContain('.cms-widget-blockquote footer{margin-top:.65em;font-size:.92em;font-style:italic}');
+        expect(doc).toContain('.cms-widget-blockquote footer a{color:#000}');
+        expect(doc).toContain('.cms-widget-blockquote footer a[data-cms-empty]{text-decoration:none}');
+    });
+
+    it('draws a chosen CMS Area as a dotted box instead of its contents', () => {
+        const doc = buildCanvasShell({ stylesheets: [] });
+        expect(doc).toContain('.cms-we-area{padding:16px 18px;border:1px dotted #cfc9c2;');
+    });
 });
 
 describe('buildCanvasDocument with inline fields', () => {
