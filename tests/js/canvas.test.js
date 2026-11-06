@@ -59,6 +59,13 @@ describe('buildCanvasShell', () => {
         const doc = buildCanvasShell({ stylesheets: [] });
         expect(doc).toContain('.cms-we-area{padding:16px 18px;border:1px dotted #cfc9c2;');
     });
+
+    it('draws a table full width with a grid and shaded headings, over the site rules', () => {
+        const doc = buildCanvasShell({ stylesheets: [] });
+        expect(doc).toContain('.cms-widget-table .table{width:100%;');
+        expect(doc).toContain('.cms-widget-table .table>thead>tr>th,.cms-widget-table .table>tbody>tr>td{');
+        expect(doc).toContain('.cms-widget-table .table>thead>tr>th{background:#f4f2ef;');
+    });
 });
 
 describe('buildCanvasDocument with inline fields', () => {

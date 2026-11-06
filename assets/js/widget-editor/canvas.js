@@ -161,7 +161,13 @@ const CANVAS_STYLE = 'html{overflow:hidden}'
     // An Area widget is not rendered on the canvas. The box names the area the page will render.
     + '.cms-we-area{padding:16px 18px;border:1px dotted #cfc9c2;border-radius:3px;background:#faf8f6}'
     + '.cms-we-area__name{margin:0;color:#242424;font-size:15px;font-weight:600;line-height:1.35}'
-    + '.cms-we-area__note{margin:4px 0 0;color:#8a837d;font-size:13px;line-height:1.4}';
+    + '.cms-we-area__note{margin:4px 0 0;color:#8a837d;font-size:13px;line-height:1.4}'
+    // A table is drawn like the editor's sheet: full width, a light grid, and shaded heading rows. The selectors
+    // name the rows and cells so they win over the site's own `.table` rules.
+    + '.cms-widget-table{overflow-x:auto}'
+    + '.cms-widget-table .table{width:100%;margin:0;border-collapse:collapse;border:1px solid #dcd7d1;background:#fff;font-size:.92em}'
+    + '.cms-widget-table .table>thead>tr>th,.cms-widget-table .table>tbody>tr>td{height:2.2em;padding:6px 10px;border:1px solid #dcd7d1;vertical-align:top;text-align:left}'
+    + '.cms-widget-table .table>thead>tr>th{background:#f4f2ef;color:#242424;font-weight:600}';
 
 /**
  * The canvas document with no sections. The canvas loads this once and patches instances into it, so a
