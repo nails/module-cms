@@ -674,10 +674,17 @@ export default {
             }
         }
 
-        /** What the fields inspector shows for the selection */
+        /**
+         * What the fields inspector shows for the selection. A key the instance does not store yet shows its
+         * default, which is what render() uses; it is saved only when that field is edited.
+         */
         const inspectorValues = computed(() => {
             const node = selectedNode.value;
-            return node ? editData(view.value.selected, node) : {};
+            if (!node) {
+                return {};
+            }
+            const widget = catalogue.value.widgets[node.slug];
+            return { ...((widget && widget.defaults) || {}), ...editData(view.value.selected, node) };
         });
 
         /**
