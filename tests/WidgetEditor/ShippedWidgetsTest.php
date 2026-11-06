@@ -6,10 +6,12 @@ use Nails\Cms\Cms\Widgets\Accordion;
 use Nails\Cms\Cms\Widgets\Area;
 use Nails\Cms\Cms\Widgets\Blockquote;
 use Nails\Cms\Cms\Widgets\Html;
+use Nails\Cms\Cms\Widgets\KitchenSink;
 use Nails\Cms\Cms\Widgets\Richtext;
 use Nails\Cms\Cms\Widgets\Table;
 use Nails\Cms\Cms\Widgets\Tabs;
 use Nails\Cms\WidgetEditor\Service\Fields;
+use Nails\Cms\WidgetEditor\Service\Registry;
 use Nails\Cms\WidgetEditor\Traits\Legacy;
 use PHPUnit\Framework\TestCase;
 
@@ -22,6 +24,20 @@ class ShippedWidgetsTest extends TestCase
     public function testRichtextRendersNothingWhenEmpty(): void
     {
         $this->assertSame('', (new Richtext())->render(['body' => '']));
+    }
+
+    public function testRichtextPreviewIsEditableWhenEmpty(): void
+    {
+        $registry = new Registry([Richtext::class => 1]);
+        $html = $registry->renderNode(
+            ['slug' => Registry::slugFor(Richtext::class), 'data' => ['body' => '']],
+            Registry::MODE_PREVIEW
+        );
+
+        $this->assertStringContainsString('data-cms-edit="rich"', $html);
+        $this->assertStringContainsString('data-cms-field="body"', $html);
+        $this->assertStringContainsString('data-cms-empty="1"', $html);
+        $this->assertStringContainsString('Write something…', $html);
     }
 
     public function testRichtextRendersBodyAsStored(): void
@@ -89,10 +105,52 @@ class ShippedWidgetsTest extends TestCase
 
     public function testNativePortsDeclareValidFieldSchemas(): void
     {
-        foreach ([new Richtext(), new Html(), new Blockquote()] as $oWidget) {
-            $aFields = Fields::normalise($oWidget->getFields());
+        foreach ([new Richtext(), new Html(), new Blockquote(), new KitchenSink()] as $oWidget) {
+            $aFields = Fields::describe($oWidget->getFields());
             $this->assertNotEmpty($aFields);
         }
+
+        $aQuote = Fields::describe((new Blockquote())->getFields())[0];
+        $this->assertSame('basic', $aQuote['editor']);
+    }
+
+    public function testKitchenSinkUsesEveryFieldType(): void
+    {
+        $aTypes = [];
+        foreach (Fields::describe((new KitchenSink())->getFields()) as $aField) {
+            $aTypes[] = $aField['type'];
+            foreach ($aField['fields'] ?? [] as $aChild) {
+                $aTypes[] = $aChild['type'];
+            }
+        }
+
+        $aExpected = ['cdn_object', 'number', 'repeater', 'richtext', 'select', 'text', 'textarea', 'toggle'];
+        $this->assertSame([], array_values(array_diff($aExpected, $aTypes)));
+    }
+
+    public function testDefaultsIncludeEachFieldsDefault(): void
+    {
+        $defaults = (new KitchenSink())->getDefaults();
+
+        $this->assertSame('A subtitle', $defaults['subtitle']);
+        $this->assertSame('light', $defaults['tone']);
+        $this->assertSame('medium', $defaults['size']);
+        $this->assertFalse($defaults['showLink']);
+        $this->assertSame([], $defaults['items']);
+    }
+
+    public function testKitchenSinkEditsTextAndBothRichModesOnTheCanvas(): void
+    {
+        $registry = new Registry([KitchenSink::class => 1]);
+        $html     = $registry->renderNode(
+            ['slug' => Registry::slugFor(KitchenSink::class), 'data' => ['items' => [['label' => 'One']]]],
+            Registry::MODE_PREVIEW
+        );
+
+        $this->assertStringContainsString('data-cms-field="title" data-cms-edit="text"', $html);
+        $this->assertStringContainsString('data-cms-field="body" data-cms-edit="rich"', $html);
+        $this->assertStringContainsString('data-cms-field="quote" data-cms-edit="rich-basic"', $html);
+        $this->assertStringContainsString('<dt>label</dt><dd>One</dd>', $html);
     }
 
     public function testBridgesUseTheLegacyTrait(): void

@@ -2,6 +2,7 @@
 
 namespace Tests\WidgetEditor;
 
+use Nails\Cms\Cms\Fields;
 use Nails\Cms\WidgetEditor\Service\Registry;
 use Nails\Cms\WidgetEditor\Widget\Base;
 use PHPUnit\Framework\TestCase;
@@ -18,6 +19,16 @@ class EditableTitle extends Base
     {
         return $this->editable('sTitle', 'h2', $data['sTitle'] ?? '', ['class' => 'title'])
             . $this->editable('body', 'div', $data['body'] ?? '', [], 'rich');
+    }
+}
+
+class EditableBasic extends Base
+{
+    const ALIASES = [];
+
+    public function render(array $data): string
+    {
+        return $this->editable('caption', 'div', $data['caption'] ?? '', [], 'rich-basic');
     }
 }
 
@@ -85,6 +96,19 @@ class EditableTest extends TestCase
         );
     }
 
+    public function testPreviewMarksABasicRichField(): void
+    {
+        $sHtml = (new Registry([EditableBasic::class => 1]))->renderNode(
+            ['slug' => 'Tests.WidgetEditor.EditableBasic', 'data' => ['caption' => '<p><strong>Hi</strong></p>']],
+            Registry::MODE_PREVIEW
+        );
+
+        self::assertStringContainsString(
+            '<div data-cms-field="caption" data-cms-edit="rich-basic" data-cms-path=""><p><strong>Hi</strong></p></div>',
+            $sHtml
+        );
+    }
+
     public function testPreviewMarksNestedFieldsWithTheirPath(): void
     {
         $sHtml = $this->registry()->renderNode(
@@ -113,6 +137,70 @@ class EditableTest extends TestCase
             public function render(array $data): string
             {
                 return $this->editable('x', 'p', 'y', [], 'table');
+            }
+        };
+
+        $oWidget->render([]);
+    }
+
+    public function testTheDeclaredFieldDecidesTheEditMode(): void
+    {
+        $oWidget = new class() extends Base {
+            public function getFields(): ?array
+            {
+                return [
+                    Fields\Text::make('title'),
+                    Fields\Richtext::make('caption')->basic(),
+                ];
+            }
+
+            public function render(array $data): string
+            {
+                return $this->editable('title', 'h2', 'T') . $this->editable('caption', 'div', '<p>C</p>');
+            }
+        };
+        $oWidget->attach(new Registry(), 'fixture', Registry::MODE_PREVIEW, 0, []);
+
+        $sHtml = $oWidget->render([]);
+
+        self::assertStringContainsString('data-cms-field="title" data-cms-edit="text"', $sHtml);
+        self::assertStringContainsString('data-cms-field="caption" data-cms-edit="rich-basic"', $sHtml);
+    }
+
+    public function testAFieldEditedOnlyInTheInspectorCannotBeEditable(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('edited in the inspector');
+
+        $oWidget = new class() extends Base {
+            public function getFields(): ?array
+            {
+                return [Fields\Textarea::make('intro')];
+            }
+
+            public function render(array $data): string
+            {
+                return $this->editable('intro', 'p', 'Intro');
+            }
+        };
+
+        $oWidget->render([]);
+    }
+
+    public function testAnEditModeThatDisagreesWithTheFieldThrows(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('not "rich"');
+
+        $oWidget = new class() extends Base {
+            public function getFields(): ?array
+            {
+                return [Fields\Richtext::make('quote')->basic()];
+            }
+
+            public function render(array $data): string
+            {
+                return $this->editable('quote', 'div', '', [], 'rich');
             }
         };
 

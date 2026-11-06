@@ -170,9 +170,16 @@ abstract class Base implements Interfaces\Widget
 
     // --------------------------------------------------------------------------
 
+    /**
+     * The data a new instance starts with: each field's default, then $defaults over them.
+     */
     public function getDefaults(): array
     {
-        return $this->defaults;
+        $fields = $this->getFields();
+
+        return is_array($fields)
+            ? array_replace(Fields::defaults(Fields::validate($fields)), $this->defaults)
+            : $this->defaults;
     }
 
     // --------------------------------------------------------------------------
@@ -185,7 +192,7 @@ abstract class Base implements Interfaces\Widget
         $data   = array_replace($this->getDefaults(), $data);
         $fields = $this->getFields();
 
-        return is_array($fields) ? Fields::fill(Fields::normalise($fields), $data) : $data;
+        return is_array($fields) ? Fields::fill(Fields::validate($fields), $data) : $data;
     }
 
     // --------------------------------------------------------------------------
@@ -305,11 +312,16 @@ abstract class Base implements Interfaces\Widget
      * the element carries no editor attributes. In the canvas it carries data-cms-field, data-cms-edit and
      * data-cms-path, which the canvas uses to write edits back to the right instance.
      *
+     * When getFields() declares the key, the field type decides how it is edited, and $edit may be omitted. A
+     * type that is not edited on the canvas (a textarea, a select), or an $edit that disagrees with the type,
+     * throws.
+     *
      * @param string               $field The data key the value is stored under
      * @param string               $tag   The element to render, e.g. h2
      * @param mixed                $value The field's value. For 'text' it is escaped; for 'rich' it is HTML
      * @param array<string, mixed> $attrs Extra attributes for the element
-     * @param string               $edit  'text' (plain text, inline) or 'rich' (HTML, opens the rich text modal)
+     * @param string|null          $edit  'text' (plain text), 'rich' (HTML, full menu) or 'rich-basic' (HTML,
+     *                                    formatting only). Defaults to the field type's, or 'text'.
      *
      * @throws \InvalidArgumentException
      */
@@ -318,9 +330,10 @@ abstract class Base implements Interfaces\Widget
         string $tag,
         mixed $value,
         array $attrs = [],
-        string $edit = 'text'
+        ?string $edit = null
     ): string {
-        if (!in_array($edit, ['text', 'rich'], true)) {
+        $edit = $this->canvasEdit($field, $edit);
+        if (!in_array($edit, ['text', 'rich', 'rich-basic'], true)) {
             throw new \InvalidArgumentException(sprintf('Unknown editable type "%s"', $edit));
         }
         if (!preg_match('/^[a-z][a-z0-9]*$/', $tag)) {
@@ -344,5 +357,42 @@ abstract class Base implements Interfaces\Widget
         }
 
         return '<' . $tag . $attributes . '>' . $content . '</' . $tag . '>';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * How editable() edits a key: the declared field's mode, checked against $edit when both are given
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function canvasEdit(string $key, ?string $edit): string
+    {
+        $fields   = $this->getFields();
+        $declared = is_array($fields) ? Fields::find(Fields::validate($fields), $key) : null;
+
+        if ($declared === null) {
+            return $edit ?? 'text';
+        }
+
+        $mode = $declared->getCanvasEdit();
+        if ($mode === null) {
+            throw new \InvalidArgumentException(sprintf(
+                'Field "%s" is a %s, which is edited in the inspector, not on the canvas',
+                $key,
+                $declared::getType()
+            ));
+        }
+
+        if ($edit !== null && $edit !== $mode) {
+            throw new \InvalidArgumentException(sprintf(
+                'Field "%s" is edited as "%s" on the canvas, not "%s"',
+                $key,
+                $mode,
+                $edit
+            ));
+        }
+
+        return $mode;
     }
 }

@@ -201,7 +201,7 @@ class Catalogue
             'screenshots' => $this->screenshots($widget),
             'slots'       => $widget->getSlots(),
             'inspector'   => is_array($fields)
-                ? ['type' => 'fields', 'fields' => Fields::normalise($fields)]
+                ? ['type' => 'fields', 'fields' => Fields::describe($fields)]
                 : ['type' => 'html'],
             'assets'      => [
                 'render' => array_values($assets['render'] ?? []),

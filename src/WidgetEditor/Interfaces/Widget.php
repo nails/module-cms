@@ -87,9 +87,9 @@ interface Widget
     // Editing
 
     /**
-     * The fields schema, or null when the widget uses an HTML form
+     * The fields schema: field instances (see Interfaces\Field), or null when the widget uses an HTML form
      *
-     * @return array<int, array<string, mixed>>|null
+     * @return Field[]|null
      */
     public function getFields(): ?array;
 

@@ -12,6 +12,7 @@
 namespace Nails\Cms\Helper;
 
 use Nails\Cms\Constants;
+use Nails\Cms\WidgetEditor\Service\FieldTypes;
 use Nails\Cms\WidgetEditor\Service\Version;
 use Nails\Common\Helper\ArrayHelper;
 use Nails\Factory;
@@ -100,17 +101,27 @@ class Form
         if (in_array(Version::V2, $enabled, true)) {
             /** @var \Nails\Common\Service\Asset $assets */
             $assets = Factory::service('Asset');
+            $before = array_values((array) $assets->getLoaded()->CSS);
+
             $assets
                 ->vue3()
                 ->load('admin.widget-editor.min.js', Constants::MODULE_SLUG)
                 ->load('admin.widget-editor.min.css', Constants::MODULE_SLUG);
 
+            // Each field type's control registers itself with the editor; see Interfaces\Field::getAssets()
+            /** @var FieldTypes $fieldTypes */
+            $fieldTypes = Factory::service('WidgetEditorFieldTypes', Constants::MODULE_SLUG);
+            foreach ($fieldTypes->assets() as $asset) {
+                is_array($asset)
+                    ? $assets->load($asset[0], $asset[1] ?? null)
+                    : $assets->load($asset);
+            }
+
             // The field renders in the body, after the head has printed its stylesheets, so a queued
-            // stylesheet never reaches the page. Emit the link with the field.
-            foreach ($assets->getLoaded()->CSS as $url) {
-                if (is_string($url) && str_contains($url, 'admin.widget-editor.min.css')) {
-                    $stylesheet = '<link rel="stylesheet" href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '">';
-                    break;
+            // stylesheet never reaches the page. Emit the links with the field.
+            foreach (array_values((array) $assets->getLoaded()->CSS) as $url) {
+                if (is_string($url) && !in_array($url, $before, true)) {
+                    $stylesheet .= '<link rel="stylesheet" href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '">';
                 }
             }
         }

@@ -57,6 +57,17 @@ return [
                 return new \Nails\Cms\WidgetEditor\Service\Favourite();
             }
         },
+        'WidgetEditorFieldTypes' => function (): \Nails\Cms\WidgetEditor\Service\FieldTypes {
+            if (class_exists('\App\Cms\WidgetEditor\Service\FieldTypes')) {
+                return new \App\Cms\WidgetEditor\Service\FieldTypes(
+                    \App\Cms\WidgetEditor\Service\FieldTypes::discover()
+                );
+            }
+
+            return new \Nails\Cms\WidgetEditor\Service\FieldTypes(
+                \Nails\Cms\WidgetEditor\Service\FieldTypes::discover()
+            );
+        },
         'WidgetEditorRegistry' => function (): \Nails\Cms\WidgetEditor\Service\Registry {
             //  The registry is built per request; the depth cap comes from the (app-overridable) widget service
             $iMaxDepth = \Nails\Factory::service('Widget', \Nails\Cms\Constants::MODULE_SLUG)->getMaxDepth();

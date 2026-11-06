@@ -13,6 +13,7 @@
 
 namespace Nails\Cms\Cms\Widgets;
 
+use Nails\Cms\Cms\Fields;
 use Nails\Cms\WidgetEditor\Widget\Base;
 
 class Html extends Base
@@ -34,7 +35,7 @@ class Html extends Base
     public function getFields(): ?array
     {
         return [
-            ['key' => 'body', 'type' => 'textarea', 'label' => 'Text', 'wide' => true],
+            Fields\Textarea::make('body')->label('Text')->wide(),
         ];
     }
 

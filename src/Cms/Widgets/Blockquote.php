@@ -16,6 +16,7 @@
 
 namespace Nails\Cms\Cms\Widgets;
 
+use Nails\Cms\Cms\Fields;
 use Nails\Cms\WidgetEditor\Widget\Base;
 
 class Blockquote extends Base
@@ -37,9 +38,9 @@ class Blockquote extends Base
     public function getFields(): ?array
     {
         return [
-            ['key' => 'quote', 'type' => 'richtext', 'label' => 'Quotation', 'wide' => true],
-            ['key' => 'cite_text', 'type' => 'text', 'label' => 'Citation'],
-            ['key' => 'cite_url', 'type' => 'text', 'label' => 'Citation URL'],
+            Fields\Richtext::make('quote')->label('Quotation')->basic(),
+            Fields\Text::make('cite_text')->label('Citation'),
+            Fields\Text::make('cite_url')->label('Citation URL'),
         ];
     }
 

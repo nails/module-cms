@@ -22,7 +22,7 @@ class HeadingWidget extends Base
 
     public function getFields(): ?array
     {
-        return [['key' => 'sText', 'type' => 'text', 'label' => 'Text']];
+        return [\Nails\Cms\Cms\Fields\Text::make('sText')->label('Text')];
     }
 
     public function getEditorForm(array $data): ?string

@@ -13,6 +13,7 @@
 
 namespace Nails\Cms\Cms\Widgets;
 
+use Nails\Cms\Cms\Fields;
 use Nails\Cms\WidgetEditor\Widget\Base;
 
 class Richtext extends Base
@@ -34,7 +35,7 @@ class Richtext extends Base
     public function getFields(): ?array
     {
         return [
-            ['key' => 'body', 'type' => 'richtext', 'label' => 'Content', 'wide' => true],
+            Fields\Richtext::make('body')->label('Content'),
         ];
     }
 
@@ -45,10 +46,21 @@ class Richtext extends Base
      */
     public function render(array $data): string
     {
-        if (empty($data['body'])) {
-            return '';
+        $body = (string) ($data['body'] ?? '');
+        if ($body === '') {
+            // The public page stays empty. The canvas draws a hint, so the field can be clicked.
+            if (!$this->isPreview()) {
+                return '';
+            }
+
+            return $this->editable(
+                'body',
+                'div',
+                '<p class="cms-we-hint">Write something…</p>',
+                ['class' => 'cms-widget cms-widget-richtext', 'data-cms-empty' => '1']
+            );
         }
 
-        return $this->editable('body', 'div', $data['body'], ['class' => 'cms-widget cms-widget-richtext'], 'rich');
+        return $this->editable('body', 'div', $body, ['class' => 'cms-widget cms-widget-richtext']);
     }
 }
