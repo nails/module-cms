@@ -30,18 +30,24 @@ export default {
         }
 
         function onChange(event) {
-            if (!syncing) {
-                emit('update', event.target.value);
+            if (syncing) {
+                return;
             }
+            const element = select.value;
+            emit('update', element ? element.value : event.target.value);
         }
 
         onMounted(() => {
             const $ = jquery();
-            if (!$ || !select.value) {
+            const element = select.value;
+            if (!$ || !element) {
                 return;
             }
+            // Select2 reports the choice with jQuery's change. Vue's listener is the native event, which that does not fire,
+            // so the drop-down can show a choice the field has not stored.
+            $(element).on('change', onChange);
             syncing = true;
-            $(select.value).select2({
+            $(element).select2({
                 width: '100%',
                 // A short list has no search box. The blank line it leaves reads as a broken field.
                 minimumResultsForSearch: Infinity,
@@ -71,9 +77,15 @@ export default {
         onBeforeUnmount(() => {
             const $ = jquery();
             const element = select.value;
-            if ($ && element && $(element).data('select2')) {
+            if (!$ || !element) {
+                return;
+            }
+            syncing = true;
+            $(element).off('change', onChange);
+            if ($(element).data('select2')) {
                 $(element).select2('destroy');
             }
+            syncing = false;
         });
 
         return { select, keys, onChange };
