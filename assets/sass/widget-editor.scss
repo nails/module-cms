@@ -624,62 +624,223 @@
         }
     }
 
-    // Table field
+    // Table field: a spreadsheet, with lettered columns and numbered rows
     &__table {
+        --we-sheet-line: #dcd7d1;
+        --we-sheet-head: #f4f2ef;
+        --we-sheet-head-hover: #ebe7e2;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        width: 100%;
+    }
+
+    &__table-frame {
+        display: flex;
+        align-items: stretch;
+        gap: 4px;
     }
 
     &__table-scroll {
+        flex: 1 1 auto;
+        min-width: 0;
         overflow-x: auto;
+        border: 1px solid var(--we-sheet-line);
+        background: var(--we-paper);
+    }
 
-        table {
-            border-collapse: collapse;
-        }
+    &__table-sheet {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        font-size: 13px;
 
+        th,
         td {
-            min-width: 120px;
-            padding: 2px;
-        }
-
-        th {
-            padding: 0 2px 2px;
-            text-align: center;
-        }
-
-        .form-control {
-            margin: 0;
-        }
-
-        button {
-            width: 24px;
-            height: 24px;
+            position: relative;
+            height: 28px;
             padding: 0;
-            border: 0;
-            border-radius: 2px;
-            background: transparent;
-            color: var(--we-muted);
-            font-size: 11px;
+            border: 1px solid var(--we-sheet-line);
+        }
 
-            &:hover {
-                background: rgba(36, 36, 36, 0.06);
-                color: var(--we-ink);
+        // The frame draws the outer edge
+        tr:first-child > * {
+            border-top: 0;
+        }
+
+        tr > :first-child {
+            border-left: 0;
+        }
+
+        tr > :last-child {
+            border-right: 0;
+        }
+
+        tbody tr:last-child > * {
+            border-bottom: 0;
+        }
+
+        // Where a dragged column or row will land
+        .is-drop-before {
+            box-shadow: inset 2px 0 0 var(--we-accent);
+        }
+
+        .is-drop-after {
+            box-shadow: inset -2px 0 0 var(--we-accent);
+        }
+
+        .is-row-drop-before,
+        .cms-we__table-head--row.is-drop-before {
+            box-shadow: inset 0 2px 0 var(--we-accent);
+        }
+
+        .is-row-drop-after,
+        .cms-we__table-head--row.is-drop-after {
+            box-shadow: inset 0 -2px 0 var(--we-accent);
+        }
+
+        th.cms-we__table-head--row {
+            padding-left: 9px;
+        }
+
+        td.is-dragging,
+        td.is-row-dragging {
+            background: var(--we-wash);
+        }
+
+        input.cms-we__table-cell {
+            display: block;
+            width: 100%;
+            height: 27px;
+            margin: 0;
+            padding: 4px 8px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            color: var(--we-ink);
+            font: inherit;
+            outline: 0;
+
+            &:focus {
+                position: relative;
+                z-index: 1;
+                box-shadow: inset 0 0 0 2px var(--we-accent);
             }
         }
     }
 
-    td.cms-we__table-remove {
-        min-width: 0;
+    &__table-index-col {
+        width: 52px;
     }
 
-    &__table-actions {
-        display: flex;
-        gap: 6px;
+    &__table-corner {
+        background: var(--we-sheet-head);
+    }
 
-        .fa {
-            margin-right: 4px;
+    &__table-head {
+        background: var(--we-sheet-head);
+        color: var(--we-muted);
+        font-size: 11px;
+        font-weight: 600;
+        text-align: center;
+        cursor: grab;
+        user-select: none;
+
+        &:hover,
+        &.is-active {
+            background: var(--we-sheet-head-hover);
+            color: var(--we-ink);
         }
+
+        &.is-active {
+            box-shadow: inset 0 -2px 0 var(--we-accent);
+        }
+
+        &.is-dragging {
+            opacity: 0.45;
+        }
+
+        &:active {
+            cursor: grabbing;
+        }
+    }
+
+    &__table-head--row {
+        text-align: left;
+
+        &.is-active {
+            box-shadow: inset -2px 0 0 var(--we-accent);
+        }
+    }
+
+    // One remove control for rows and columns, shown on the header being pointed at
+    &__table-remove {
+        position: absolute;
+        top: 50%;
+        right: 3px;
+        width: 20px;
+        height: 20px;
+        margin-top: -10px;
+        padding: 0;
+        border: 0;
+        border-radius: 2px;
+        background: transparent;
+        color: var(--we-muted);
+        font-size: 10px;
+        line-height: 20px;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.12s;
+
+        &:hover,
+        &:focus-visible {
+            background: rgba(36, 36, 36, 0.08);
+            color: var(--we-accent);
+        }
+    }
+
+    &__table-head:hover &__table-remove,
+    &__table-remove:focus-visible {
+        opacity: 1;
+    }
+
+    &__table-heading-row td {
+        background: #faf9f7;
+    }
+
+    &__table-heading-row input.cms-we__table-cell {
+        font-weight: 600;
+    }
+
+    // Add column on the right, add row below
+    &__table-add {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 1px dashed var(--we-line-strong);
+        border-radius: 2px;
+        background: transparent;
+        color: var(--we-muted);
+        font-size: 11px;
+        cursor: pointer;
+
+        &:hover,
+        &:focus-visible {
+            border-style: solid;
+            border-color: var(--we-accent);
+            background: var(--we-wash);
+            color: var(--we-accent);
+        }
+    }
+
+    &__table-add--column {
+        flex: 0 0 22px;
+    }
+
+    &__table-add--row {
+        height: 22px;
+        margin: 4px 26px 0 0;
     }
 
     // Rich text modal
