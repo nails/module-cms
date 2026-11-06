@@ -714,13 +714,14 @@ export default {
         function hitTest(event) {
             const document = doc();
             if (!document || !overlay.value) {
-                return { item: null, field: null };
+                return { item: null, field: null, action: null };
             }
             const box = overlay.value.getBoundingClientRect();
             const el = document.elementFromPoint(event.clientX - box.left, event.clientY - box.top);
             return {
                 item: closestEl(el, '.cms-canvas-item'),
                 field: closestEl(el, '[data-cms-edit]'),
+                action: closestEl(el, '[data-cms-action="toggle"]'),
             };
         }
 
@@ -787,7 +788,7 @@ export default {
 
         function onClick(event) {
             finishInline();
-            const { item, field } = hitTest(event);
+            const { item, field, action } = hitTest(event);
             if (!item) {
                 emit('select', null);
                 return;
@@ -803,15 +804,41 @@ export default {
 
             emit('select', { uid, path: locked ? '' : path });
 
-            if (!field || locked || justEnded) {
+            if (field && !locked && !justEnded) {
+                const edit = field.getAttribute('data-cms-edit');
+                if (edit === 'rich' || edit === 'rich-basic') {
+                    startRich(field, uid, path, name, edit === 'rich-basic');
+                } else if (edit === 'text') {
+                    startInline(field, uid, path, name, event);
+                }
                 return;
             }
-            const edit = field.getAttribute('data-cms-edit');
-            if (edit === 'rich' || edit === 'rich-basic') {
-                startRich(field, uid, path, name, edit === 'rich-basic');
-            } else if (edit === 'text') {
-                startInline(field, uid, path, name, event);
+
+            // The heading writes the panel's Starts open value. The canvas already shows it.
+            if (!locked && action && item.contains(action)) {
+                togglePanel(action, uid);
             }
+        }
+
+        /** Opens or closes the panel and stores that as Starts open. */
+        function togglePanel(action, uid) {
+            const panel = closestEl(action, '.panel');
+            const collapse = panel && panel.querySelector(':scope > .panel-collapse');
+            const field = action.getAttribute('data-cms-field');
+            if (!collapse || !field) {
+                return;
+            }
+            const open = !collapse.classList.contains('in');
+            collapse.classList.toggle('in', open);
+            action.setAttribute('aria-expanded', open ? 'true' : 'false');
+            measure();
+            inline.add(uid);
+            emit('edit', {
+                uid,
+                path: action.getAttribute('data-cms-path') || '',
+                field,
+                value: open,
+            });
         }
 
         // --------------------------------------------------------------------------
