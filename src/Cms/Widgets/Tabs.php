@@ -5,6 +5,9 @@
  * The tabs are a repeater stored under `tabs`, the key the v1 view read for developer-defined tabs. v1 stored
  * parallel `title` and `body` lists, which upgrade() converts.
  *
+ * The public markup is the v1 markup, and the first tab starts selected. The canvas edits each title and body in
+ * place, and a click on a tab shows that pane. Which tab is showing is not stored.
+ *
  * @package     Nails
  * @subpackage  module-cms
  * @category    Widget
@@ -96,7 +99,9 @@ class Tabs extends Base
     {
         $tabs = array_values(array_filter((array) ($data['tabs'] ?? []), 'is_array'));
         if ($tabs === []) {
-            return '';
+            return $this->isPreview()
+                ? '<div class="cms-widget nails-cms-widget-tabs"><p class="cms-we-hint">Add a tab in the inspector.</p></div>'
+                : '';
         }
 
         $id    = 'cms-tabs-' . bin2hex(random_bytes(4));
@@ -104,22 +109,82 @@ class Tabs extends Base
         $panes = '';
 
         foreach ($tabs as $index => $tab) {
-            $active = $index === 0 ? ' active' : '';
+            $active = $index === 0;
+            $paneId = $id . '-' . $index;
+            $title  = (string) ($tab['title'] ?? '');
+            $body   = (string) ($tab['body'] ?? '');
 
-            $nav .= '<li class="tab-item' . $active . '" role="presentation">'
-                . '<a href="#' . $id . '-' . $index . '" role="tab" data-toggle="tab">'
-                . htmlspecialchars((string) ($tab['title'] ?? ''), ENT_QUOTES)
+            if ($this->isPreview()) {
+                $nav   .= $this->previewTab($index, $paneId, $title, $active);
+                $panes .= $this->previewPane($index, $paneId, $body, $active);
+                continue;
+            }
+
+            $class = $active ? ' active' : '';
+            $nav  .= '<li class="tab-item' . $class . '" role="presentation">'
+                . '<a href="#' . $paneId . '" role="tab" data-toggle="tab">'
+                . htmlspecialchars($title, ENT_QUOTES)
                 . '</a>'
                 . '</li>';
-
-            $panes .= '<div role="tabpanel" class="tab-pane' . $active . '" id="' . $id . '-' . $index . '">'
-                . (string) ($tab['body'] ?? '')
-                . '</div>';
+            $panes .= '<div role="tabpanel" class="tab-pane' . $class . '" id="' . $paneId . '">' . $body . '</div>';
         }
 
         return '<div class="cms-widget nails-cms-widget-tabs">'
             . '<ul class="nav nav-tabs" role="tablist">' . $nav . '</ul>'
             . '<div class="tab-content">' . $panes . '</div>'
             . '</div>';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * The canvas tab. The title is edited in place; the rest of the tab shows this pane.
+     */
+    private function previewTab(int $index, string $paneId, string $title, bool $active): string
+    {
+        $empty = $title === '';
+        $attrs = [
+            'class'                => 'cms-tab-title',
+            'data-cms-placeholder' => 'Add a title',
+        ];
+        if ($empty) {
+            $attrs['data-cms-empty'] = '1';
+        }
+
+        $label = $this->editable(
+            'tabs/' . $index . '/title',
+            'span',
+            $empty ? 'Add a title' : $title,
+            $attrs
+        );
+
+        return '<li class="tab-item' . ($active ? ' active' : '') . '" role="presentation">'
+            . '<a href="#' . $paneId . '" role="tab" data-cms-action="tab" data-cms-tab="' . $index . '"'
+            . ' aria-selected="' . ($active ? 'true' : 'false') . '">'
+            . $label
+            . '</a>'
+            . '</li>';
+    }
+
+    // --------------------------------------------------------------------------
+
+    private function previewPane(int $index, string $paneId, string $body, bool $active): string
+    {
+        $empty = $body === '';
+        $attrs = [
+            'role'  => 'tabpanel',
+            'class' => 'tab-pane' . ($active ? ' active' : ''),
+            'id'    => $paneId,
+        ];
+        if ($empty) {
+            $attrs['data-cms-empty'] = '1';
+        }
+
+        return $this->editable(
+            'tabs/' . $index . '/body',
+            'div',
+            $empty ? '<p class="cms-we-hint">Write something…</p>' : $body,
+            $attrs
+        );
     }
 }

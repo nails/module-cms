@@ -329,6 +329,35 @@ class ShippedWidgetsTest extends TestCase
         $this->assertSame(1, substr_count($html, 'tab-item active'));
         $this->assertSame(1, substr_count($html, 'tab-pane active'));
         $this->assertStringContainsString('<p>b</p>', $html);
+        $this->assertStringNotContainsString('data-cms-edit', $html);
+    }
+
+    public function testTabsPreviewEditsEachTabAndAsksWhenThereAreNone(): void
+    {
+        $registry = new Registry([Tabs::class => 1]);
+        $slug     = Registry::slugFor(Tabs::class);
+
+        $empty = $registry->renderNode(['slug' => $slug, 'data' => ['tabs' => []]], Registry::MODE_PREVIEW);
+        $this->assertStringContainsString('Add a tab in the inspector.', $empty);
+        $this->assertStringNotContainsString('data-cms-edit', $empty);
+
+        $html = $registry->renderNode(
+            ['slug' => $slug, 'data' => ['tabs' => [
+                ['title' => '', 'body' => ''],
+                ['title' => 'Second', 'body' => '<p>b</p>'],
+            ]]],
+            Registry::MODE_PREVIEW
+        );
+
+        $this->assertSame(1, substr_count($html, 'tab-item active'));
+        $this->assertSame(1, substr_count($html, 'tab-pane active'));
+        $this->assertStringContainsString('data-cms-action="tab" data-cms-tab="1"', $html);
+        $this->assertStringContainsString('aria-selected="false"', $html);
+        $this->assertStringContainsString('data-cms-field="tabs/0/title" data-cms-edit="text"', $html);
+        $this->assertStringContainsString('data-cms-field="tabs/1/body" data-cms-edit="rich"', $html);
+        $this->assertStringContainsString('Add a title', $html);
+        $this->assertStringContainsString('Write something…', $html);
+        $this->assertStringContainsString('<p>b</p>', $html);
     }
 
     // --------------------------------------------------------------------------
