@@ -76,8 +76,15 @@
                     <em v-if="outlineOpen">{{ view.count }}</em>
                 </header>
                 <template v-if="outlineOpen">
-                    <p v-if="!view.nodes.length" class="cms-we-outline__empty">No widgets yet.</p>
-                    <ol
+                    <button
+                        v-if="!view.nodes.length"
+                        type="button"
+                        class="cms-we-outline__add"
+                        @click="openDrawer({ parentUid: null, slot: null, index: 0 })"
+                        @dragover.prevent="markTail"
+                        @drop.prevent.stop="onDropEnd"
+                    >Add a widget</button>
+                    <ol v-else
                         class="cms-we-outline__list"
                         @dragover.prevent
                         @drop.prevent="onDropEnd"
@@ -88,10 +95,12 @@
                             :node="node"
                             :index="index"
                             :selected="view.selected"
+                            :hovered="hovered"
                             :catalogue="catalogue"
                             :drag="drag"
                             :folded-ids="folded"
-                            @select="select"
+                            @select="selectFromOutline"
+                            @hover="onOutlineHover"
                             @toggle="toggleFold"
                             @move="onMove"
                             @insert="openDrawer"
@@ -124,14 +133,15 @@
                     :stylesheets="canvasStylesheets"
                     :preview-url="endpoint('preview')"
                     :area="view.active"
-                    :selected="selectedTop"
-                    :label-for="labelFor"
+                    :selected="selectedPlace"
+                    :hover="hoverPlace"
+                    :scroll-to="scrollTo"
                     @select="onCanvasSelect"
+                    @hover="onCanvasHover"
                     @edit="onCanvasEdit"
                     @rich="onCanvasRich"
                     @insert-at="onCanvasInsert"
-                    @duplicate="duplicateNode"
-                    @remove="requestRemove"
+                    @inline-fields="onInlineFields"
                 />
             </div>
 
@@ -160,7 +170,7 @@
                         <p>Select a widget on the page or in the outline to edit it.</p>
                     </div>
                     <div v-else-if="selectedNode.locked" class="cms-we__locked">
-                        <strong>{{ selectedNode.slug }}</strong>
+                        <strong><i class="fa fa-triangle-exclamation"></i> {{ selectedNode.slug }}</strong>
                         is kept as it was saved. It can be removed or reordered here, and edited in the editor that created it.
                     </div>
                     <FieldsInspector
@@ -195,11 +205,11 @@
         ></WidgetDrawer>
 
         <Modal v-if="rich.open" :title="'Edit ' + rich.field" @close="closeRich">
-            <RichTextModal ref="richEditor" :value="rich.value" @save="saveRich" @dirty="richDirty = $event"></RichTextModal>
+            <RichTextModal ref="richEditor" :value="rich.value" @save="saveRich" @dirty="richDirty = $event" @close="closeRich"></RichTextModal>
             <template #actions>
                 <span v-if="!richDirty" class="cms-we__rich-note">No changes yet.</span>
-                <button type="button" class="btn btn-primary btn-sm" :disabled="!richDirty" @click="richEditor.save()">Save</button>
-                <button type="button" class="btn btn-default btn-sm" @click="closeRich">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" :disabled="!richDirty" @mousedown.prevent="richEditor.save()">Save</button>
+                <button type="button" class="btn btn-default btn-sm" @mousedown.prevent="closeRich">Cancel</button>
             </template>
         </Modal>
 
@@ -233,7 +243,7 @@ import { createEditor } from './editor.js';
 import { organiserGroups } from './rules.js';
 import { clearDraft, draftKey, loadDraft, saveDraft } from './draft.js';
 import { serialiseFields } from './serialise.js';
-import { resolveNodeUid } from './canvas.js';
+import { placeOf, resolveNodeUid } from './canvas.js';
 import { placeKey } from './outline.js';
 import OutlineNode from './OutlineNode.vue';
 import Canvas from './Canvas.vue';
@@ -304,13 +314,22 @@ export default {
 
         const selectedNode = computed(() => findNode(view.value.nodes, view.value.selected));
 
-        // The fields schema of the selected widget (only set when its inspector is a fields one)
+        /** Field keys the canvas is editing in place for the selection. Those stay off the inspector. */
+        const inlineKeys = ref([]);
+
+        function onInlineFields(keys) {
+            inlineKeys.value = Array.isArray(keys) ? keys : [];
+        }
+
+        // The fields schema of the selected widget, without fields already edited on the canvas
         const selectedFields = computed(() => {
             const node = selectedNode.value;
             const widget = node ? catalogue.value.widgets[node.slug] : null;
-            return widget && widget.inspector && Array.isArray(widget.inspector.fields)
+            const fields = widget && widget.inspector && Array.isArray(widget.inspector.fields)
                 ? widget.inspector.fields
                 : [];
+            const hidden = new Set(inlineKeys.value);
+            return fields.filter((field) => !hidden.has(field.key));
         });
 
         // Top-level instances of the active area, with their stored data, for the canvas
@@ -341,12 +360,12 @@ export default {
             return widget ? widget.description || widget.summary || '' : '';
         });
 
-        /** The top-level instance holding the selection, which is what the canvas highlights */
-        const selectedTop = computed(() => {
-            const uid = view.value.selected;
-            const top = uid ? view.value.nodes.find((node) => node.uid === uid || findNode([node], uid)) : null;
-            return top ? top.uid : null;
-        });
+        /** The widget hovered in either the outline or the canvas. Both draw it. */
+        const hovered = ref(null);
+        /** Bumped by an outline click, so the canvas scrolls that widget into view */
+        const scrollTo = ref(0);
+        const selectedPlace = computed(() => placeOf(view.value.nodes, view.value.selected));
+        const hoverPlace = computed(() => placeOf(view.value.nodes, hovered.value));
 
         const activeLabel = computed(() => {
             const area = view.value.areas.find((item) => item.slug === view.value.active);
@@ -695,6 +714,22 @@ export default {
             refresh();
         }
 
+        /** An outline click selects the widget and brings it into view on the canvas */
+        function selectFromOutline(uid) {
+            select(uid);
+            scrollTo.value += 1;
+        }
+
+        function onOutlineHover(uid) {
+            hovered.value = uid || null;
+        }
+
+        function onCanvasHover(target) {
+            hovered.value = target
+                ? (resolveNodeUid(view.value.nodes, target.uid, target.path) || target.uid)
+                : null;
+        }
+
         /** @param {?{parentUid: ?string, slot: ?string, index: number}} at Null to insert after the selection */
         function openDrawer(at) {
             drawer.at = at
@@ -956,14 +991,19 @@ export default {
             onCanvasRich,
             onCanvasInsert,
             onCanvasSelect,
+            onCanvasHover,
+            onOutlineHover,
             onFieldsChange,
+            onInlineFields,
             selectedFields,
             selectedLabel,
             selectedWidget,
             selectedDescription,
-            selectedTop,
+            selectedPlace,
+            hoverPlace,
+            hovered,
+            scrollTo,
             activeLabel,
-            labelFor,
             requestRemove,
             confirmRemove,
             onDropEnd,
@@ -982,6 +1022,7 @@ export default {
             endpoint,
             setArea,
             select,
+            selectFromOutline,
             insert,
             openDrawer,
             duplicateNode,

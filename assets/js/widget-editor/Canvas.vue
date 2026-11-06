@@ -1,5 +1,5 @@
 <template>
-    <div class="cms-we-canvas" :class="{ 'is-empty': !items.length }">
+    <div class="cms-we-canvas">
         <div class="cms-we-canvas__page">
             <iframe
                 v-show="items.length"
@@ -22,30 +22,17 @@
                 @mouseleave="clearHover"
                 @click="onClick"
             >
-                <div v-if="fieldBox && !inline.active" class="cms-we-canvas__field" :style="boxStyle(fieldBox, 3)"></div>
                 <div
-                    v-if="hoverBox && hover !== selected"
+                    v-if="showHover"
                     class="cms-we-canvas__box is-hover"
-                    :style="boxStyle(hoverBox, 8)"
+                    :style="lineStyle(hoverBox)"
                 ></div>
                 <div
                     v-if="selectedBox"
                     ref="selectedEl"
                     class="cms-we-canvas__box is-selected"
-                    :style="boxStyle(selectedBox, 8)"
+                    :style="lineStyle(selectedBox)"
                 ></div>
-
-                <div
-                    v-if="toolBox && !inline.active"
-                    class="cms-we-canvas__tools"
-                    :style="toolStyle(toolBox)"
-                    @mousemove.stop
-                    @click.stop
-                >
-                    <em>{{ labelFor(toolUid) }}</em>
-                    <button type="button" title="Duplicate" @click="$emit('duplicate', toolUid)"><i class="fa fa-clone"></i></button>
-                    <button type="button" title="Remove" @click="$emit('remove', toolUid)"><i class="fa fa-trash"></i></button>
-                </div>
 
                 <div
                     v-for="gap in gaps"
@@ -59,11 +46,23 @@
                     <button type="button" title="Insert a widget here"><i class="fa fa-plus"></i></button>
                 </div>
 
+                <RichTextSurface
+                    v-if="rich.active"
+                    ref="richEl"
+                    class="cms-we-canvas__rich"
+                    :style="rich.style"
+                    :value="rich.value"
+                    :basic="rich.basic"
+                    @update="onRichUpdate"
+                    @mousedown.stop
+                    @click.stop
+                ></RichTextSurface>
+
                 <div
                     v-if="inline.active"
                     ref="inlineEl"
                     class="cms-we-canvas__inline"
-                    contenteditable="plaintext-only"
+                    contenteditable="true"
                     spellcheck="true"
                     :style="inline.style"
                     @mousemove.stop
@@ -76,19 +75,19 @@
             </div>
 
             <div v-if="!items.length" class="cms-we-canvas__empty">
-                <p>Nothing here yet.</p>
+                <i class="fa fa-puzzle-piece"></i>
+                <p>Add a widget to start building this page.</p>
+                <button type="button" @click="$emit('insert-at', 0)">Add a widget</button>
             </div>
-
-            <button type="button" class="cms-we-canvas__add" @click="$emit('insert-at', items.length)">
-                <i class="fa fa-plus"></i> Add widget
-            </button>
         </div>
     </div>
 </template>
 
 <script>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
-import { buildCanvasShell, renderSection } from './canvas.js';
+import { buildCanvasShell, canvasStylesheets, fontFaceRules, inlineFieldKeys, renderSection } from './canvas.js';
+import { isBlankHtml } from './rich-schema.js';
+import RichTextSurface from './RichTextSurface.vue';
 
 /** Changes settle for this long before previews are requested again (D5) */
 const DEBOUNCE_MS = 300;
@@ -163,8 +162,157 @@ const COPIED_STYLES = [
     'textTransform', 'textAlign', 'color', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
 ];
 
+/** Blocks whose type is copied from the preview, so the editor does not use the admin page's headings. */
+const SAMPLE_TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'blockquote', 'pre', 'code'];
+
+const SAMPLE_PROPS = [
+    'fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'lineHeight', 'letterSpacing',
+    'textTransform', 'color', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft',
+];
+
+const TYPE_STYLE_ID = 'cms-we-canvas-type';
+
+function cssProp(name) {
+    return name.replace(/[A-Z]/g, (letter) => '-' + letter.toLowerCase());
+}
+
+/** True when a child's margin collapses through the field, so the text sits on the field's edge. */
+function marginCollapsed(field, el, edge) {
+    const fieldRect = field.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    const delta = edge === 'top' ? rect.top - fieldRect.top : fieldRect.bottom - rect.bottom;
+    return Math.abs(delta) < 1;
+}
+
+/**
+ * The preview's computed type for each block, as rules for the editor.
+ * Probes are not the first child, so a widget's first-child margin rule is recorded on its own.
+ *
+ * @param {HTMLElement} field
+ * @param {Window} win
+ * @return {string}
+ */
+function previewTypeCss(field, win) {
+    const owner = field.ownerDocument;
+    const blocks = Array.from(field.children).filter((el) => !el.classList.contains('cms-we-hint'));
+    const first = blocks[0] || null;
+    const last = blocks[blocks.length - 1] || null;
+    // A margin that collapses out of the field is not part of the field's box. The editor is a
+    // flow root, so it would pull that margin inside and the text would jump. Drop it there.
+    let zeroTop = Boolean(first && (win.getComputedStyle(first).marginTop === '0px' || marginCollapsed(field, first, 'top')));
+    let zeroBottom = Boolean(last && marginCollapsed(field, last, 'bottom'));
+    const spacer = owner.createElement('div');
+    field.appendChild(spacer);
+    const rules = [];
+
+    try {
+        const fieldStyle = win.getComputedStyle(field);
+        const smoothing = [];
+        if (fieldStyle.webkitFontSmoothing) {
+            smoothing.push('-webkit-font-smoothing:' + fieldStyle.webkitFontSmoothing + ' !important');
+        }
+        if (fieldStyle.MozOsxFontSmoothing) {
+            smoothing.push('-moz-osx-font-smoothing:' + fieldStyle.MozOsxFontSmoothing + ' !important');
+        }
+        if (smoothing.length) {
+            rules.push('.cms-we-canvas__rich .ProseMirror{' + smoothing.join(';') + '}');
+        }
+
+        SAMPLE_TAGS.forEach((tag) => {
+            let host;
+            let node;
+            if (tag === 'li') {
+                host = owner.createElement('ul');
+                node = owner.createElement('li');
+                host.appendChild(node);
+            } else if (tag === 'a') {
+                host = owner.createElement('p');
+                node = owner.createElement('a');
+                node.setAttribute('href', '#');
+                host.appendChild(node);
+            } else if (tag === 'code') {
+                host = owner.createElement('pre');
+                node = owner.createElement('code');
+                host.appendChild(node);
+            } else {
+                node = owner.createElement(tag);
+                host = node;
+            }
+            node.textContent = 'a';
+            field.appendChild(host);
+            try {
+                const style = win.getComputedStyle(node);
+                const decls = SAMPLE_PROPS
+                    .filter((prop) => style[prop])
+                    .map((prop) => cssProp(prop) + ':' + style[prop] + ' !important');
+                if (tag === 'ul' || tag === 'ol') {
+                    decls.push('list-style-type:' + style.listStyleType + ' !important');
+                    decls.push('list-style-position:' + style.listStylePosition + ' !important');
+                    decls.push('padding-left:' + style.paddingLeft + ' !important');
+                }
+                if (tag === 'a') {
+                    decls.push('text-decoration:' + (style.textDecorationLine || style.textDecoration) + ' !important');
+                }
+                if (tag === 'blockquote') {
+                    decls.push('padding-left:' + style.paddingLeft + ' !important');
+                    decls.push('border-left:' + style.borderLeftWidth + ' ' + style.borderLeftStyle + ' ' + style.borderLeftColor + ' !important');
+                }
+                if (tag === 'pre' || tag === 'code') {
+                    decls.push('padding:' + style.padding + ' !important');
+                    decls.push('background-color:' + style.backgroundColor + ' !important');
+                    decls.push('white-space:' + style.whiteSpace + ' !important');
+                }
+                rules.push('.cms-we-canvas__rich .ProseMirror ' + tag + '{' + decls.join(';') + '}');
+            } finally {
+                host.remove();
+            }
+        });
+    } finally {
+        spacer.remove();
+    }
+
+    if (!first) {
+        const probe = owner.createElement('h2');
+        probe.textContent = 'a';
+        field.insertBefore(probe, field.firstChild);
+        zeroTop = win.getComputedStyle(probe).marginTop === '0px' || marginCollapsed(field, probe, 'top');
+        zeroBottom = marginCollapsed(field, probe, 'bottom');
+        probe.remove();
+    }
+
+    if (zeroTop) {
+        rules.push('.cms-we-canvas__rich .ProseMirror > :first-child{margin-top:0 !important}');
+    }
+    if (zeroBottom) {
+        rules.push('.cms-we-canvas__rich .ProseMirror > :last-child{margin-bottom:0 !important}');
+    }
+
+    // all:revert sets -webkit-user-modify back to read-only, which drops the caret and ignores typing.
+    rules.push('.cms-we-canvas__rich .ProseMirror,.cms-we-canvas__rich .ProseMirror *{-webkit-user-modify:read-write !important;caret-color:auto}');
+
+    return rules.join('\n');
+}
+
+function setTypeStyle(css) {
+    let style = document.getElementById(TYPE_STYLE_ID);
+    if (!css) {
+        if (style) {
+            style.remove();
+        }
+        return;
+    }
+    if (!style) {
+        style = document.createElement('style');
+        style.id = TYPE_STYLE_ID;
+    }
+    // After the admin stylesheets, which are linked at the end of the body.
+    (document.body || document.head).appendChild(style);
+    style.textContent = css;
+}
+
 export default {
     name: 'Canvas',
+    components: { RichTextSurface },
     props: {
         /** Top-level instances of the active area: [{uid, slug, data, locked}] */
         items: { type: Array, required: true },
@@ -174,17 +322,23 @@ export default {
         previewUrl: { type: String, required: true },
         /** Area slug, passed to the preview context (D21) */
         area: { type: String, default: '' },
-        /** The top-level instance holding the selection */
-        selected: { type: String, default: null },
-        /** (uid) => the widget's label */
-        labelFor: { type: Function, required: true },
+        /**
+         * The selected widget's place on the canvas: {top, path}.
+         * `path` is empty for a top-level widget.
+         */
+        selected: { type: Object, default: null },
+        /** The hovered widget's place, from the canvas or the outline: {top, path} */
+        hover: { type: Object, default: null },
+        /** Bumped when the outline selects a widget, so the canvas scrolls it into view */
+        scrollTo: { type: Number, default: 0 },
     },
-    emits: ['edit', 'rich', 'insert-at', 'select', 'duplicate', 'remove'],
+    emits: ['edit', 'rich', 'insert-at', 'select', 'hover', 'inline-fields'],
     setup(props, { emit }) {
         const frame = ref(null);
         const overlay = ref(null);
         const selectedEl = ref(null);
         const inlineEl = ref(null);
+        const richEl = ref(null);
         const cache = new Map();
         /** The HTML last written into the frame for each instance, so unchanged instances are not touched */
         const rendered = new Map();
@@ -194,15 +348,25 @@ export default {
 
         const height = ref(0);
         const rects = ref({});
+        /** Bounding boxes of `[data-cms-path]` regions, keyed `topUid\\npath` */
+        const pathRects = ref({});
         const gaps = ref([]);
-        const hover = ref(null);
-        const fieldBox = ref(null);
         const cursor = ref('default');
         const editing = reactive({ active: false, uid: null, path: '', field: '', style: {} });
+        const rich = reactive({ active: false, uid: null, path: '', field: '', value: '', basic: false, style: {} });
+        /** The HTML last written from the rich text session, so closing restores what was edited */
+        let richLast = '';
         /** The frame element being edited inline. It is hidden while the editor's copy is over it. */
         let editTarget = null;
-        /** Set when the canvas made the selection, so the page is not scrolled to what was just clicked */
-        let selectedHere = false;
+        /** The field a click just finished editing, so that same click does not open it again. */
+        let endedKey = '';
+        let endedAt = 0;
+        /** The last hover reported, so the pointer does not emit the same place on every move */
+        let hoverKey = '';
+        /** Field keys last reported for the selection, so the inspector is not updated with the same list */
+        let inlineSent = null;
+        /** One fetch of the canvas font faces, shared by every edit */
+        let fontsPromise = null;
 
         let timer = null;
         let sequence = 0;
@@ -211,10 +375,9 @@ export default {
         let observer = null;
         let frameRequest = null;
 
-        const hoverBox = computed(() => (hover.value ? rects.value[hover.value] || null : null));
-        const selectedBox = computed(() => (props.selected ? rects.value[props.selected] || null : null));
-        const toolUid = computed(() => (hoverBox.value ? hover.value : (selectedBox.value ? props.selected : null)));
-        const toolBox = computed(() => (toolUid.value ? rects.value[toolUid.value] || null : null));
+        const hoverBox = computed(() => boxFor(props.hover));
+        const selectedBox = computed(() => boxFor(props.selected));
+        const showHover = computed(() => Boolean(hoverBox.value) && !samePlace(props.hover, props.selected));
 
         function doc() {
             return frame.value && frame.value.contentDocument;
@@ -222,7 +385,7 @@ export default {
 
         function sectionFor(item) {
             if (item.locked) {
-                return { uid: item.uid, html: '', error: null, locked: true, pending: false };
+                return { uid: item.uid, html: '', error: null, locked: true, pending: false, slug: item.slug };
             }
             const entry = cache.get(item.uid);
             if (!entry) {
@@ -287,7 +450,77 @@ export default {
                 }
             });
 
+            // Below the last widget, so a widget can be added at the end of the page
+            if (props.items.length) {
+                const gap = document.createElement('div');
+                gap.className = 'cms-we-gap';
+                gap.setAttribute('data-index', String(props.items.length));
+                root.appendChild(gap);
+            }
+
             measure();
+            publishInline();
+        }
+
+        /** Fields the preview marks as editable, for the selected instance only. */
+        function publishInline() {
+            const place = props.selected;
+            const keys = place ? inlineFieldKeys(rendered.get(place.top) || '', place.path) : [];
+            const token = keys.join('\n');
+            if (token === inlineSent) {
+                return;
+            }
+            inlineSent = token;
+            emit('inline-fields', keys);
+        }
+
+        /**
+         * Copies the canvas stylesheets' font faces into the admin page.
+         * The editor is not inside the iframe, so it cannot use a face that only the iframe has loaded.
+         */
+        function installFonts() {
+            if (fontsPromise) {
+                return fontsPromise;
+            }
+            fontsPromise = (async () => {
+                const rules = [];
+                await Promise.all(canvasStylesheets(props.stylesheets).map(async (url) => {
+                    try {
+                        const absolute = new URL(url, window.location.href).href;
+                        const response = await fetch(absolute, { credentials: 'same-origin' });
+                        if (!response.ok) {
+                            return;
+                        }
+                        fontFaceRules(await response.text(), absolute).forEach((rule) => rules.push(rule));
+                    } catch (e) {
+                        // The iframe still has the stylesheet. The editor uses the next family in the stack.
+                    }
+                }));
+                if (!rules.length || !mounted) {
+                    return;
+                }
+                let style = document.getElementById('cms-we-canvas-fonts');
+                if (!style) {
+                    style = document.createElement('style');
+                    style.id = 'cms-we-canvas-fonts';
+                    document.head.appendChild(style);
+                }
+                style.textContent = rules.join('\n');
+                if (rich.active && document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(() => {
+                        if (rich.active) {
+                            fitRich();
+                        }
+                    });
+                }
+            })();
+            return fontsPromise;
+        }
+
+        /** The field's width, and no wider than the page it sits on. */
+        function boxWidth(rect) {
+            const room = overlay.value ? overlay.value.clientWidth - rect.left : rect.width;
+            return Math.max(0, Math.min(rect.width, room));
         }
 
         /** Sizes the frame to its content and records where each instance and gap is, for the overlay */
@@ -303,13 +536,34 @@ export default {
             }
 
             const found = {};
+            const paths = {};
             Array.from(body.children).forEach((el) => {
                 const uid = el.getAttribute('data-uid');
                 if (uid !== null) {
                     found[uid] = rectOf(el);
                 }
             });
+            // A nested widget has no element of its own. Its fields share a path, and that region is its box.
+            Array.from(body.querySelectorAll('.cms-canvas-item')).forEach((item) => {
+                const top = item.getAttribute('data-uid');
+                if (!top) {
+                    return;
+                }
+                Array.from(item.querySelectorAll('[data-cms-path]')).forEach((el) => {
+                    const path = el.getAttribute('data-cms-path') || '';
+                    if (path === '') {
+                        return;
+                    }
+                    const rect = rectOf(el);
+                    if (rect.width < 1 && rect.height < 1) {
+                        return;
+                    }
+                    const key = top + '\n' + path;
+                    paths[key] = paths[key] ? unionRect(paths[key], rect) : rect;
+                });
+            });
             rects.value = found;
+            pathRects.value = paths;
 
             gaps.value = Array.from(body.querySelectorAll('.cms-we-gap')).map((el) => {
                 const rect = el.getBoundingClientRect();
@@ -427,10 +681,10 @@ export default {
                 const { item, field } = hitTest({ clientX, clientY });
                 const uid = item ? item.getAttribute('data-uid') : null;
                 const locked = uid ? Boolean((props.items.find((entry) => entry.uid === uid) || {}).locked) : false;
-                hover.value = uid;
-                fieldBox.value = field && !locked ? rectOf(field) : null;
+                publishHover(item, locked ? null : field);
                 if (field && !locked) {
-                    cursor.value = field.getAttribute('data-cms-edit') === 'text' ? 'text' : 'pointer';
+                    const kind = field.getAttribute('data-cms-edit');
+                    cursor.value = kind === 'text' || kind === 'rich' || kind === 'rich-basic' ? 'text' : 'pointer';
                 } else {
                     cursor.value = item ? 'pointer' : 'default';
                 }
@@ -438,9 +692,43 @@ export default {
         }
 
         function clearHover() {
-            hover.value = null;
-            fieldBox.value = null;
+            if (frameRequest) {
+                cancelAnimationFrame(frameRequest);
+                frameRequest = null;
+            }
             cursor.value = 'default';
+            publishHover(null, null);
+        }
+
+        /** Tells the outline which widget is under the pointer. A field's path names a nested widget. */
+        function publishHover(item, field) {
+            if (!item) {
+                if (hoverKey !== '') {
+                    hoverKey = '';
+                    emit('hover', null);
+                }
+                return;
+            }
+            const uid = item.getAttribute('data-uid') || '';
+            const path = field && item.contains(field) ? (field.getAttribute('data-cms-path') || '') : '';
+            const key = uid + '\n' + path;
+            if (key === hoverKey) {
+                return;
+            }
+            hoverKey = key;
+            emit('hover', { uid, path });
+        }
+
+        function markEnded(field) {
+            if (!field) {
+                endedKey = '';
+            } else {
+                const item = closestEl(field, '.cms-canvas-item');
+                endedKey = (item ? item.getAttribute('data-uid') : '') + '\n'
+                    + (field.getAttribute('data-cms-path') || '') + '\n'
+                    + (field.getAttribute('data-cms-field') || '');
+            }
+            endedAt = performance.now();
         }
 
         function onClick(event) {
@@ -454,17 +742,20 @@ export default {
             const uid = item.getAttribute('data-uid');
             const locked = Boolean((props.items.find((entry) => entry.uid === uid) || {}).locked);
             const path = field ? field.getAttribute('data-cms-path') || '' : '';
+            const name = field ? field.getAttribute('data-cms-field') : '';
+            const justEnded = endedKey !== ''
+                && performance.now() - endedAt < 500
+                && endedKey === uid + '\n' + path + '\n' + name;
 
-            selectedHere = true;
             emit('select', { uid, path: locked ? '' : path });
 
-            if (!field || locked) {
+            if (!field || locked || justEnded) {
                 return;
             }
-            const name = field.getAttribute('data-cms-field');
-            if (field.getAttribute('data-cms-edit') === 'rich') {
-                emit('rich', { uid, path, field: name, value: field.innerHTML });
-            } else if (field.getAttribute('data-cms-edit') === 'text') {
+            const edit = field.getAttribute('data-cms-edit');
+            if (edit === 'rich' || edit === 'rich-basic') {
+                startRich(field, uid, path, name, edit === 'rich-basic');
+            } else if (edit === 'text') {
                 startInline(field, uid, path, name, event);
             }
         }
@@ -473,6 +764,7 @@ export default {
         // Inline text: an editable copy of the field, styled like it, sits over the field while it is edited
 
         async function startInline(field, uid, path, name, event) {
+            finishRich();
             const win = doc().defaultView;
             const style = win.getComputedStyle(field);
             const rect = field.getBoundingClientRect();
@@ -487,9 +779,10 @@ export default {
             editing.field = name;
             editing.style = {
                 ...copied,
+                boxSizing: 'border-box',
                 top: rect.top + 'px',
                 left: rect.left + 'px',
-                width: rect.width + 'px',
+                width: boxWidth(rect) + 'px',
                 minHeight: rect.height + 'px',
                 background: backgroundOf(field, win),
             };
@@ -501,7 +794,6 @@ export default {
             }
             inlineEl.value.textContent = field.textContent;
             field.style.visibility = 'hidden';
-            fieldBox.value = null;
             inlineEl.value.focus();
             placeCaret(inlineEl.value, event.clientX, event.clientY);
         }
@@ -517,6 +809,10 @@ export default {
         }
 
         function onInlineKeydown(event) {
+            if ((event.metaKey || event.ctrlKey) && ['b', 'i', 'u'].includes(event.key.toLowerCase())) {
+                event.preventDefault();
+                return;
+            }
             if (event.key === 'Enter' || event.key === 'Escape') {
                 event.preventDefault();
                 finishInline();
@@ -533,6 +829,7 @@ export default {
             if (!editing.active) {
                 return;
             }
+            markEnded(editTarget);
             if (editTarget) {
                 editTarget.style.visibility = '';
             }
@@ -543,18 +840,207 @@ export default {
         }
 
         // --------------------------------------------------------------------------
+        // Rich text on the canvas. The frame cannot run the editor, so it sits over the field.
 
-        function boxStyle(box, inset) {
+        async function startRich(field, uid, path, name, basic) {
+            finishInline();
+            const win = doc().defaultView;
+            const typeCss = previewTypeCss(field, win);
+            const style = win.getComputedStyle(field);
+            const rect = field.getBoundingClientRect();
+            const copied = {};
+            COPIED_STYLES.forEach((property) => {
+                copied[property] = style[property];
+            });
+
+            editTarget = field;
+            rich.uid = uid;
+            rich.path = path;
+            rich.field = name;
+            rich.value = field.getAttribute('data-cms-empty') === '1' ? '' : field.innerHTML;
+            rich.basic = Boolean(basic);
+            richLast = rich.value;
+            setTypeStyle(typeCss);
+            rich.style = {
+                ...copied,
+                boxSizing: 'border-box',
+                top: rect.top + 'px',
+                left: rect.left + 'px',
+                width: boxWidth(rect) + 'px',
+                minHeight: rect.height + 'px',
+                background: backgroundOf(field, win),
+            };
+            rich.active = true;
+
+            // A collapsed margin sits outside the field. Hold that space on the field itself
+            // before the content is cleared, or the text below jumps up.
+            const blocks = Array.from(field.children).filter((el) => !el.classList.contains('cms-we-hint'));
+            const firstBlock = blocks[0];
+            const lastBlock = blocks[blocks.length - 1];
+            const holdTop = firstBlock && marginCollapsed(field, firstBlock, 'top')
+                ? win.getComputedStyle(firstBlock).marginTop
+                : '';
+            const holdBottom = lastBlock && marginCollapsed(field, lastBlock, 'bottom')
+                ? win.getComputedStyle(lastBlock).marginBottom
+                : '';
+
+            await nextTick();
+            if (holdTop) {
+                field.style.marginTop = holdTop;
+            }
+            if (holdBottom) {
+                field.style.marginBottom = holdBottom;
+            }
+            field.style.visibility = 'hidden';
+            field.style.minHeight = rect.height + 'px';
+            field.innerHTML = '';
+            if (richEl.value && typeof richEl.value.focus === 'function') {
+                richEl.value.focus();
+            }
+            fitRich();
+            installFonts();
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(() => {
+                    if (rich.active) {
+                        fitRich();
+                    }
+                });
+            }
+            requestAnimationFrame(() => {
+                if (rich.active) {
+                    fitRich();
+                }
+            });
+        }
+
+        function fitRich() {
+            const root = richEl.value && richEl.value.$el;
+            if (!editTarget || !root) {
+                return;
+            }
+            editTarget.style.minHeight = root.offsetHeight + 'px';
+            measure();
+        }
+
+        function onRichUpdate(html) {
+            if (!editTarget || !rich.active) {
+                return;
+            }
+            const value = isBlankHtml(html) ? '' : html;
+            nextTick(fitRich);
+            if (value === richLast) {
+                return;
+            }
+            richLast = value;
+            inline.add(rich.uid);
+            emit('edit', { uid: rich.uid, path: rich.path, field: rich.field, value });
+        }
+
+        function finishRich() {
+            if (!rich.active) {
+                return;
+            }
+            markEnded(editTarget);
+            if (editTarget) {
+                editTarget.style.visibility = '';
+                editTarget.style.minHeight = '';
+                editTarget.style.marginTop = '';
+                editTarget.style.marginBottom = '';
+                editTarget.innerHTML = richLast === ''
+                    ? '<p class="cms-we-hint">Write something…</p>'
+                    : richLast;
+                if (richLast === '') {
+                    editTarget.setAttribute('data-cms-empty', '1');
+                } else {
+                    editTarget.removeAttribute('data-cms-empty');
+                }
+            }
+            editTarget = null;
+            rich.active = false;
+            setTypeStyle('');
+            sync();
+            measure();
+        }
+
+        /**
+         * Escape and a press outside the field end editing.
+         * The listener is on the window, in the capture phase, so a field that stops the key still ends.
+         */
+        function onInlineEscape(event) {
+            if (event.key !== 'Escape' || (!editing.active && !rich.active)) {
+                return;
+            }
+            if (event.target && event.target.closest && event.target.closest('.cms-we-menu__link')) {
+                return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            if (rich.active) {
+                finishRich();
+                return;
+            }
+            finishInline();
+        }
+
+        function insideRich(target) {
+            const root = richEl.value && richEl.value.$el;
+            if (root && (target === root || root.contains(target))) {
+                return true;
+            }
+            // The bubble is portaled onto the editor, outside the field.
+            return Boolean(target && target.closest && (target.closest('.cms-we-bubble') || target.closest('.cms-we-menu')));
+        }
+
+        function onInlinePointer(event) {
+            if (editing.active && inlineEl.value) {
+                if (event.target !== inlineEl.value && !inlineEl.value.contains(event.target)) {
+                    finishInline();
+                }
+            }
+            if (rich.active && !insideRich(event.target)) {
+                finishRich();
+            }
+        }
+
+        // --------------------------------------------------------------------------
+
+        /** The sidebar line. It is always on the left edge of the canvas, as tall as the widget. */
+        function lineStyle(box) {
             return {
-                top: (box.top - inset / 2) + 'px',
-                left: (box.left - inset) + 'px',
-                width: (box.width + inset * 2) + 'px',
-                height: (box.height + inset) + 'px',
+                top: box.top + 'px',
+                left: '0px',
+                height: box.height + 'px',
             };
         }
 
-        function toolStyle(box) {
-            return { top: (box.top - 4) + 'px', left: (box.left + box.width + 8) + 'px' };
+        function samePlace(a, b) {
+            return Boolean(a && b && a.top === b.top && (a.path || '') === (b.path || ''));
+        }
+
+        /** The widget's own box, or the region of a nested widget's fields, or the top-level widget that holds it */
+        function boxFor(place) {
+            if (!place || !place.top) {
+                return null;
+            }
+            if (!place.path) {
+                return rects.value[place.top] || null;
+            }
+            const prefix = place.top + '\n' + place.path;
+            let box = null;
+            Object.keys(pathRects.value).forEach((key) => {
+                if (key === prefix || key.startsWith(prefix + '/')) {
+                    box = box ? unionRect(box, pathRects.value[key]) : pathRects.value[key];
+                }
+            });
+            return box || rects.value[place.top] || null;
+        }
+
+        function unionRect(a, b) {
+            const top = Math.min(a.top, b.top);
+            const left = Math.min(a.left, b.left);
+            const right = Math.max(a.left + a.width, b.left + b.width);
+            const bottom = Math.max(a.top + a.height, b.top + b.height);
+            return { top, left, width: right - left, height: bottom - top };
         }
 
         function onLoad() {
@@ -590,27 +1076,49 @@ export default {
             }
         });
 
-        watch(() => props.selected, async () => {
-            if (selectedHere) {
-                selectedHere = false;
+        watch(() => props.scrollTo, async (token) => {
+            if (!token) {
                 return;
             }
             await nextTick();
-            if (selectedEl.value && selectedEl.value.scrollIntoView) {
-                selectedEl.value.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            const el = selectedEl.value;
+            if (!el) {
+                return;
             }
+            const scroller = el.closest('.cms-we__stage');
+            if (!scroller) {
+                return;
+            }
+            const elRect = el.getBoundingClientRect();
+            const box = scroller.getBoundingClientRect();
+            // Already on screen: leave the page where it is
+            if (elRect.top >= box.top && elRect.bottom <= box.bottom) {
+                return;
+            }
+            const delta = elRect.top < box.top
+                ? elRect.top - box.top - 24
+                : elRect.bottom - box.bottom + 24;
+            scroller.scrollBy({ top: delta, behavior: 'smooth' });
         });
+
+        watch(() => props.selected, () => publishInline());
 
         onMounted(() => {
             mounted = true;
             window.addEventListener('resize', measure);
+            window.addEventListener('keydown', onInlineEscape, true);
+            window.addEventListener('mousedown', onInlinePointer, true);
+            installFonts();
             refreshPreviews();
         });
 
         onBeforeUnmount(() => {
             mounted = false;
+            setTypeStyle('');
             clearTimeout(timer);
             window.removeEventListener('resize', measure);
+            window.removeEventListener('keydown', onInlineEscape, true);
+            window.removeEventListener('mousedown', onInlinePointer, true);
             if (observer) {
                 observer.disconnect();
             }
@@ -624,17 +1132,17 @@ export default {
             overlay,
             selectedEl,
             inlineEl,
+            richEl,
             shell,
             height,
             gaps,
-            hover,
-            fieldBox,
             cursor,
             inline: editing,
+            rich,
+            onRichUpdate,
+            showHover,
             hoverBox,
             selectedBox,
-            toolUid,
-            toolBox,
             onLoad,
             onPointer,
             clearHover,
@@ -643,8 +1151,7 @@ export default {
             onInlineKeydown,
             onInlinePaste,
             finishInline,
-            boxStyle,
-            toolStyle,
+            lineStyle,
         };
     },
 };

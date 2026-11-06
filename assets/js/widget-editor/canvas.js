@@ -47,6 +47,7 @@ export function escapeHtml(value) {
  * @property {string}      html   Server-rendered preview. Trusted: the server produced it.
  * @property {string|null} error  Set when the preview failed
  * @property {boolean}     locked  The instance is kept as saved and has no preview
+ * @property {string}      [slug]  The stored slug, named in the locked warning
  * @property {boolean}     [pending] The preview has been requested and has not come back yet
  */
 
@@ -70,8 +71,13 @@ export function renderSection(section) {
     }
 
     if (section.locked) {
+        const who = section.slug ? escapeHtml(section.slug) : 'This widget';
         return '<div class="cms-canvas-item" data-uid="' + uid + '">'
-            + '<div class="cms-canvas-placeholder">Saved content. Edit it in the editor that created it.</div></div>';
+            + '<div class="cms-canvas-warning">'
+            + '<strong><span class="cms-canvas-warning__mark" aria-hidden="true">⚠</span> Kept as saved</strong>'
+            + '<span>' + who + ' cannot be edited here. It can be removed or reordered, '
+            + 'and edited in the editor that created it.</span>'
+            + '</div></div>';
     }
 
     if (!section.html) {
@@ -89,9 +95,18 @@ export function renderSection(section) {
  */
 const CANVAS_STYLE = 'html{overflow:hidden}'
     + 'body{display:flow-root;margin:0;padding:0;background:#fff;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}'
-    + '.cms-canvas-item{position:relative;margin:0}'
+    // :where() loses to any site rule, so these are only the defaults when the site does not set them.
+    + ':where(body){line-height:1.45}'
+    + ':where(h1,h2,h3,h4,h5,h6){line-height:1.3}'
+    + ':where(blockquote){margin:1em 0;padding-left:1em;border-left:3px solid #cfc9c2}'
+    + ':where(pre){margin:1em 0;padding:12px 14px;overflow-x:auto;background:#f6f4f1;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em;line-height:1.45;white-space:pre-wrap}'
+    // Padding lives inside the widget's box, so the selection line stays on the canvas edge.
+    + '.cms-canvas-item{display:flow-root;position:relative;margin:0;padding:12px 28px}'
     + '.cms-we-gap{height:24px}'
+    + '.cms-we-hint{margin:0;color:#8a837d}'
     + '.cms-canvas-error{padding:10px 14px;background:#fdf2f2;color:#7a1f1f;border:1px solid #f1caca;font-size:13px}'
+    + '.cms-canvas-warning{display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:#fdf8e8;color:#6b5417;border:1px solid #ecd9a0;font-size:13px;line-height:1.45;text-align:left}'
+    + '.cms-canvas-warning__mark{margin-right:6px}'
     + '.cms-canvas-placeholder{padding:18px 14px;color:#8a837d;border:1px dashed #d8d2cb;font-size:12px;letter-spacing:.06em;text-align:center;text-transform:uppercase}';
 
 /**
@@ -149,4 +164,124 @@ export function resolveNodeUid(nodes, topUid, path) {
     }
 
     return node ? node.uid : null;
+}
+
+/**
+ * The canvas place of a node: the top-level instance that contains it, and the path within that instance.
+ * An empty path is the top-level instance itself. This is the inverse of resolveNodeUid().
+ *
+ * @param {Array<{uid: string, slots?: Object<string, Array>}>} nodes
+ * @param {?string} uid
+ * @return {?{top: string, path: string}}
+ */
+export function placeOf(nodes, uid) {
+
+    if (!uid) {
+        return null;
+    }
+
+    /**
+     * @param {Array} list
+     * @param {?string} top
+     * @param {string} path
+     * @return {?{top: string, path: string}}
+     */
+    function walk(list, top, path) {
+        for (let i = 0; i < list.length; i++) {
+            const node = list[i];
+            const nodeTop = top || node.uid;
+            if (node.uid === uid) {
+                return { top: nodeTop, path: path };
+            }
+            const slots = node.slots || {};
+            const names = Object.keys(slots);
+            for (let s = 0; s < names.length; s++) {
+                const children = slots[names[s]] || [];
+                for (let c = 0; c < children.length; c++) {
+                    const childPath = (path ? path + '/' : '') + names[s] + '/' + c;
+                    const found = walk([children[c]], nodeTop, childPath);
+                    if (found) {
+                        return found;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    return walk(nodes || [], null, '');
+}
+
+/**
+ * Field keys edited on the canvas for one instance.
+ *
+ * The preview marks them with data-cms-field and data-cms-path. `path` is empty for the top-level
+ * instance and a slot path for a nested one. A field of a nested instance is not included for its parent.
+ *
+ * @param {string} html The preview HTML
+ * @param {string} [path]
+ * @return {string[]}
+ */
+export function inlineFieldKeys(html, path) {
+    const wanted = String(path || '');
+    const keys = [];
+    const tags = /<[^>]*>/g;
+    let match = tags.exec(String(html || ''));
+
+    while (match) {
+        const field = /data-cms-field="([^"]*)"/.exec(match[0]);
+        const fieldPath = /data-cms-path="([^"]*)"/.exec(match[0]);
+        if (field && fieldPath && fieldPath[1] === wanted && keys.indexOf(field[1]) === -1) {
+            keys.push(field[1]);
+        }
+        match = tags.exec(String(html || ''));
+    }
+
+    return keys;
+}
+
+/**
+ * The @font-face rules in a stylesheet, so the canvas fonts can be used in the admin page.
+ *
+ * A root-relative or absolute url is left as it is. A relative url is resolved against the stylesheet,
+ * because the rule is inserted into the admin document and would otherwise load from the wrong place.
+ *
+ * @param {string} css
+ * @param {string} [baseUrl]
+ * @return {string[]}
+ */
+export function fontFaceRules(css, baseUrl) {
+    const rules = [];
+    const pattern = /@font-face\s*\{/g;
+    let match = pattern.exec(css);
+
+    while (match) {
+        let index = match.index + match[0].length;
+        let depth = 1;
+        while (index < css.length && depth > 0) {
+            if (css[index] === '{') {
+                depth += 1;
+            } else if (css[index] === '}') {
+                depth -= 1;
+            }
+            index += 1;
+        }
+        let block = css.slice(match.index, index);
+        if (baseUrl) {
+            block = block.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g, (full, quote, asset) => {
+                if (/^(?:data:|https?:|\/\/)/i.test(asset) || asset.charAt(0) === '/') {
+                    return full;
+                }
+                try {
+                    return 'url(' + quote + new URL(asset, baseUrl).href + quote + ')';
+                } catch (e) {
+                    return full;
+                }
+            });
+        }
+        rules.push(block);
+        match = pattern.exec(css);
+    }
+
+    return rules;
 }

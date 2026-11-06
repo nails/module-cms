@@ -17,10 +17,13 @@
             class="cms-we-outline__item"
             :class="{
                 'is-selected': node.uid === selected,
+                'is-hover': node.uid === hovered,
                 'is-nested': depth > 0,
             }"
             draggable="true"
             @click="$emit('select', node.uid)"
+            @mouseenter="$emit('hover', node.uid)"
+            @mouseleave="$emit('hover', null)"
             @dragstart="onDragStart"
             @dragend="onDragEnd"
             @dragover.prevent="onDragOver"
@@ -28,11 +31,13 @@
         >
             <span v-if="depth === 0" class="cms-we-outline__num">{{ pad(index + 1) }}</span>
             <span class="cms-we-outline__text">
-                <strong>{{ label }}</strong>
+                <strong>
+                    <i v-if="node.locked" class="fa fa-triangle-exclamation cms-we-outline__warn" title="Kept as saved"></i>
+                    {{ label }}
+                </strong>
                 <small>{{ summary || '\u00a0' }}</small>
             </span>
             <span class="cms-we-outline__actions">
-                <i v-if="node.locked" class="fa fa-lock" title="Kept as saved"></i>
                 <button type="button" title="Duplicate" @click.stop="$emit('duplicate', node.uid)">
                     <i class="fa fa-clone"></i>
                 </button>
@@ -75,12 +80,14 @@
                             :index="childIndex"
                             :depth="depth + 1"
                             :selected="selected"
+                            :hovered="hovered"
                             :catalogue="catalogue"
                             :drag="drag"
                             :folded-ids="foldedIds"
                             :parent-uid="node.uid"
                             :slot-name="slot"
                             @select="$emit('select', $event)"
+                            @hover="$emit('hover', $event)"
                             @toggle="$emit('toggle', $event)"
                             @move="$emit('move', $event)"
                             @insert="$emit('insert', $event)"
@@ -118,6 +125,8 @@ export default {
         index: { type: Number, required: true },
         depth: { type: Number, default: 0 },
         selected: { type: String, default: null },
+        /** The widget hovered in the outline or on the canvas */
+        hovered: { type: String, default: null },
         catalogue: { type: Object, required: true },
         /** Shared by every row: {uid, over: placeKey, blocked: uids the drag cannot enter} */
         drag: { type: Object, required: true },
@@ -126,17 +135,24 @@ export default {
         parentUid: { type: String, default: null },
         slotName: { type: String, default: null },
     },
-    emits: ['select', 'toggle', 'move', 'insert', 'duplicate', 'remove'],
+    emits: ['select', 'hover', 'toggle', 'move', 'insert', 'duplicate', 'remove'],
     setup(props, { emit }) {
         const widget = computed(() => props.catalogue.widgets[props.node.slug] || null);
         const label = computed(() => (widget.value ? widget.value.label : props.node.slug));
+        /** The content's text, then what a container holds, then the widget's own description, as the inspector shows it */
         const summary = computed(() => {
             const text = snippet(props.node.data);
-            if (text !== '' || !props.node.slots) {
+            if (text !== '') {
                 return text;
             }
-            const inside = Object.values(props.node.slots).reduce((total, children) => total + children.length, 0);
-            return inside === 1 ? '1 widget inside' : inside + ' widgets inside';
+            if (props.node.slots) {
+                const inside = Object.values(props.node.slots).reduce((total, children) => total + children.length, 0);
+                if (inside > 0) {
+                    return inside === 1 ? '1 widget inside' : inside + ' widgets inside';
+                }
+            }
+            const info = widget.value;
+            return info ? info.description || info.summary || '' : '';
         });
         /** Where this row's slots draw their guide. A nested slot is already inside its parent's guide. */
         const guide = computed(() => (props.depth === 0 ? '28px' : '16px'));

@@ -5,6 +5,9 @@ import {
     canvasStylesheets,
     escapeHtml,
     renderSection,
+    fontFaceRules,
+    inlineFieldKeys,
+    placeOf,
     resolveNodeUid,
 } from '../../assets/js/widget-editor/canvas.js';
 
@@ -20,6 +23,14 @@ describe('buildCanvasShell', () => {
         const doc = buildCanvasShell({ stylesheets: [] });
         expect(doc).toContain('html{overflow:hidden}');
         expect(doc).toContain('display:flow-root');
+    });
+
+    it('insets a widget inside its box, so its line stays on the canvas edge', () => {
+        const doc = buildCanvasShell({ stylesheets: [] });
+        expect(doc).toContain('body{display:flow-root;margin:0;padding:0;');
+        expect(doc).toContain(':where(body){line-height:1.45}');
+        expect(doc).toContain(':where(h1,h2,h3,h4,h5,h6){line-height:1.3}');
+        expect(doc).toContain('.cms-canvas-item{display:flow-root;position:relative;margin:0;padding:12px 28px}');
     });
 });
 
@@ -66,6 +77,35 @@ describe('resolveNodeUid', () => {
         expect(resolveNodeUid(nodes, 'n2', 'items/9')).toBeNull();
         expect(resolveNodeUid(nodes, 'n2', 'missing/0')).toBeNull();
         expect(resolveNodeUid(nodes, 'gone', '')).toBeNull();
+    });
+});
+
+describe('placeOf', () => {
+
+    const nodes = [
+        { uid: 'n1', slots: {} },
+        {
+            uid: 'n2',
+            slots: {
+                items: [
+                    { uid: 'n3', slots: {} },
+                    { uid: 'n4', slots: { inner: [{ uid: 'n5', slots: {} }] } },
+                ],
+            },
+        },
+    ];
+
+    it('is the inverse of resolveNodeUid', () => {
+        expect(placeOf(nodes, 'n1')).toEqual({ top: 'n1', path: '' });
+        expect(placeOf(nodes, 'n2')).toEqual({ top: 'n2', path: '' });
+        expect(placeOf(nodes, 'n3')).toEqual({ top: 'n2', path: 'items/0' });
+        expect(placeOf(nodes, 'n5')).toEqual({ top: 'n2', path: 'items/1/inner/0' });
+        expect(resolveNodeUid(nodes, 'n2', placeOf(nodes, 'n5').path)).toBe('n5');
+    });
+
+    it('returns null for a missing widget', () => {
+        expect(placeOf(nodes, null)).toBeNull();
+        expect(placeOf(nodes, 'gone')).toBeNull();
     });
 });
 
@@ -121,10 +161,18 @@ describe('renderSection', () => {
         expect(out).not.toContain('<img');
     });
 
-    it('shows a placeholder for a locked instance, with no preview', () => {
-        const out = renderSection({ uid: 'n1', html: '<p>secret</p>', error: null, locked: true });
-        expect(out).toContain('cms-canvas-placeholder');
+    it('shows a warning for a locked instance, naming its slug and hiding the preview', () => {
+        const out = renderSection({
+            uid: 'n1',
+            html: '<p>secret</p>',
+            error: null,
+            locked: true,
+            slug: 'App.Cms.Widgets.<Wev>',
+        });
+        expect(out).toContain('cms-canvas-warning');
+        expect(out).toContain('App.Cms.Widgets.&lt;Wev&gt;');
         expect(out).not.toContain('secret');
+        expect(out).not.toContain('<Wev>');
     });
 
     it('shows a loading placeholder while a preview is pending', () => {
@@ -167,5 +215,57 @@ describe('buildCanvasDocument', () => {
         expect(first).toBeGreaterThan(0);
         expect(second).toBeGreaterThan(first);
         expect(third).toBeGreaterThan(second);
+    });
+});
+
+describe('inlineFieldKeys', () => {
+
+    const html = [
+        '<div class="cms-widget" data-cms-field="body" data-cms-edit="rich" data-cms-path="">',
+        '<h2 data-cms-path="items/0" data-cms-field="title" data-cms-edit="text">Hi</h2>',
+        '<p data-cms-field="body" data-cms-edit="rich" data-cms-path="items/0">There</p>',
+        '<p data-cms-field="body" data-cms-edit="rich" data-cms-path="">Again</p>',
+        '</div>',
+    ].join('');
+
+    it('keeps the fields of the top-level instance', () => {
+        expect(inlineFieldKeys(html, '')).toEqual(['body']);
+    });
+
+    it('keeps the fields of one nested instance', () => {
+        expect(inlineFieldKeys(html, 'items/0')).toEqual(['title', 'body']);
+    });
+
+    it('returns nothing for a path the preview does not mark', () => {
+        expect(inlineFieldKeys(html, 'items/1')).toEqual([]);
+        expect(inlineFieldKeys('', '')).toEqual([]);
+    });
+});
+
+describe('fontFaceRules', () => {
+
+    it('keeps each face and resolves a relative url against the stylesheet', () => {
+        const css = [
+            'body { color: red; }',
+            '@font-face { font-family: "One"; src: url("../fonts/one.woff2") format("woff2"); }',
+            '@font-face { font-family: "Two"; src: url("/assets/fonts/two.woff2"); }',
+            'h1 { font-family: One; }',
+        ].join('\n');
+
+        const rules = fontFaceRules(css, 'https://site.test/assets/css/app.css');
+
+        expect(rules).toHaveLength(2);
+        expect(rules[0]).toContain('font-family: "One"');
+        expect(rules[0]).toContain('url("https://site.test/assets/fonts/one.woff2")');
+        expect(rules[1]).toContain('url("/assets/fonts/two.woff2")');
+        expect(rules.join('\n')).not.toContain('color: red');
+    });
+
+    it('leaves an absolute or root-relative url as it is', () => {
+        const css = '@font-face { src: url("https://cdn.test/a.woff2"), url(//cdn.test/b.woff2); }';
+        const rules = fontFaceRules(css, 'https://site.test/app.css');
+
+        expect(rules[0]).toContain('url("https://cdn.test/a.woff2")');
+        expect(rules[0]).toContain('url(//cdn.test/b.woff2)');
     });
 });

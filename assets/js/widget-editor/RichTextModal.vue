@@ -1,20 +1,6 @@
 <template>
     <div class="cms-we__rich">
-        <div v-if="editor" class="cms-we__rich-tools" role="toolbar" aria-label="Formatting">
-            <button
-                v-for="tool in tools"
-                :key="tool.label"
-                type="button"
-                class="btn btn-default btn-sm"
-                :class="{ 'is-active': isActive(tool.name, tool.attrs) }"
-                :aria-pressed="isActive(tool.name, tool.attrs) ? 'true' : 'false'"
-                :title="tool.label"
-                @click="tool.run()"
-            >
-                {{ tool.label }}
-            </button>
-        </div>
-
+        <RichMenu v-if="editor" :editor="editor" :basic="basic" attached></RichMenu>
         <editor-content :editor="editor" class="cms-we__rich-content"></editor-content>
     </div>
 </template>
@@ -22,72 +8,26 @@
 <script>
 import { onBeforeUnmount, onMounted, ref, shallowRef } from 'vue';
 import { Editor, EditorContent } from '@tiptap/vue-3';
-import StarterKit from '@tiptap/starter-kit';
+import RichMenu from './RichMenu.vue';
+import { richExtensions } from './rich-schema.js';
 
 /**
- * The rich text schema (D18): paragraphs, bold, italic, links, lists and headings. Anything else in the stored
- * HTML is dropped by the schema when it loads, and the cleaned HTML is only written back once the user edits.
+ * Fallback for a rich text field that is not edited on the canvas. The menubar is the same one the canvas uses.
+ * `basic` is the formatting-only menu. The schema drops anything it does not keep, and that HTML is only
+ * written back once the user edits.
  */
-function schemaKit() {
-    return StarterKit.configure({
-        heading: { levels: [2, 3] },
-        blockquote: false,
-        code: false,
-        codeBlock: false,
-        horizontalRule: false,
-        strike: false,
-        underline: false,
-        link: { openOnClick: false, autolink: false },
-    });
-}
-
 export default {
     name: 'RichTextModal',
-    components: { EditorContent },
+    components: { EditorContent, RichMenu },
     props: {
         /** The field's stored HTML */
         value: { type: String, default: '' },
+        basic: { type: Boolean, default: false },
     },
-    emits: ['save', 'dirty'],
+    emits: ['save', 'dirty', 'close'],
     setup(props, { emit }) {
         const editor = shallowRef(null);
         const dirty = ref(false);
-        const version = ref(0);
-
-        function isActive(name, attrs) {
-            // Reading version makes the toolbar update with the selection
-            // eslint-disable-next-line no-unused-expressions
-            version.value;
-            return Boolean(editor.value && editor.value.isActive(name, attrs));
-        }
-
-        function chain() {
-            return editor.value.chain().focus();
-        }
-
-        function setLink() {
-            const current = editor.value.getAttributes('link').href || '';
-            const href = window.prompt('Link address (leave empty to remove the link)', current);
-            if (href === null) {
-                return;
-            }
-            if (href.trim() === '') {
-                chain().extendMarkRange('link').unsetLink().run();
-                return;
-            }
-            chain().extendMarkRange('link').setLink({ href: href.trim() }).run();
-        }
-
-        const tools = [
-            { label: 'Bold', name: 'bold', run: () => chain().toggleBold().run() },
-            { label: 'Italic', name: 'italic', run: () => chain().toggleItalic().run() },
-            { label: 'Heading', name: 'heading', attrs: { level: 2 }, run: () => chain().toggleHeading({ level: 2 }).run() },
-            { label: 'Subheading', name: 'heading', attrs: { level: 3 }, run: () => chain().toggleHeading({ level: 3 }).run() },
-            { label: 'Paragraph', name: 'paragraph', run: () => chain().setParagraph().run() },
-            { label: 'Bullet list', name: 'bulletList', run: () => chain().toggleBulletList().run() },
-            { label: 'Numbered list', name: 'orderedList', run: () => chain().toggleOrderedList().run() },
-            { label: 'Link', name: 'link', run: setLink },
-        ];
 
         function save() {
             if (!dirty.value || !editor.value) {
@@ -99,13 +39,21 @@ export default {
         onMounted(() => {
             editor.value = new Editor({
                 content: props.value,
-                extensions: [schemaKit()],
+                extensions: richExtensions(props.basic),
+                editorProps: {
+                    // ProseMirror claims Escape and calls preventDefault. Safari then does not bubble it,
+                    // so the editor's own Escape handler never runs and the dialog stays open.
+                    handleKeyDown(_view, event) {
+                        if (event.key === 'Escape') {
+                            emit('close');
+                            return true;
+                        }
+                        return false;
+                    },
+                },
                 onUpdate: () => {
                     dirty.value = true;
                     emit('dirty', true);
-                },
-                onTransaction: () => {
-                    version.value++;
                 },
             });
         });
@@ -116,7 +64,7 @@ export default {
             }
         });
 
-        return { editor, dirty, tools, isActive, save };
+        return { editor, dirty, save };
     },
 };
 </script>
