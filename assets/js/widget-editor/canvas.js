@@ -167,7 +167,19 @@ const CANVAS_STYLE = 'html{overflow:hidden}'
     + '.cms-widget-table{overflow-x:auto}'
     + '.cms-widget-table .table{width:100%;margin:0;border-collapse:collapse;border:1px solid #dcd7d1;background:#fff;font-size:.92em}'
     + '.cms-widget-table .table>thead>tr>th,.cms-widget-table .table>tbody>tr>td{height:2.2em;padding:6px 10px;border:1px solid #dcd7d1;vertical-align:top;text-align:left}'
-    + '.cms-widget-table .table>thead>tr>th{background:#f4f2ef;color:#242424;font-weight:600}';
+    + '.cms-widget-table .table>thead>tr>th{background:#f4f2ef;color:#242424;font-weight:600}'
+    // Tabs have no script here, so the pane carrying .active is the one on show. The editor moves that class
+    // when a tab is clicked. These rules name the widget, so they win over a site's .nav-tabs rules.
+    + '.nails-cms-widget-tabs .nav-tabs{display:flex;flex-wrap:wrap;margin:0;padding:0;list-style:none;border-bottom:1px solid #e4dfd8}'
+    + '.nails-cms-widget-tabs .tab-item{float:none;margin:0}'
+    + '.nails-cms-widget-tabs .tab-item>a{display:block;margin:0 2px -1px 0;padding:8px 14px;border:1px solid transparent;border-radius:3px 3px 0 0;background:transparent;color:#6f675f;font-weight:600;line-height:1.35;text-decoration:none}'
+    + '.nails-cms-widget-tabs .tab-item.active>a{border-color:#e4dfd8;border-bottom-color:#fff;background:#fff;color:#242424}'
+    + '.nails-cms-widget-tabs .cms-tab-title[data-cms-empty]{color:#8a837d;font-weight:400}'
+    + '.nails-cms-widget-tabs .tab-content{padding:12px 2px 2px}'
+    + '.nails-cms-widget-tabs .tab-pane{display:none}'
+    + '.nails-cms-widget-tabs .tab-pane.active{display:block}'
+    + '.nails-cms-widget-tabs .tab-pane>:first-child{margin-top:0}'
+    + '.nails-cms-widget-tabs .tab-pane>:last-child{margin-bottom:0}';
 
 /**
  * The canvas document with no sections. The canvas loads this once and patches instances into it, so a

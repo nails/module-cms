@@ -60,6 +60,15 @@ describe('buildCanvasShell', () => {
         expect(doc).toContain('.cms-we-area{padding:16px 18px;border:1px dotted #cfc9c2;');
     });
 
+    it('draws tabs and shows only the pane carrying active, over the site rules', () => {
+        const doc = buildCanvasShell({ stylesheets: [] });
+        expect(doc).toContain('.nails-cms-widget-tabs .nav-tabs{display:flex;');
+        expect(doc).toContain('.nails-cms-widget-tabs .tab-pane{display:none}');
+        expect(doc).toContain('.nails-cms-widget-tabs .tab-pane.active{display:block}');
+        expect(doc).toContain('.nails-cms-widget-tabs .tab-pane>:first-child{margin-top:0}');
+        expect(doc).toContain('.nails-cms-widget-tabs .tab-pane>:last-child{margin-bottom:0}');
+    });
+
     it('draws a table full width with a grid and shaded headings, over the site rules', () => {
         const doc = buildCanvasShell({ stylesheets: [] });
         expect(doc).toContain('.cms-widget-table .table{width:100%;');
