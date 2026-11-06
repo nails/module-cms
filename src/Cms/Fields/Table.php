@@ -1,8 +1,8 @@
 <?php
 
 /**
- * A grid of plain-text cells, stored as a list of rows, each a list of cell strings. Rows and columns are added
- * and removed in the control. size() sets the empty grid a new instance starts with.
+ * A grid of plain-text cells, stored as a list of rows, each a list of cell strings. Rows and columns are added,
+ * removed and dragged in the control. size() sets the empty grid a new instance starts with.
  *
  * @package     Nails
  * @subpackage  module-cms
@@ -18,6 +18,7 @@ class Table extends Base
 {
     protected int $rows = 3;
     protected int $columns = 3;
+    protected ?string $headerRows = null;
 
     // --------------------------------------------------------------------------
 
@@ -32,6 +33,18 @@ class Table extends Base
     {
         $this->rows    = $rows;
         $this->columns = $columns;
+        return $this;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Names the widget's field that holds how many of the first rows are headings. The control shades those rows;
+     * the widget's render() decides how they are output.
+     */
+    public function headerRows(string $key): static
+    {
+        $this->headerRows = $key;
         return $this;
     }
 
@@ -72,5 +85,12 @@ class Table extends Base
     protected function defaultValue(): mixed
     {
         return array_fill(0, $this->rows, array_fill(0, $this->columns, ''));
+    }
+
+    // --------------------------------------------------------------------------
+
+    protected function config(): array
+    {
+        return ['headerRows' => $this->headerRows];
     }
 }
