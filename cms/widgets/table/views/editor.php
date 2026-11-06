@@ -41,6 +41,7 @@ if (!isset($tblAttr) && isset($attributes) && is_string($attributes)) {
 <textarea style="display: none;" name="tblData" class="table-data">
 <?=!empty($tblData) ? $tblData : $sEmptyTableData?>
 </textarea>
+<input type="hidden" name="header_rows" value="<?=(int) ($header_rows ?? 0)?>">
 <?php
 
 echo form_field([

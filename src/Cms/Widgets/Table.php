@@ -2,8 +2,9 @@
 
 /**
  * The "Table" widget for WidgetEditor (v2). Ports the v1 widget: the stored slug `table` resolves through ALIASES.
- * The cells are a `table` field stored under `rows`, and the extra table attributes under `attributes`. v1 stored
- * the cells as a JSON string under `tblData` and the attributes under `tblAttr`, which upgrade() converts.
+ * The cells are a `table` field stored under `rows`, the number of heading rows under `header_rows`, and the extra
+ * table attributes under `attributes`. v1 stored the cells as a JSON string under `tblData` and the attributes under
+ * `tblAttr`, which upgradeV1() converts. Migration13 runs the same conversion on stored pages and areas.
  *
  * Cells and attributes are output as stored, as in v1.
  *
@@ -41,7 +42,12 @@ class Table extends Base
     public function getFields(): ?array
     {
         return [
-            Fields\Table::make('rows')->label('Cells')->size(4, 3)->wide(),
+            Fields\Table::make('rows')->label('Cells')->size(4, 3)->headerRows('header_rows')->wide(),
+            Fields\Number::make('header_rows')
+                ->label('Header rows')
+                ->tip('How many of the first rows are headings')
+                ->min(0)
+                ->default(1),
             Fields\Text::make('attributes')
                 ->label('Attributes')
                 ->tip('Added to the <table> tag as written, for example id="prices"'),
@@ -175,28 +181,73 @@ class Table extends Base
     // --------------------------------------------------------------------------
 
     /**
+     * A table whose cells are all blank renders nothing. The canvas still draws it, so it can be seen and filled.
+     *
      * @inheritDoc
      */
     public function render(array $data): string
     {
         $rows = array_values(array_filter((array) ($data['rows'] ?? []), 'is_array'));
+
         if ($rows === []) {
+            return $this->isPreview()
+                ? '<div class="cms-widget cms-widget-table"><p class="cms-we-hint">Add some cells in the inspector.</p></div>'
+                : '';
+        }
+
+        if (!$this->isPreview() && static::isBlank($rows)) {
             return '';
         }
 
         $attributes = trim((string) ($data['attributes'] ?? ''));
+        $headers    = max(0, min(count($rows), (int) ($data['header_rows'] ?? 0)));
+        $head       = '';
         $body       = '';
 
-        foreach ($rows as $rowIndex => $cells) {
+        foreach (array_slice($rows, 0, $headers) as $rowIndex => $cells) {
+            $head .= '<tr data-row="' . $rowIndex . '" class="cms-widget-table-row cms-widget-table-header-row">';
+            foreach (array_values($cells) as $columnIndex => $cell) {
+                $head .= '<th scope="col" data-row="' . $columnIndex . '" class="cms-widget-table-cell">' . static::cell($cell) . '</th>';
+            }
+            $head .= '</tr>';
+        }
+
+        //  The row classes, and data-row holding the column index on a cell, are the v1 markup
+        foreach (array_slice($rows, $headers) as $rowIndex => $cells) {
             $body .= '<tr data-row="' . $rowIndex . '" class="cms-widget-table-row cms-widgettable-row-' . ($rowIndex % 2 ? 'odd' : 'even') . '">';
             foreach (array_values($cells) as $columnIndex => $cell) {
-                $body .= '<td data-row="' . $columnIndex . '" class="cms-widget-table-cell">' . (is_scalar($cell) ? (string) $cell : '') . '</td>';
+                $body .= '<td data-row="' . $columnIndex . '" class="cms-widget-table-cell">' . static::cell($cell) . '</td>';
             }
             $body .= '</tr>';
         }
 
         return '<div class="cms-widget cms-widget-table">'
-            . '<table class="table"' . ($attributes !== '' ? ' ' . $attributes : '') . '><tbody>' . $body . '</tbody></table>'
+            . '<table class="table"' . ($attributes !== '' ? ' ' . $attributes : '') . '>'
+            . ($head !== '' ? '<thead>' . $head . '</thead>' : '')
+            . ($body !== '' ? '<tbody>' . $body . '</tbody>' : '')
+            . '</table>'
             . '</div>';
+    }
+
+    // --------------------------------------------------------------------------
+
+    private static function cell(mixed $cell): string
+    {
+        return is_scalar($cell) ? (string) $cell : '';
+    }
+
+    // --------------------------------------------------------------------------
+
+    private static function isBlank(array $rows): bool
+    {
+        foreach ($rows as $cells) {
+            foreach ($cells as $cell) {
+                if (trim(static::cell($cell)) !== '') {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

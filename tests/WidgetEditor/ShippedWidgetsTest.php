@@ -410,19 +410,69 @@ class ShippedWidgetsTest extends TestCase
         $widget = new Table();
         $html   = $widget->render($widget->normalise(['tblData' => '[["<b>a</b>","b"],["c"]]', 'tblAttr' => 'id="x"']));
 
+        //  A v1 table has no heading rows, so its markup is the v1 markup
         $this->assertStringContainsString('<table class="table" id="x"><tbody>', $html);
+        $this->assertStringNotContainsString('<thead>', $html);
         $this->assertStringContainsString('<td data-row="0" class="cms-widget-table-cell"><b>a</b></td>', $html);
         // The short row is padded by the field
         $this->assertSame(4, substr_count($html, '<td '));
     }
 
-    public function testTableDefaultsToAnEmptyGrid(): void
+    public function testTableRendersItsHeaderRowsAsHeadings(): void
     {
-        $defaults = (new Table())->getDefaults();
+        $widget = new Table();
+        $html   = $widget->render($widget->normalise(['rows' => [['H1', 'H2'], ['a', 'b'], ['c', 'd']], 'header_rows' => 1]));
+
+        $this->assertStringContainsString(
+            '<thead><tr data-row="0" class="cms-widget-table-row cms-widget-table-header-row">'
+            . '<th scope="col" data-row="0" class="cms-widget-table-cell">H1</th>',
+            $html
+        );
+        $this->assertStringContainsString(
+            '<tbody><tr data-row="0" class="cms-widget-table-row cms-widgettable-row-even"><td data-row="0" class="cms-widget-table-cell">a</td>',
+            $html
+        );
+        $this->assertStringContainsString('<tr data-row="1" class="cms-widget-table-row cms-widgettable-row-odd">', $html);
+
+        //  More header rows than rows makes every row a heading
+        $html = $widget->render($widget->normalise(['rows' => [['H1']], 'header_rows' => 5]));
+        $this->assertStringContainsString('<thead>', $html);
+        $this->assertStringNotContainsString('<tbody>', $html);
+    }
+
+    public function testTableDefaultsToAnEmptyGridWithOneHeaderRow(): void
+    {
+        $widget   = new Table();
+        $defaults = $widget->getDefaults();
 
         $this->assertCount(4, $defaults['rows']);
         $this->assertSame(['', '', ''], $defaults['rows'][0]);
-        $this->assertSame('', (new Table())->render(['rows' => []]));
+        $this->assertSame(1, $defaults['header_rows']);
+        $this->assertSame('', $widget->render(['rows' => []]));
+
+        //  A table whose cells are all blank renders nothing on the page
+        $this->assertSame('', $widget->render($widget->normalise([])));
+    }
+
+    public function testTablePreviewDrawsABlankTableAndAsksForCells(): void
+    {
+        $registry = new Registry([Table::class => 1]);
+        $slug     = Registry::slugFor(Table::class);
+
+        $blank = $registry->renderNode(['slug' => $slug, 'data' => []], Registry::MODE_PREVIEW);
+        $this->assertStringContainsString('<thead>', $blank);
+        $this->assertSame(9, substr_count($blank, '<td '));
+
+        $none = $registry->renderNode(['slug' => $slug, 'data' => ['rows' => []]], Registry::MODE_PREVIEW);
+        $this->assertStringContainsString('Add some cells in the inspector.', $none);
+    }
+
+    public function testTableFieldNamesItsHeaderRowsField(): void
+    {
+        $fields = Fields::validate((new Table())->getFields());
+
+        $this->assertSame('header_rows', Fields::find($fields, 'rows')->toArray()['headerRows']);
+        $this->assertSame('number', Fields::find($fields, 'header_rows')->toArray()['type']);
     }
 
     // --------------------------------------------------------------------------
