@@ -67,6 +67,49 @@ class ShippedWidgetsTest extends TestCase
         $this->assertSame('', (new Blockquote())->render(['quote' => '', 'cite_text' => 'Someone']));
     }
 
+    public function testBlockquotePreviewShowsEmptyFieldsAsPlaceholders(): void
+    {
+        $registry = new Registry([Blockquote::class => 1]);
+        $slug     = Registry::slugFor(Blockquote::class);
+
+        $empty = $registry->renderNode(
+            ['slug' => $slug, 'data' => ['quote' => '', 'cite_text' => '', 'cite_url' => 'https://example.com']],
+            Registry::MODE_PREVIEW
+        );
+
+        $this->assertStringContainsString('class="cms-widget cms-widget-blockquote"', $empty);
+        $this->assertStringContainsString('data-cms-field="quote" data-cms-edit="rich-basic"', $empty);
+        $this->assertStringContainsString('data-cms-empty="1"', $empty);
+        $this->assertStringContainsString('Write something…', $empty);
+        $this->assertStringContainsString('data-cms-field="cite_text" data-cms-edit="text"', $empty);
+        $this->assertStringContainsString('data-cms-placeholder="Add a citation"', $empty);
+        $this->assertStringContainsString('Add a citation', $empty);
+        // With a URL the citation field is the link itself, so the placeholder is not wrapped in one
+        $this->assertStringContainsString('<a data-cms-placeholder="Add a citation" data-cms-empty="1" href="https://example.com" data-cms-field="cite_text"', $empty);
+
+        $plain = $registry->renderNode(
+            ['slug' => $slug, 'data' => ['quote' => '<p>Quote</p>', 'cite_text' => '', 'cite_url' => '']],
+            Registry::MODE_PREVIEW
+        );
+        $this->assertStringContainsString('<span data-cms-placeholder="Add a citation" data-cms-empty="1" data-cms-field="cite_text"', $plain);
+        $this->assertStringNotContainsString('<a ', $plain);
+
+        $filled = $registry->renderNode(
+            ['slug' => $slug, 'data' => [
+                'quote'     => '<p>Quote</p>',
+                'cite_text' => 'Source & co',
+                'cite_url'  => 'https://example.com/a?b=1',
+            ]],
+            Registry::MODE_PREVIEW
+        );
+
+        $this->assertStringContainsString('<p>Quote</p>', $filled);
+        $this->assertStringContainsString('<a data-cms-placeholder="Add a citation" href="https://example.com/a?b=1" data-cms-field="cite_text"', $filled);
+        $this->assertStringContainsString('>Source &amp; co</a>', $filled);
+        $this->assertStringNotContainsString('data-cms-empty', $filled);
+        $this->assertStringNotContainsString('Write something…', $filled);
+    }
+
     public function testBlockquoteWithoutCitation(): void
     {
         $sHtml = (new Blockquote())->render(['quote' => '<p>Quote</p>', 'cite_text' => '', 'cite_url' => '']);
