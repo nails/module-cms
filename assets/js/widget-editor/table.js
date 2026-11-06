@@ -39,6 +39,52 @@ export function setTableCell(rows, rowIndex, columnIndex, text) {
     return rows.map((row, r) => (r === rowIndex ? row.map((cell, c) => (c === columnIndex ? text : cell)) : row));
 }
 
+/** @return {number} How many of the first rows are headings: a whole number from 0 to the row count */
+export function tableHeaderCount(value, rowCount) {
+    const count = Math.floor(Number(value));
+    return Number.isFinite(count) ? Math.min(Math.max(count, 0), rowCount) : 0;
+}
+
+/** @return {string} The spreadsheet name of a column: A to Z, then AA, AB, … */
+export function columnName(index) {
+    let name = '';
+    for (let n = index + 1; n > 0; n = Math.floor((n - 1) / 26)) {
+        name = String.fromCharCode(65 + ((n - 1) % 26)) + name;
+    }
+    return name;
+}
+
+/**
+ * Where a dragged row or column ends up, from the gap it is dropped in: gap 0 is before the first, gap n after the
+ * last. Dropping either side of itself leaves it where it is.
+ */
+export function movedIndex(from, gap) {
+    return gap > from ? gap - 1 : gap;
+}
+
+/** Moves a row to index `to` */
+export function moveTableRow(rows, from, to) {
+    if (from === to) {
+        return rows;
+    }
+    const next = [...rows];
+    next.splice(to, 0, ...next.splice(from, 1));
+    return next;
+}
+
+/** Moves a column to index `to` in every row. A short row is filled first, so its cells keep their columns. */
+export function moveTableColumn(rows, from, to) {
+    if (from === to) {
+        return rows;
+    }
+    const width = tableWidth(rows);
+    return rows.map((row) => {
+        const next = [...row, ...new Array(width - row.length).fill('')];
+        next.splice(to, 0, ...next.splice(from, 1));
+        return next;
+    });
+}
+
 /** @return {string} e.g. "3 rows × 4 columns" */
 export function tableSummary(value) {
     const rows = tableRows(value);

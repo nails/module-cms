@@ -3,9 +3,14 @@ import { BUILTIN_RULES } from '../../assets/js/widget-editor/builtin-rules.js';
 import {
     addTableColumn,
     addTableRow,
+    columnName,
+    movedIndex,
+    moveTableColumn,
+    moveTableRow,
     removeTableColumn,
     removeTableRow,
     setTableCell,
+    tableHeaderCount,
     tableIsEmpty,
     tableRows,
     tableSummary,
@@ -47,5 +52,44 @@ describe('table field', () => {
         expect(tableIsEmpty([['', ' ']])).toBe(true);
         expect(tableIsEmpty([['', 'a']])).toBe(false);
         expect(BUILTIN_RULES.table.summary([['a']])).toBe('1 row × 1 column');
+    });
+
+    it('names columns as a spreadsheet does', () => {
+        expect([0, 1, 25, 26, 27, 51, 52, 701, 702].map(columnName))
+            .toEqual(['A', 'B', 'Z', 'AA', 'AB', 'AZ', 'BA', 'ZZ', 'AAA']);
+    });
+
+    it('reads the header row count as a whole number no larger than the table', () => {
+        expect(tableHeaderCount(1, 3)).toBe(1);
+        expect(tableHeaderCount('2', 3)).toBe(2);
+        expect(tableHeaderCount(9, 3)).toBe(3);
+        expect(tableHeaderCount(1.7, 3)).toBe(1);
+        expect(tableHeaderCount(-1, 3)).toBe(0);
+        expect(tableHeaderCount(null, 3)).toBe(0);
+        expect(tableHeaderCount(undefined, 3)).toBe(0);
+        expect(tableHeaderCount('x', 3)).toBe(0);
+    });
+});
+
+describe('dragging rows and columns', () => {
+    it('turns the gap a drop lands in into the new index', () => {
+        // Three items; gaps 0 to 3
+        expect(movedIndex(0, 3)).toBe(2);
+        expect(movedIndex(2, 0)).toBe(0);
+        expect(movedIndex(1, 1)).toBe(1);
+        expect(movedIndex(1, 2)).toBe(1);
+    });
+
+    it('moves a row without changing the others', () => {
+        const rows = [['a'], ['b'], ['c']];
+        expect(moveTableRow(rows, 0, 2)).toEqual([['b'], ['c'], ['a']]);
+        expect(moveTableRow(rows, 2, 0)).toEqual([['c'], ['a'], ['b']]);
+        expect(moveTableRow(rows, 1, 1)).toBe(rows);
+        expect(rows).toEqual([['a'], ['b'], ['c']]);
+    });
+
+    it('moves a column in every row, filling a short row first', () => {
+        expect(moveTableColumn([['a', 'b', 'c'], ['d', 'e', 'f']], 0, 2)).toEqual([['b', 'c', 'a'], ['e', 'f', 'd']]);
+        expect(moveTableColumn([['a', 'b', 'c'], ['d']], 2, 0)).toEqual([['c', 'a', 'b'], ['', 'd', '']]);
     });
 });
