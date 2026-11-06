@@ -13,6 +13,14 @@
 $sTableData = !empty($tblData) ? (string) $tblData : '';
 $sTblAttr = !empty($tblAttr) ? $tblAttr : '';
 
+//  A table saved by the WidgetEditor (v2), or converted by Migration13, stores `rows` and `attributes`
+if ($sTableData === '' && !empty($rows) && is_array($rows)) {
+    $sTableData = json_encode(array_values($rows));
+}
+if ($sTblAttr === '' && !empty($attributes) && is_string($attributes)) {
+    $sTblAttr = $attributes;
+}
+
 if (!empty($sTableData)) {
     $sTableData = json_decode($sTableData);
     ?>

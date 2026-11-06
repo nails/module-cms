@@ -27,6 +27,15 @@ $aEmptyTableData = [
 ];
 $sEmptyTableData = json_encode($aEmptyTableData);
 
+//  A table saved by the WidgetEditor (v2), or converted by Migration13, stores `rows`, `attributes` and
+//  `header_rows`. This form replaces the instance's data when it is saved, so it must carry all three.
+if (empty($tblData) && !empty($rows) && is_array($rows)) {
+    $tblData = json_encode(array_values($rows));
+}
+if (!isset($tblAttr) && isset($attributes) && is_string($attributes)) {
+    $tblAttr = $attributes;
+}
+
 ?>
 <div class="handsontable" style="background: rgb(234, 234, 234);"></div>
 <textarea style="display: none;" name="tblData" class="table-data">
