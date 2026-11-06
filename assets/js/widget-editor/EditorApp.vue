@@ -177,7 +177,7 @@
                         v-else-if="inspector.type === 'fields'"
                         class="cms-we__settings"
                         :fields="selectedFields"
-                        :values="selectedNode.data || {}"
+                        :values="inspectorValues"
                         @change="onFieldsChange"
                     ></FieldsInspector>
                     <p v-else-if="inspector.error">{{ inspector.error }}</p>
@@ -277,8 +277,9 @@ export default {
             count: 0,
             maxInstances: 0,
         });
-        // callbacks, slug: the v1 scripts of the form in the inspector, and the widget they belong to
-        const inspector = reactive({ type: null, error: '', warning: '', slug: '', callbacks: null, empty: false });
+        // callbacks, slug: the v1 scripts of the form in the inspector, and the widget they belong to.
+        // upgraded: { uid, data } for a selection stored in an older shape, until its first edit.
+        const inspector = reactive({ type: null, error: '', warning: '', slug: '', callbacks: null, empty: false, upgraded: null });
         // The HTML form lives in one element, which is moved between the inspector and the modal, so the values
         // typed in it are kept when it moves
         const formNode = document.createElement('div');
@@ -478,6 +479,7 @@ export default {
             inspector.callbacks = null;
             inspector.slug = '';
             inspector.empty = false;
+            inspector.upgraded = null;
             const node = selectedNode.value;
             if (!node || node.locked) {
                 return;
@@ -486,10 +488,11 @@ export default {
             if (!widget) {
                 return;
             }
-            if (widget.inspector && widget.inspector.type === 'fields') {
+            if (widget.inspector && widget.inspector.type === 'fields' && !widget.upgrades) {
                 inspector.type = 'fields';
                 return;
             }
+            const uid = view.value.selected;
 
             const response = await fetch(endpoint('inspector'), {
                 method: 'POST',
@@ -498,6 +501,9 @@ export default {
                 body: JSON.stringify({ items: [{ slug: node.slug, data: node.data }] }),
             });
             const body = await response.json();
+            if (view.value.selected !== uid) {
+                return;
+            }
             const item = body.data && body.data[0];
             if (!response.ok || !item) {
                 inspector.error = 'The editor form could not be loaded';
@@ -508,6 +514,9 @@ export default {
                 return;
             }
             if (item.type === 'fields') {
+                if (widget.upgrades && item.data && typeof item.data === 'object' && !Array.isArray(item.data)) {
+                    inspector.upgraded = { uid, data: item.data };
+                }
                 inspector.type = 'fields';
                 return;
             }
@@ -651,6 +660,24 @@ export default {
             return true;
         }
 
+        /** The data an edit starts from: the upgraded data, the first time an instance in an older shape is edited */
+        function editData(uid, node) {
+            return inspector.upgraded && inspector.upgraded.uid === uid ? inspector.upgraded.data : (node.data || {});
+        }
+
+        /** Once edited, the instance holds the upgraded data, so its own data is used from then on */
+        function dropUpgraded(uid) {
+            if (inspector.upgraded && inspector.upgraded.uid === uid) {
+                inspector.upgraded = null;
+            }
+        }
+
+        /** What the fields inspector shows for the selection */
+        const inspectorValues = computed(() => {
+            const node = selectedNode.value;
+            return node ? editData(view.value.selected, node) : {};
+        });
+
         /**
          * One field changed in the fields inspector. It is merged with the node's current data, not with the data
          * the inspector was rendered from, so two quick changes cannot overwrite each other.
@@ -661,11 +688,12 @@ export default {
             if (!found || found.node.locked) {
                 return;
             }
-            const current = found.node.data || {};
+            const current = editData(uid, found.node);
             if (JSON.stringify(current[key]) === JSON.stringify(value)) {
                 return;
             }
             editor.update(uid, { ...current, [key]: value }, true);
+            dropUpgraded(uid);
             refresh();
         }
 
@@ -972,6 +1000,7 @@ export default {
             view,
             groups,
             inspector,
+            inspectorValues,
             panelHost,
             drawer,
             rich,

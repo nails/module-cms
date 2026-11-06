@@ -108,14 +108,40 @@ class ContextWidget extends Base
     }
 }
 
+class RenamedWidget extends Base
+{
+    const ALIASES = [];
+
+    public function getFields(): ?array
+    {
+        return [\Nails\Cms\Cms\Fields\Text::make('title')];
+    }
+
+    public function upgrade(array $data): array
+    {
+        if (array_key_exists('sTitle', $data)) {
+            $data['title'] ??= $data['sTitle'];
+            unset($data['sTitle']);
+        }
+        return $data;
+    }
+
+    public function render(array $data): string
+    {
+        return '<h2>' . $data['title'] . '</h2>';
+    }
+}
+
 class ApiTest extends TestCase
 {
     private const HEADING = 'Tests.WidgetEditor.Api.HeadingWidget';
     private const NOTE    = 'Tests.WidgetEditor.Api.NoteWidget';
+    private const RENAMED = 'Tests.WidgetEditor.Api.RenamedWidget';
 
     private function registry(): Registry
     {
         return new Registry([
+            RenamedWidget::class  => 1,
             HeadingWidget::class  => 1,
             NoteWidget::class     => 1,
             HiddenWidget::class   => 1,
@@ -243,6 +269,33 @@ class ApiTest extends TestCase
         self::assertSame(['note.js'], $out[1]['assets']);
         self::assertNull($out[2]['type']);
         self::assertNotNull($out[2]['error']);
+    }
+
+    public function testCatalogueFlagsWidgetsThatUpgrade(): void
+    {
+        $payload = $this->catalogue();
+
+        self::assertTrue($payload['widgets'][self::RENAMED]['upgrades']);
+        self::assertFalse($payload['widgets'][self::HEADING]['upgrades']);
+    }
+
+    public function testInspectorReturnsUpgradedDataForAFieldsWidget(): void
+    {
+        $out = (new Inspector())->render($this->registry(), [
+            ['slug' => self::RENAMED, 'data' => ['sTitle' => 'Old']],
+            ['slug' => self::RENAMED, 'data' => ['title' => 'New']],
+        ]);
+
+        self::assertSame('fields', $out[0]['type']);
+        self::assertSame(['title' => 'Old'], $out[0]['data']);
+        self::assertSame(['title' => 'New'], $out[1]['data']);
+    }
+
+    public function testRenderAppliesTheUpgrade(): void
+    {
+        $html = $this->registry()->renderNode(['slug' => self::RENAMED, 'data' => ['sTitle' => 'Old']]);
+
+        self::assertSame('<h2>Old</h2>', $html);
     }
 
     public function testFavouriteListNormalisation(): void

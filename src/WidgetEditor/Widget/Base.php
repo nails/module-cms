@@ -185,14 +185,25 @@ abstract class Base implements Interfaces\Widget
     // --------------------------------------------------------------------------
 
     /**
-     * Fills any keys the data is missing from getDefaults(). Pure: the result is never saved.
+     * Upgrades the data, then fills any keys it is missing from getDefaults(). Pure: the result is never saved.
      */
     public function normalise(array $data): array
     {
-        $data   = array_replace($this->getDefaults(), $data);
+        $data   = array_replace($this->getDefaults(), $this->upgrade($data));
         $fields = $this->getFields();
 
         return is_array($fields) ? Fields::fill(Fields::validate($fields), $data) : $data;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * A widget whose stored shape changed (for example from its v1 widget) overrides this. Data that is already
+     * in the current shape must come back unchanged.
+     */
+    public function upgrade(array $data): array
+    {
+        return $data;
     }
 
     // --------------------------------------------------------------------------
