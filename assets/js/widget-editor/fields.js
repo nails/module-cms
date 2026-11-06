@@ -1,10 +1,12 @@
 /**
- * Rules for a fields-schema widget's inspector (D23)
+ * Rules for a fields-schema widget's inspector
  *
  * The schema comes from the catalogue, already validated and with defaults filled (see Service\Fields in PHP).
- * These functions are pure, so the Vue controls only render and call them. Nothing here blocks a save: a missing
- * required field is a warning.
+ * Rules that depend on the type (what counts as empty, how a value is stored) come from the type's definition in
+ * field-types.js. Nothing here blocks a save: a missing required field is a warning.
  */
+
+import { fieldType } from './field-types.js';
 
 /**
  * @typedef {Object} Field
@@ -20,7 +22,6 @@
  * @property {number|null} [min]
  * @property {number|null} [max]
  * @property {Field[]} [fields]   Repeater children
- * @property {string} [bucket]    cdn_object bucket
  */
 
 /**
@@ -44,15 +45,22 @@ export function visibleFields(fields, values) {
 }
 
 /**
- * Whether a value counts as missing for a required field. A toggle is never missing: off is a value.
+ * Whether a value counts as missing for a required field. The type may decide (a toggle is never missing);
+ * otherwise null, blank text and an empty list are missing.
  * @param {Field} field
  * @param {unknown} value
  * @return {boolean}
  */
 export function isEmpty(field, value) {
-    if (field.type === 'toggle') {
-        return false;
-    }
+    const definition = fieldType(field.type);
+    return definition && definition.isEmpty ? definition.isEmpty(value, field) : isBlank(value);
+}
+
+/**
+ * @param {unknown} value
+ * @return {boolean}
+ */
+export function isBlank(value) {
     if (value === undefined || value === null) {
         return true;
     }
@@ -84,7 +92,7 @@ export function missingRequired(fields, values, prefix = '') {
             out.push({ path, label: field.label });
         }
 
-        if (field.type === 'repeater' && Array.isArray(value)) {
+        if (Array.isArray(field.fields) && Array.isArray(value)) {
             value.forEach((row, index) => {
                 out.push(...missingRequired(field.fields, row || {}, path + '[' + index + '].'));
             });
@@ -166,31 +174,59 @@ export function setRowValue(rows, index, key, value) {
 }
 
 /**
- * Converts what a control reports into the stored value for its type. Nothing is clamped, so a value outside
- * min or max is kept and the editor does not block it.
+ * The row's heading: the first field's text, or its selected option. Empty falls back to "Item N".
+ *
+ * @param {Field} field A repeater
+ * @param {Object<string, unknown>} row
+ * @param {number} index
+ * @return {string}
+ */
+export function rowTitle(field, row, index) {
+    const fallback = 'Item ' + (index + 1);
+    const first = (field.fields || [])[0];
+    if (!first || !row) {
+        return fallback;
+    }
+
+    const value = row[first.key];
+    let text = '';
+    if (first.options && value in first.options) {
+        text = String(first.options[value]);
+    } else if (first.type === 'richtext') {
+        text = plainText(value);
+    } else if (typeof value === 'string' || typeof value === 'number') {
+        text = String(value);
+    }
+
+    text = text.replace(/\s+/g, ' ').trim();
+    return text || fallback;
+}
+
+/**
+ * Converts what a control reports into the stored value for its type. A type without a rule stores what it reports.
  *
  * @param {Field} field
  * @param {unknown} raw
  * @return {unknown}
  */
 export function coerce(field, raw) {
-    switch (field.type) {
-        case 'number': {
-            if (raw === '' || raw === null || raw === undefined) {
-                return null;
-            }
-            const number = Number(raw);
-            return Number.isFinite(number) ? number : null;
-        }
-        case 'toggle':
-            return Boolean(raw);
-        case 'cdn_object': {
-            const id = parseInt(raw, 10);
-            return Number.isInteger(id) && id > 0 ? id : null;
-        }
-        default:
-            return raw;
+    const definition = fieldType(field.type);
+    return definition && definition.coerce ? definition.coerce(raw, field) : raw;
+}
+
+/**
+ * One line that stands in for a wide field in the inspector
+ *
+ * @param {Field} field
+ * @param {unknown} value
+ * @return {string}
+ */
+export function summary(field, value) {
+    const definition = fieldType(field.type);
+    if (definition && definition.summary) {
+        return definition.summary(value, field);
     }
+    return isEmpty(field, value) ? 'Nothing yet' : String(value);
 }
 
 /**

@@ -1,17 +1,29 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { BUILTIN_RULES } from '../../assets/js/widget-editor/builtin-rules.js';
+import { clearFieldTypes, registerFieldType } from '../../assets/js/widget-editor/field-types.js';
 import {
     addRow,
     canAddRow,
     coerce,
+    isEmpty,
     isVisible,
     missingRequired,
     moveRow,
     newRow,
     plainText,
     removeRow,
+    rowTitle,
     setRowValue,
+    summary,
     visibleFields,
 } from '../../assets/js/widget-editor/fields.js';
+
+beforeAll(() => {
+    clearFieldTypes();
+    Object.keys(BUILTIN_RULES).forEach((type) => {
+        registerFieldType({ type, component: {}, ...BUILTIN_RULES[type] });
+    });
+});
 
 const ROW = {
     key: 'aItems',
@@ -112,6 +124,19 @@ describe('repeater rows', () => {
         expect(moveRow(rows, 2, 1)).toBe(rows);
     });
 
+    it('names a row from its first field, using a select option label', () => {
+        expect(rowTitle(ROW, { sText: '  Hello  ' }, 0)).toBe('Hello');
+        expect(rowTitle(ROW, { sText: '' }, 2)).toBe('Item 3');
+        const selectFirst = {
+            ...ROW,
+            fields: [
+                { key: 'sTone', type: 'select', options: { dark: 'Dark' } },
+                { key: 'sText', type: 'text' },
+            ],
+        };
+        expect(rowTitle(selectFirst, { sTone: 'dark', sText: 'ignored' }, 0)).toBe('Dark');
+    });
+
     it('changes one child without touching the others', () => {
         const rows = [{ sText: 'a', sTone: 'light' }, { sText: 'b', sTone: 'light' }];
         const next = setRowValue(rows, 1, 'sText', 'changed');
@@ -138,14 +163,40 @@ describe('coerce', () => {
         expect(coerce({ type: 'toggle' }, '')).toBe(false);
     });
 
-    it('keeps a cdn object as a positive integer id', () => {
-        expect(coerce({ type: 'cdn_object' }, '12')).toBe(12);
-        expect(coerce({ type: 'cdn_object' }, '0')).toBeNull();
-        expect(coerce({ type: 'cdn_object' }, '')).toBeNull();
-    });
-
     it('leaves text as it is', () => {
         expect(coerce({ type: 'text' }, ' spaced ')).toBe(' spaced ');
+    });
+
+    it('stores what a type with no rule reports, including an unregistered type', () => {
+        expect(coerce({ type: 'unknown' }, '7')).toBe('7');
+    });
+});
+
+describe('isEmpty', () => {
+
+    it('treats blank text, null and no rows as empty', () => {
+        expect(isEmpty({ type: 'text' }, '  ')).toBe(true);
+        expect(isEmpty({ type: 'number' }, null)).toBe(true);
+        expect(isEmpty({ type: 'repeater' }, [])).toBe(true);
+        expect(isEmpty({ type: 'number' }, 0)).toBe(false);
+    });
+
+    it('lets the type decide', () => {
+        expect(isEmpty({ type: 'toggle' }, false)).toBe(false);
+    });
+});
+
+describe('summary', () => {
+
+    it('summarises each built-in type in one line', () => {
+        expect(summary({ type: 'text' }, '')).toBe('Nothing yet');
+        expect(summary({ type: 'textarea' }, 'Some notes')).toBe('Some notes');
+        expect(summary({ type: 'richtext' }, '<p>Rich <b>body</b></p>')).toBe('Rich body');
+        expect(summary({ type: 'select', options: { light: 'Light' } }, 'light')).toBe('Light');
+        expect(summary({ type: 'toggle' }, true)).toBe('On');
+        expect(summary({ type: 'number' }, 0)).toBe('0');
+        expect(summary({ type: 'repeater' }, [{}, {}])).toBe('2 items');
+        expect(summary({ type: 'repeater' }, [{}])).toBe('1 item');
     });
 });
 

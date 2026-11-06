@@ -1,291 +1,78 @@
 <template>
-    <div v-if="field.type === 'repeater'" class="field">
-        <span class="label">
-            {{ field.label }}
-            <span v-if="field.required" class="field-required" title="Required">*</span>
-            <span v-if="field.tip" class="tip" :title="field.tip"><i class="fa fa-question-circle"></i></span>
-        </span>
-        <div class="cms-we__repeater">
-            <div v-for="(row, index) in rows" :key="index" class="cms-we__row-item">
-                <div class="cms-we__row-tools">
-                    <strong>{{ field.label }} {{ index + 1 }}</strong>
-                    <button type="button" class="btn btn-default btn-xs" :disabled="index === 0" @click="move(index, -1)">Up</button>
-                    <button type="button" class="btn btn-default btn-xs" :disabled="index === rows.length - 1" @click="move(index, 1)">Down</button>
-                    <button type="button" class="btn btn-default btn-xs" :disabled="!canRemove" @click="remove(index)">Remove</button>
-                </div>
-                <FieldControl
-                    v-for="child in visibleFields(field.fields, row)"
-                    :key="child.key"
-                    :field="child"
-                    :value="row[child.key]"
-                    @update="setChild(index, child.key, $event)"
-                ></FieldControl>
-            </div>
-            <button type="button" class="btn btn-default btn-sm" :disabled="!canAdd" @click="add">Add item</button>
-            <p v-if="!canAdd && field.max !== null" class="cms-we__rich-note">The most is {{ field.max }}.</p>
-            <p v-if="field.required && empty" class="cms-we__warning">Required. You can still save.</p>
-        </div>
-    </div>
-    <div v-else class="field" :class="{ checkbox: field.type === 'toggle' }">
-        <label>
+    <component :is="definition.component" v-if="inModal && definition" :field="field" :value="value" @update="onUpdate"></component>
+    <div v-else class="field" :class="definition && definition.className">
+        <component :is="wrapper">
             <span class="label">
                 {{ field.label }}
                 <span v-if="field.required" class="field-required" title="Required">*</span>
-                <span v-if="field.tip" class="tip" :title="field.tip"><i class="fa fa-question-circle"></i></span>
+                <span v-if="field.tip" class="tip">
+                    <span class="hint--right hint--medium" :aria-label="field.tip"><i class="fa fa-question-circle"></i></span>
+                </span>
+                <small v-if="field.subtitle" class="cms-we__subtitle">{{ field.subtitle }}</small>
             </span>
             <span class="input">
-            <template v-if="field.type === 'richtext'">
-                <p class="cms-we__rich-note">{{ summary || 'Nothing yet' }}</p>
-                <button type="button" class="btn btn-default btn-sm" @click="openRich">Edit text</button>
-                <Modal v-if="richOpen" :title="field.label" @close="richOpen = false">
-                    <RichTextModal ref="richEditor" :value="value || ''" @save="saveRich" @dirty="richDirty = $event"></RichTextModal>
-                    <template #actions>
-                        <span v-if="!richDirty" class="cms-we__rich-note">No changes yet.</span>
-                        <button type="button" class="btn btn-primary btn-sm" :disabled="!richDirty" @click="richEditor.save()">Save</button>
-                        <button type="button" class="btn btn-default btn-sm" @click="richOpen = false">Cancel</button>
-                    </template>
-                </Modal>
-            </template>
+                <p v-if="!definition" class="cms-we__warning">
+                    No control is registered for the field type "{{ field.type }}".
+                </p>
 
-            <input
-                v-else-if="field.type === 'text'"
-                type="text"
-                class="form-control"
-                :maxlength="field.maxlength || undefined"
-                :value="value ?? ''"
-                @input="emit('update', $event.target.value)"
-            >
+                <template v-else-if="collapsed">
+                    <p class="cms-we__summary">{{ oneLine }}</p>
+                    <button type="button" class="btn btn-default btn-sm cms-we__edit" @click="wideOpen = true">
+                        <i class="fa fa-pencil-alt"></i> Edit
+                    </button>
+                    <Modal v-if="wideOpen" :title="field.label" @close="wideOpen = false">
+                        <FieldControl :field="field" :value="value" in-modal @update="emit('update', $event)"></FieldControl>
+                        <template #actions>
+                            <button type="button" class="btn btn-primary btn-sm" @mousedown.prevent="wideOpen = false">Done</button>
+                        </template>
+                    </Modal>
+                </template>
 
-            <textarea
-                v-else-if="field.type === 'textarea'"
-                class="form-control"
-                rows="4"
-                :maxlength="field.maxlength || undefined"
-                :value="value ?? ''"
-                @input="emit('update', $event.target.value)"
-            ></textarea>
-
-            <input
-                v-else-if="field.type === 'number'"
-                type="number"
-                class="form-control"
-                :min="field.min ?? undefined"
-                :max="field.max ?? undefined"
-                :value="value ?? ''"
-                @input="emit('update', coerce(field, $event.target.value))"
-            >
-
-            <select
-                v-else-if="field.type === 'select'"
-                class="form-control"
-                :value="value"
-                @change="emit('update', $event.target.value)"
-            >
-                <option v-for="(label, key) in field.options" :key="key" :value="key">{{ label }}</option>
-            </select>
-
-            <input
-                v-else-if="field.type === 'toggle'"
-                type="checkbox"
-                :checked="Boolean(value)"
-                @change="emit('update', $event.target.checked)"
-            >
-
-            <small v-if="field.maxlength && (field.type === 'text' || field.type === 'textarea')" class="char-count" :data-max-length="field.maxlength">
-                Max Length: {{ field.maxlength }}
-            </small>
-
-            <!--
-                The CDN object picker. This is the server markup from module-cdn (cdn/views/picker.php). Only the hidden
-                input is bound by Vue; the label and preview are filled in by the picker's own code, so they are left empty here.
-            -->
-            <template v-else-if="field.type === 'cdn_object'">
-                <div ref="picker" class="cdn-object-picker" :data-bucket="field.bucket || null">
-                    <input class="cdn-object-picker__input" type="hidden" :value="value ?? ''">
-                    <button type="button" class="cdn-object-picker__btn btn btn-sm btn-primary">Browse</button>
-                    <b class="cdn-object-picker__pending fa fa-spinner fa-spin"></b>
-                    <div class="cdn-object-picker__label"></div>
-                    <a class="cdn-object-picker__preview-link" href="#">
-                        <div class="cdn-object-picker__preview"></div>
-                    </a>
-                    <b class="cdn-object-picker__remove fa fa-times-circle"></b>
-                </div>
-                <p v-if="!value" class="cms-we__rich-note">No file selected</p>
-            </template>
-
-            <p v-if="field.required && empty && field.type !== 'toggle'" class="cms-we__warning">Required. You can still save.</p>
+                <component :is="definition.component" v-else :field="field" :value="value" @update="onUpdate"></component>
             </span>
-        </label>
+        </component>
+        <small v-if="field.info" class="info" :class="field.infoClass">{{ field.info }}</small>
     </div>
 </template>
 
 <script>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import Modal from './Modal.vue';
-import RichTextModal from './RichTextModal.vue';
-import {
-    addRow,
-    canAddRow,
-    canRemoveRow,
-    coerce,
-    isEmpty,
-    moveRow,
-    plainText,
-    removeRow,
-    setRowValue,
-    visibleFields,
-} from './fields.js';
+import { fieldType } from './field-types.js';
+import { coerce, summary } from './fields.js';
 
+/**
+ * One field in the inspector: its label, tip and info, around the control registered for its type
+ * (see field-types.js). A wide field shows a short summary here and its control, without the label, in a modal.
+ */
 export default {
     name: 'FieldControl',
-    components: { Modal, RichTextModal },
+    components: { Modal },
     props: {
-        /** A normalised field from the catalogue */
+        /** A field from the catalogue */
         field: { type: Object, required: true },
         /** The field's stored value */
         value: { type: null, default: undefined },
-        /** Set when this control is already shown in the modal, so it is not wrapped again */
+        /** Set when this control is already shown in the modal, so only the control is drawn */
         inModal: { type: Boolean, default: false },
     },
     emits: ['update'],
     setup(props, { emit }) {
         const wideOpen = ref(false);
-        const richOpen = ref(false);
-        const richDirty = ref(false);
-        const richEditor = ref(null);
-        const picker = ref(null);
+        const definition = computed(() => fieldType(props.field.type));
+        const collapsed = computed(() => Boolean(props.field.wide && definition.value?.wide && !props.inModal));
+        // A <label> forwards clicks to its first control, which would steal clicks from a control with several
+        // parts, or from a modal opened inside it
+        const wrapper = computed(() => (
+            !definition.value || collapsed.value || definition.value.layout === 'block' ? 'div' : 'label'
+        ));
+        const oneLine = computed(() => summary(props.field, props.value));
 
-        const empty = computed(() => isEmpty(props.field, props.value));
-        const rows = computed(() => (Array.isArray(props.value) ? props.value : []));
-
-        // One line that stands in for a wide control in the inspector
-        const summary = computed(() => {
-            switch (props.field.type) {
-                case 'repeater':
-                    return rows.value.length === 1 ? '1 item' : rows.value.length + ' items';
-                case 'richtext':
-                    return plainText(props.value) || 'Nothing yet';
-                case 'cdn_object':
-                    return props.value ? 'Object #' + props.value : 'None selected';
-                default:
-                    return empty.value ? 'Nothing yet' : String(props.value);
-            }
-        });
-        const canAdd = computed(() => canAddRow(props.field, rows.value));
-        const canRemove = computed(() => canRemoveRow(props.field, rows.value));
-
-        function add() {
-            emit('update', addRow(props.field, rows.value));
+        function onUpdate(raw) {
+            emit('update', coerce(props.field, raw));
         }
 
-        function remove(index) {
-            emit('update', removeRow(props.field, rows.value, index));
-        }
-
-        function move(index, delta) {
-            emit('update', moveRow(rows.value, index, delta));
-        }
-
-        function setChild(index, key, value) {
-            emit('update', setRowValue(rows.value, index, key, value));
-        }
-
-        function openRich() {
-            richDirty.value = false;
-            richOpen.value = true;
-        }
-
-        function saveRich(html) {
-            richOpen.value = false;
-            emit('update', html);
-        }
-
-        // The picker's own handlers (module-cdn ObjectPicker) set the hidden input and trigger these events.
-        // Listening through jQuery is the only way to see them, because they are not DOM events.
-        let onPicked = null;
-        // Set while the value is changed from outside, so the picker's own events are not written back as an edit
-        let syncing = false;
-
-        /**
-         * Brings the picker in line with the stored value: fetches the object's name and thumbnail when there is
-         * one, or clears the picker when the value was emptied from outside (e.g. the row above was removed).
-         */
-        function syncPicker() {
-            const $ = window.jQuery;
-            const el = picker.value;
-            if (!$ || !el) {
-                return;
-            }
-            const input = el.querySelector('.cdn-object-picker__input');
-            const wanted = props.value ? String(props.value) : '';
-
-            if (wanted) {
-                syncing = true;
-                $(el).trigger('refresh');
-                syncing = false;
-            } else if (input && input.value !== '') {
-                syncing = true;
-                $(el).find('.cdn-object-picker__remove').trigger('click');
-                syncing = false;
-            }
-        }
-
-        onMounted(() => {
-            if (props.field.type !== 'cdn_object' || !picker.value || !window.jQuery) {
-                return;
-            }
-            onPicked = () => {
-                if (syncing) {
-                    return;
-                }
-                const input = picker.value.querySelector('.cdn-object-picker__input');
-                emit('update', coerce(props.field, input ? input.value : null));
-            };
-            window.jQuery(picker.value).on('picked reset', onPicked);
-            syncPicker();
-        });
-
-        watch(
-            () => props.value,
-            () => {
-                if (props.field.type !== 'cdn_object' || !picker.value) {
-                    return;
-                }
-                const input = picker.value.querySelector('.cdn-object-picker__input');
-                const wanted = props.value ? String(props.value) : '';
-                if (input && input.value !== wanted) {
-                    syncPicker();
-                }
-            }
-        );
-
-        onBeforeUnmount(() => {
-            if (onPicked && picker.value && window.jQuery) {
-                window.jQuery(picker.value).off('picked reset', onPicked);
-            }
-        });
-
-        return {
-            wideOpen,
-            richOpen,
-            richDirty,
-            richEditor,
-            openRich,
-            picker,
-            summary,
-            empty,
-            rows,
-            canAdd,
-            canRemove,
-            add,
-            remove,
-            move,
-            setChild,
-            saveRich,
-            emit,
-            coerce,
-            visibleFields,
-        };
+        return { definition, collapsed, wrapper, wideOpen, oneLine, onUpdate, emit };
     },
 };
 </script>
