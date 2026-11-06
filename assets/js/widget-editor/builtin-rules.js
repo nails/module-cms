@@ -4,6 +4,7 @@
  */
 
 import { plainText } from './fields.js';
+import { tableIsEmpty, tableSummary } from './table.js';
 
 /** @type {Object<string, Object>} Type name => definition, without `type` and `component` */
 export const BUILTIN_RULES = {
@@ -47,5 +48,11 @@ export const BUILTIN_RULES = {
             const count = Array.isArray(value) ? value.length : 0;
             return count === 1 ? '1 item' : count + ' items';
         },
+    },
+
+    table: {
+        layout: 'block',
+        isEmpty: (value) => tableIsEmpty(value),
+        summary: (value) => tableSummary(value),
     },
 };

@@ -4,6 +4,7 @@ import NumberControl from './controls/NumberControl.vue';
 import RepeaterControl from './controls/RepeaterControl.vue';
 import RichtextControl from './controls/RichtextControl.vue';
 import SelectControl from './controls/SelectControl.vue';
+import TableControl from './controls/TableControl.vue';
 import TextareaControl from './controls/TextareaControl.vue';
 import TextControl from './controls/TextControl.vue';
 import ToggleControl from './controls/ToggleControl.vue';
@@ -16,6 +17,7 @@ const COMPONENTS = {
     toggle: ToggleControl,
     number: NumberControl,
     repeater: RepeaterControl,
+    table: TableControl,
 };
 
 /**

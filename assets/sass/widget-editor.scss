@@ -624,6 +624,64 @@
         }
     }
 
+    // Table field
+    &__table {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__table-scroll {
+        overflow-x: auto;
+
+        table {
+            border-collapse: collapse;
+        }
+
+        td {
+            min-width: 120px;
+            padding: 2px;
+        }
+
+        th {
+            padding: 0 2px 2px;
+            text-align: center;
+        }
+
+        .form-control {
+            margin: 0;
+        }
+
+        button {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            border: 0;
+            border-radius: 2px;
+            background: transparent;
+            color: var(--we-muted);
+            font-size: 11px;
+
+            &:hover {
+                background: rgba(36, 36, 36, 0.06);
+                color: var(--we-ink);
+            }
+        }
+    }
+
+    td.cms-we__table-remove {
+        min-width: 0;
+    }
+
+    &__table-actions {
+        display: flex;
+        gap: 6px;
+
+        .fa {
+            margin-right: 4px;
+        }
+    }
+
     // Rich text modal
     &__rich {
         display: flex;
