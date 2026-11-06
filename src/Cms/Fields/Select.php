@@ -64,8 +64,14 @@ class Select extends Base
 
     // --------------------------------------------------------------------------
 
+    /**
+     * A JavaScript object lists integer-like keys first, so `order` carries the order the options were given in
+     */
     protected function config(): array
     {
-        return ['options' => $this->options];
+        return [
+            'options' => $this->options,
+            'order'   => array_map('strval', array_keys($this->options)),
+        ];
     }
 }

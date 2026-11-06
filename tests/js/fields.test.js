@@ -10,6 +10,7 @@ import {
     missingRequired,
     moveRow,
     newRow,
+    optionKeys,
     plainText,
     removeRow,
     rowTitle,
@@ -197,6 +198,19 @@ describe('summary', () => {
         expect(summary({ type: 'number' }, 0)).toBe('0');
         expect(summary({ type: 'repeater' }, [{}, {}])).toBe('2 items');
         expect(summary({ type: 'repeater' }, [{}])).toBe('1 item');
+    });
+});
+
+describe('optionKeys', () => {
+
+    it('follows the order PHP gave, not the object order', () => {
+        const field = { options: { 2: 'Two', 5: 'Five', '': 'Choose' }, order: ['', '5', '2'] };
+        expect(optionKeys(field)).toEqual(['', '5', '2']);
+    });
+
+    it('falls back to the object order when order is missing or does not match', () => {
+        expect(optionKeys({ options: { a: 'A', b: 'B' } })).toEqual(['a', 'b']);
+        expect(optionKeys({ options: { a: 'A', b: 'B' }, order: ['a'] })).toEqual(['a', 'b']);
     });
 });
 

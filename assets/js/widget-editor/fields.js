@@ -19,6 +19,7 @@ import { fieldType } from './field-types.js';
  * @property {Object<string, unknown>} visibleWhen
  * @property {unknown} default
  * @property {Object<string, string>} [options]
+ * @property {string[]} [order]   Option keys in the order PHP gave them
  * @property {number|null} [min]
  * @property {number|null} [max]
  * @property {Field[]} [fields]   Repeater children
@@ -200,6 +201,18 @@ export function rowTitle(field, row, index) {
 
     text = text.replace(/\s+/g, ' ').trim();
     return text || fallback;
+}
+
+/**
+ * A select's option keys, in the order PHP gave them. Without `order`, the object's own order is used.
+ *
+ * @param {Field} field
+ * @return {string[]}
+ */
+export function optionKeys(field) {
+    const options = field.options || {};
+    const order = Array.isArray(field.order) ? field.order.filter((key) => key in options) : [];
+    return order.length === Object.keys(options).length ? order : Object.keys(options);
 }
 
 /**

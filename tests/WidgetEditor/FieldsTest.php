@@ -248,4 +248,27 @@ class FieldsTest extends TestCase
         self::assertSame(['1' => 'One', '2' => 'Two'], $aField['options']);
         self::assertSame('1', $aField['default']);
     }
+
+    public function testSelectCarriesTheOrderItWasGiven(): void
+    {
+        $field = Fields\Select::make('a')->options(['' => 'Choose', 5 => 'Five', 2 => 'Two'])->toArray();
+
+        self::assertSame(['', '5', '2'], $field['order']);
+    }
+
+    public function testTableDefaultsToItsSizeAndFillsRowsToTheWidest(): void
+    {
+        $field = Fields\Table::make('rows')->size(2, 3);
+
+        self::assertSame('table', $field->toArray()['type']);
+        self::assertSame([['', '', ''], ['', '', '']], $field->getDefault());
+        self::assertSame([['a', 'b'], ['1', '']], $field->fill([['a', 'b'], [1]]));
+        self::assertSame('not rows', $field->fill('not rows'));
+    }
+
+    public function testRejectsAnEmptyTableSize(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        FieldList::validate([Fields\Table::make('rows')->size(0, 2)]);
+    }
 }

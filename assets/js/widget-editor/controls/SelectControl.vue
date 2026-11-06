@@ -1,11 +1,12 @@
 <template>
     <select ref="select" class="cms-we__select" :value="value ?? ''" @change="onChange">
-        <option v-for="(label, key) in field.options" :key="key" :value="key">{{ label }}</option>
+        <option v-for="key in keys" :key="key" :value="key">{{ field.options[key] }}</option>
     </select>
 </template>
 
 <script>
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { optionKeys } from '../fields.js';
 
 /**
  * A drop-down. Admin's page has Select2, so the control uses it; without it the select is left as it is.
@@ -19,6 +20,7 @@ export default {
     emits: ['update'],
     setup(props, { emit }) {
         const select = ref(null);
+        const keys = computed(() => optionKeys(props.field));
         // Set while the value is applied from outside, so Select2's own change is not written back
         let syncing = false;
 
@@ -74,7 +76,7 @@ export default {
             }
         });
 
-        return { select, onChange };
+        return { select, keys, onChange };
     },
 };
 </script>
