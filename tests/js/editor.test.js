@@ -180,6 +180,26 @@ describe('createEditor', () => {
         expect(editor.stored('side').some((item) => item.slug === 'Note')).toBe(true);
     });
 
+    it('opens an instance stored under an alias as its widget, and saves the canonical slug once edited', () => {
+        const stored = { slug: 'legacy-note', data: { text: 'Old' } };
+        const editor = createEditor([{ slug: 'main', label: 'Main', data: [stored] }], catalogue);
+        const node = editor.snapshot().nodes[0];
+
+        expect(node.slug).toBe('Note');
+        expect(node.locked).toBe(false);
+        expect(editor.stored('main')[0]).toBe(stored);
+
+        editor.update(node.uid, { text: 'New' }, true);
+        expect(editor.stored('main')[0]).toEqual({ slug: 'Note', data: { text: 'New' } });
+    });
+
+    it('keeps an unknown slug locked', () => {
+        const editor = createEditor([{ slug: 'main', label: 'Main', data: [{ slug: 'gone', data: {} }] }], catalogue);
+
+        expect(editor.snapshot().nodes[0].slug).toBe('gone');
+        expect(editor.snapshot().nodes[0].locked).toBe(true);
+    });
+
     it('undo restores the stored instances', () => {
         const source = areas();
         const editor = createEditor(source, catalogue);

@@ -26,10 +26,19 @@ export function createEditor(areas, catalogue, hooks = {}) {
         stored[area.slug] = area.data;
     });
 
+    // Alias => canonical slug, so content stored under an earlier slug opens as that widget
+    const canonical = {};
+    Object.keys(catalogue.widgets || {}).forEach((slug) => {
+        (catalogue.widgets[slug].aliases || []).forEach((alias) => {
+            canonical[alias] = slug;
+        });
+    });
+
     const limits = catalogue.limits || {};
     const tree = createTree({
         maxDepth: limits.max_depth,
         maxInstances: limits.max_instances_per_area,
+        slugFor: (slug) => (catalogue.widgets[slug] ? slug : canonical[slug] || slug),
         isEditable: (slug) => Boolean(catalogue.widgets[slug]),
         canPlace: () => true,
         slotsFor: (slug) => catalogue.widgets[slug]?.slots || {},
