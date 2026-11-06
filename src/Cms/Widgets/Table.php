@@ -23,6 +23,10 @@ class Table extends Base
 {
     const ALIASES = ['table'];
 
+    /** Where a v1 value that could not be converted exactly is kept, as it was stored */
+    const V1_DATA_KEY = 'v1_tblData';
+    const V1_ATTR_KEY = 'v1_tblAttr';
+
     protected string $label       = 'Table';
     protected string $summary     = 'Easily build a table';
     protected string $description = 'Easily build a table';
@@ -51,18 +55,121 @@ class Table extends Base
      */
     public function upgrade(array $data): array
     {
-        if (!array_key_exists('rows', $data) && array_key_exists('tblData', $data)) {
-            $rows         = is_string($data['tblData']) ? json_decode($data['tblData'], true) : $data['tblData'];
-            $data['rows'] = is_array($rows) ? $rows : [];
+        return static::upgradeV1($data);
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Converts the v1 keys, and returns data that has none unchanged.
+     *
+     * The v1 editor replaced an instance's data with its form, so v1 keys are always the latest edit and win over
+     * `rows` and `attributes`. They are removed once converted. A grid that cannot be converted exactly (JSON that
+     * cannot be read, or a cell that is not text or a number) is converted as far as it can be, and the stored value
+     * is kept under V1_DATA_KEY; attributes that are not text are kept under V1_ATTR_KEY. v1 had no heading rows,
+     * so a converted table gets `header_rows` 0.
+     *
+     * @param array $data The stored data
+     *
+     * @return array
+     */
+    public static function upgradeV1(array $data): array
+    {
+        $isV1 = false;
+
+        if (array_key_exists('tblData', $data)) {
+            $isV1 = true;
+            [$rows, $exact] = static::v1Rows($data['tblData']);
+
+            $data['rows'] = $rows;
+            if (!$exact) {
+                $data[static::V1_DATA_KEY] = $data['tblData'];
+            }
+            unset($data['tblData']);
         }
 
-        if (!array_key_exists('attributes', $data) && array_key_exists('tblAttr', $data)) {
-            $data['attributes'] = is_string($data['tblAttr']) ? $data['tblAttr'] : '';
+        if (array_key_exists('tblAttr', $data)) {
+            $isV1       = true;
+            $attributes = $data['tblAttr'];
+
+            if ($attributes === null || is_scalar($attributes)) {
+                //  v1 printed the attributes only when they were not empty()
+                $data['attributes'] = empty($attributes) ? '' : (string) $attributes;
+            } else {
+                $data['attributes']        = '';
+                $data[static::V1_ATTR_KEY] = $attributes;
+            }
+            unset($data['tblAttr']);
         }
 
-        unset($data['tblData'], $data['tblAttr']);
+        if ($isV1 && !array_key_exists('header_rows', $data)) {
+            $data['header_rows'] = 0;
+        }
 
         return $data;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Reads a v1 grid, as Handsontable's getData() stored it: a JSON list of rows, each a list of cells
+     *
+     * A cell is output as v1 output it: null and false are empty, true is "1", a number is its digits. A row that
+     * is not a list is empty, as v1 output an empty row for it.
+     *
+     * @param mixed $stored The stored `tblData`
+     *
+     * @return array{0: array<int, array<int, string>>, 1: bool} The rows, and whether nothing was lost
+     */
+    protected static function v1Rows(mixed $stored): array
+    {
+        if ($stored === null || (is_string($stored) && trim($stored) === '')) {
+            return [[], true];
+        }
+
+        if (is_string($stored)) {
+            //  Big integers keep their digits rather than becoming floats
+            $grid = json_decode($stored, true, 512, JSON_BIGINT_AS_STRING);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return [[], false];
+            }
+        } else {
+            $grid = $stored;
+        }
+
+        if ($grid === null) {
+            return [[], true];
+        }
+
+        if (!is_array($grid)) {
+            return [[], false];
+        }
+
+        $exact = true;
+        $rows  = [];
+
+        foreach ($grid as $row) {
+            if (!is_array($row)) {
+                $exact  = false;
+                $rows[] = [];
+                continue;
+            }
+
+            $cells = [];
+            foreach ($row as $cell) {
+                if ($cell === null || $cell === false) {
+                    $cells[] = '';
+                } elseif (is_scalar($cell)) {
+                    $cells[] = (string) $cell;
+                } else {
+                    $exact   = false;
+                    $cells[] = '';
+                }
+            }
+            $rows[] = $cells;
+        }
+
+        return [$rows, $exact];
     }
 
     // --------------------------------------------------------------------------

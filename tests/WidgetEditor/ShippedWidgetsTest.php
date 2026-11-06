@@ -335,10 +335,74 @@ class ShippedWidgetsTest extends TestCase
 
     public function testTableUpgradesTheV1JsonAndAttributes(): void
     {
-        $data = (new Table())->upgrade(['tblData' => '[["a","b"],["c","d"]]', 'tblAttr' => 'id="x"']);
+        //  The v1 form posted its JSON from a textarea, so it can end in a newline
+        $data = (new Table())->upgrade(['tblData' => "[[\"a\",\"b\"],[\"c\",\"d\"]]\n", 'tblAttr' => 'id="x"']);
 
-        $this->assertSame(['rows' => [['a', 'b'], ['c', 'd']], 'attributes' => 'id="x"'], $data);
-        $this->assertSame(['rows' => []], (new Table())->upgrade(['tblData' => 'not json']));
+        $this->assertSame(['rows' => [['a', 'b'], ['c', 'd']], 'attributes' => 'id="x"', 'header_rows' => 0], $data);
+    }
+
+    public function testTableUpgradeReadsCellsAsV1OutputThem(): void
+    {
+        //  Handsontable stores an empty cell as null, and a cell can be a number or a boolean
+        $data = Table::upgradeV1(['tblData' => '[[null,12,1.5,true,false,"<b>x</b>"],[12345678901234567890]]']);
+
+        $this->assertSame([['', '12', '1.5', '1', '', '<b>x</b>'], ['12345678901234567890']], $data['rows']);
+        $this->assertArrayNotHasKey(Table::V1_DATA_KEY, $data);
+    }
+
+    public function testTableUpgradeOfAnEmptyV1Table(): void
+    {
+        $this->assertSame(
+            ['rows' => [], 'attributes' => '', 'header_rows' => 0],
+            Table::upgradeV1(['tblData' => '', 'tblAttr' => ''])
+        );
+        $this->assertSame(['rows' => [], 'header_rows' => 0], Table::upgradeV1(['tblData' => 'null']));
+        $this->assertSame(['rows' => [['a']], 'header_rows' => 0], Table::upgradeV1(['tblData' => [['a']]]));
+    }
+
+    public function testTableUpgradeKeepsWhatItCannotConvert(): void
+    {
+        $this->assertSame(
+            ['rows' => [], Table::V1_DATA_KEY => 'not json', 'header_rows' => 0],
+            Table::upgradeV1(['tblData' => 'not json'])
+        );
+
+        //  A cell that is a list, and a row that is not one, are converted as far as they can be
+        $stored = '[["a",["b"]],"row"]';
+        $this->assertSame(
+            ['rows' => [['a', ''], []], Table::V1_DATA_KEY => $stored, 'header_rows' => 0],
+            Table::upgradeV1(['tblData' => $stored])
+        );
+
+        $this->assertSame(
+            ['attributes' => '', Table::V1_ATTR_KEY => ['id' => 'x'], 'header_rows' => 0],
+            Table::upgradeV1(['tblAttr' => ['id' => 'x']])
+        );
+    }
+
+    public function testTableUpgradeIsIdempotent(): void
+    {
+        foreach ([
+            ['tblData' => '[["a"]]', 'tblAttr' => 'id="x"'],
+            ['tblData' => 'not json', 'other' => 1],
+            ['tblData' => '[["a",{"b":1}]]'],
+            ['rows' => [['a']], 'header_rows' => 2, 'attributes' => ''],
+        ] as $stored) {
+            $once = Table::upgradeV1($stored);
+            $this->assertSame($once, Table::upgradeV1($once));
+        }
+    }
+
+    public function testTableUpgradePrefersTheV1KeysTheV1EditorLastSaved(): void
+    {
+        //  The v1 editor saves its form over the data, with the header rows it was given
+        $data = Table::upgradeV1(['rows' => [['old']], 'attributes' => 'id="old"', 'tblData' => '[["new"]]', 'tblAttr' => 'id="new"', 'header_rows' => '2']);
+
+        $this->assertSame([['new']], $data['rows']);
+        $this->assertSame('id="new"', $data['attributes']);
+        $this->assertSame('2', $data['header_rows']);
+        $this->assertArrayNotHasKey('tblData', $data);
+        $this->assertArrayNotHasKey('tblAttr', $data);
     }
 
     public function testTableRendersCellsAsStored(): void
