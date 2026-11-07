@@ -2,7 +2,7 @@
 
 /**
  * The "Rich Text" widget for WidgetEditor (v2). Ports the v1 widget: the stored slug `richtext` resolves through
- * ALIASES, and the stored `body` key is unchanged.
+ * ALIASES, and so does content saved under the previous class name. The stored `body` key is unchanged.
  *
  * @package     Nails
  * @subpackage  module-cms
@@ -16,9 +16,9 @@ namespace Nails\Cms\Cms\Widgets;
 use Nails\Cms\Cms\Fields;
 use Nails\Cms\WidgetEditor\Widget\Base;
 
-class Richtext extends Base
+class RichText extends Base
 {
-    const ALIASES = ['richtext'];
+    const ALIASES = ['richtext', 'Nails.Cms.Cms.Widgets.Richtext'];
 
     protected string $label       = 'Rich Text';
     protected string $summary     = 'Build beautiful pages using the rich text editor; embed images, links and more.';

@@ -5,9 +5,9 @@ namespace Tests\WidgetEditor;
 use Nails\Cms\Cms\Widgets\Accordion;
 use Nails\Cms\Cms\Widgets\Area;
 use Nails\Cms\Cms\Widgets\Blockquote;
-use Nails\Cms\Cms\Widgets\Html;
 use Nails\Cms\Cms\Widgets\KitchenSink;
-use Nails\Cms\Cms\Widgets\Richtext;
+use Nails\Cms\Cms\Widgets\PlainText;
+use Nails\Cms\Cms\Widgets\RichText;
 use Nails\Cms\Cms\Widgets\Table;
 use Nails\Cms\Cms\Widgets\Tabs;
 use Nails\Cms\WidgetEditor\Service\Fields;
@@ -23,14 +23,14 @@ class ShippedWidgetsTest extends TestCase
 {
     public function testRichtextRendersNothingWhenEmpty(): void
     {
-        $this->assertSame('', (new Richtext())->render(['body' => '']));
+        $this->assertSame('', (new RichText())->render(['body' => '']));
     }
 
     public function testRichtextPreviewIsEditableWhenEmpty(): void
     {
-        $registry = new Registry([Richtext::class => 1]);
+        $registry = new Registry([RichText::class => 1]);
         $html = $registry->renderNode(
-            ['slug' => Registry::slugFor(Richtext::class), 'data' => ['body' => '']],
+            ['slug' => Registry::slugFor(RichText::class), 'data' => ['body' => '']],
             Registry::MODE_PREVIEW
         );
 
@@ -42,7 +42,7 @@ class ShippedWidgetsTest extends TestCase
 
     public function testRichtextRendersBodyAsStored(): void
     {
-        $sHtml = (new Richtext())->render(['body' => '<p>Hi <strong>there</strong></p>']);
+        $sHtml = (new RichText())->render(['body' => '<p>Hi <strong>there</strong></p>']);
 
         $this->assertStringContainsString('class="cms-widget cms-widget-richtext"', $sHtml);
         $this->assertStringContainsString('<p>Hi <strong>there</strong></p>', $sHtml);
@@ -50,16 +50,23 @@ class ShippedWidgetsTest extends TestCase
 
     public function testRichtextAliasIsTheV1Slug(): void
     {
-        $this->assertSame(['richtext'], Richtext::ALIASES);
+        $this->assertSame(['richtext', 'Nails.Cms.Cms.Widgets.Richtext'], RichText::ALIASES);
+
+        $registry = new Registry([RichText::class => 1]);
+        $this->assertTrue($registry->has('richtext'));
+        $this->assertTrue($registry->has('Nails.Cms.Cms.Widgets.Richtext'));
     }
 
     public function testHtmlRendersBodyUnescaped(): void
     {
-        $sHtml = (new Html())->render(['body' => '<b>Raw</b>']);
+        $sHtml = (new PlainText())->render(['body' => '<b>Raw</b>']);
 
         $this->assertSame('<div class="cms-widget cms-widget-html"><b>Raw</b></div>', $sHtml);
-        $this->assertSame('', (new Html())->render(['body' => '']));
-        $this->assertSame(['html'], Html::ALIASES);
+        $this->assertSame('', (new PlainText())->render(['body' => '']));
+        $this->assertSame(['html'], PlainText::ALIASES);
+
+        $registry = new Registry([PlainText::class => 1]);
+        $this->assertTrue($registry->has('html'));
     }
 
     public function testBlockquoteRendersNothingWithoutAQuote(): void
@@ -148,7 +155,7 @@ class ShippedWidgetsTest extends TestCase
 
     public function testNativePortsDeclareValidFieldSchemas(): void
     {
-        foreach ([new Richtext(), new Html(), new Blockquote(), new KitchenSink()] as $oWidget) {
+        foreach ([new RichText(), new PlainText(), new Blockquote(), new KitchenSink()] as $oWidget) {
             $aFields = Fields::describe($oWidget->getFields());
             $this->assertNotEmpty($aFields);
         }

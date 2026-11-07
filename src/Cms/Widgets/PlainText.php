@@ -2,7 +2,7 @@
 
 /**
  * The "Plain Text" widget for WidgetEditor (v2). Ports the v1 widget: the stored slug `html` resolves through
- * ALIASES, and the stored `body` key is unchanged. The body is output as it is stored, as in v1.
+ * ALIASES. The stored `body` key is unchanged. The body is output as it is stored, as in v1.
  *
  * @package     Nails
  * @subpackage  module-cms
@@ -16,7 +16,7 @@ namespace Nails\Cms\Cms\Widgets;
 use Nails\Cms\Cms\Fields;
 use Nails\Cms\WidgetEditor\Widget\Base;
 
-class Html extends Base
+class PlainText extends Base
 {
     const ALIASES = ['html'];
 
