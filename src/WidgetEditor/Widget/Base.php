@@ -108,6 +108,20 @@ abstract class Base implements Interfaces\Widget
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Dot paths in this widget's data that store a CDN object id. Empty when it stores none.
+     *
+     * The CDN monitor watches the canonical slug and every alias.
+     *
+     * @return string[]
+     */
+    public function getCdnMonitorPaths(): array
+    {
+        return [];
+    }
+
+    // --------------------------------------------------------------------------
+
     public static function getStatus(): Status
     {
         return static::STATUS;

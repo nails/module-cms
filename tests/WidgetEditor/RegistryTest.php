@@ -248,6 +248,8 @@ class RegistryTest extends TestCase
         self::assertTrue($oRegistry->knows($sSlug));
         self::assertFalse($oRegistry->has($sSlug));
         self::assertNull($oRegistry->resolve($sSlug));
+        self::assertArrayHasKey($sSlug, $oRegistry->known());
+        self::assertSame([], $oRegistry->all());
         self::assertSame('', $oRegistry->renderNode(['slug' => $sSlug, 'data' => []], Registry::MODE_PREVIEW));
     }
 
