@@ -306,6 +306,29 @@ abstract class Base implements Interfaces\Widget
     // --------------------------------------------------------------------------
 
     /**
+     * The dotted box a canvas uses when it names something the page will render. The icon is this widget's own.
+     *
+     * $name and $note are already escaped.
+     */
+    protected function placeholderBox(string $name, string $note): string
+    {
+        $icon = $this->getIcon();
+        if (!preg_match('/^fa-[a-z0-9-]+$/', $icon)) {
+            $icon = 'fa-cube';
+        }
+
+        return '<div class="cms-we-area">'
+            . '<i class="fa ' . $icon . ' cms-we-area__icon" aria-hidden="true"></i>'
+            . '<div class="cms-we-area__copy">'
+            . '<p class="cms-we-area__name">' . $name . '</p>'
+            . '<p class="cms-we-area__note">' . $note . '</p>'
+            . '</div>'
+            . '</div>';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * The path of this instance, relative to its top-level instance
      *
      * @return string[]

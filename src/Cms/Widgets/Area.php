@@ -114,12 +114,7 @@ class Area extends Base
         $name  = $label !== '' ? htmlspecialchars($label, ENT_QUOTES) : 'Unknown area';
         $note  = $label !== '' ? 'This area will be rendered here.' : 'This area is no longer available.';
 
-        return '<div class="cms-widget cms-widget-area">'
-            . '<div class="cms-we-area">'
-            . '<p class="cms-we-area__name">' . $name . '</p>'
-            . '<p class="cms-we-area__note">' . $note . '</p>'
-            . '</div>'
-            . '</div>';
+        return '<div class="cms-widget cms-widget-area">' . $this->placeholderBox($name, $note) . '</div>';
     }
 
     // --------------------------------------------------------------------------

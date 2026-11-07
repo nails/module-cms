@@ -546,6 +546,7 @@ class ShippedWidgetsTest extends TestCase
         $this->assertStringContainsString('cms-we-area', $html);
         $this->assertStringContainsString('Footer', $html);
         $this->assertStringContainsString('This area will be rendered here.', $html);
+        $this->assertStringContainsString('fa-layer-group', $html);
         $this->assertStringNotContainsString('area 3', $html);
 
         $empty = $widget->preview(['areaId' => '']);
