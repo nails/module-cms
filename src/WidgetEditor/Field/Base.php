@@ -124,7 +124,8 @@ abstract class Base implements Interfaces\Field
     }
 
     /**
-     * Shows the field only while every named sibling has the given value, compared strictly
+     * Shows the field only while every named sibling has the given value, compared strictly. A value that is a
+     * list matches when the sibling is one of those values.
      *
      * @param array<string, mixed> $conditions Sibling key => value
      */

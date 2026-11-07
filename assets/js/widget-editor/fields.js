@@ -26,14 +26,19 @@ import { fieldType } from './field-types.js';
  */
 
 /**
- * Whether a field is shown for the given values. Every condition in visibleWhen must match.
+ * Whether a field is shown for the given values. Every condition in visibleWhen must match. A condition that is a
+ * list matches when the sibling is one of those values, still compared strictly.
  * @param {Field} field
  * @param {Object<string, unknown>} values
  * @return {boolean}
  */
 export function isVisible(field, values) {
     const conditions = field.visibleWhen || {};
-    return Object.keys(conditions).every((key) => values && values[key] === conditions[key]);
+    return Object.keys(conditions).every((key) => {
+        const actual = values ? values[key] : undefined;
+        const expected = conditions[key];
+        return Array.isArray(expected) ? expected.includes(actual) : actual === expected;
+    });
 }
 
 /**

@@ -60,6 +60,13 @@ describe('isVisible and visibleFields', () => {
         expect(isVisible(SCHEMA[1], { bShowLink: true })).toBe(true);
     });
 
+    it('matches a condition that lists several values', () => {
+        const field = { key: 'sSize', type: 'select', visibleWhen: { sScaling: ['CROP', 'SCALE'] } };
+        expect(isVisible(field, { sScaling: 'NONE' })).toBe(false);
+        expect(isVisible(field, { sScaling: 'CROP' })).toBe(true);
+        expect(isVisible(field, { sScaling: 'SCALE' })).toBe(true);
+    });
+
     it('lists only the visible fields', () => {
         const keys = visibleFields(SCHEMA, { bShowLink: false }).map((field) => field.key);
         expect(keys).toEqual(['bShowLink', 'sHeading', 'aItems']);
