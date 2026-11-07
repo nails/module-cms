@@ -69,6 +69,12 @@ describe('buildCanvasShell', () => {
         expect(doc).toContain('.nails-cms-widget-tabs .tab-pane>:last-child{margin-bottom:0}');
     });
 
+    it('keeps an image inside the canvas and lets its alignment place it', () => {
+        const doc = buildCanvasShell({ stylesheets: [] });
+        expect(doc).toContain('.cms-widget-image img{display:inline-block;max-width:100%;height:auto;vertical-align:top}');
+        expect(doc).toContain('.cms-widget-image a{display:inline-block;max-width:100%}');
+    });
+
     it('draws a table full width with a grid and shaded headings, over the site rules', () => {
         const doc = buildCanvasShell({ stylesheets: [] });
         expect(doc).toContain('.cms-widget-table .table{width:100%;');

@@ -179,7 +179,11 @@ const CANVAS_STYLE = 'html{overflow:hidden}'
     + '.nails-cms-widget-tabs .tab-pane{display:none}'
     + '.nails-cms-widget-tabs .tab-pane.active{display:block}'
     + '.nails-cms-widget-tabs .tab-pane>:first-child{margin-top:0}'
-    + '.nails-cms-widget-tabs .tab-pane>:last-child{margin-bottom:0}';
+    + '.nails-cms-widget-tabs .tab-pane>:last-child{margin-bottom:0}'
+    // An image is shown at its own size, and no wider than the canvas. It stays inline so the wrapper's
+    // text-align (left, center or right) places it.
+    + '.cms-widget-image img{display:inline-block;max-width:100%;height:auto;vertical-align:top}'
+    + '.cms-widget-image a{display:inline-block;max-width:100%}';
 
 /**
  * The canvas document with no sections. The canvas loads this once and patches instances into it, so a
