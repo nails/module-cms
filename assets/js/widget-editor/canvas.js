@@ -159,7 +159,9 @@ const CANVAS_STYLE = 'html{overflow:hidden}'
     + '.cms-widget-accordion .panel-collapse{display:none}'
     + '.cms-widget-accordion .panel-collapse.in{display:block}'
     // An Area widget is not rendered on the canvas. The box names the area the page will render.
-    + '.cms-we-area{padding:16px 18px;border:1px dotted #cfc9c2;border-radius:3px;background:#faf8f6}'
+    + '.cms-we-area{display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px dotted #cfc9c2;border-radius:3px;background:#faf8f6}'
+    + '.cms-we-area__icon{flex:none;color:#8a837d;font-size:18px;line-height:1}'
+    + '.cms-we-area__copy{min-width:0}'
     + '.cms-we-area__name{margin:0;color:#242424;font-size:15px;font-weight:600;line-height:1.35}'
     + '.cms-we-area__note{margin:4px 0 0;color:#8a837d;font-size:13px;line-height:1.4}'
     // A table is drawn like the editor's sheet: full width, a light grid, and shaded heading rows. The selectors
@@ -195,7 +197,13 @@ const CANVAS_STYLE = 'html{overflow:hidden}'
  */
 export function buildCanvasShell({ stylesheets }) {
 
-    const links = canvasStylesheets(stylesheets)
+    // The same Font Awesome the admin loads, so a placeholder can use its widget's icon. The site stylesheets
+    // do not include it.
+    const fontAwesome = [
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css',
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css',
+    ];
+    const links = fontAwesome.concat(canvasStylesheets(stylesheets))
         .map((url) => '<link rel="stylesheet" href="' + escapeHtml(url) + '">')
         .join('');
 

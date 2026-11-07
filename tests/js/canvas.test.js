@@ -57,7 +57,9 @@ describe('buildCanvasShell', () => {
 
     it('draws a chosen CMS Area as a dotted box instead of its contents', () => {
         const doc = buildCanvasShell({ stylesheets: [] });
-        expect(doc).toContain('.cms-we-area{padding:16px 18px;border:1px dotted #cfc9c2;');
+        expect(doc).toContain('.cms-we-area{display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px dotted #cfc9c2;');
+        expect(doc).toContain('.cms-we-area__icon{flex:none;color:#8a837d;font-size:18px;line-height:1}');
+        expect(doc).toContain('font-awesome/6.4.0/css/solid.min.css');
     });
 
     it('draws tabs and shows only the pane carrying active, over the site rules', () => {
