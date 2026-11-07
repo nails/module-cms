@@ -10,7 +10,7 @@ let app = null;
 let host = null;
 
 /**
- * Opens the editor over the page. Called by the v1 plugin when this session's version is v2.
+ * Opens the editor over the page. Called by the widget field plugin.
  * @param {Object} options
  */
 function open(options) {

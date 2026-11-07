@@ -13,7 +13,6 @@ namespace Nails\Cms\Helper;
 
 use Nails\Cms\Constants;
 use Nails\Cms\WidgetEditor\Service\FieldTypes;
-use Nails\Cms\WidgetEditor\Service\Version;
 use Nails\Common\Helper\ArrayHelper;
 use Nails\Factory;
 
@@ -24,8 +23,8 @@ class Form
      */
     const FIELD_WIDGETS = 'cms_widgets';
 
-    /** The version config is emitted once per request, however many widget fields the page has */
-    private static bool $configEmitted = false;
+    /** The editor assets are emitted once per request, however many widget fields the page has */
+    private static bool $assetsEmitted = false;
 
     // --------------------------------------------------------------------------
 
@@ -50,7 +49,7 @@ class Form
         <span class="fa $sButtonIcon">&nbsp;</span> $sButtonText
         </button>
         EOT
-            . static::editorConfig();
+            . static::editorAssets();
     }
 
     // --------------------------------------------------------------------------
@@ -83,55 +82,43 @@ class Form
     // --------------------------------------------------------------------------
 
     /**
-     * The editor versions this page should use, and the v2 bundle when that version is enabled
+     * The editor bundle, Vue 3, and each field type's assets. Emitted once, with the first widget field.
      */
-    private static function editorConfig(): string
+    private static function editorAssets(): string
     {
-        if (self::$configEmitted) {
+        if (self::$assetsEmitted) {
             return '';
         }
-        self::$configEmitted = true;
+        self::$assetsEmitted = true;
 
-        /** @var Version $version */
-        $version = Factory::service('WidgetEditorVersion', Constants::MODULE_SLUG);
-        $enabled = $version->getEnabledVersions();
-        $active  = $version->getDefault();
+        /** @var \Nails\Common\Service\Asset $assets */
+        $assets = Factory::service('Asset');
+        $before = array_values((array) $assets->getLoaded()->CSS);
 
+        $assets
+            ->vue3()
+            ->load('admin.widget-editor.min.js', Constants::MODULE_SLUG)
+            ->load('admin.widget-editor.min.css', Constants::MODULE_SLUG);
+
+        // Each field type's control registers itself with the editor; see Interfaces\Field::getAssets()
+        /** @var FieldTypes $fieldTypes */
+        $fieldTypes = Factory::service('WidgetEditorFieldTypes', Constants::MODULE_SLUG);
+        foreach ($fieldTypes->assets() as $asset) {
+            is_array($asset)
+                ? $assets->load($asset[0], $asset[1] ?? null)
+                : $assets->load($asset);
+        }
+
+        // The field renders in the body, after the head has printed its stylesheets, so a queued
+        // stylesheet never reaches the page. Emit the links with the field.
         $stylesheet = '';
-        if (in_array(Version::V2, $enabled, true)) {
-            /** @var \Nails\Common\Service\Asset $assets */
-            $assets = Factory::service('Asset');
-            $before = array_values((array) $assets->getLoaded()->CSS);
-
-            $assets
-                ->vue3()
-                ->load('admin.widget-editor.min.js', Constants::MODULE_SLUG)
-                ->load('admin.widget-editor.min.css', Constants::MODULE_SLUG);
-
-            // Each field type's control registers itself with the editor; see Interfaces\Field::getAssets()
-            /** @var FieldTypes $fieldTypes */
-            $fieldTypes = Factory::service('WidgetEditorFieldTypes', Constants::MODULE_SLUG);
-            foreach ($fieldTypes->assets() as $asset) {
-                is_array($asset)
-                    ? $assets->load($asset[0], $asset[1] ?? null)
-                    : $assets->load($asset);
-            }
-
-            // The field renders in the body, after the head has printed its stylesheets, so a queued
-            // stylesheet never reaches the page. Emit the links with the field.
-            foreach (array_values((array) $assets->getLoaded()->CSS) as $url) {
-                if (is_string($url) && !in_array($url, $before, true)) {
-                    $stylesheet .= '<link rel="stylesheet" href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '">';
-                }
+        foreach (array_values((array) $assets->getLoaded()->CSS) as $url) {
+            if (is_string($url) && !in_array($url, $before, true)) {
+                $stylesheet .= '<link rel="stylesheet" href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '">';
             }
         }
 
-        $json = json_encode(
-            ['enabled' => $enabled, 'active' => $active],
-            JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP
-        );
-
-        return $stylesheet . '<script type="application/json" id="cms-widget-editor-config">' . $json . '</script>';
+        return $stylesheet;
     }
 
     // --------------------------------------------------------------------------

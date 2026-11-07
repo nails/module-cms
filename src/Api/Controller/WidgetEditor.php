@@ -3,7 +3,7 @@
 /**
  * Admin API for the WidgetEditor (v2)
  *
- * Served at api/cms/widgeteditor/… with no controller map. The v1 api/cms/widgets endpoints are unchanged.
+ * Served at api/cms/widgeteditor/… with no controller map.
  *
  * @package     Nails
  * @subpackage  module-cms
@@ -22,7 +22,6 @@ use Nails\Cms\WidgetEditor\Service\Catalogue;
 use Nails\Cms\WidgetEditor\Service\Favourite;
 use Nails\Cms\WidgetEditor\Service\Inspector;
 use Nails\Cms\WidgetEditor\Service\Preview;
-use Nails\Cms\WidgetEditor\Service\Version;
 use Nails\Common\Service\HttpCodes;
 use Nails\Factory;
 
@@ -91,30 +90,6 @@ class WidgetEditor extends Api\Controller\Base
                 $this->items($body, Inspector::MAX_ITEMS)
             )
         );
-    }
-
-    // --------------------------------------------------------------------------
-
-    /**
-     * Sets the editor version for this browser session. Body: `{"version": "v1"|"v2"}`.
-     *
-     * @throws ApiException
-     */
-    public function putVersion(): ApiResponse
-    {
-        $body    = $this->getRequestData();
-        $version = $body['version'] ?? null;
-        if (!is_string($version)) {
-            throw new ApiException('version must be a string', HttpCodes::STATUS_BAD_REQUEST);
-        }
-
-        try {
-            $this->versions()->setDefault($version);
-        } catch (\InvalidArgumentException $e) {
-            throw new ApiException($e->getMessage(), HttpCodes::STATUS_BAD_REQUEST);
-        }
-
-        return $this->respond(['version' => $version]);
     }
 
     // --------------------------------------------------------------------------
@@ -281,13 +256,6 @@ class WidgetEditor extends Api\Controller\Base
     private function favourites(): Favourite
     {
         return Factory::service('WidgetEditorFavourite', Constants::MODULE_SLUG);
-    }
-
-    // --------------------------------------------------------------------------
-
-    private function versions(): Version
-    {
-        return Factory::service('WidgetEditorVersion', Constants::MODULE_SLUG);
     }
 
     // --------------------------------------------------------------------------
