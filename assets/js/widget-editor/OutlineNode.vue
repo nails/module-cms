@@ -38,6 +38,24 @@
                 <small>{{ summary || '\u00a0' }}</small>
             </span>
             <span class="cms-we-outline__actions">
+                <button
+                    type="button"
+                    class="cms-we-outline__nudge"
+                    title="Move up"
+                    :disabled="index === 0"
+                    @click.stop="$emit('nudge', { uid: node.uid, delta: -1 })"
+                >
+                    <i class="fa fa-arrow-up"></i>
+                </button>
+                <button
+                    type="button"
+                    class="cms-we-outline__nudge"
+                    title="Move down"
+                    :disabled="index >= count - 1"
+                    @click.stop="$emit('nudge', { uid: node.uid, delta: 1 })"
+                >
+                    <i class="fa fa-arrow-down"></i>
+                </button>
                 <button type="button" title="Duplicate" @click.stop="$emit('duplicate', node.uid)">
                     <i class="fa fa-clone"></i>
                 </button>
@@ -86,7 +104,9 @@
                             :folded-ids="foldedIds"
                             :parent-uid="node.uid"
                             :slot-name="slot"
+                            :count="children.length"
                             @select="$emit('select', $event)"
+                            @nudge="$emit('nudge', $event)"
                             @hover="$emit('hover', $event)"
                             @toggle="$emit('toggle', $event)"
                             @move="$emit('move', $event)"
@@ -106,6 +126,7 @@
                             @drop.prevent.stop="dropAt(node.uid, slot, children.length)"
                         >
                             <i class="fa" :class="marker(placeKey(node.uid, slot, children.length)).icon"></i>
+                            <span class="cms-we-outline__gap-label">Add widget</span>
                         </button>
                     </div>
                 </template>
@@ -134,8 +155,10 @@ export default {
         foldedIds: { type: Object, required: true },
         parentUid: { type: String, default: null },
         slotName: { type: String, default: null },
+        /** How many widgets share this list, so move up and move down know their ends */
+        count: { type: Number, default: 1 },
     },
-    emits: ['select', 'hover', 'toggle', 'move', 'insert', 'duplicate', 'remove'],
+    emits: ['select', 'hover', 'toggle', 'move', 'insert', 'duplicate', 'remove', 'nudge'],
     setup(props, { emit }) {
         const widget = computed(() => props.catalogue.widgets[props.node.slug] || null);
         const label = computed(() => (widget.value ? widget.value.label : props.node.slug));

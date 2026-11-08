@@ -1,5 +1,10 @@
 <template>
-    <div class="cms-we" role="dialog" aria-label="Widget editor">
+    <div
+        class="cms-we"
+        role="dialog"
+        aria-label="Widget editor"
+        :class="{ 'is-sheet-outline': sheet === 'outline', 'is-sheet-inspector': sheet === 'inspector' }"
+    >
         <div class="cms-we__bar">
             <div class="cms-we__title">
                 <i class="fa fa-puzzle-piece cms-we__mark" title="Widgets"></i>
@@ -62,7 +67,7 @@
             <p><i class="fa fa-spinner fa-spin"></i> Loading widgets…</p>
         </div>
         <div v-else class="cms-we__body" :class="{ 'is-outline-closed': !outlineOpen, 'is-inspector-closed': !inspectorOpen }">
-            <nav class="cms-we-outline" aria-label="Outline">
+            <nav id="cms-we-outline" class="cms-we-outline" aria-label="Outline">
                 <header class="cms-we-outline__head">
                     <button
                         type="button"
@@ -72,10 +77,13 @@
                     >
                         <i class="fa" :class="outlineOpen ? 'fa-angles-left' : 'fa-angles-right'"></i>
                     </button>
-                    <span v-if="outlineOpen">Outline</span>
-                    <em v-if="outlineOpen">{{ view.count }}</em>
+                    <span v-if="outlineOpen || sheet === 'outline'">Outline</span>
+                    <em v-if="outlineOpen || sheet === 'outline'">{{ view.count }}</em>
+                    <button type="button" class="cms-we-outline__close" title="Close outline" @click="sheet = null">
+                        <i class="fa fa-xmark"></i>
+                    </button>
                 </header>
-                <template v-if="outlineOpen">
+                <template v-if="outlineOpen || sheet === 'outline'">
                     <button
                         v-if="!view.nodes.length"
                         type="button"
@@ -99,7 +107,9 @@
                             :catalogue="catalogue"
                             :drag="drag"
                             :folded-ids="folded"
+                            :count="view.nodes.length"
                             @select="selectFromOutline"
+                            @nudge="onNudge"
                             @hover="onOutlineHover"
                             @toggle="toggleFold"
                             @move="onMove"
@@ -121,6 +131,7 @@
                                 @drop.prevent.stop="onDropEnd"
                             >
                                 <i class="fa" :class="tailIcon"></i>
+                                <span class="cms-we-outline__gap-label">Add widget</span>
                             </button>
                         </li>
                     </ol>
@@ -145,9 +156,9 @@
                 />
             </div>
 
-            <aside class="cms-we__inspector">
+            <aside id="cms-we-inspector" class="cms-we__inspector">
                 <header class="cms-we__inspector-head">
-                    <span v-if="inspectorOpen">Inspector</span>
+                    <span v-if="inspectorOpen || sheet === 'inspector'">Inspector</span>
                     <button
                         type="button"
                         class="cms-we__inspector-collapse"
@@ -156,8 +167,11 @@
                     >
                         <i class="fa" :class="inspectorOpen ? 'fa-angles-right' : 'fa-angles-left'"></i>
                     </button>
+                    <button type="button" class="cms-we__inspector-close" title="Close inspector" @click="sheet = null">
+                        <i class="fa fa-xmark"></i>
+                    </button>
                 </header>
-                <div v-show="inspectorOpen" class="cms-we__inspector-body">
+                <div v-show="inspectorOpen || sheet === 'inspector'" class="cms-we__inspector-body">
                     <div v-if="selectedNode" class="cms-we__inspector-title">
                         <p v-if="selectedWidget && selectedWidget.groups && selectedWidget.groups.length" class="cms-we__kicker">
                             {{ selectedWidget.groups[0] }}
@@ -192,6 +206,30 @@
                 </div>
             </aside>
         </div>
+
+        <nav v-if="!loading" class="cms-we__dock" aria-label="Editor panels">
+            <button
+                type="button"
+                :aria-expanded="sheet === 'outline'"
+                aria-controls="cms-we-outline"
+                :class="{ 'is-on': sheet === 'outline' }"
+                @click="toggleSheet('outline')"
+            >
+                <i class="fa fa-list-ul" aria-hidden="true"></i>
+                <span>Outline</span>
+                <em>{{ view.count }}</em>
+            </button>
+            <button
+                type="button"
+                :aria-expanded="sheet === 'inspector'"
+                aria-controls="cms-we-inspector"
+                :class="{ 'is-on': sheet === 'inspector' }"
+                @click="toggleSheet('inspector')"
+            >
+                <i class="fa fa-sliders" aria-hidden="true"></i>
+                <span>{{ selectedNode ? selectedLabel : 'Inspector' }}</span>
+            </button>
+        </nav>
 
         <WidgetDrawer
             :open="drawer.open"
@@ -303,6 +341,8 @@ export default {
         let errorTimer = null;
         const outlineOpen = ref(true);
         const inspectorOpen = ref(true);
+        /** 'outline' or 'inspector' while that sheet covers the canvas on a narrow screen */
+        const sheet = ref(null);
         const folded = reactive({});
         const draftOffer = ref('');
         let editor = null;
@@ -600,6 +640,8 @@ export default {
                     }
                 } else if (drawer.open) {
                     drawer.open = false;
+                } else if (sheet.value) {
+                    sheet.value = null;
                 } else if (view.value.selected) {
                     select(null);
                 } else {
@@ -642,6 +684,17 @@ export default {
                 editor.nudge(view.value.selected, delta);
                 refresh();
             }
+        }
+
+        /** One sheet at a time. The same button closes it. */
+        function toggleSheet(name) {
+            sheet.value = sheet.value === name ? null : name;
+        }
+
+        /** Up or down within the widget's own list. Dragging does not work from a touch. */
+        function onNudge(detail) {
+            editor.nudge(detail.uid, detail.delta);
+            refresh();
         }
 
         /**
@@ -797,6 +850,11 @@ export default {
             const at = drawer.at ? { area: view.value.active, ...drawer.at } : undefined;
             editor.insert(slug, at);
             drawer.open = false;
+            // The new widget is on the canvas, which the sheet was covering
+            if (sheet.value) {
+                sheet.value = null;
+                scrollTo.value += 1;
+            }
             refresh();
         }
 
@@ -1022,6 +1080,9 @@ export default {
             drag,
             outlineOpen,
             inspectorOpen,
+            sheet,
+            toggleSheet,
+            onNudge,
             folded,
             tailKey,
             toggleFold,
