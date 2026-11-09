@@ -8,16 +8,7 @@
         <div class="cms-we__bar">
             <div class="cms-we__title">
                 <i class="fa fa-puzzle-piece cms-we__mark" title="Widgets"></i>
-                <select
-                    v-if="view.areas.length > 1"
-                    class="cms-we__area"
-                    :value="view.active"
-                    title="Switch field"
-                    @change="setArea($event.target.value)"
-                >
-                    <option v-for="area in view.areas" :key="area.slug" :value="area.slug">{{ area.label }}</option>
-                </select>
-                <strong v-else class="cms-we__area">{{ activeLabel }}</strong>
+                <strong class="cms-we__area">{{ activeLabel }}</strong>
             </div>
             <div class="cms-we__tools">
                 <button type="button" class="cms-we__btn is-icon" title="Undo (⌘Z)" :disabled="!view.canUndo" @click="run('undo')">
@@ -796,11 +787,6 @@ export default {
             rich.value = '';
         }
 
-        function setArea(slug) {
-            editor.setActive(slug);
-            refresh();
-        }
-
         function select(uid) {
             editor.select(uid);
             refresh();
@@ -1130,7 +1116,6 @@ export default {
             canvasItems,
             canvasStylesheets,
             endpoint,
-            setArea,
             select,
             selectFromOutline,
             insert,

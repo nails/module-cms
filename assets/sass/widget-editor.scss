@@ -87,19 +87,6 @@
         white-space: nowrap;
     }
 
-    select#{&}__area {
-        max-width: 360px;
-        padding: 2px 22px 2px 0;
-        border: 0;
-        background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23fff' fill-opacity='.6'/%3E%3C/svg%3E") no-repeat right 4px center;
-        appearance: none;
-        cursor: pointer;
-
-        option {
-            color: var(--we-ink);
-        }
-    }
-
     &__tools {
         display: flex;
         gap: 8px;
@@ -2293,8 +2280,7 @@
         min-width: 0;
     }
 
-    .cms-we__area,
-    select.cms-we__area {
+    .cms-we__area {
         max-width: 100%;
     }
 
