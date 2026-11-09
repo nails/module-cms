@@ -7,10 +7,103 @@ import {
     renderSection,
     fontFaceRules,
     inlineFieldKeys,
+    ownerPath,
+    parseMarker,
     placeOf,
     refreshingUids,
     resolveNodeUid,
+    slotInsertPoints,
+    storedAt,
 } from '../../assets/js/widget-editor/canvas.js';
+
+describe('parseMarker', () => {
+
+    it('reads the slot and child markers the preview writes', () => {
+        expect(parseMarker('cms-we-slot content')).toEqual({ kind: 'slot', close: false, path: 'content' });
+        expect(parseMarker('/cms-we-node content%2F0%2Fitems/2')).toEqual({ kind: 'node', close: true, path: 'content/0/items/2' });
+    });
+
+    it('ignores other comments', () => {
+        expect(parseMarker(' a note ')).toBeNull();
+        expect(parseMarker('cms-we-slot')).toBeNull();
+        expect(parseMarker('cms-we-slot %E0%A4%A')).toBeNull();
+    });
+});
+
+describe('ownerPath', () => {
+
+    it('is the widget one level up from a child or a slot', () => {
+        expect(ownerPath('content/0/items/1')).toBe('content/0');
+        expect(ownerPath('content/0')).toBe('');
+        expect(ownerPath('content/0/items')).toBe('content/0');
+        expect(ownerPath('content')).toBe('');
+        expect(ownerPath('')).toBeNull();
+    });
+});
+
+describe('storedAt', () => {
+
+    const item = {
+        slug: 'outer',
+        data: { content: [{ slug: 'inner', data: { content: [{ slug: 'leaf', data: {} }] } }] },
+    };
+
+    it('walks the stored data to a nested widget', () => {
+        expect(storedAt(item, '').slug).toBe('outer');
+        expect(storedAt(item, 'content/0').slug).toBe('inner');
+        expect(storedAt(item, 'content/0/content/0').slug).toBe('leaf');
+    });
+
+    it('is null when the path has gone', () => {
+        expect(storedAt(item, 'content/3')).toBeNull();
+        expect(storedAt(item, 'other/0')).toBeNull();
+        expect(storedAt(null, '')).toBeNull();
+    });
+});
+
+describe('slotInsertPoints', () => {
+
+    const rect = (top, left, width, height) => ({ top, left, width, height });
+
+    it('puts a level line before, between and after stacked children', () => {
+        const slot = rect(0, 10, 200, 100);
+        const points = slotInsertPoints(slot, [
+            { index: 0, rect: rect(0, 10, 200, 40) },
+            { index: 1, rect: rect(50, 10, 200, 50) },
+        ]);
+
+        expect(points.map((point) => [point.index, point.upright, point.y])).toEqual([
+            [0, false, 0],
+            [1, false, 45],
+            [2, false, 100],
+        ]);
+        expect(points[0]).toMatchObject({ x: 10, length: 200 });
+    });
+
+    it('puts an upright line between children side by side', () => {
+        const slot = rect(0, 0, 300, 80);
+        const points = slotInsertPoints(slot, [
+            { index: 0, rect: rect(0, 0, 100, 80) },
+            { index: 1, rect: rect(0, 110, 100, 60) },
+        ]);
+
+        expect(points.map((point) => [point.index, point.upright, point.x])).toEqual([
+            [0, true, 0],
+            [1, true, 105],
+            [2, true, 210],
+        ]);
+        expect(points[1]).toMatchObject({ y: 0, length: 80 });
+    });
+
+    it('offers one place on each side of a single child', () => {
+        const points = slotInsertPoints(rect(0, 0, 100, 20), [{ index: 0, rect: rect(0, 0, 100, 20) }]);
+        expect(points.map((point) => [point.index, point.y])).toEqual([[0, 0], [1, 20]]);
+    });
+
+    it('has nothing to offer for an empty slot', () => {
+        expect(slotInsertPoints(rect(0, 0, 10, 10), [])).toEqual([]);
+    });
+});
 
 describe('buildCanvasShell', () => {
 

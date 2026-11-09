@@ -1335,6 +1335,53 @@
             cursor: not-allowed;
         }
     }
+
+    // The end of a slot takes a whole row, so adding to a nested list is not a hover target on a boundary.
+    // An empty slot shows it outlined, as the place for the first widget.
+    &__slot-add {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        width: calc(100% - 8px);
+        height: 24px;
+        margin: 1px 0 6px;
+        padding: 0 8px;
+        border: 1px dashed transparent;
+        border-radius: 3px;
+        background: transparent;
+        color: var(--we-faint);
+        font: inherit;
+        font-size: 11px;
+        cursor: pointer;
+
+        .fa {
+            font-size: 9px;
+        }
+
+        &:hover,
+        &:focus-visible {
+            border-color: var(--we-line-strong);
+            background: rgba(36, 36, 36, 0.03);
+            color: var(--we-ink);
+        }
+
+        &.is-empty {
+            height: 30px;
+            border-color: var(--we-line-strong);
+            color: var(--we-muted);
+        }
+
+        &.is-drop,
+        &.is-invalid {
+            border-style: solid;
+            border-color: var(--we-accent);
+            color: var(--we-accent);
+        }
+
+        &.is-invalid {
+            cursor: not-allowed;
+        }
+    }
 }
 
 // ------------------------------------------------------------------------------
@@ -1448,6 +1495,170 @@
 
         &:hover {
             opacity: 1;
+        }
+    }
+
+    // A widget with slots: a dashed frame around what it wraps, a tag where it starts, and one where it ends
+    &__wrap {
+        position: absolute;
+        z-index: 1;
+        border: 1px dashed rgba(36, 36, 36, 0.24);
+        border-radius: 2px;
+        pointer-events: none;
+
+        &.is-active {
+            border-color: var(--we-accent);
+        }
+    }
+
+    // A tab on top of the frame where the wrapper starts, and one under it where it ends
+    &__wrap-tag {
+        position: absolute;
+        z-index: 3;
+        display: inline-flex;
+        gap: 5px;
+        align-items: center;
+        height: 17px;
+        padding: 0 7px;
+        border: 1px solid var(--we-line-strong);
+        border-bottom: 0;
+        border-radius: 3px 3px 0 0;
+        background: var(--we-paper);
+        color: var(--we-muted);
+        font: inherit;
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1;
+        white-space: nowrap;
+        transform: translateY(-100%);
+        cursor: pointer;
+
+        .fa {
+            font-size: 9px;
+        }
+
+        &:hover,
+        &.is-active {
+            border-color: var(--we-accent);
+            color: var(--we-accent);
+        }
+
+        &.is-end {
+            border-top: 0;
+            border-bottom: 1px solid var(--we-line-strong);
+            border-radius: 0 0 3px 3px;
+            font-weight: 500;
+            transform: none;
+            cursor: default;
+            pointer-events: none;
+        }
+    }
+
+    // Over an empty slot's placeholder. The whole placeholder adds the first widget.
+    &__slot-add {
+        position: absolute;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+
+        button {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            height: 30px;
+            padding: 0 12px;
+            border: 1px solid var(--we-line-strong);
+            border-radius: 15px;
+            background: var(--we-paper);
+            color: var(--we-body);
+            font: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(36, 36, 36, 0.08);
+            cursor: pointer;
+        }
+
+        &:hover button {
+            border-color: var(--we-accent);
+            color: var(--we-accent);
+        }
+    }
+
+    // Between the children of a slot. Only the "+" takes the pointer, so the content around it stays editable.
+    &__slot-gap {
+        position: absolute;
+        z-index: 3;
+        pointer-events: none;
+
+        &::before {
+            content: '';
+            position: absolute;
+            background: var(--we-line-strong);
+            opacity: 0.5;
+        }
+
+        &.is-across::before {
+            top: -0.5px;
+            right: 0;
+            left: 0;
+            height: 1px;
+        }
+
+        &.is-upright::before {
+            top: 0;
+            bottom: 0;
+            left: -0.5px;
+            width: 1px;
+        }
+
+        &.is-across {
+            height: 0;
+        }
+
+        &.is-upright {
+            width: 0;
+        }
+
+        button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            padding: 0;
+            border: 1px solid var(--we-line-strong);
+            border-radius: 50%;
+            background: var(--we-paper);
+            color: var(--we-muted);
+            font-size: 9px;
+            line-height: 1;
+            box-shadow: 0 1px 2px rgba(36, 36, 36, 0.08);
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        &.is-across.is-edge button {
+            left: calc(100% - 22px);
+        }
+
+        &.is-upright.is-edge button {
+            top: calc(100% - 22px);
+        }
+
+        &:hover::before {
+            background: var(--we-accent);
+            opacity: 1;
+        }
+
+        &:hover button {
+            border-color: var(--we-accent);
+            color: var(--we-accent);
         }
     }
 
@@ -2276,6 +2487,21 @@
             font-size: 13px;
             line-height: 1;
             transform: none;
+        }
+    }
+
+    .cms-we-outline__slot-add,
+    .cms-we-outline__slot-add.is-empty {
+        justify-content: center;
+        height: 44px;
+        margin: 4px 12px 12px 0;
+        border-color: var(--we-line-strong);
+        color: var(--we-body);
+        font-size: 14px;
+        font-weight: 600;
+
+        .fa {
+            font-size: 13px;
         }
     }
 

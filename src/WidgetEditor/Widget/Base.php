@@ -291,20 +291,37 @@ abstract class Base implements Interfaces\Widget
             ));
         }
 
-        $output = '';
-        foreach (array_values((array) ($data[$name] ?? [])) as $index => $child) {
+        $preview  = $this->isPreview();
+        $slotPath = rawurlencode(implode('/', [...$this->nodePath(), $name]));
+        $children = array_values((array) ($data[$name] ?? []));
+        $output   = '';
+
+        foreach ($children as $index => $child) {
             $context                = $this->context;
             $context[self::PATH_KEY] = [...$this->nodePath(), $name, (string) $index];
 
-            $output .= $this->registry->renderNode(
+            $html = $this->registry->renderNode(
                 $child,
                 $this->mode,
                 $this->depth + 1,
                 $context
             );
+
+            $output .= $preview
+                ? '<!--cms-we-node ' . $slotPath . '/' . $index . '-->' . $html . '<!--/cms-we-node ' . $slotPath . '/' . $index . '-->'
+                : $html;
         }
 
-        return $output;
+        if (!$preview) {
+            return $output;
+        }
+
+        //  Comments mark the slot for the canvas without adding boxes that the page's CSS could style
+        if ($children === []) {
+            $output = '<div class="cms-we-slot-empty" data-cms-slot-empty></div>';
+        }
+
+        return '<!--cms-we-slot ' . $slotPath . '-->' . $output . '<!--/cms-we-slot ' . $slotPath . '-->';
     }
 
     // --------------------------------------------------------------------------
@@ -331,13 +348,15 @@ abstract class Base implements Interfaces\Widget
             $icon = 'fa-cube';
         }
 
-        return '<div class="cms-we-area">'
-            . '<i class="fa ' . $icon . ' cms-we-area__icon" aria-hidden="true"></i>'
-            . '<div class="cms-we-area__copy">'
-            . '<p class="cms-we-area__name">' . $name . '</p>'
-            . '<p class="cms-we-area__note">' . $note . '</p>'
-            . '</div>'
-            . '</div>';
+        return <<<EOF
+            <div class="cms-we-area">
+                <i class="fa $icon cms-we-area__icon" aria-hidden="true"></i>
+                <div class="cms-we-area__copy">
+                    <p class="cms-we-area__name">$name</p>
+                    <p class="cms-we-area__note">$note</p>
+                </div>
+            </div>
+            EOF;
     }
 
     // --------------------------------------------------------------------------

@@ -276,9 +276,52 @@ class RegistryTest extends TestCase
         ];
 
         self::assertSame(
-            '<div><h1>A</h1>|<h1>B</h1></div>',
+            '<div>'
+            . '<!--cms-we-slot left--><!--cms-we-node left/0--><h1>A</h1><!--/cms-we-node left/0--><!--/cms-we-slot left-->'
+            . '|'
+            . '<!--cms-we-slot right--><!--cms-we-node right/0--><h1>B</h1><!--/cms-we-node right/0--><!--/cms-we-slot right-->'
+            . '</div>',
             $oRegistry->renderNode($aNode, Registry::MODE_PREVIEW)
         );
+    }
+
+    public function testSlotsRenderWithoutMarkersOnThePage(): void
+    {
+        $oRegistry = new Registry([Heading::class => 1, Columns::class => 1]);
+
+        $aNode = [
+            'slug' => self::COLUMNS,
+            'data' => [
+                'left'  => [['slug' => self::HEADING, 'data' => ['sText' => 'A']]],
+                'right' => [],
+            ],
+        ];
+
+        self::assertSame('<div><h1>A</h1>|</div>', $oRegistry->renderNode($aNode));
+    }
+
+    public function testEmptySlotHoldsAPlaceInPreviewMode(): void
+    {
+        $oRegistry = new Registry([Heading::class => 1, Columns::class => 1]);
+
+        $aNode = [
+            'slug' => self::COLUMNS,
+            'data' => [
+                'left'  => [[
+                    'slug' => self::COLUMNS,
+                    'data' => ['left' => [], 'right' => []],
+                ]],
+                'right' => [],
+            ],
+        ];
+
+        $sHtml = $oRegistry->renderNode($aNode, Registry::MODE_PREVIEW);
+
+        self::assertStringContainsString(
+            '<!--cms-we-slot left%2F0%2Fleft--><div class="cms-we-slot-empty" data-cms-slot-empty></div><!--/cms-we-slot left%2F0%2Fleft-->',
+            $sHtml
+        );
+        self::assertSame(3, substr_count($sHtml, 'data-cms-slot-empty'));
     }
 
     public function testDepthCapSkipsDeeperNodes(): void
@@ -300,10 +343,7 @@ class RegistryTest extends TestCase
             ],
         ];
 
-        self::assertSame(
-            '<div><div>|</div>|</div>',
-            $oRegistry->renderNode($aNode, Registry::MODE_PREVIEW)
-        );
+        self::assertSame('<div><div>|</div>|</div>', $oRegistry->renderNode($aNode));
     }
 
     public function testWalkVisitsNestedInstancesWithPaths(): void

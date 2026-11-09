@@ -147,11 +147,13 @@
                     :selected="selectedPlace"
                     :hover="hoverPlace"
                     :scroll-to="scrollTo"
+                    :widgets="catalogue.widgets"
                     @select="onCanvasSelect"
                     @hover="onCanvasHover"
                     @edit="onCanvasEdit"
                     @rich="onCanvasRich"
                     @insert-at="onCanvasInsert"
+                    @insert-into="onCanvasInsertInto"
                     @inline-fields="onInlineFields"
                 />
             </div>
@@ -837,6 +839,14 @@ export default {
             openDrawer({ parentUid: null, slot: null, index });
         }
 
+        /** An add button in a slot on the canvas. `path` names the wrapper inside its top-level widget. */
+        function onCanvasInsertInto({ uid, path, slot, index }) {
+            const parentUid = resolveNodeUid(view.value.nodes, uid, path);
+            if (parentUid) {
+                openDrawer({ parentUid, slot, index });
+            }
+        }
+
         /** A click in the canvas selects the instance under it, or the nested instance that owns the field */
         function onCanvasSelect(target) {
             if (!target) {
@@ -1089,6 +1099,7 @@ export default {
             onCanvasEdit,
             onCanvasRich,
             onCanvasInsert,
+            onCanvasInsertInto,
             onCanvasSelect,
             onCanvasHover,
             onOutlineHover,

@@ -125,6 +125,8 @@ const CANVAS_STYLE = 'html{overflow:hidden}'
     + '.cms-canvas-item{display:flow-root;position:relative;margin:0;padding:12px 28px}'
     + '.cms-we-gap{height:24px}'
     + '.cms-we-hint{margin:0;color:#8a837d}'
+    // An empty slot holds the place the editor draws its add button over
+    + '.cms-we-slot-empty{box-sizing:border-box;min-height:64px;border:1px dashed #cfc9c2;border-radius:3px;background:rgba(250,248,246,.85)}'
     + '.cms-canvas-error{padding:10px 14px;background:#fdf2f2;color:#7a1f1f;border:1px solid #f1caca;font-size:13px}'
     + '.cms-canvas-warning{display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:#fdf8e8;color:#6b5417;border:1px solid #ecd9a0;font-size:13px;line-height:1.45;text-align:left}'
     + '.cms-canvas-warning__mark{margin-right:6px}'
@@ -294,6 +296,105 @@ export function placeOf(nodes, uid) {
     }
 
     return walk(nodes || [], null, '');
+}
+
+/**
+ * Reads a slot or child marker that the preview writes as a comment, e.g. `cms-we-slot content` or
+ * `/cms-we-node content/0`. The path is URL-encoded so it cannot end the comment.
+ *
+ * @param {string} text The comment's text
+ * @return {?{kind: 'slot'|'node', close: boolean, path: string}}
+ */
+export function parseMarker(text) {
+    const match = /^(\/?)cms-we-(slot|node) (\S+)$/.exec(String(text || '').trim());
+    if (!match) {
+        return null;
+    }
+    try {
+        return { kind: match[2], close: match[1] === '/', path: decodeURIComponent(match[3]) };
+    } catch (e) {
+        return null;
+    }
+}
+
+/**
+ * The path of the widget that holds a nested widget or a slot, one level up.
+ * 'content/0/items/1' is held by 'content/0'; a top-level slot such as 'content' is held by ''.
+ *
+ * @param {string} path A child's path (slot/index pairs) or a slot's path (pairs then a slot name)
+ * @return {?string} Null for the top-level widget itself
+ */
+export function ownerPath(path) {
+    const segments = path ? String(path).split('/') : [];
+    if (!segments.length) {
+        return null;
+    }
+    const keep = segments.length % 2 === 0 ? segments.length - 2 : segments.length - 1;
+    return segments.slice(0, keep).join('/');
+}
+
+/**
+ * The stored widget at a path inside a top-level instance's stored data
+ *
+ * @param {{slug: string, data: Object}} item
+ * @param {string} path
+ * @return {?{slug: string, data: Object}}
+ */
+export function storedAt(item, path) {
+    let node = item || null;
+    const segments = path ? String(path).split('/') : [];
+    for (let i = 0; node && i < segments.length; i += 2) {
+        const children = node.data && node.data[segments[i]];
+        node = Array.isArray(children) ? children[Number(segments[i + 1])] || null : null;
+    }
+    return node && typeof node.slug === 'string' ? node : null;
+}
+
+/**
+ * Where the canvas offers to insert into a slot that has children: before the first, between each pair,
+ * and after the last. Children side by side (columns) get an upright line between them, stacked children
+ * a level one across the slot.
+ *
+ * @param {{top: number, left: number, width: number, height: number}} slot
+ * @param {Array<{index: number, rect: {top: number, left: number, width: number, height: number}}>} children In order
+ * @return {Array<{index: number, upright: boolean, x: number, y: number, length: number}>}
+ */
+export function slotInsertPoints(slot, children) {
+    const list = (children || []).filter((child) => child && child.rect);
+    if (!list.length) {
+        return [];
+    }
+
+    const right = (rect) => rect.left + rect.width;
+    const bottom = (rect) => rect.top + rect.height;
+    const beside = (a, b) => b.left >= right(a) - 2 && b.top < bottom(a) - 2;
+    const across = (y) => ({ upright: false, x: slot.left, y, length: slot.width });
+    const upright = (x, a, b) => {
+        const top = Math.min(a.top, b.top);
+        return { upright: true, x, y: top, length: Math.max(bottom(a), bottom(b)) - top };
+    };
+
+    const first = list[0].rect;
+    const last = list[list.length - 1].rect;
+    const row = list.length > 1 && beside(list[0].rect, list[1].rect);
+    const points = [{ index: list[0].index, ...(row ? upright(first.left, first, first) : across(first.top)) }];
+
+    for (let i = 1; i < list.length; i++) {
+        const a = list[i - 1].rect;
+        const b = list[i].rect;
+        points.push({
+            index: list[i].index,
+            ...(beside(a, b) ? upright((right(a) + b.left) / 2, a, b) : across((bottom(a) + b.top) / 2)),
+        });
+    }
+
+    const lastRow = list.length > 1 && beside(list[list.length - 2].rect, last);
+    points.push({
+        index: list[list.length - 1].index + 1,
+        ...(lastRow ? upright(right(last), last, last) : across(bottom(last))),
+    });
+
+    return points;
 }
 
 /**

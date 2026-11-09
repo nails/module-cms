@@ -115,20 +115,18 @@
                             @remove="$emit('remove', $event)"
                         />
                     </ol>
-                    <div class="cms-we-outline__tail">
-                        <button
-                            type="button"
-                            class="cms-we-outline__gap is-tail"
-                            :class="marker(placeKey(node.uid, slot, children.length)).state"
-                            :title="marker(placeKey(node.uid, slot, children.length)).title"
-                            @click.stop="insertAt(node.uid, slot, children.length)"
-                            @dragover.prevent="mark($event, node.uid, slot, children.length)"
-                            @drop.prevent.stop="dropAt(node.uid, slot, children.length)"
-                        >
-                            <i class="fa" :class="marker(placeKey(node.uid, slot, children.length)).icon"></i>
-                            <span class="cms-we-outline__gap-label">Add widget</span>
-                        </button>
-                    </div>
+                    <button
+                        type="button"
+                        class="cms-we-outline__slot-add"
+                        :class="[marker(placeKey(node.uid, slot, children.length)).state, { 'is-empty': !children.length }]"
+                        :title="marker(placeKey(node.uid, slot, children.length)).title"
+                        @click.stop="insertAt(node.uid, slot, children.length)"
+                        @dragover.prevent="mark($event, node.uid, slot, children.length)"
+                        @drop.prevent.stop="dropAt(node.uid, slot, children.length)"
+                    >
+                        <i class="fa" :class="marker(placeKey(node.uid, slot, children.length)).icon"></i>
+                        <span>{{ children.length ? 'Add widget' : 'Add the first widget' }}</span>
+                    </button>
                 </template>
             </div>
         </div>

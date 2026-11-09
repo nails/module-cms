@@ -54,6 +54,64 @@
                     <button type="button" title="Insert a widget here"><i class="fa fa-plus"></i></button>
                 </div>
 
+                <div
+                    v-for="wrap in wraps"
+                    :key="'wrap-' + wrap.key"
+                    class="cms-we-canvas__wrap"
+                    :class="{ 'is-active': wrap.current }"
+                    :style="rectStyle(wrap.rect)"
+                ></div>
+                <button
+                    v-for="wrap in wraps"
+                    v-show="wrap.shown"
+                    :key="'wrap-tag-' + wrap.key"
+                    type="button"
+                    class="cms-we-canvas__wrap-tag"
+                    :class="{ 'is-active': wrap.current }"
+                    :style="{ top: wrap.rect.top + 'px', left: wrap.tagLeft + 'px' }"
+                    :title="'Select this ' + wrap.label.toLowerCase()"
+                    @mousemove.stop
+                    @click.stop="$emit('select', { uid: wrap.top, path: wrap.path })"
+                >
+                    <i class="fa" :class="wrap.icon"></i>{{ wrap.label }}
+                </button>
+                <div
+                    v-for="wrap in wraps"
+                    v-show="wrap.near"
+                    :key="'wrap-end-' + wrap.key"
+                    class="cms-we-canvas__wrap-tag is-end"
+                    :class="{ 'is-active': wrap.current }"
+                    :style="{ top: (wrap.rect.top + wrap.rect.height) + 'px', left: (wrap.rect.left + 8) + 'px' }"
+                >End of {{ wrap.label.toLowerCase() }}</div>
+
+                <div
+                    v-for="slot in emptySlots"
+                    :key="'slot-add-' + slot.key"
+                    class="cms-we-canvas__slot-add"
+                    :style="rectStyle(slot.rect)"
+                    @mousemove.stop
+                    @click.stop="insertInto(slot, 0)"
+                >
+                    <button type="button"><i class="fa fa-plus"></i>{{ slot.label }}</button>
+                </div>
+
+                <div
+                    v-for="point in slotGaps"
+                    :key="'slot-gap-' + point.key"
+                    class="cms-we-canvas__slot-gap"
+                    :class="[point.upright ? 'is-upright' : 'is-across', { 'is-edge': point.edge }]"
+                    :style="point.upright
+                        ? { left: point.x + 'px', top: point.y + 'px', height: point.length + 'px' }
+                        : { left: point.x + 'px', top: point.y + 'px', width: point.length + 'px' }"
+                >
+                    <button
+                        type="button"
+                        :title="point.title"
+                        @mousemove.stop
+                        @click.stop="insertInto(point, point.index)"
+                    ><i class="fa fa-plus"></i></button>
+                </div>
+
                 <RichTextSurface
                     v-if="rich.active"
                     ref="richEl"
@@ -93,7 +151,18 @@
 
 <script>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
-import { buildCanvasShell, canvasStylesheets, fontFaceRules, inlineFieldKeys, refreshingUids, renderSection } from './canvas.js';
+import {
+    buildCanvasShell,
+    canvasStylesheets,
+    fontFaceRules,
+    inlineFieldKeys,
+    ownerPath,
+    parseMarker,
+    refreshingUids,
+    renderSection,
+    slotInsertPoints,
+    storedAt,
+} from './canvas.js';
 import { isBlankHtml } from './rich-schema.js';
 import RichTextSurface from './RichTextSurface.vue';
 
@@ -125,6 +194,97 @@ function closestEl(target, selector) {
 function rectOf(el) {
     const rect = el.getBoundingClientRect();
     return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+}
+
+/** The box of what lies between two markers, or null when nothing there is drawn */
+function rangeRect(document, start, end) {
+    const range = document.createRange();
+    range.setStartAfter(start);
+    range.setEndBefore(end);
+    const rect = range.getBoundingClientRect();
+    return rect.width < 1 && rect.height < 1
+        ? null
+        : { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+}
+
+/** The box of an instance's content, inside the item's padding */
+function contentRect(document, item) {
+    const range = document.createRange();
+    range.selectNodeContents(item);
+    const rect = range.getBoundingClientRect();
+    return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+}
+
+/**
+ * Reads the slot and child markers in one top-level instance.
+ * A nested widget's box is everything between its markers. A slot records its children's boxes, in order,
+ * and the placeholder it shows when it is empty.
+ *
+ * @return {{nodes: Object<string, Object>, slots: Array<Object>}} Nodes keyed by path
+ */
+function readMarkers(document, item, top) {
+    const nodes = {};
+    const slots = [];
+    const opened = new Map();
+    const bySlot = new Map();
+    const walker = document.createTreeWalker(item, NodeFilter.SHOW_COMMENT);
+
+    for (let comment = walker.nextNode(); comment; comment = walker.nextNode()) {
+        const marker = parseMarker(comment.nodeValue);
+        if (!marker) {
+            continue;
+        }
+        const key = marker.kind + '\n' + marker.path;
+        if (!marker.close) {
+            opened.set(key, comment);
+            if (marker.kind === 'slot') {
+                const slot = {
+                    key: top + '\n' + marker.path,
+                    top,
+                    path: marker.path,
+                    owner: ownerPath(marker.path),
+                    slot: marker.path.split('/').pop(),
+                    rect: null,
+                    empty: null,
+                    children: [],
+                };
+                bySlot.set(marker.path, slot);
+                slots.push(slot);
+            }
+            continue;
+        }
+
+        const start = opened.get(key);
+        opened.delete(key);
+        if (!start) {
+            continue;
+        }
+        const rect = rangeRect(document, start, comment);
+        if (marker.kind === 'node') {
+            const segments = marker.path.split('/');
+            const slot = bySlot.get(segments.slice(0, -1).join('/'));
+            if (rect) {
+                nodes[marker.path] = rect;
+                if (slot) {
+                    slot.children.push({ index: Number(segments[segments.length - 1]), rect });
+                }
+            }
+            continue;
+        }
+        const slot = bySlot.get(marker.path);
+        const holder = start.nextSibling;
+        if (holder && holder.nodeType === 1 && holder.hasAttribute('data-cms-slot-empty')) {
+            slot.empty = rectOf(holder);
+        }
+        slot.rect = rect;
+    }
+
+    return { nodes, slots };
+}
+
+/** How much room a wrapper's tag takes, so tags that start in one place sit side by side */
+function tagWidth(label) {
+    return 34 + label.length * 6.5;
 }
 
 /** Text fields hold one line */
@@ -375,8 +535,10 @@ export default {
         hover: { type: Object, default: null },
         /** Bumped when the outline selects a widget, so the canvas scrolls it into view */
         scrollTo: { type: Number, default: 0 },
+        /** Catalogue widgets by slug, for the labels and slots of wrapper widgets */
+        widgets: { type: Object, default: () => ({}) },
     },
-    emits: ['edit', 'rich', 'insert-at', 'select', 'hover', 'inline-fields'],
+    emits: ['edit', 'rich', 'insert-at', 'insert-into', 'select', 'hover', 'inline-fields'],
     setup(props, { emit }) {
         const frame = ref(null);
         const overlay = ref(null);
@@ -398,6 +560,12 @@ export default {
         const refreshing = ref([]);
         /** Bounding boxes of `[data-cms-path]` regions, keyed `topUid\\npath` */
         const pathRects = ref({});
+        /** Nested widgets' boxes from the slot markers, keyed `topUid\\npath` */
+        const nodeRects = ref({});
+        /** Each instance's content box, inside the item's padding */
+        const contentRects = ref({});
+        /** Every slot on the canvas, with its children's boxes */
+        const slots = ref([]);
         const gaps = ref([]);
         const cursor = ref('default');
         const editing = reactive({ active: false, uid: null, path: '', field: '', style: {} });
@@ -426,6 +594,138 @@ export default {
         const hoverBox = computed(() => boxFor(props.hover));
         const selectedBox = computed(() => boxFor(props.selected));
         const showHover = computed(() => Boolean(hoverBox.value) && !samePlace(props.hover, props.selected));
+
+        /** The hovered and selected widgets, keyed `topUid\\npath` */
+        const current = computed(() => new Set(
+            [props.hover, props.selected]
+                .filter((place) => place && place.top)
+                .map((place) => place.top + '\n' + (place.path || ''))
+        ));
+
+        /** Those widgets and the wrappers that directly hold them. Their slots show where to insert. */
+        const near = computed(() => {
+            const keys = new Set(current.value);
+            [props.hover, props.selected].forEach((place) => {
+                const up = place && place.top ? ownerPath(place.path || '') : null;
+                if (up !== null) {
+                    keys.add(place.top + '\n' + up);
+                }
+            });
+            return keys;
+        });
+
+        function describe(top, path) {
+            const item = props.items.find((entry) => entry.uid === top) || null;
+            const stored = path === '' ? item : storedAt(item, path);
+            const widget = stored ? props.widgets[stored.slug] || null : null;
+            return {
+                label: widget ? widget.label : (stored ? stored.slug : 'Wrapper'),
+                icon: widget && /^fa-[a-z0-9-]+$/.test(widget.icon || '') ? widget.icon : 'fa-layer-group',
+                slots: widget && widget.slots ? widget.slots : {},
+            };
+        }
+
+        /**
+         * A frame for each widget that has slots, so it reads as a wrapper. A top-level wrapper always shows its tag.
+         * A nested one shows its tags while it, or a widget directly inside it, is hovered or selected, so the tags
+         * do not sit over the content of every level at once.
+         */
+        const wraps = computed(() => {
+            const owners = new Map();
+            slots.value.forEach((slot) => {
+                const key = slot.top + '\n' + slot.owner;
+                if (!owners.has(key)) {
+                    owners.set(key, { key, top: slot.top, path: slot.owner });
+                }
+            });
+
+            const placed = [];
+            return Array.from(owners.values()).map((wrap) => {
+                const rect = wrap.path === ''
+                    ? contentRects.value[wrap.top]
+                    : nodeRects.value[wrap.key];
+                if (!rect) {
+                    return null;
+                }
+                const { label, icon } = describe(wrap.top, wrap.path);
+                const shown = wrap.path === '' || near.value.has(wrap.key);
+                const width = tagWidth(label);
+                let left = rect.left + 8;
+                let moved = shown;
+                while (moved) {
+                    moved = false;
+                    placed.forEach((tag) => {
+                        if (Math.abs(tag.top - rect.top) < 18 && left < tag.left + tag.width && left + width > tag.left) {
+                            left = tag.left + tag.width + 4;
+                            moved = true;
+                        }
+                    });
+                }
+                if (shown) {
+                    placed.push({ top: rect.top, left, width });
+                }
+                return {
+                    ...wrap,
+                    rect,
+                    label,
+                    icon,
+                    shown,
+                    tagLeft: left,
+                    current: current.value.has(wrap.key),
+                    near: near.value.has(wrap.key),
+                };
+            }).filter(Boolean);
+        });
+
+        /** An add button over each empty slot. A wrapper with more than one slot names the slot. */
+        const emptySlots = computed(() => slots.value
+            .filter((slot) => slot.empty)
+            .map((slot) => {
+                const defined = describe(slot.top, slot.owner).slots;
+                const names = Object.keys(defined);
+                const name = defined[slot.slot] && defined[slot.slot].label ? defined[slot.slot].label : slot.slot;
+                return {
+                    ...slot,
+                    rect: slot.empty,
+                    label: names.length > 1 ? 'Add to ' + name : 'Add a widget',
+                };
+            }));
+
+        /**
+         * Insert points in the slots of the hovered or selected wrapper, and of the wrapper holding that widget.
+         * A wrapper and the one inside it often share an edge. The inner slot keeps the middle of the line and the
+         * outer one moves its "+" to the end, clear of the wrapper tags, so both can be reached.
+         */
+        const slotGaps = computed(() => {
+            const points = [];
+            const depth = (slot) => slot.path.split('/').length;
+            slots.value
+                .filter((slot) => slot.rect && slot.children.length && near.value.has(slot.top + '\n' + slot.owner))
+                .sort((a, b) => depth(b) - depth(a))
+                .forEach((slot) => {
+                    const label = describe(slot.top, slot.owner).label;
+                    const children = slot.children.slice().sort((a, b) => a.index - b.index);
+                    slotInsertPoints(slot.rect, children).forEach((point) => {
+                        const edge = points.some((other) => other.upright === point.upright
+                            && Math.abs(other.x - point.x) < 6
+                            && Math.abs(other.y - point.y) < 6);
+                        points.push({
+                            ...point,
+                            edge,
+                            title: 'Insert into the ' + label.toLowerCase() + ' here',
+                            key: slot.key + '\n' + point.index,
+                            top: slot.top,
+                            owner: slot.owner,
+                            slot: slot.slot,
+                        });
+                    });
+                });
+            return points;
+        });
+
+        function insertInto(target, index) {
+            emit('insert-into', { uid: target.top, path: target.owner, slot: target.slot, index });
+        }
 
         function doc() {
             return frame.value && frame.value.contentDocument;
@@ -590,6 +890,9 @@ export default {
 
             const found = {};
             const paths = {};
+            const nodes = {};
+            const contents = {};
+            const slotList = [];
             Array.from(body.children).forEach((el) => {
                 const uid = el.getAttribute('data-uid');
                 if (uid !== null) {
@@ -614,9 +917,18 @@ export default {
                     const key = top + '\n' + path;
                     paths[key] = paths[key] ? unionRect(paths[key], rect) : rect;
                 });
+                const marked = readMarkers(document, item, top);
+                Object.keys(marked.nodes).forEach((path) => {
+                    nodes[top + '\n' + path] = marked.nodes[path];
+                });
+                slotList.push(...marked.slots);
+                contents[top] = contentRect(document, item);
             });
             rects.value = found;
             pathRects.value = paths;
+            nodeRects.value = nodes;
+            contentRects.value = contents;
+            slots.value = slotList;
 
             gaps.value = Array.from(body.querySelectorAll('.cms-we-gap')).map((el) => {
                 const rect = el.getBoundingClientRect();
@@ -724,12 +1036,42 @@ export default {
                 return { item: null, field: null, action: null };
             }
             const box = overlay.value.getBoundingClientRect();
-            const el = document.elementFromPoint(event.clientX - box.left, event.clientY - box.top);
+            const x = event.clientX - box.left;
+            const y = event.clientY - box.top;
+            const el = document.elementFromPoint(x, y);
             return {
                 item: closestEl(el, '.cms-canvas-item'),
                 field: closestEl(el, '[data-cms-edit]'),
                 action: closestEl(el, '[data-cms-action]'),
+                x,
+                y,
             };
+        }
+
+        /** The innermost nested widget under a point, or '' for the top-level widget */
+        function deepestPath(uid, x, y) {
+            const prefix = uid + '\n';
+            let best = '';
+            Object.keys(nodeRects.value).forEach((key) => {
+                if (!key.startsWith(prefix)) {
+                    return;
+                }
+                const rect = nodeRects.value[key];
+                const path = key.slice(prefix.length);
+                const inside = x >= rect.left && x <= rect.left + rect.width && y >= rect.top && y <= rect.top + rect.height;
+                if (inside && path.split('/').length > (best ? best.split('/').length : 0)) {
+                    best = path;
+                }
+            });
+            return best;
+        }
+
+        /** A field names the widget it belongs to. Elsewhere, the innermost widget under the pointer. */
+        function pathAt(item, field, x, y) {
+            if (field && item.contains(field)) {
+                return field.getAttribute('data-cms-path') || '';
+            }
+            return deepestPath(item.getAttribute('data-uid') || '', x, y);
         }
 
         function onPointer(event) {
@@ -740,10 +1082,10 @@ export default {
             const clientY = event.clientY;
             frameRequest = requestAnimationFrame(() => {
                 frameRequest = null;
-                const { item, field } = hitTest({ clientX, clientY });
+                const { item, field, x, y } = hitTest({ clientX, clientY });
                 const uid = item ? item.getAttribute('data-uid') : null;
                 const locked = uid ? Boolean((props.items.find((entry) => entry.uid === uid) || {}).locked) : false;
-                publishHover(item, locked ? null : field);
+                publishHover(item, locked ? '' : (item ? pathAt(item, field, x, y) : ''));
                 if (field && !locked && !inactiveTab(field)) {
                     const kind = field.getAttribute('data-cms-edit');
                     cursor.value = kind === 'text' || kind === 'rich' || kind === 'rich-basic' ? 'text' : 'pointer';
@@ -759,11 +1101,11 @@ export default {
                 frameRequest = null;
             }
             cursor.value = 'default';
-            publishHover(null, null);
+            publishHover(null, '');
         }
 
-        /** Tells the outline which widget is under the pointer. A field's path names a nested widget. */
-        function publishHover(item, field) {
+        /** Tells the outline which widget is under the pointer. The path names a nested widget. */
+        function publishHover(item, path) {
             if (!item) {
                 if (hoverKey !== '') {
                     hoverKey = '';
@@ -772,7 +1114,6 @@ export default {
                 return;
             }
             const uid = item.getAttribute('data-uid') || '';
-            const path = field && item.contains(field) ? (field.getAttribute('data-cms-path') || '') : '';
             const key = uid + '\n' + path;
             if (key === hoverKey) {
                 return;
@@ -795,7 +1136,7 @@ export default {
 
         function onClick(event) {
             finishInline();
-            const { item, field, action } = hitTest(event);
+            const { item, field, action, x, y } = hitTest(event);
             if (!item) {
                 emit('select', null);
                 return;
@@ -803,7 +1144,7 @@ export default {
 
             const uid = item.getAttribute('data-uid');
             const locked = Boolean((props.items.find((entry) => entry.uid === uid) || {}).locked);
-            const path = field ? field.getAttribute('data-cms-path') || '' : '';
+            const path = pathAt(item, field, x, y);
             const name = field ? field.getAttribute('data-cms-field') : '';
             const justEnded = endedKey !== ''
                 && performance.now() - endedAt < 500
@@ -1204,6 +1545,9 @@ export default {
                 return rects.value[place.top] || null;
             }
             const prefix = place.top + '\n' + place.path;
+            if (nodeRects.value[prefix]) {
+                return nodeRects.value[prefix];
+            }
             let box = null;
             Object.keys(pathRects.value).forEach((key) => {
                 if (key === prefix || key.startsWith(prefix + '/')) {
@@ -1320,9 +1664,23 @@ export default {
             };
         }
 
+        function rectStyle(rect) {
+            return {
+                top: rect.top + 'px',
+                left: rect.left + 'px',
+                width: rect.width + 'px',
+                height: rect.height + 'px',
+            };
+        }
+
         return {
             frame,
             overlay,
+            wraps,
+            emptySlots,
+            slotGaps,
+            insertInto,
+            rectStyle,
             selectedEl,
             inlineEl,
             richEl,
