@@ -277,9 +277,9 @@ class RegistryTest extends TestCase
 
         self::assertSame(
             '<div>'
-            . '<!--cms-we-slot left--><!--cms-we-node left/0--><h1>A</h1><!--/cms-we-node left/0--><!--/cms-we-slot left-->'
+            . '<!--cms-we-slot left--><div class="cms-we-slot"><!--cms-we-node left/0--><h1>A</h1><!--/cms-we-node left/0--></div><!--/cms-we-slot left-->'
             . '|'
-            . '<!--cms-we-slot right--><!--cms-we-node right/0--><h1>B</h1><!--/cms-we-node right/0--><!--/cms-we-slot right-->'
+            . '<!--cms-we-slot right--><div class="cms-we-slot"><!--cms-we-node right/0--><h1>B</h1><!--/cms-we-node right/0--></div><!--/cms-we-slot right-->'
             . '</div>',
             $oRegistry->renderNode($aNode, Registry::MODE_PREVIEW)
         );
@@ -318,7 +318,7 @@ class RegistryTest extends TestCase
         $sHtml = $oRegistry->renderNode($aNode, Registry::MODE_PREVIEW);
 
         self::assertStringContainsString(
-            '<!--cms-we-slot left%2F0%2Fleft--><div class="cms-we-slot-empty" data-cms-slot-empty></div><!--/cms-we-slot left%2F0%2Fleft-->',
+            '<!--cms-we-slot left%2F0%2Fleft--><div class="cms-we-slot"><div class="cms-we-slot-empty" data-cms-slot-empty></div></div><!--/cms-we-slot left%2F0%2Fleft-->',
             $sHtml
         );
         self::assertSame(3, substr_count($sHtml, 'data-cms-slot-empty'));

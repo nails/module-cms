@@ -90,9 +90,14 @@ describe('slotInsertPoints', () => {
         expect(points.map((point) => [point.index, point.upright, point.x])).toEqual([
             [0, true, 0],
             [1, true, 105],
-            [2, true, 210],
+            [2, true, 255],
         ]);
         expect(points[1]).toMatchObject({ y: 0, length: 80 });
+    });
+
+    it('puts the end lines in the padding around the children', () => {
+        const points = slotInsertPoints(rect(0, 0, 200, 100), [{ index: 0, rect: rect(24, 28, 144, 52) }]);
+        expect(points.map((point) => [point.index, point.y])).toEqual([[0, 12], [1, 88]]);
     });
 
     it('offers one place on each side of a single child', () => {

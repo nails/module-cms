@@ -125,6 +125,9 @@ const CANVAS_STYLE = 'html{overflow:hidden}'
     + '.cms-canvas-item{display:flow-root;position:relative;margin:0;padding:12px 28px}'
     + '.cms-we-gap{height:24px}'
     + '.cms-we-hint{margin:0;color:#8a837d}'
+    // The same inset and the same gap a widget has on the canvas. Columns keep the grid's own gutter.
+    + '.cms-we-slot{display:flow-root;box-sizing:border-box;padding:24px 28px}'
+    + '.cms-we-slot>*+*:not([class*="col-"]){margin-top:24px}'
     // An empty slot holds the place the editor draws its add button over
     + '.cms-we-slot-empty{box-sizing:border-box;min-height:64px;border:1px dashed #cfc9c2;border-radius:3px;background:rgba(250,248,246,.85)}'
     + '.cms-canvas-error{padding:10px 14px;background:#fdf2f2;color:#7a1f1f;border:1px solid #f1caca;font-size:13px}'
@@ -376,8 +379,14 @@ export function slotInsertPoints(slot, children) {
 
     const first = list[0].rect;
     const last = list[list.length - 1].rect;
+    const slotRight = slot.left + slot.width;
+    const slotBottom = slot.top + slot.height;
     const row = list.length > 1 && beside(list[0].rect, list[1].rect);
-    const points = [{ index: list[0].index, ...(row ? upright(first.left, first, first) : across(first.top)) }];
+    // The first and last lines sit in the slot's padding, so they do not cross the content
+    const points = [{
+        index: list[0].index,
+        ...(row ? upright((slot.left + first.left) / 2, first, first) : across((slot.top + first.top) / 2)),
+    }];
 
     for (let i = 1; i < list.length; i++) {
         const a = list[i - 1].rect;
@@ -391,7 +400,7 @@ export function slotInsertPoints(slot, children) {
     const lastRow = list.length > 1 && beside(list[list.length - 2].rect, last);
     points.push({
         index: list[list.length - 1].index + 1,
-        ...(lastRow ? upright(right(last), last, last) : across(bottom(last))),
+        ...(lastRow ? upright((right(last) + slotRight) / 2, last, last) : across((bottom(last) + slotBottom) / 2)),
     });
 
     return points;

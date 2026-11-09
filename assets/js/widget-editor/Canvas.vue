@@ -103,13 +103,11 @@
                     :style="point.upright
                         ? { left: point.x + 'px', top: point.y + 'px', height: point.length + 'px' }
                         : { left: point.x + 'px', top: point.y + 'px', width: point.length + 'px' }"
+                    :title="point.title"
+                    @mousemove.stop
+                    @click.stop="insertInto(point, point.index)"
                 >
-                    <button
-                        type="button"
-                        :title="point.title"
-                        @mousemove.stop
-                        @click.stop="insertInto(point, point.index)"
-                    ><i class="fa fa-plus"></i></button>
+                    <button type="button" tabindex="-1"><i class="fa fa-plus"></i></button>
                 </div>
 
                 <RichTextSurface
@@ -273,8 +271,11 @@ function readMarkers(document, item, top) {
         }
         const slot = bySlot.get(marker.path);
         const holder = start.nextSibling;
-        if (holder && holder.nodeType === 1 && holder.hasAttribute('data-cms-slot-empty')) {
-            slot.empty = rectOf(holder);
+        const empty = holder && holder.nodeType === 1
+            ? (holder.hasAttribute('data-cms-slot-empty') ? holder : holder.querySelector('[data-cms-slot-empty]'))
+            : null;
+        if (empty) {
+            slot.empty = rectOf(empty);
         }
         slot.rect = rect;
     }

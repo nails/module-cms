@@ -316,12 +316,15 @@ abstract class Base implements Interfaces\Widget
             return $output;
         }
 
-        //  Comments mark the slot for the canvas without adding boxes that the page's CSS could style
+        //  Comments mark the slot for the canvas. The div is the slot's own padding, the same inset a widget has on
+        //  the canvas, and it only exists in the preview
         if ($children === []) {
             $output = '<div class="cms-we-slot-empty" data-cms-slot-empty></div>';
         }
 
-        return '<!--cms-we-slot ' . $slotPath . '-->' . $output . '<!--/cms-we-slot ' . $slotPath . '-->';
+        return '<!--cms-we-slot ' . $slotPath . '-->'
+            . '<div class="cms-we-slot">' . $output . '</div>'
+            . '<!--/cms-we-slot ' . $slotPath . '-->';
     }
 
     // --------------------------------------------------------------------------
