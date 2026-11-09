@@ -30,8 +30,8 @@ class Blockquote extends Base
     protected string $summary     = 'A block quote with optional citation';
     protected string $description = 'A block quote with optional citation';
     protected string $icon        = 'fa-quote-left';
-    protected array $keywords     = ['text', 'plain text', 'quote', 'blockquote', 'callout'];
-    protected array $defaults     = ['quote' => '', 'cite_text' => '', 'cite_url' => ''];
+    protected array  $keywords    = ['text', 'plain text', 'quote', 'blockquote', 'callout'];
+    protected array  $defaults    = ['quote' => '', 'cite_text' => '', 'cite_url' => ''];
 
     // --------------------------------------------------------------------------
 
@@ -41,9 +41,15 @@ class Blockquote extends Base
     public function getFields(): ?array
     {
         return [
-            Fields\Richtext::make('quote')->label('Quotation')->basic(),
-            Fields\Text::make('cite_text')->label('Citation'),
-            Fields\Text::make('cite_url')->label('Citation URL'),
+            Fields\Richtext::make('quote')
+                ->label('Quotation')
+                ->basic(),
+
+            Fields\Text::make('cite_text')
+                ->label('Citation'),
+
+            Fields\Text::make('cite_url')
+                ->label('Citation URL'),
         ];
     }
 

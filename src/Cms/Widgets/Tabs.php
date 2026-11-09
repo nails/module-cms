@@ -28,7 +28,7 @@ class Tabs extends Base
     protected string $summary     = 'Show tabbed content.';
     protected string $description = 'Show tabbed content. The first tab starts selected.';
     protected string $icon        = 'fa-folder';
-    protected array $keywords     = ['tabs', 'tabbed', 'panels'];
+    protected array  $keywords    = ['tabs', 'tabbed', 'panels'];
 
     // --------------------------------------------------------------------------
 
@@ -41,8 +41,12 @@ class Tabs extends Base
             Fields\Repeater::make('tabs')
                 ->label('Tabs')
                 ->fields([
-                    Fields\Text::make('title')->label('Title')->required(),
-                    Fields\Richtext::make('body')->label('Body'),
+                    Fields\Text::make('title')
+                        ->label('Title')
+                        ->required(),
+
+                    Fields\Richtext::make('body')
+                        ->label('Body'),
                 ]),
         ];
     }
@@ -121,18 +125,21 @@ class Tabs extends Base
             }
 
             $class = $active ? ' active' : '';
-            $nav  .= '<li class="tab-item' . $class . '" role="presentation">'
-                . '<a href="#' . $paneId . '" role="tab" data-toggle="tab">'
-                . htmlspecialchars($title, ENT_QUOTES)
-                . '</a>'
-                . '</li>';
+            $title = htmlspecialchars($title, ENT_QUOTES);
+            $nav   .= <<<EOF
+                <li class="tab-item{$class}" role="presentation">
+                    <a href="#$paneId" role="tab" data-toggle="tab">$title</a>
+                </li>
+                EOF;
             $panes .= '<div role="tabpanel" class="tab-pane' . $class . '" id="' . $paneId . '">' . $body . '</div>';
         }
 
-        return '<div class="cms-widget nails-cms-widget-tabs">'
-            . '<ul class="nav nav-tabs" role="tablist">' . $nav . '</ul>'
-            . '<div class="tab-content">' . $panes . '</div>'
-            . '</div>';
+        return <<<EOF
+            <div class="cms-widget nails-cms-widget-tabs">
+                <ul class="nav nav-tabs" role="tablist">$nav</ul>
+                <div class="tab-content">$panes</div>
+            </div>
+            EOF;
     }
 
     // --------------------------------------------------------------------------
@@ -158,12 +165,14 @@ class Tabs extends Base
             $attrs
         );
 
-        return '<li class="tab-item' . ($active ? ' active' : '') . '" role="presentation">'
-            . '<a href="#' . $paneId . '" role="tab" data-cms-action="tab" data-cms-tab="' . $index . '"'
-            . ' aria-selected="' . ($active ? 'true' : 'false') . '">'
-            . $label
-            . '</a>'
-            . '</li>';
+        $class    = $active ? ' active' : '';
+        $selected = $active ? 'true' : 'false';
+
+        return <<<EOF
+            <li class="tab-item{$class}" role="presentation">
+                <a href="#$paneId" role="tab" data-cms-action="tab" data-cms-tab="$index" aria-selected="$selected">$label</a>
+            </li>
+            EOF;
     }
 
     // --------------------------------------------------------------------------

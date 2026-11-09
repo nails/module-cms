@@ -30,7 +30,7 @@ class Area extends Base
     protected string $summary     = 'Renders the contents of a CMS Area';
     protected string $description = 'Renders the contents of a CMS Area';
     protected string $icon        = 'fa-layer-group';
-    protected array $keywords     = ['cms', 'area', 'widgets'];
+    protected array  $keywords    = ['cms', 'area', 'widgets'];
 
     /** @var array<string, string>|null Area id => label, loaded once per request */
     private static ?array $areas = null;
@@ -46,7 +46,8 @@ class Area extends Base
     public function getFields(): ?array
     {
         $areas = $this->areaOptions();
-        $field = Fields\Select::make('areaId')->label('Area');
+        $field = Fields\Select::make('areaId')
+            ->label('Area');
 
         if ($areas === []) {
             return [

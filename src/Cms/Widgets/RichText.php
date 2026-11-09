@@ -18,14 +18,14 @@ use Nails\Cms\WidgetEditor\Widget\Base;
 
 class RichText extends Base
 {
-    const ALIASES = ['richtext', 'Nails.Cms.Cms.Widgets.Richtext'];
+    const ALIASES = ['richtext'];
 
     protected string $label       = 'Rich Text';
     protected string $summary     = 'Build beautiful pages using the rich text editor; embed images, links and more.';
     protected string $description = 'Build beautiful pages using the rich text editor; embed images, links and more.';
     protected string $icon        = 'fa-paragraph';
-    protected array $keywords     = ['rich text', 'formatted text', 'formatted', 'wysiwyg', 'embed'];
-    protected array $defaults     = ['body' => ''];
+    protected array  $keywords    = ['rich text', 'formatted text', 'formatted', 'wysiwyg', 'embed'];
+    protected array  $defaults    = ['body' => ''];
 
     // --------------------------------------------------------------------------
 
@@ -54,13 +54,23 @@ class RichText extends Base
             }
 
             return $this->editable(
-                'body',
-                'div',
-                '<p class="cms-we-hint">Write something…</p>',
-                ['class' => 'cms-widget cms-widget-richtext', 'data-cms-empty' => '1']
+                field: 'body',
+                tag: 'div',
+                value: '<p class="cms-we-hint">Write something…</p>',
+                attrs: [
+                    'class'          => 'cms-widget cms-widget-richtext',
+                    'data-cms-empty' => '1',
+                ]
             );
         }
 
-        return $this->editable('body', 'div', $body, ['class' => 'cms-widget cms-widget-richtext']);
+        return $this->editable(
+            field: 'body',
+            tag: 'div',
+            value: $body,
+            attrs: [
+                'class' => 'cms-widget cms-widget-richtext',
+            ]
+        );
     }
 }

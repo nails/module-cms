@@ -32,7 +32,7 @@ class Table extends Base
     protected string $summary     = 'Easily build a table';
     protected string $description = 'Easily build a table';
     protected string $icon        = 'fa-table';
-    protected array $keywords     = ['table', 'tabular data', 'data'];
+    protected array  $keywords    = ['table', 'tabular data', 'data'];
 
     // --------------------------------------------------------------------------
 
@@ -42,12 +42,18 @@ class Table extends Base
     public function getFields(): ?array
     {
         return [
-            Fields\Table::make('rows')->label('Cells')->size(4, 3)->headerRows('header_rows')->wide(),
+            Fields\Table::make('rows')
+                ->label('Cells')
+                ->size(4, 3)
+                ->headerRows('header_rows')
+                ->wide(),
+
             Fields\Number::make('header_rows')
                 ->label('Header rows')
                 ->tip('How many of the first rows are headings')
                 ->min(0)
                 ->default(1),
+
             Fields\Text::make('attributes')
                 ->label('Attributes')
                 ->tip('Added to the <table> tag as written, for example id="prices"'),
@@ -221,12 +227,15 @@ class Table extends Base
             $body .= '</tr>';
         }
 
-        return '<div class="cms-widget cms-widget-table">'
-            . '<table class="table"' . ($attributes !== '' ? ' ' . $attributes : '') . '>'
-            . ($head !== '' ? '<thead>' . $head . '</thead>' : '')
-            . ($body !== '' ? '<tbody>' . $body . '</tbody>' : '')
-            . '</table>'
-            . '</div>';
+        $attributes = $attributes !== '' ? ' ' . $attributes : '';
+        $head       = $head !== '' ? '<thead>' . $head . '</thead>' : '';
+        $body       = $body !== '' ? '<tbody>' . $body . '</tbody>' : '';
+
+        return <<<EOF
+            <div class="cms-widget cms-widget-table">
+                <table class="table"$attributes>$head$body</table>
+            </div>
+            EOF;
     }
 
     // --------------------------------------------------------------------------

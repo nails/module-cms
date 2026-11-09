@@ -25,7 +25,7 @@ class Accordion extends Base
     protected string $summary     = 'Collapsible panels.';
     protected string $description = 'Collapsible panels. Each one can start open or closed.';
     protected string $icon        = 'fa-list-alt';
-    protected array $keywords     = ['accordion', 'collapse', 'panels', 'faq'];
+    protected array  $keywords    = ['accordion', 'collapse', 'panels', 'faq'];
 
     // --------------------------------------------------------------------------
 
@@ -38,9 +38,16 @@ class Accordion extends Base
             Fields\Repeater::make('panels')
                 ->label('Panels')
                 ->fields([
-                    Fields\Text::make('title')->label('Title')->required(),
-                    Fields\Toggle::make('open')->label('Starts open')->default(true),
-                    Fields\Richtext::make('body')->label('Body'),
+                    Fields\Text::make('title')
+                        ->label('Title')
+                        ->required(),
+
+                    Fields\Toggle::make('open')
+                        ->label('Starts open')
+                        ->default(true),
+
+                    Fields\Richtext::make('body')
+                        ->label('Body'),
                 ]),
         ];
     }
@@ -63,7 +70,7 @@ class Accordion extends Base
             }
 
             // A v1 panel stored `collapsed`. Everything else starts as the v1 view did: the first panel open.
-            $panel['open'] = array_key_exists('collapsed', $panel)
+            $panel['open']          = array_key_exists('collapsed', $panel)
                 ? !$panel['collapsed']
                 : $index === 0;
             $data['panels'][$index] = $panel;
@@ -93,9 +100,13 @@ class Accordion extends Base
             $html .= $this->panelHtml($id, $index, $panel);
         }
 
-        return '<div class="cms-widget cms-widget-accordion">'
-            . '<div class="panel-group" id="' . $id . '" role="tablist">' . $html . '</div>'
-            . '</div>';
+        return <<<EOF
+            <div class="cms-widget cms-widget-accordion">
+                <div class="panel-group" id="$id" role="tablist">
+                    $html
+                </div>
+            </div>
+            EOF;
     }
 
     // --------------------------------------------------------------------------
@@ -114,23 +125,28 @@ class Accordion extends Base
             $heading  = $this->previewHeading($index, $title, $open, $panelId);
             $bodyHtml = $this->previewBody($index, $body);
         } else {
-            $heading = '<div class="panel-heading" role="tab" id="' . $panelId . '-heading">'
-                . '<h4 class="panel-title">'
-                . '<a role="button" data-toggle="collapse" href="#' . $panelId . '-body"'
-                . ' aria-expanded="' . ($open ? 'true' : 'false') . '" aria-controls="' . $panelId . '-body">'
-                . htmlspecialchars($title, ENT_QUOTES)
-                . '</a>'
-                . '</h4>'
-                . '</div>';
+            $expanded = $open ? 'true' : 'false';
+            $title    = htmlspecialchars($title, ENT_QUOTES);
+            $heading  = <<<EOF
+                <div class="panel-heading" role="tab" id="{$panelId}-heading">
+                    <h4 class="panel-title">
+                        <a role="button" data-toggle="collapse" href="#{$panelId}-body" aria-expanded="$expanded" aria-controls="{$panelId}-body">$title</a>
+                    </h4>
+                </div>
+                EOF;
             $bodyHtml = '<div class="panel-body">' . $body . '</div>';
         }
 
-        return '<div class="panel panel-default">'
-            . $heading
-            . '<div id="' . $panelId . '-body" class="panel-collapse collapse' . ($open ? ' in' : '') . '" role="tabpanel" aria-labelledby="' . $panelId . '-heading">'
-            . $bodyHtml
-            . '</div>'
-            . '</div>';
+        $in = $open ? ' in' : '';
+
+        return <<<EOF
+            <div class="panel panel-default">
+                $heading
+                <div id="{$panelId}-body" class="panel-collapse collapse{$in}" role="tabpanel" aria-labelledby="{$panelId}-heading">
+                    $bodyHtml
+                </div>
+            </div>
+            EOF;
     }
 
     // --------------------------------------------------------------------------
@@ -156,12 +172,14 @@ class Accordion extends Base
             $attrs
         );
 
-        return '<div class="panel-heading" role="tab" id="' . $panelId . '-heading" data-cms-action="toggle"'
-            . ' data-cms-field="panels/' . $index . '/open"'
-            . ' data-cms-path="' . htmlspecialchars(implode('/', $this->nodePath()), ENT_QUOTES) . '"'
-            . ' aria-expanded="' . ($open ? 'true' : 'false') . '" aria-controls="' . $panelId . '-body">'
-            . '<h4 class="panel-title">' . $label . '<span class="cms-accordion-mark" aria-hidden="true"></span></h4>'
-            . '</div>';
+        $path     = htmlspecialchars(implode('/', $this->nodePath()), ENT_QUOTES);
+        $expanded = $open ? 'true' : 'false';
+
+        return <<<EOF
+            <div class="panel-heading" role="tab" id="{$panelId}-heading" data-cms-action="toggle" data-cms-field="panels/{$index}/open" data-cms-path="$path" aria-expanded="$expanded" aria-controls="{$panelId}-body">
+                <h4 class="panel-title">$label<span class="cms-accordion-mark" aria-hidden="true"></span></h4>
+            </div>
+            EOF;
     }
 
     // --------------------------------------------------------------------------

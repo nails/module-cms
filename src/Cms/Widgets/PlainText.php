@@ -24,8 +24,8 @@ class PlainText extends Base
     protected string $summary     = 'Plain, completely unformatted text. Perfect for custom HTML.';
     protected string $description = 'Plain, completely unformatted text. Perfect for custom HTML.';
     protected string $icon        = 'fa-code';
-    protected array $keywords     = ['text', 'html', 'code', 'plaintext', 'plain text'];
-    protected array $defaults     = ['body' => ''];
+    protected array  $keywords    = ['text', 'html', 'code', 'plaintext', 'plain text'];
+    protected array  $defaults    = ['body' => ''];
 
     // --------------------------------------------------------------------------
 
@@ -35,7 +35,9 @@ class PlainText extends Base
     public function getFields(): ?array
     {
         return [
-            Fields\Textarea::make('body')->label('Text')->wide(),
+            Fields\Textarea::make('body')
+                ->label('Text')
+                ->wide(),
         ];
     }
 
@@ -50,6 +52,8 @@ class PlainText extends Base
             return '';
         }
 
-        return '<div class="cms-widget cms-widget-html">' . $data['body'] . '</div>';
+        return <<<EOF
+            <div class="cms-widget cms-widget-html">{$data['body']}</div>
+            EOF;
     }
 }
