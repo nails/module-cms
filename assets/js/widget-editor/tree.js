@@ -29,6 +29,7 @@
  * @property {number}                              [maxDepth=8]
  * @property {number}                              [maxInstances=200]
  * @property {number}                              [historyLimit=100]
+ * @property {(slug: string) => string}            [slugFor]     The canonical slug for a stored one (an alias)
  * @property {(slug: string) => boolean}           [isEditable]  The widget is in the catalogue
  * @property {(slug: string) => boolean}           [canPlace]    The area rules allow it here
  * @property {(slug: string) => Object<string, SlotDefinition>} [slotsFor]
@@ -38,6 +39,7 @@ const DEFAULTS = {
     maxDepth: 8,
     maxInstances: 200,
     historyLimit: 100,
+    slugFor: (slug) => slug,
     isEditable: () => true,
     canPlace: () => true,
     slotsFor: () => ({}),
@@ -80,10 +82,11 @@ export function createTree(options = {}, areas = {}) {
     /**
      * Converts a stored instance into a node. The node keeps the stored object as `original`.
      * An editable container's slot children are pulled into `slots`; anything else stays in `data`.
+     * A slug stored under an alias takes the canonical slug, which is saved once the instance is edited.
      */
     function fromStored(instance) {
 
-        const slug      = String(instance.slug);
+        const slug      = opts.slugFor(String(instance.slug));
         const editable  = opts.isEditable(slug);
         const data      = isPlainObject(instance.data) ? instance.data : {};
         const node      = {

@@ -141,6 +141,13 @@ describe('createEditor', () => {
         expect(result.ok).toBe(false);
         expect(editor.snapshot().nodes).toHaveLength(1);
         expect(editor.snapshot().message).toMatch(/not allowed/);
+
+        const first = editor.snapshot().messageId;
+        editor.clearMessage();
+        expect(editor.snapshot().message).toBe('');
+
+        editor.insert('Note');
+        expect(editor.snapshot().messageId).toBeGreaterThan(first);
     });
 
     it('inserts into the first slot of the selected container', () => {
@@ -171,6 +178,26 @@ describe('createEditor', () => {
 
         expect(back.ok).toBe(false);
         expect(editor.stored('side').some((item) => item.slug === 'Note')).toBe(true);
+    });
+
+    it('opens an instance stored under an alias as its widget, and saves the canonical slug once edited', () => {
+        const stored = { slug: 'legacy-note', data: { text: 'Old' } };
+        const editor = createEditor([{ slug: 'main', label: 'Main', data: [stored] }], catalogue);
+        const node = editor.snapshot().nodes[0];
+
+        expect(node.slug).toBe('Note');
+        expect(node.locked).toBe(false);
+        expect(editor.stored('main')[0]).toBe(stored);
+
+        editor.update(node.uid, { text: 'New' }, true);
+        expect(editor.stored('main')[0]).toEqual({ slug: 'Note', data: { text: 'New' } });
+    });
+
+    it('keeps an unknown slug locked', () => {
+        const editor = createEditor([{ slug: 'main', label: 'Main', data: [{ slug: 'gone', data: {} }] }], catalogue);
+
+        expect(editor.snapshot().nodes[0].slug).toBe('gone');
+        expect(editor.snapshot().nodes[0].locked).toBe(true);
     });
 
     it('undo restores the stored instances', () => {

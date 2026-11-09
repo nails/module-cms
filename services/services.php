@@ -42,20 +42,23 @@ return [
                 return new Service\Template();
             }
         },
-        'WidgetEditorVersion' => function (): \Nails\Cms\WidgetEditor\Service\Version {
-            $session = \Nails\Factory::service('Session');
-            if (class_exists('\App\Cms\WidgetEditor\Service\Version')) {
-                return \App\Cms\WidgetEditor\Service\Version::fromConfig($session);
-            }
-
-            return \Nails\Cms\WidgetEditor\Service\Version::fromConfig($session);
-        },
         'WidgetEditorFavourite' => function (): \Nails\Cms\WidgetEditor\Service\Favourite {
             if (class_exists('\App\Cms\WidgetEditor\Service\Favourite')) {
                 return new \App\Cms\WidgetEditor\Service\Favourite();
             } else {
                 return new \Nails\Cms\WidgetEditor\Service\Favourite();
             }
+        },
+        'WidgetEditorFieldTypes' => function (): \Nails\Cms\WidgetEditor\Service\FieldTypes {
+            if (class_exists('\App\Cms\WidgetEditor\Service\FieldTypes')) {
+                return new \App\Cms\WidgetEditor\Service\FieldTypes(
+                    \App\Cms\WidgetEditor\Service\FieldTypes::discover()
+                );
+            }
+
+            return new \Nails\Cms\WidgetEditor\Service\FieldTypes(
+                \Nails\Cms\WidgetEditor\Service\FieldTypes::discover()
+            );
         },
         'WidgetEditorRegistry' => function (): \Nails\Cms\WidgetEditor\Service\Registry {
             //  The registry is built per request; the depth cap comes from the (app-overridable) widget service

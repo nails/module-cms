@@ -223,6 +223,23 @@ class Registry
     // --------------------------------------------------------------------------
 
     /**
+     * Every widget, including those which do not render, keyed by canonical slug
+     *
+     * @return array<string, Interfaces\Widget>
+     */
+    public function known(): array
+    {
+        $aOut = [];
+        foreach ($this->index()['leaves'] as $canonical => $leaf) {
+            $aOut[$canonical] = $this->instantiate($canonical, $leaf, static::MODE_RENDER, 0, []);
+        }
+
+        return $aOut;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * The canonical slug of the widget a class belongs to (the root slug, for an overridden class)
      */
     public function canonicalSlugFor(string $class): ?string

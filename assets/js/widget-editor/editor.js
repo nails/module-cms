@@ -26,10 +26,19 @@ export function createEditor(areas, catalogue, hooks = {}) {
         stored[area.slug] = area.data;
     });
 
+    // Alias => canonical slug, so content stored under an earlier slug opens as that widget
+    const canonical = {};
+    Object.keys(catalogue.widgets || {}).forEach((slug) => {
+        (catalogue.widgets[slug].aliases || []).forEach((alias) => {
+            canonical[alias] = slug;
+        });
+    });
+
     const limits = catalogue.limits || {};
     const tree = createTree({
         maxDepth: limits.max_depth,
         maxInstances: limits.max_instances_per_area,
+        slugFor: (slug) => (catalogue.widgets[slug] ? slug : canonical[slug] || slug),
         isEditable: (slug) => Boolean(catalogue.widgets[slug]),
         canPlace: () => true,
         slotsFor: (slug) => catalogue.widgets[slug]?.slots || {},
@@ -38,6 +47,8 @@ export function createEditor(areas, catalogue, hooks = {}) {
     let active = areaList[0] ? areaList[0].slug : '';
     let selected = null;
     let message = '';
+    /** Bumps whenever a command sets the message, including a repeat of the same text */
+    let messageId = 0;
 
     function current() {
         return areaList.find((area) => area.slug === active) || null;
@@ -87,6 +98,7 @@ export function createEditor(areas, catalogue, hooks = {}) {
 
     function apply(result) {
         message = result.ok ? '' : (result.error || 'That change was not made');
+        messageId += 1;
         if (result.ok) {
             publish();
         }
@@ -102,7 +114,11 @@ export function createEditor(areas, catalogue, hooks = {}) {
         });
     }
 
-    function insert(slug) {
+    /**
+     * @param {string} slug
+     * @param {{area: string, parentUid: ?string, slot: ?string, index: number}} [at] Where to insert. Omit to use the selection.
+     */
+    function insert(slug, at) {
         const widget = catalogue.widgets[slug];
         if (!widget) {
             return apply({ ok: false, error: '"' + slug + '" cannot be edited here, so it cannot be added' });
@@ -111,7 +127,7 @@ export function createEditor(areas, catalogue, hooks = {}) {
             return apply({ ok: false, error: '"' + (widget.label || slug) + '" is not allowed in this area' });
         }
 
-        const dest = destination();
+        const dest = at || destination();
         const result = tree.insert(dest.area, dest.parentUid, dest.slot, dest.index, slug, widget.defaults || {});
         if (result.ok) {
             selected = result.uid;
@@ -172,6 +188,7 @@ export function createEditor(areas, catalogue, hooks = {}) {
             nodes: tree.view(active),
             stored: active ? tree.toStored(active) : [],
             message,
+            messageId,
             canUndo: tree.canUndo(),
             canRedo: tree.canRedo(),
             count: active ? tree.count(active) : 0,
@@ -191,6 +208,9 @@ export function createEditor(areas, catalogue, hooks = {}) {
         },
         select(uid) {
             selected = uid;
+        },
+        clearMessage() {
+            message = '';
         },
         insert,
         remove,

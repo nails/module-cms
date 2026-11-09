@@ -39,4 +39,13 @@ class BridgeTest extends TestCase
         $this->assertStringNotContainsString('final class', $sSource);
         $this->assertStringNotContainsString(' extends Base', $sSource);
     }
+
+    public function testOnlyAppV1WidgetsAreBridgedOverANativeWidget(): void
+    {
+        $oMethod = new \ReflectionMethod(Bridge::class, 'isAppClass');
+
+        $this->assertTrue($oMethod->invoke(null, 'App\\Cms\\Widget\\Area'));
+        $this->assertTrue($oMethod->invoke(null, '\\App\\Cms\\Widget\\Area'));
+        $this->assertFalse($oMethod->invoke(null, 'Nails\\Cms\\Cms\\Widget\\Area'));
+    }
 }

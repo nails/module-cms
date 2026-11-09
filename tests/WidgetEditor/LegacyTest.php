@@ -106,6 +106,39 @@ class LegacyStubBridge extends Base
     }
 }
 
+class LegacyStubNative extends Base
+{
+    public function getFields(): ?array
+    {
+        return [\Nails\Cms\Cms\Fields\Text::make('title')];
+    }
+
+    public function upgrade(array $data): array
+    {
+        return ['title' => $data['sTitle'] ?? ''];
+    }
+
+    public function preview(array $data, array $context = []): string
+    {
+        return 'native preview';
+    }
+
+    public function render(array $data): string
+    {
+        return 'native render';
+    }
+}
+
+class LegacyStubOverride extends LegacyStubNative
+{
+    use Legacy;
+
+    protected static function legacyClass(): string
+    {
+        return LegacyStubWidget::class;
+    }
+}
+
 /**
  * Covers the v1 bridge: the mapping of v1 metadata, status and aliases, and delegation of render, editor and scripts
  */
@@ -170,6 +203,19 @@ class LegacyTest extends TestCase
     {
         $oBridge = new LegacyStubBridge();
         $this->assertSame('<h2>Hello</h2>', $oBridge->render(['sTitle' => 'Hello']));
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function testABridgeOverANativeWidgetIsV1Throughout(): void
+    {
+        $oBridge = new LegacyStubOverride();
+
+        $this->assertNull($oBridge->getFields());
+        $this->assertSame(['sTitle' => 'Hello'], $oBridge->upgrade(['sTitle' => 'Hello']));
+        $this->assertSame(['sTitle' => 'Hello'], $oBridge->normalise(['sTitle' => 'Hello']));
+        $this->assertSame('<h2>Hello</h2>', $oBridge->render(['sTitle' => 'Hello']));
+        $this->assertSame('<h2>Hello</h2>', $oBridge->preview(['sTitle' => 'Hello']));
     }
 
     // --------------------------------------------------------------------------

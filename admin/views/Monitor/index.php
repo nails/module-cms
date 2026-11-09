@@ -27,7 +27,7 @@ echo Nails\Admin\Helper::loadSearch((object) [
             <th>Item</th>
             <th>Slug</th>
             <th class="text-center">Usages</th>
-            <th class="text-center">In Use</th>
+            <th class="text-center">In use</th>
             <th class="actions" style="width: 175px;">Actions</th>
         </tr>
     </thead>
@@ -49,6 +49,18 @@ echo Nails\Admin\Helper::loadSearch((object) [
                 </td>
                 <td>
                     <?=$oItem->label?>
+                    <?php
+                    if ($oItem->is_deprecated) {
+                        ?>
+                        <span class="badge">Deprecated</span>
+                        <?php
+                        if (!empty($oItem->alternative)) {
+                            ?>
+                            <small>Use <?=htmlspecialchars($oItem->alternative, ENT_QUOTES)?> instead</small>
+                            <?php
+                        }
+                    }
+                    ?>
                     <small><?=$oItem->description?></small>
                 </td>
                 <td>
@@ -57,7 +69,7 @@ echo Nails\Admin\Helper::loadSearch((object) [
                 <td class="text-center">
                     <?=$oItem->usages?>
                 </td>
-                <?=\Nails\Admin\Helper::loadBoolCell(!$oItem->is_deprecated)?>
+                <?=\Nails\Admin\Helper::loadBoolCell($oItem->usages > 0)?>
                 <td class="actions">
                     <a href="<?=current_url() . '/' . $oItem->slug?>" class="btn btn-xs btn-primary">
                         Details

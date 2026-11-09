@@ -47,6 +47,20 @@ class Cdn
                 }
             }
         }
+
+        $oRegistry = $oWidgetService->getRegistry();
+        foreach ($oRegistry->known() as $sCanonical => $oWidget) {
+            if (!method_exists($oWidget, 'getCdnMonitorPaths')) {
+                continue;
+            }
+            $aPaths = $oWidget->getCdnMonitorPaths();
+            if ($aPaths === []) {
+                continue;
+            }
+            foreach ($oRegistry->slugsFor($sCanonical) as $sSlug) {
+                $this->aWidgetMappings[$sSlug] = $aPaths;
+            }
+        }
     }
 
     // --------------------------------------------------------------------------

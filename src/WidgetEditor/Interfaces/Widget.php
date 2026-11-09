@@ -71,6 +71,16 @@ interface Widget
      */
     public function normalise(array $data): array;
 
+    /**
+     * Converts data stored in an older shape to the current one. Pure. normalise() applies it, and the editor
+     * applies it before the instance is first edited, so stored data changes only when someone edits it.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>
+     */
+    public function upgrade(array $data): array;
+
     // Output
 
     /** @param array<string, mixed> $data */
@@ -87,9 +97,9 @@ interface Widget
     // Editing
 
     /**
-     * The fields schema, or null when the widget uses an HTML form
+     * The fields schema: field instances (see Interfaces\Field), or null when the widget uses an HTML form
      *
-     * @return array<int, array<string, mixed>>|null
+     * @return Field[]|null
      */
     public function getFields(): ?array;
 

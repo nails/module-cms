@@ -100,7 +100,9 @@ class Widget
                     $oWidget->getLabel(),
                     $oWidget->getDescription(),
                     $oWidget->getScreenshot(),
-                    $iUsages
+                    $iUsages,
+                    $oWidget::isDeprecated(),
+                    $oWidget::alternative()
                 );
 
                 $aSummary[] = $oItem;

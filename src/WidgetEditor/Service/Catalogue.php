@@ -12,6 +12,7 @@
 namespace Nails\Cms\WidgetEditor\Service;
 
 use Nails\Cms\WidgetEditor\Interfaces\Widget;
+use Nails\Cms\WidgetEditor\Widget\Base;
 
 class Catalogue
 {
@@ -201,14 +202,25 @@ class Catalogue
             'screenshots' => $this->screenshots($widget),
             'slots'       => $widget->getSlots(),
             'inspector'   => is_array($fields)
-                ? ['type' => 'fields', 'fields' => Fields::normalise($fields)]
+                ? ['type' => 'fields', 'fields' => Fields::describe($fields)]
                 : ['type' => 'html'],
             'assets'      => [
                 'render' => array_values($assets['render'] ?? []),
                 'editor' => array_values($assets['editor'] ?? []),
             ],
             'defaults'    => $widget->getDefaults(),
+            'upgrades'    => $this->upgrades($widget),
         ];
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Whether the widget converts older data, so the editor asks for the converted data before an edit
+     */
+    private function upgrades(Widget $widget): bool
+    {
+        return (new \ReflectionMethod($widget, 'upgrade'))->getDeclaringClass()->getName() !== Base::class;
     }
 
     // --------------------------------------------------------------------------

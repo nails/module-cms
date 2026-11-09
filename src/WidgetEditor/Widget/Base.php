@@ -14,6 +14,7 @@
 
 namespace Nails\Cms\WidgetEditor\Widget;
 
+use Nails\Cms\Cms\Fields\Repeater;
 use Nails\Cms\WidgetEditor\Exception\RegistryException;
 use Nails\Cms\WidgetEditor\Interfaces;
 use Nails\Cms\WidgetEditor\Service\Fields;
@@ -107,6 +108,20 @@ abstract class Base implements Interfaces\Widget
 
     // --------------------------------------------------------------------------
 
+    /**
+     * Dot paths in this widget's data that store a CDN object id. Empty when it stores none.
+     *
+     * The CDN monitor watches the canonical slug and every alias.
+     *
+     * @return string[]
+     */
+    public function getCdnMonitorPaths(): array
+    {
+        return [];
+    }
+
+    // --------------------------------------------------------------------------
+
     public static function getStatus(): Status
     {
         return static::STATUS;
@@ -170,22 +185,40 @@ abstract class Base implements Interfaces\Widget
 
     // --------------------------------------------------------------------------
 
+    /**
+     * The data a new instance starts with: each field's default, then $defaults over them.
+     */
     public function getDefaults(): array
     {
-        return $this->defaults;
+        $fields = $this->getFields();
+
+        return is_array($fields)
+            ? array_replace(Fields::defaults(Fields::validate($fields)), $this->defaults)
+            : $this->defaults;
     }
 
     // --------------------------------------------------------------------------
 
     /**
-     * Fills any keys the data is missing from getDefaults(). Pure: the result is never saved.
+     * Upgrades the data, then fills any keys it is missing from getDefaults(). Pure: the result is never saved.
      */
     public function normalise(array $data): array
     {
-        $data   = array_replace($this->getDefaults(), $data);
+        $data   = array_replace($this->getDefaults(), $this->upgrade($data));
         $fields = $this->getFields();
 
-        return is_array($fields) ? Fields::fill(Fields::normalise($fields), $data) : $data;
+        return is_array($fields) ? Fields::fill(Fields::validate($fields), $data) : $data;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * A widget whose stored shape changed (for example from its v1 widget) overrides this. Data that is already
+     * in the current shape must come back unchanged.
+     */
+    public function upgrade(array $data): array
+    {
+        return $data;
     }
 
     // --------------------------------------------------------------------------
@@ -258,20 +291,40 @@ abstract class Base implements Interfaces\Widget
             ));
         }
 
-        $output = '';
-        foreach (array_values((array) ($data[$name] ?? [])) as $index => $child) {
+        $preview  = $this->isPreview();
+        $slotPath = rawurlencode(implode('/', [...$this->nodePath(), $name]));
+        $children = array_values((array) ($data[$name] ?? []));
+        $output   = '';
+
+        foreach ($children as $index => $child) {
             $context                = $this->context;
             $context[self::PATH_KEY] = [...$this->nodePath(), $name, (string) $index];
 
-            $output .= $this->registry->renderNode(
+            $html = $this->registry->renderNode(
                 $child,
                 $this->mode,
                 $this->depth + 1,
                 $context
             );
+
+            $output .= $preview
+                ? '<!--cms-we-node ' . $slotPath . '/' . $index . '-->' . $html . '<!--/cms-we-node ' . $slotPath . '/' . $index . '-->'
+                : $html;
         }
 
-        return $output;
+        if (!$preview) {
+            return $output;
+        }
+
+        //  Comments mark the slot for the canvas. The div is the slot's own padding, the same inset a widget has on
+        //  the canvas, and it only exists in the preview
+        if ($children === []) {
+            $output = '<div class="cms-we-slot-empty" data-cms-slot-empty></div>';
+        }
+
+        return '<!--cms-we-slot ' . $slotPath . '-->'
+            . '<div class="cms-we-slot">' . $output . '</div>'
+            . '<!--/cms-we-slot ' . $slotPath . '-->';
     }
 
     // --------------------------------------------------------------------------
@@ -287,11 +340,36 @@ abstract class Base implements Interfaces\Widget
     // --------------------------------------------------------------------------
 
     /**
+     * The dotted box a canvas uses when it names something the page will render. The icon is this widget's own.
+     *
+     * $name and $note are already escaped.
+     */
+    protected function placeholderBox(string $name, string $note): string
+    {
+        $icon = $this->getIcon();
+        if (!preg_match('/^fa-[a-z0-9-]+$/', $icon)) {
+            $icon = 'fa-cube';
+        }
+
+        return <<<EOF
+            <div class="cms-we-area">
+                <i class="fa $icon cms-we-area__icon" aria-hidden="true"></i>
+                <div class="cms-we-area__copy">
+                    <p class="cms-we-area__name">$name</p>
+                    <p class="cms-we-area__note">$note</p>
+                </div>
+            </div>
+            EOF;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
      * The path of this instance, relative to its top-level instance
      *
      * @return string[]
      */
-    private function nodePath(): array
+    protected function nodePath(): array
     {
         return array_values((array) ($this->context[self::PATH_KEY] ?? []));
     }
@@ -305,11 +383,17 @@ abstract class Base implements Interfaces\Widget
      * the element carries no editor attributes. In the canvas it carries data-cms-field, data-cms-edit and
      * data-cms-path, which the canvas uses to write edits back to the right instance.
      *
-     * @param string               $field The data key the value is stored under
+     * When getFields() declares the key, the field type decides how it is edited, and $edit may be omitted. A
+     * type that is not edited on the canvas (a textarea, a select), or an $edit that disagrees with the type,
+     * throws.
+     *
+     * @param string               $field The data key the value is stored under. A repeater row is
+     *                                    `list/0/child`: the repeater key, the row index, and the child's key.
      * @param string               $tag   The element to render, e.g. h2
      * @param mixed                $value The field's value. For 'text' it is escaped; for 'rich' it is HTML
      * @param array<string, mixed> $attrs Extra attributes for the element
-     * @param string               $edit  'text' (plain text, inline) or 'rich' (HTML, opens the rich text modal)
+     * @param string|null          $edit  'text' (plain text), 'rich' (HTML, full menu) or 'rich-basic' (HTML,
+     *                                    formatting only). Defaults to the field type's, or 'text'.
      *
      * @throws \InvalidArgumentException
      */
@@ -318,9 +402,10 @@ abstract class Base implements Interfaces\Widget
         string $tag,
         mixed $value,
         array $attrs = [],
-        string $edit = 'text'
+        ?string $edit = null
     ): string {
-        if (!in_array($edit, ['text', 'rich'], true)) {
+        $edit = $this->canvasEdit($field, $edit);
+        if (!in_array($edit, ['text', 'rich', 'rich-basic'], true)) {
             throw new \InvalidArgumentException(sprintf('Unknown editable type "%s"', $edit));
         }
         if (!preg_match('/^[a-z][a-z0-9]*$/', $tag)) {
@@ -344,5 +429,76 @@ abstract class Base implements Interfaces\Widget
         }
 
         return '<' . $tag . $attributes . '>' . $content . '</' . $tag . '>';
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * How editable() edits a key: the declared field's mode, checked against $edit when both are given
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function canvasEdit(string $key, ?string $edit): string
+    {
+        $fields   = $this->getFields();
+        $declared = is_array($fields) ? $this->declaredField(Fields::validate($fields), $key) : null;
+
+        if ($declared === null) {
+            return $edit ?? 'text';
+        }
+
+        $mode = $declared->getCanvasEdit();
+        if ($mode === null) {
+            throw new \InvalidArgumentException(sprintf(
+                'Field "%s" is a %s, which is edited in the inspector, not on the canvas',
+                $key,
+                $declared::getType()
+            ));
+        }
+
+        if ($edit !== null && $edit !== $mode) {
+            throw new \InvalidArgumentException(sprintf(
+                'Field "%s" is edited as "%s" on the canvas, not "%s"',
+                $key,
+                $mode,
+                $edit
+            ));
+        }
+
+        return $mode;
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * The field $key names. A path `list/0/child` is that child of a repeater row.
+     *
+     * @param \Nails\Cms\WidgetEditor\Interfaces\Field[] $fields
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function declaredField(array $fields, string $key): ?Interfaces\Field
+    {
+        $parts = explode('/', $key);
+        $field = Fields::find($fields, $parts[0]);
+
+        if (count($parts) === 1) {
+            return $field;
+        }
+
+        if (!$field instanceof Repeater || count($parts) !== 3 || !preg_match('/^\d+$/', $parts[1])) {
+            throw new \InvalidArgumentException(sprintf('Field "%s" is not a repeater row', $key));
+        }
+
+        $child = Fields::find($field->getChildren(), $parts[2]);
+        if ($child === null) {
+            throw new \InvalidArgumentException(sprintf(
+                'Field "%s" is not a field of "%s"',
+                $parts[2],
+                $parts[0]
+            ));
+        }
+
+        return $child;
     }
 }

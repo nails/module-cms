@@ -1,12 +1,13 @@
 <template>
-    <div class="cms-we__modal-backdrop">
-        <div class="cms-we__modal" role="dialog" aria-modal="true" :aria-label="title">
-            <header class="cms-we__modal-head">
-                <strong>{{ title }}</strong>
-                <button type="button" class="cms-we__tool" @click="$emit('close')">Close</button>
-            </header>
-            <div class="cms-we__modal-body">
+    <div class="modal modal--open modal--processed" role="dialog" aria-modal="true" :aria-label="title">
+        <div class="modal__inner">
+            <div class="modal__close" role="button" tabindex="0" aria-label="Close" @mousedown.prevent="$emit('close')">&times;</div>
+            <div class="modal__title">{{ title }}</div>
+            <div class="modal__body">
                 <slot></slot>
+            </div>
+            <div v-if="$slots.actions" class="modal__actions">
+                <slot name="actions"></slot>
             </div>
         </div>
     </div>
@@ -14,8 +15,9 @@
 
 <script>
 /**
- * A dialog over the editor. It closes only from its own controls, so an unsaved change is not lost to a stray
- * click on the backdrop.
+ * Admin's modal (module-admin `.modal`). It closes from its own control, so a click on the page behind it
+ * does not discard what is being edited. `modal--processed` keeps admin's modal plugin from binding this
+ * dialog: that plugin only removes the open class, so the dialog would open again on the next render.
  */
 export default {
     name: 'Modal',

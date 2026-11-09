@@ -1,10 +1,12 @@
 /**
- * Rules for a fields-schema widget's inspector (D23)
+ * Rules for a fields-schema widget's inspector
  *
  * The schema comes from the catalogue, already validated and with defaults filled (see Service\Fields in PHP).
- * These functions are pure, so the Vue controls only render and call them. Nothing here blocks a save: a missing
- * required field is a warning.
+ * Rules that depend on the type (what counts as empty, how a value is stored) come from the type's definition in
+ * field-types.js. Nothing here blocks a save: a missing required field is a warning.
  */
+
+import { fieldType } from './field-types.js';
 
 /**
  * @typedef {Object} Field
@@ -17,21 +19,26 @@
  * @property {Object<string, unknown>} visibleWhen
  * @property {unknown} default
  * @property {Object<string, string>} [options]
+ * @property {string[]} [order]   Option keys in the order PHP gave them
  * @property {number|null} [min]
  * @property {number|null} [max]
  * @property {Field[]} [fields]   Repeater children
- * @property {string} [bucket]    cdn_object bucket
  */
 
 /**
- * Whether a field is shown for the given values. Every condition in visibleWhen must match.
+ * Whether a field is shown for the given values. Every condition in visibleWhen must match. A condition that is a
+ * list matches when the sibling is one of those values, still compared strictly.
  * @param {Field} field
  * @param {Object<string, unknown>} values
  * @return {boolean}
  */
 export function isVisible(field, values) {
     const conditions = field.visibleWhen || {};
-    return Object.keys(conditions).every((key) => values && values[key] === conditions[key]);
+    return Object.keys(conditions).every((key) => {
+        const actual = values ? values[key] : undefined;
+        const expected = conditions[key];
+        return Array.isArray(expected) ? expected.includes(actual) : actual === expected;
+    });
 }
 
 /**
@@ -44,15 +51,22 @@ export function visibleFields(fields, values) {
 }
 
 /**
- * Whether a value counts as missing for a required field. A toggle is never missing: off is a value.
+ * Whether a value counts as missing for a required field. The type may decide (a toggle is never missing);
+ * otherwise null, blank text and an empty list are missing.
  * @param {Field} field
  * @param {unknown} value
  * @return {boolean}
  */
 export function isEmpty(field, value) {
-    if (field.type === 'toggle') {
-        return false;
-    }
+    const definition = fieldType(field.type);
+    return definition && definition.isEmpty ? definition.isEmpty(value, field) : isBlank(value);
+}
+
+/**
+ * @param {unknown} value
+ * @return {boolean}
+ */
+export function isBlank(value) {
     if (value === undefined || value === null) {
         return true;
     }
@@ -84,7 +98,7 @@ export function missingRequired(fields, values, prefix = '') {
             out.push({ path, label: field.label });
         }
 
-        if (field.type === 'repeater' && Array.isArray(value)) {
+        if (Array.isArray(field.fields) && Array.isArray(value)) {
             value.forEach((row, index) => {
                 out.push(...missingRequired(field.fields, row || {}, path + '[' + index + '].'));
             });
@@ -166,31 +180,121 @@ export function setRowValue(rows, index, key, value) {
 }
 
 /**
- * Converts what a control reports into the stored value for its type. Nothing is clamped, so a value outside
- * min or max is kept and the editor does not block it.
+ * The value at a slash path. A path with no slash is a top-level key. `panels/0/title` is a repeater row.
+ *
+ * @param {Object<string, unknown>|unknown[]} data
+ * @param {string} path
+ * @return {unknown}
+ */
+export function valueAt(data, path) {
+    const parts = String(path).split('/');
+    let node = data;
+
+    for (let i = 0; i < parts.length; i++) {
+        if (node === null || node === undefined || typeof node !== 'object') {
+            return undefined;
+        }
+        node = node[parts[i]];
+    }
+
+    return node;
+}
+
+/**
+ * A copy of data with the value at path replaced. Arrays along the path stay arrays.
+ *
+ * @param {Object<string, unknown>|unknown[]} data
+ * @param {string} path
+ * @param {unknown} value
+ * @return {Object<string, unknown>|unknown[]}
+ */
+export function setAt(data, path, value) {
+    const parts = String(path).split('/');
+    const root = Array.isArray(data) ? data.slice() : { ...(data || {}) };
+
+    if (parts.length === 1) {
+        root[parts[0]] = value;
+        return root;
+    }
+
+    let cursor = root;
+    for (let i = 0; i < parts.length - 1; i++) {
+        const child = cursor[parts[i]];
+        const copy = Array.isArray(child) ? child.slice() : { ...(child && typeof child === 'object' ? child : {}) };
+        cursor[parts[i]] = copy;
+        cursor = copy;
+    }
+
+    cursor[parts[parts.length - 1]] = value;
+    return root;
+}
+
+/**
+ * The row's heading: the first field's text, or its selected option. Empty falls back to "Item N".
+ *
+ * @param {Field} field A repeater
+ * @param {Object<string, unknown>} row
+ * @param {number} index
+ * @return {string}
+ */
+export function rowTitle(field, row, index) {
+    const fallback = 'Item ' + (index + 1);
+    const first = (field.fields || [])[0];
+    if (!first || !row) {
+        return fallback;
+    }
+
+    const value = row[first.key];
+    let text = '';
+    if (first.options && value in first.options) {
+        text = String(first.options[value]);
+    } else if (first.type === 'richtext') {
+        text = plainText(value);
+    } else if (typeof value === 'string' || typeof value === 'number') {
+        text = String(value);
+    }
+
+    text = text.replace(/\s+/g, ' ').trim();
+    return text || fallback;
+}
+
+/**
+ * A select's option keys, in the order PHP gave them. Without `order`, the object's own order is used.
+ *
+ * @param {Field} field
+ * @return {string[]}
+ */
+export function optionKeys(field) {
+    const options = field.options || {};
+    const order = Array.isArray(field.order) ? field.order.filter((key) => key in options) : [];
+    return order.length === Object.keys(options).length ? order : Object.keys(options);
+}
+
+/**
+ * Converts what a control reports into the stored value for its type. A type without a rule stores what it reports.
  *
  * @param {Field} field
  * @param {unknown} raw
  * @return {unknown}
  */
 export function coerce(field, raw) {
-    switch (field.type) {
-        case 'number': {
-            if (raw === '' || raw === null || raw === undefined) {
-                return null;
-            }
-            const number = Number(raw);
-            return Number.isFinite(number) ? number : null;
-        }
-        case 'toggle':
-            return Boolean(raw);
-        case 'cdn_object': {
-            const id = parseInt(raw, 10);
-            return Number.isInteger(id) && id > 0 ? id : null;
-        }
-        default:
-            return raw;
+    const definition = fieldType(field.type);
+    return definition && definition.coerce ? definition.coerce(raw, field) : raw;
+}
+
+/**
+ * One line that stands in for a wide field in the inspector
+ *
+ * @param {Field} field
+ * @param {unknown} value
+ * @return {string}
+ */
+export function summary(field, value) {
+    const definition = fieldType(field.type);
+    if (definition && definition.summary) {
+        return definition.summary(value, field);
     }
+    return isEmpty(field, value) ? 'Nothing yet' : String(value);
 }
 
 /**

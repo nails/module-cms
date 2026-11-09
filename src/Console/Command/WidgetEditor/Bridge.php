@@ -77,12 +77,18 @@ class Bridge extends Base
                     continue;
                 }
 
-                // A v2 widget already claims this slug (a module ships it). The bridge then overrides that widget,
-                // rather than claiming the same alias, which would fail the whole catalogue
+                // A v2 widget already claims this slug (a module ships it). A module's own v1 widget needs no
+                // bridge. An app's v1 override of it is bridged by overriding the v2 widget, rather than claiming
+                // the same alias, which would fail the whole catalogue
                 $sParent = null;
                 if ($oRegistry->knows($sSlug)) {
                     $oClaimed = $oRegistry->resolve($sSlug);
                     $sParent  = $oClaimed !== null ? get_class($oClaimed) : null;
+
+                    if (!self::isAppClass($sClass)) {
+                        $aLines[] = '<comment>native</comment> ' . $sSlug . ($sParent !== null ? ' (' . $sParent . ')' : '');
+                        continue;
+                    }
                 }
 
                 $sNote = $sParent !== null ? ' (overrides ' . $sParent . ')' : '';
@@ -124,8 +130,18 @@ class Bridge extends Base
     // --------------------------------------------------------------------------
 
     /**
-     * The source of a bridge class. With a parent, the bridge overrides that v2 widget (#[Overrides]) and keeps its
-     * render; the v1 class it delegates to still decides the editor, scripts and status.
+     * Whether a v1 widget class belongs to the app, rather than to a module
+     */
+    private static function isAppClass(string $sClass): bool
+    {
+        return str_starts_with(ltrim($sClass, '\\'), 'App\\');
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * The source of a bridge class. With a parent, the bridge overrides that v2 widget (#[Overrides]) so it claims
+     * its slug; the v1 class it delegates to renders it and decides the editor, scripts and status.
      */
     private function bridgeSource(string $sSlug, string $sLegacyClass, ?string $sParent = null): string
     {
