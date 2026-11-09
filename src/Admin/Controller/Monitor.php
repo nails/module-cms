@@ -13,10 +13,13 @@ namespace Nails\Cms\Admin\Controller;
 
 use Nails\Admin;
 use Nails\Admin\Factory\Nav;
+use Nails\Admin\Helper;
 use Nails\Cms\Admin\Permission;
 use Nails\Cms\Constants;
+use Nails\Cms\Helper\Monitor as MonitorHelper;
 use Nails\Cms\Service;
 use Nails\Cms\WidgetEditor\Monitor\Adapter;
+use Nails\Common\Service\Input;
 use Nails\Factory;
 
 /**
@@ -53,6 +56,26 @@ class Monitor extends Admin\Controller\Base
             'Widgets',
             'widget',
             Permission\Monitor\Widget::class
+        );
+    }
+
+    // --------------------------------------------------------------------------
+
+    public function widgetExport(): void
+    {
+        if (!userHasPermission(Permission\Monitor\Widget::class)) {
+            unauthorised();
+        }
+
+        /** @var Input $input */
+        $input = Factory::service('Input');
+        /** @var Service\Monitor\Widget $service */
+        $service = Factory::service('MonitorWidget', Constants::MODULE_SLUG);
+
+        Helper::loadCsv(
+            MonitorHelper::widgetCsv($this->filterSummary($service->summary(), $input)),
+            'cms-widgets.csv',
+            false
         );
     }
 
@@ -124,37 +147,20 @@ class Monitor extends Admin\Controller\Base
 
         } else {
 
-            $aSummary = $oService->summary();
+            $aSummary = $this->filterSummary($oService->summary(), $oInput);
 
-            //  Search
-            $sKeywords = strtolower(trim($oInput->get('keywords')));
-            if ($sKeywords) {
-                $aSummary = array_filter($aSummary, function (\Nails\Cms\Factory\Monitor\Item $oItem) use ($sKeywords) {
+            if ($sView === 'widget') {
+                $aExport = MonitorHelper::widgetExportQuery(
+                    $oInput->get('keywords'),
+                    $oInput->get('sortOn'),
+                    $oInput->get('sortOrder')
+                );
 
-                    if (str_contains(strtolower($oItem->slug), $sKeywords)) {
-                        return true;
-                    } elseif (str_contains(strtolower($oItem->label), $sKeywords)) {
-                        return true;
-                    } elseif (str_contains(strtolower($oItem->description), $sKeywords)) {
-                        return true;
-                    }
-
-                    return false;
-                });
-            }
-
-            //  Sorting
-            $sSortOn    = trim($oInput->get('sortOn'));
-            $sSortOrder = trim($oInput->get('sortOrder'));
-            if ($sSortOn || $sSortOrder) {
-
-                if ($sSortOn === 'usages') {
-                    arraySortMulti($aSummary, 'usages');
-                }
-
-                if ($sSortOrder === 'desc') {
-                    $aSummary = array_reverse($aSummary);
-                }
+                Helper::addHeaderButton(
+                    static::url('widgetExport') . ($aExport ? '?' . http_build_query($aExport) : ''),
+                    'Export as CSV',
+                    'default'
+                );
             }
 
             $this
@@ -162,5 +168,48 @@ class Monitor extends Admin\Controller\Base
                 ->setTitles(['CMS Monitor', $sLabel])
                 ->loadView('index');
         }
+    }
+
+    // --------------------------------------------------------------------------
+
+    /**
+     * Applies the list's search and sort to a monitor summary
+     *
+     * @param \Nails\Cms\Factory\Monitor\Item[] $aSummary
+     *
+     * @return \Nails\Cms\Factory\Monitor\Item[]
+     */
+    private function filterSummary(array $aSummary, Input $oInput): array
+    {
+        $sKeywords = strtolower(trim((string) $oInput->get('keywords')));
+        if ($sKeywords !== '') {
+            $aSummary = array_filter($aSummary, function (\Nails\Cms\Factory\Monitor\Item $oItem) use ($sKeywords) {
+
+                if (str_contains(strtolower($oItem->slug), $sKeywords)) {
+                    return true;
+                } elseif (str_contains(strtolower($oItem->label), $sKeywords)) {
+                    return true;
+                } elseif (str_contains(strtolower($oItem->description), $sKeywords)) {
+                    return true;
+                }
+
+                return false;
+            });
+        }
+
+        $sSortOn    = trim((string) $oInput->get('sortOn'));
+        $sSortOrder = trim((string) $oInput->get('sortOrder'));
+        if ($sSortOn !== '' || $sSortOrder !== '') {
+
+            if ($sSortOn === 'usages') {
+                arraySortMulti($aSummary, 'usages');
+            }
+
+            if ($sSortOrder === 'desc') {
+                $aSummary = array_reverse($aSummary);
+            }
+        }
+
+        return $aSummary;
     }
 }
