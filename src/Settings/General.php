@@ -2,6 +2,7 @@
 
 namespace Nails\Cms\Settings;
 
+use Nails\Cms\Admin\Permission;
 use Nails\Cms\Model\Page;
 use Nails\Cms\Service\Driver;
 use Nails\Common\Helper\Form;
@@ -31,9 +32,9 @@ class General implements Interfaces\Component\Settings
     /**
      * @inheritDoc
      */
-    public function getPermissions(): array
+    public function getPermission(): string
     {
-        return [];
+        return Permission\Settings\General::class;
     }
 
     // --------------------------------------------------------------------------
